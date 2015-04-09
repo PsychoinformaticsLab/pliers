@@ -1,0 +1,4 @@
+
+class Extractor(object):
+
+    pass
