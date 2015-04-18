@@ -1,1 +1,1 @@
-python-magic
+six
