@@ -3,6 +3,7 @@ from os.path import exists, isdir, join
 from glob import glob
 import magic
 from .stimuli import VideoStim, AudioStim, TextStim, ImageStim
+from abc import ABCMeta, abstractmethod
 
 # Only process files with one of these extensions
 EXTENSIONS = ['mp4', 'mp3', 'avi', 'jpg', 'jpeg', 'bmp', 'gif', 'txt',
@@ -51,11 +52,28 @@ def load(source, dtype=None):
     return stims
 
 
-class ExportFormat(object):
+def export(annotations, filename=None, format='fsl'):
+    """ Initialize and apply an Exporter once. """
     pass
 
 
-class DataSource(object):
+class Exporter(object):
+    ''' Base exporter class. '''
+
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def export(self):
+        pass
+
+
+class TimelineExporter(object):
+    ''' Exporter that handles Timelines. '''
     pass
-    """ Data sources required to produce an annotation, e.g., external
-    corpora. """
+
+
+class FSLExporter(object):
+    ''' Exports a Timeline as tsv with onset, duration, and amplitude columns.
+    '''
+    def export(self, data, filename=None):
+        pass
