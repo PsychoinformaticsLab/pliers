@@ -69,9 +69,9 @@ class VideoStim(DynamicStim):
         i = 0
         while self.clip.isOpened():
             ret, frame = self.clip.read()
-            yield VideoFrameStim(self, i, data=frame)
             if not ret:
                 break
+            yield VideoFrameStim(self, i, data=frame)
             i += 1
         self.clip.release()
 
