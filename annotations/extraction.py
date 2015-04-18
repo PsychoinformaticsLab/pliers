@@ -1,4 +1,0 @@
-
-class Extractor(object):
-
-    pass
