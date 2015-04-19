@@ -4,6 +4,7 @@ from glob import glob
 import magic
 from .stimuli import VideoStim, AudioStim, TextStim, ImageStim
 from abc import ABCMeta, abstractmethod
+import pandas as pd
 
 # Only process files with one of these extensions
 EXTENSIONS = ['mp4', 'mp3', 'avi', 'jpg', 'jpeg', 'bmp', 'gif', 'txt',
@@ -58,6 +59,7 @@ def export(annotations, filename=None, format='fsl'):
 
 
 class Exporter(object):
+
     ''' Base exporter class. '''
 
     __metaclass__ = ABCMeta
@@ -67,13 +69,57 @@ class Exporter(object):
         pass
 
 
-class TimelineExporter(object):
+class TimelineExporter(Exporter):
+
     ''' Exporter that handles Timelines. '''
-    pass
+
+    @staticmethod
+    def timeline_to_df(timeline):
+        ''' Extracts all note data from a timeline and converts it to a
+        pandas DataFrame in long format (i.e., each row is a single key/value
+        pair in a single Note). '''
+        data = []
+        for onset, event in timeline.events.items():
+            for note in event.notes:
+                duration = event.duration or note.stim.duration
+                if duration is None:
+                    raise AttributeError(
+                        'Duration information is missing for at least one '
+                        'Event. A valid duration attribute must be set in '
+                        'either the Event instance, or in the Stim '
+                        'instance associated with every Note in the '
+                        'Event.')
+                for var, value in note.data.items():
+                    data.append([onset, var, duration, value])
+        return pd.DataFrame(data,
+                            columns=['onset', 'name', 'duration', 'amplitude'])
 
 
-class FSLExporter(object):
-    ''' Exports a Timeline as tsv with onset, duration, and amplitude columns.
-    '''
-    def export(self, data, filename=None):
-        pass
+class FSLExporter(TimelineExporter):
+
+    ''' Exports a Timeline as tsv files with onset, duration, and amplitude
+    columns. A separate file is created for each variable or 'condition'. '''
+
+    def export(self, timeline, path=None):
+        '''
+        Args:
+            timeline (Timeline): the Timeline instance to export.
+            path (str): the directory to write files to.
+        Returns: if path is None, returns a dictionary, where keys are variable
+            names and values are pandas DataFrames. Otherwise, None.
+        '''
+        data = self.timeline_to_df(timeline)
+        results = {}
+        for var in data['name'].unique():
+            results[var] = data[data['name'] == var][['onset', 'duration',
+                                                      'amplitude']]
+
+        if path is not None:
+            if not exists(path) or not isdir(path):
+                raise IOError("The path %s does not exist or is not a "
+                              "directory" % path)
+            for var, d in results.items():
+                filename = join(path, var + '.txt')
+                d.to_csv(filename, sep='\t', index=False, header=False)
+        else:
+            return results

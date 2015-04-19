@@ -31,7 +31,7 @@ class Timeline(object):
     def __init__(self, events=None, period=None):
 
         self.events = OrderedDict()
-        
+
         if events is not None:
             for i, ev in enumerate(events):
                 position = ev.position
