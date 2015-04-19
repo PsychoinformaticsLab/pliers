@@ -42,5 +42,5 @@ class TestCore(TestCase):
         exp.export(timeline, tmpdir)
         from glob import glob
         files = glob(join(tmpdir, '*.txt'))
-        print len(files)
+        self.assertEquals(len(files), 2)
         shutil.rmtree(tmpdir)
