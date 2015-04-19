@@ -48,7 +48,8 @@ class VideoFrameStim(ImageStim):
                                              description)
         self.video = video
         self.frame_num = frame_num
-        self.onset = frame_num * 1. / video.fps
+        self.duration = 1. / video.fps
+        self.onset = frame_num * self.duration
 
 
 class VideoStim(DynamicStim):
