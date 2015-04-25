@@ -69,6 +69,16 @@ class VideoStim(DynamicStim):
         self.n_frames = self.clip.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)
         self.width = int(self.clip.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
         self.height = int(self.clip.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+
+        # Read in all frames
+        self.frames = []
+        while self.clip.isOpened():
+            ret, frame = self.clip.read()
+            if not ret:
+                break
+            self.frames.append(frame)
+        self.clip.release()
+
         super(VideoStim, self).__init__(filename, label, description)
 
     def _extract_duration(self):
@@ -76,14 +86,8 @@ class VideoStim(DynamicStim):
 
     def __iter__(self):
         """ Frame iteration. """
-        i = 0
-        while self.clip.isOpened():
-            ret, frame = self.clip.read()
-            if not ret:
-                break
-            yield VideoFrameStim(self, i, data=frame)
-            i += 1
-        self.clip.release()
+        for i, f in enumerate(self.frames):
+            yield VideoFrameStim(self, i, data=f)
 
     def annotate(self, annotators):
         period = 1. / self.fps
