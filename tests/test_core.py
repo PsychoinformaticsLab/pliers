@@ -1,6 +1,6 @@
 from unittest import TestCase
 from utils import get_test_data_path
-from annotations.stims import VideoStim, VideoFrameStim
+from annotations.stims import VideoStim, VideoFrameStim, ComplexTextStim
 from annotations.annotators import (FaceDetectionAnnotator,
                                     DenseOpticalFlowAnnotator,
                                     VideoAnnotator)
@@ -35,8 +35,7 @@ class TestCore(TestCase):
         event file export. '''
         stim = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
         annotators = [DenseOpticalFlowAnnotator(), FaceDetectionAnnotator()]
-        va = VideoAnnotator(annotators)
-        timeline = va.apply(stim)
+        timeline = stim.annotate(annotators)
         exp = FSLExporter()
         tmpdir = tempfile.mkdtemp()
         exp.export(timeline, tmpdir)
@@ -44,3 +43,14 @@ class TestCore(TestCase):
         files = glob(join(tmpdir, '*.txt'))
         self.assertEquals(len(files), 2)
         shutil.rmtree(tmpdir)
+
+    def test_complex_text_stim(self):
+        text_dir = join(get_test_data_path(), 'text')
+        stim = ComplexTextStim(join(text_dir, 'complex_stim_no_header.txt'),
+                               columns='ot', default_duration=0.2)
+        self.assertEquals(len(stim.elements), 4)
+        self.assertEquals(stim.elements[2].onset, 34)
+        self.assertEquals(stim.elements[2].duration, 0.2)
+        stim = ComplexTextStim(join(text_dir, 'complex_stim_with_header.txt'))
+        self.assertEquals(len(stim.elements), 4)
+        self.assertEquals(stim.elements[2].duration, 0.1)

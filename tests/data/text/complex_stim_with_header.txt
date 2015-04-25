@@ -1,0 +1,5 @@
+onset	text	duration
+0.3	explicit	0.1
+0.5	column	0.1
+0.8	names	0.1
+1.8	included	0.1
