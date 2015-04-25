@@ -40,23 +40,6 @@ class VideoAnnotator(Annotator, DynamicAnnotatorMixin):
 
     stim_types = [stims.VideoStim]
 
-    def __init__(self, annotators):
-        super(self.__class__, self).__init__()
-        self.annotators = annotators
-
-    def apply(self, video):
-        period = 1./video.fps
-        timeline = Timeline(period=period)
-        c = 0
-        for frame in video:
-            if frame.data is not None:
-                event = Event(position=c * period)
-                for ann in self.annotators:
-                    event.add_note(ann.apply(frame))
-                timeline.add_event(event)
-                c += 1
-        return timeline
-
 
 class DenseOpticalFlowAnnotator(ImageAnnotator):
 
