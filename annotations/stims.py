@@ -89,17 +89,22 @@ class VideoStim(DynamicStim):
         for i, f in enumerate(self.frames):
             yield VideoFrameStim(self, i, data=f)
 
-    def annotate(self, annotators):
+    def annotate(self, annotators, merge_events=True):
         period = 1. / self.fps
         timeline = Timeline(period=period)
-        c = 0
-        for frame in self:
-            if frame.data is not None:
-                event = Event(onset=c * period)
-                for ann in annotators:
-                    event.add_note(ann.apply(frame))
-                timeline.add_event(event)
-                c += 1
+        for ann in annotators:
+            if ann.target.__name__ == self.__class__.__name__:
+                events = ann.apply(self)
+                for ev in events:
+                    timeline.add_event(ev, merge=merge_events)
+            else:
+                c = 0
+                for frame in self:
+                    if frame.data is not None:
+                        event = Event(onset=c * period)
+                        event.add_note(ann.apply(frame))
+                        timeline.add_event(event, merge=merge_events)
+                        c += 1
         return timeline
 
 
@@ -114,10 +119,11 @@ class AudioStim(DynamicStim):
         pass
 
 
-class TextStim(Stim):
+class TextStim(object):
 
     ''' Any text stimulus. '''
-    pass
+    def __init__(self, text):
+        self.text = text
 
 
 class DynamicTextStim(TextStim):
@@ -125,8 +131,7 @@ class DynamicTextStim(TextStim):
     ''' A text stimulus with timing/onset information. '''
 
     def __init__(self, text, order, onset=None, duration=None):
-        super(DynamicTextStim, self).__init__(None, None, None)
-        self.text = text
+        super(DynamicTextStim, self).__init__(text)
         self.order = order
         self.onset = onset
         self.duration = duration
@@ -186,13 +191,18 @@ class ComplexTextStim(object):
         for elem in self.elements:
             yield elem
 
-    def annotate(self, annotators):
+    def annotate(self, annotators, merge_events=True):
         timeline = Timeline()
-        for elem in self.elements:
-            event = Event(onset=elem.onset)
-            for ann in annotators:
-                event.add_note(ann.apply(elem))
-                timeline.add_event(event)
+        for ann in annotators:
+            if ann.target.__name__ == self.__class__.__name__:
+                events = ann.apply(self)
+                for ev in events:
+                    timeline.add_event(ev, merge=merge_events)
+            else:
+                for elem in self.elements:
+                    event = Event(onset=elem.onset)
+                    event.add_note(ann.apply(elem))
+                    timeline.add_event(event, merge=merge_events)
         return timeline
 
     @classmethod
