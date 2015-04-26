@@ -1,16 +1,9 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 import cv2
 import numpy as np
-from .core import Note, Event, Timeline
+import pandas as pd
+from .core import Note
 import stims
-
-
-class DynamicAnnotatorMixin(object):
-    pass
-
-
-class StaticAnnotatorMixin(object):
-    pass
 
 
 class Annotator(object):
@@ -26,19 +19,19 @@ class Annotator(object):
     def apply(self):
         pass
 
-    # @abstractproperty
-    # def stim_types(self):
-    #     pass
+    @abstractproperty
+    def target(self):
+        pass
 
 
-class ImageAnnotator(Annotator, StaticAnnotatorMixin):
+class ImageAnnotator(Annotator):
 
-    stim_types = [stims.ImageStim]
+    target = stims.ImageStim
 
 
-class VideoAnnotator(Annotator, DynamicAnnotatorMixin):
+class VideoAnnotator(Annotator):
 
-    stim_types = [stims.VideoStim]
+    target = stims.VideoStim
 
 
 class DenseOpticalFlowAnnotator(ImageAnnotator):
@@ -68,8 +61,28 @@ class DenseOpticalFlowAnnotator(ImageAnnotator):
         return Note(img, self, {'total_flow': total_flow})
 
 
-class TextAnnotator(DynamicAnnotatorMixin, Annotator):
-    pass
+class TextAnnotator(Annotator):
+ 
+    target = stims.TextStim
+
+
+class TextDictionaryAnnotator(TextAnnotator):
+
+    def __init__(self, dictionary, variables=None, missing='nan'):
+        self.data = pd.read_csv(dictionary, sep='\t', index_col=0)
+        self.variables = variables
+        if variables is not None:
+            self.data = self.data[variables]
+        # Set up response when key is missing
+        self.missing = np.nan
+        super(self.__class__, self).__init__()
+
+    def apply(self, stim):
+        if stim.text not in self.data.index:
+            vals = pd.Series(self.missing, self.variables)
+        else:
+            vals = self.data.loc[stim.text]
+        return Note(stim, self, vals.to_dict())
 
 
 class CornerDetectionAnnotator(ImageAnnotator):
@@ -81,20 +94,6 @@ class CornerDetectionAnnotator(ImageAnnotator):
     def apply(self, img):
         kp = self.fast.detect(img, None)
         return Note(img, self, {'corners_detected': kp})
-
-
-# class ImageFeatureDetectionAnnotator(ImageAnnotator):
-
-#     def __init__(self):
-#         super(self.__class__, self).__init__()
-#         self.star = cv2.FeatureDetector_create("STAR")
-#         self.brief = cv2.DescriptorExtractor_create("BRIEF")
-#         self.name = "FeatureDetection"
-
-#     def apply(self, img):
-#         kp = self.star.detect(img, None)
-#         kp, des = self.brief.compute(img, kp)
-#         return Note(img, self, {'features_detected': des})
 
 
 class FaceDetectionAnnotator(ImageAnnotator):
@@ -122,28 +121,3 @@ class FaceDetectionAnnotator(ImageAnnotator):
 
         return Note(img, self, {'num_faces': len(faces)})
 
-
-# class ShapeMotionDetectionAnnotator(VideoAnnotator):
-
-#     def __init__(self):
-#         super(ShapeMotionDetectionAnnotator, self).__init__()
-#         self.name = "ShapeMotionDetection"
-
-#     def apply(self, video):
-
-#         def rgb2gray(rgb):
-#             r, g, b = rgb[:, :, 0], rgb[:, :, 1], rgb[:, :, 2]
-#             gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
-#             return gray
-
-#         img = video.frames[50]
-#         for img in video.frames:
-#             if img is not None:
-#                 gray = 255 - rgb2gray(img).astype('uint8')
-#                 ret, thresh = cv2.threshold(gray, 35, 255, cv2.THRESH_BINARY)
-#                 thresh = np.copy(thresh)
-#                 contours, h = contours, hierarchy = cv2.findContours(
-#                     thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
-#                 cv2.drawContours(img, contours, -1, (200, 255, 200), 2)
-#                 cv2.imshow('frame', img)
-#                 cv2.waitKey(20)
