@@ -1,15 +1,13 @@
 from unittest import TestCase
 from utils import get_test_data_path
 from annotations.stims import VideoStim, VideoFrameStim, ComplexTextStim
-from annotations.annotators import (FaceDetectionAnnotator,
-                                    DenseOpticalFlowAnnotator,
-                                    VideoAnnotator, TextDictionaryAnnotator)
+from annotations.annotators.image import FaceDetectionAnnotator
+from annotations.annotators.video import DenseOpticalFlowAnnotator
+from annotations.annotators.text import TextDictionaryAnnotator
 from annotations.io import FSLExporter, TimelineExporter
 from os.path import join
 import tempfile
 import shutil
-import pandas as pd
-import cProfile
 
 
 class TestCore(TestCase):
