@@ -3,8 +3,8 @@ from utils import get_test_data_path
 from annotations.stims import VideoStim, VideoFrameStim, ComplexTextStim
 from annotations.annotators import (FaceDetectionAnnotator,
                                     DenseOpticalFlowAnnotator,
-                                    VideoAnnotator)
-from annotations.io import FSLExporter
+                                    VideoAnnotator, TextDictionaryAnnotator)
+from annotations.io import FSLExporter, TimelineExporter
 from os.path import join
 import tempfile
 import shutil
@@ -54,3 +54,16 @@ class TestCore(TestCase):
         stim = ComplexTextStim(join(text_dir, 'complex_stim_with_header.txt'))
         self.assertEquals(len(stim.elements), 4)
         self.assertEquals(stim.elements[2].duration, 0.1)
+
+    def test_text_annotation(self):
+        text_dir = join(get_test_data_path(), 'text')
+        stim = ComplexTextStim(join(text_dir, 'sample_text.txt'),
+                               columns='to', default_duration=1)
+        td = TextDictionaryAnnotator(join(text_dir,
+                                          'test_lexical_dictionary.txt'),
+                                     variables=['length', 'frequency'])
+        self.assertEquals(td.data.shape, (7, 2))
+        timeline = stim.annotate([td])
+        df = TimelineExporter.timeline_to_df(timeline)
+        self.assertEquals(df.shape, (12, 4))
+        self.assertEquals(df.iloc[9, 3], 10.6)
