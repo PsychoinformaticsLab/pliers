@@ -74,10 +74,17 @@ class TimelineExporter(Exporter):
     ''' Exporter that handles Timelines. '''
 
     @staticmethod
-    def timeline_to_df(timeline):
+    def timeline_to_df(timeline, format='long'):
         ''' Extracts all note data from a timeline and converts it to a
-        pandas DataFrame in long format (i.e., each row is a single key/value
-        pair in a single Note). '''
+        pandas DataFrame.
+        Args:
+            timeline: the Timeline instance to convert
+            format (str): The format of the returned DF. Either 'long'
+                (default) or 'wide'. In long format, each row is a single
+                key/value pair in a single Note). In wide format, each row is
+                a single event, and all note values are represented in columns.
+        Returns: a pandas DataFrame.
+        '''
         data = []
         for onset, event in timeline.events.items():
             for note in event.notes:
@@ -91,8 +98,11 @@ class TimelineExporter(Exporter):
                         'Event.')
                 for var, value in note.data.items():
                     data.append([onset, var, duration, value])
-        return pd.DataFrame(data,
+        data = pd.DataFrame(data,
                             columns=['onset', 'name', 'duration', 'amplitude'])
+        if format == 'wide':
+            data = data.pivot(index='onset', columns='name')
+        return data
 
 
 class FSLExporter(TimelineExporter):
