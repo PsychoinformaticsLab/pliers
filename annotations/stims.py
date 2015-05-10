@@ -1,8 +1,9 @@
 from abc import ABCMeta, abstractmethod
 import cv2
 import six
-from .core import Timeline, Event, Note
+from .core import Timeline, Event
 import pandas as pd
+from scipy.io import wavfile
 
 
 class Stim(object):
@@ -93,10 +94,12 @@ class VideoStim(DynamicStim):
         period = 1. / self.fps
         timeline = Timeline(period=period)
         for ann in annotators:
+            # For VideoAnnotators, pass the entire stim
             if ann.target.__name__ == self.__class__.__name__:
                 events = ann.apply(self)
                 for ev in events:
                     timeline.add_event(ev, merge=merge_events)
+            # Otherwise, for images, loop over frames
             else:
                 c = 0
                 for frame in self:
@@ -110,13 +113,15 @@ class VideoStim(DynamicStim):
 
 class AudioStim(DynamicStim):
 
-    ''' An audio clip. '''
+    ''' An audio clip. For now, only handles wav files. '''
 
     def __init__(self, filename, label=None, description=None):
-        super(VideoStim, self).__init__(filename, label, description)
+        self.sampling_rate, self.data = wavfile.read(filename)
+        self._extract_duration()
+        super(AudioStim, self).__init__(filename, label, description)
 
     def _extract_duration(self):
-        pass
+        self.duration = len(self.data)*1./self.sampling_rate
 
 
 class TextStim(object):

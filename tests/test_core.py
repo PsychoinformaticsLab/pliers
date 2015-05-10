@@ -1,6 +1,7 @@
 from unittest import TestCase
 from utils import get_test_data_path
-from annotations.stims import VideoStim, VideoFrameStim, ComplexTextStim
+from annotations.stims import (VideoStim, VideoFrameStim, ComplexTextStim,
+                               AudioStim)
 from annotations.annotators.image import FaceDetectionAnnotator
 from annotations.annotators.video import DenseOpticalFlowAnnotator
 from annotations.annotators.text import TextDictionaryAnnotator
@@ -65,3 +66,8 @@ class TestCore(TestCase):
         df = TimelineExporter.timeline_to_df(timeline)
         self.assertEquals(df.shape, (12, 4))
         self.assertEquals(df.iloc[9, 3], 10.6)
+
+    def test_audio_stim(self):
+        audio_dir = join(get_test_data_path(), 'audio')
+        stim = AudioStim(join(audio_dir, 'daffy.wav'))
+        self.assertEquals(stim.sampling_rate, 11025)
