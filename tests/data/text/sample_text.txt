@@ -1,0 +1,6 @@
+some	1
+sample	2
+text	3
+for	4
+testing	5
+annotation	6
