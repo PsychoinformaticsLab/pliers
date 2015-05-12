@@ -1,3 +1,5 @@
 six
+matplotlib
 numpy
 pandas
+scipy
