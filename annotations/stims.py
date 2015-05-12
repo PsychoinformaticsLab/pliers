@@ -10,11 +10,9 @@ class Stim(object):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, filename, label, description):
+    def __init__(self, filename=None):
 
         self.filename = filename
-        self.label = label
-        self.description = description
         self.annotations = []
 
 
@@ -24,8 +22,8 @@ class DynamicStim(Stim):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, filename, label, description):
-        super(DynamicStim, self).__init__(filename, label, description)
+    def __init__(self, filename=None):
+        super(DynamicStim, self).__init__(filename)
         self._extract_duration()
 
     @abstractmethod
@@ -37,11 +35,10 @@ class ImageStim(Stim):
 
     ''' A static image. '''
 
-    def __init__(self, filename=None, data=None, label=None, duration=None,
-                 description=None):
+    def __init__(self, filename=None, data=None, duration=None):
         if data is None and isinstance(filename, six.string_types):
             data = cv2.imread(filename)
-        super(ImageStim, self).__init__(filename, label, description)
+        super(ImageStim, self).__init__(filename)
         self.data = data
         self.duration = duration
 
@@ -50,10 +47,8 @@ class VideoFrameStim(ImageStim):
 
     ''' A single frame of video. '''
 
-    def __init__(self, video, frame_num, filename=None, data=None, label=None,
-                 description=None):
-        super(VideoFrameStim, self).__init__(filename, data, label,
-                                             description)
+    def __init__(self, video, frame_num, filename=None, data=None):
+        super(VideoFrameStim, self).__init__(filename, data)
         self.video = video
         self.frame_num = frame_num
         self.duration = 1. / video.fps
@@ -64,7 +59,7 @@ class VideoStim(DynamicStim):
 
     ''' A video. '''
 
-    def __init__(self, filename, label=None, description=None):
+    def __init__(self, filename):
         self.clip = cv2.VideoCapture(filename)
         self.fps = self.clip.get(cv2.cv.CV_CAP_PROP_FPS)
         self.n_frames = self.clip.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)
@@ -80,7 +75,7 @@ class VideoStim(DynamicStim):
             self.frames.append(frame)
         self.clip.release()
 
-        super(VideoStim, self).__init__(filename, label, description)
+        super(VideoStim, self).__init__(filename)
 
     def _extract_duration(self):
         self.duration = self.n_frames * 1. / self.fps
@@ -115,16 +110,43 @@ class AudioStim(DynamicStim):
 
     ''' An audio clip. For now, only handles wav files. '''
 
-    def __init__(self, filename, label=None, description=None):
+    def __init__(self, filename):
         self.sampling_rate, self.data = wavfile.read(filename)
         self._extract_duration()
-        super(AudioStim, self).__init__(filename, label, description)
+        super(AudioStim, self).__init__(filename)
 
     def _extract_duration(self):
         self.duration = len(self.data)*1./self.sampling_rate
 
+    def annotate(self, annotators, merge_events=True):
+        timeline = Timeline()
+        for ann in annotators:
+            events = ann.apply(self)
+            for ev in events:
+                timeline.add_event(ev, merge=merge_events)
+        return timeline
 
-class TextStim(object):
+
+class TranscribedAudioStim(AudioStim):
+
+    ''' An AudioStim with an associated text transcription.
+    Args:
+        filename (str): The path to the audio clip.
+        transcription (str or ComplexTextStim): the associated transcription.
+            If a string, this is interpreted as the name of a file containing
+            data needed to initialize a new ComplexTextStim. Otherwise, must
+            pass an existing ComplexTextStim instance.
+        kwargs (dict): optional keywords passed to the ComplexTextStim
+            initializer if transcription argument is a string.
+    '''
+    def __init__(self, filename, transcription, **kwargs):
+        if isinstance(transcription, six.string_types):
+            transcription = ComplexTextStim(transcription, **kwargs)
+        self.transcription = transcription
+        super(AudioStim, self).__init__(filename)
+
+
+class TextStim(Stim):
 
     ''' Any text stimulus. '''
     def __init__(self, text):
@@ -136,10 +158,10 @@ class DynamicTextStim(TextStim):
     ''' A text stimulus with timing/onset information. '''
 
     def __init__(self, text, order, onset=None, duration=None):
-        super(DynamicTextStim, self).__init__(text)
         self.order = order
         self.onset = onset
         self.duration = duration
+        super(DynamicTextStim, self).__init__(text)
 
 
 class ComplexTextStim(object):
@@ -165,7 +187,7 @@ class ComplexTextStim(object):
             contains a header row, the columns argument will be ignored.
         default_duration (float): the duration to assign to any text elements
             in the collection that do not have an explicit value provided
-            in the input filename.
+            in the input file.
     '''
 
     def __init__(self, filename, columns='tod', default_duration=None):
