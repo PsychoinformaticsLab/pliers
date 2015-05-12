@@ -1,5 +1,6 @@
 # import pandas as pd
 from collections import OrderedDict
+from .io import TimelineExporter
 
 
 class Note(object):
@@ -79,3 +80,6 @@ class Timeline(object):
 
         if sort:
             self._sort_events()
+
+    def to_df(self, format='long'):
+        return TimelineExporter.timeline_to_df(self, format)
