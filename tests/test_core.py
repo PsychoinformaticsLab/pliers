@@ -5,6 +5,7 @@ from annotations.stims import (VideoStim, VideoFrameStim, ComplexTextStim,
 from annotations.annotators.image import FaceDetectionAnnotator
 from annotations.annotators.video import DenseOpticalFlowAnnotator
 from annotations.annotators.text import TextDictionaryAnnotator
+from annotations.annotators.audio import STFTAnnotator
 from annotations.io import FSLExporter, TimelineExporter
 from os.path import join
 import tempfile
@@ -16,7 +17,7 @@ class TestCore(TestCase):
     def test_video_stim(self):
         ''' Test VideoStim functionality. '''
         filename = join(get_test_data_path(), 'video', 'small.mp4')
-        video = VideoStim(filename, 'test video')
+        video = VideoStim(filename)
         self.assertEquals(video.fps, 30)
         self.assertEquals(video.n_frames, 166)
         self.assertEquals(video.width, 560)
@@ -69,5 +70,10 @@ class TestCore(TestCase):
 
     def test_audio_stim(self):
         audio_dir = join(get_test_data_path(), 'audio')
-        stim = AudioStim(join(audio_dir, 'daffy.wav'))
+        stim = AudioStim(join(audio_dir, 'barber.wav'))
         self.assertEquals(stim.sampling_rate, 11025)
+        ann = STFTAnnotator(frame_size=1., spectrogram=False,
+                            bins=[(100, 300), (300, 3000), (3000, 20000)])
+        timeline = stim.annotate([ann])
+        df = timeline.to_df('long')
+        self.assertEquals(df.shape, (1671, 4))
