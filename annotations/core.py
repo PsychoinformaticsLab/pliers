@@ -1,6 +1,5 @@
 # import pandas as pd
 from collections import OrderedDict
-from .io import TimelineExporter
 
 
 class Note(object):
@@ -88,4 +87,6 @@ class Timeline(object):
             # TODO: handle potential period mismatches
 
     def to_df(self, format='long'):
+        # local import to prevent circularity
+        from .io import TimelineExporter
         return TimelineExporter.timeline_to_df(self, format)
