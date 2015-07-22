@@ -6,6 +6,7 @@ from annotations.annotators.image import FaceDetectionAnnotator
 from annotations.annotators.video import DenseOpticalFlowAnnotator
 from annotations.annotators.text import TextDictionaryAnnotator
 from annotations.annotators.audio import STFTAnnotator
+from annotations.annotators.response import VideoResponseAnnotator
 from annotations.io import FSLExporter, TimelineExporter
 from os.path import join
 import tempfile
@@ -35,7 +36,7 @@ class TestCore(TestCase):
         event file export. '''
         stim = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
         annotators = [DenseOpticalFlowAnnotator(), FaceDetectionAnnotator()]
-        timeline = stim.annotate(annotators)
+        timeline = stim.annotate(annotators, show=False)
         exp = FSLExporter()
         tmpdir = tempfile.mkdtemp()
         exp.export(timeline, tmpdir)

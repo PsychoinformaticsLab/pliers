@@ -24,8 +24,9 @@ setup(
     url='http://github.com/tyarkoni/annotations',
     packages=["annotations"],
     package_data={'annotations': ['data/*'],
-                'annotations.tests': ['data/*']
-                },
-    # download_url='https://github.com/tyarkoni/annotations/archive/%s.tar.gz' % __version__,
+                  'annotations.tests': ['data/*']
+                  },
+    # download_url='https://github.com/tyarkoni/annotations/archive/%s.tar.gz' %
+    # __version__,
     **extra_setuptools_args
-    )
+)

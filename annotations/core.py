@@ -81,5 +81,11 @@ class Timeline(object):
         if sort:
             self._sort_events()
 
+    def merge(self, timeline):
+        ''' Merge passed Timeline into current instance. '''
+        for event in timeline.events:
+            self.add_event(event, merge=True)
+            # TODO: handle potential period mismatches
+
     def to_df(self, format='long'):
         return TimelineExporter.timeline_to_df(self, format)

@@ -61,6 +61,8 @@ class STFTAnnotator(AudioAnnotator):
                 label = '%d_%d' % fb
                 start, stop = fb
                 val = data[i, start:stop].mean()
+                if np.isinf(val):
+                    val = 0.
                 note_data[label] = val
             ev.add_note(Note(stim, self, note_data))
             events.append(ev)

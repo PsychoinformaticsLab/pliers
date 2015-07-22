@@ -1,9 +1,23 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractproperty
 import cv2
 import six
 from .core import Timeline, Event
 import pandas as pd
 from scipy.io import wavfile
+# from collections import defaultdict
+
+
+class AnnotationRule(object):
+
+    def __init__(self, target, map=False):
+        self.target = target
+        self.map = map
+
+    def apply(self, annotator):
+        if self.map:
+            return map(annotator.apply, self.target)
+        else:
+            return annotator.apply(self.target)
 
 
 class Stim(object):
@@ -14,6 +28,23 @@ class Stim(object):
 
         self.filename = filename
         self.annotations = []
+
+
+    # @abstractproperty
+    def rules(self):
+        pass
+
+    def annotate(self, annotators, period=None, merge_events=True):
+
+        timeline = Timeline(period=period)
+        for ann in annotators:
+            target = ann.target.__name__
+            if target not in self.rules:
+                ann_name = ann.__class__.__name__
+                raise KeyError('Annotation %s must be applied to a stimulus'
+                                 ' of class %s, but none is defined.' \
+                                 % (ann_name, target))
+            self.rules[target].apply(ann)
 
 
 class DynamicStim(Stim):
@@ -85,13 +116,13 @@ class VideoStim(DynamicStim):
         for i, f in enumerate(self.frames):
             yield VideoFrameStim(self, i, data=f)
 
-    def annotate(self, annotators, merge_events=True):
+    def annotate(self, annotators, merge_events=True, **kwargs):
         period = 1. / self.fps
         timeline = Timeline(period=period)
         for ann in annotators:
             # For VideoAnnotators, pass the entire stim
             if ann.target.__name__ == self.__class__.__name__:
-                events = ann.apply(self)
+                events = ann.apply(self, **kwargs)
                 for ev in events:
                     timeline.add_event(ev, merge=merge_events)
             # Otherwise, for images, loop over frames
@@ -144,6 +175,21 @@ class TranscribedAudioStim(AudioStim):
             transcription = ComplexTextStim(transcription, **kwargs)
         self.transcription = transcription
         super(AudioStim, self).__init__(filename)
+
+    def annotate(self, annotators):
+        timeline = Timeline()
+        audio_anns, text_anns = [], []
+        for ann in annotators:
+            if ann.target.__name__ == 'AudioStim':
+                audio_anns.append(ann)
+            elif ann.target.__name__ == 'ComplexTextStim':
+                text_anns.append(ann)
+
+        audio_tl = super(TranscribedAudioStim, self).annotate(audio_anns)
+        timeline.merge(audio_tl)
+        text_tl = self.transcription.annotate(text_anns)
+        timeline.merge(text_tl)
+        return timeline
 
 
 class TextStim(Stim):
@@ -239,6 +285,3 @@ class ComplexTextStim(object):
         """
         pass
 
-
-class StimCollection(object):
-    pass
