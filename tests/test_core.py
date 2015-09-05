@@ -1,5 +1,5 @@
 from unittest import TestCase
-from utils import _get_test_data_path
+from .utils import _get_test_data_path
 from annotations.stims import VideoStim
 from annotations.annotators.image import FaceDetectionAnnotator
 from annotations.annotators.video import DenseOpticalFlowAnnotator

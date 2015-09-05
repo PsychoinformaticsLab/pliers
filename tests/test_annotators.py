@@ -1,6 +1,6 @@
 from unittest import TestCase
 from os.path import join
-from utils import _get_test_data_path
+from .utils import _get_test_data_path
 from annotations.annotators.text import TextDictionaryAnnotator
 from annotations.annotators.audio import STFTAnnotator
 from annotations.stims import ComplexTextStim, AudioStim

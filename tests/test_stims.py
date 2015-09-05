@@ -1,11 +1,42 @@
 from unittest import TestCase
-from utils import _get_test_data_path
+from .utils import _get_test_data_path
 from annotations.stims import (VideoStim, VideoFrameStim, ComplexTextStim,
                                AudioStim)
+from annotations.annotators import Annotator
+from annotations.stims import Stim
+from annotations.core import Note
+from annotations.core import Event
+import numpy as np
 from os.path import join
 
 
 class TestStims(TestCase):
+
+    @classmethod
+    def setUpClass(self):
+
+        class DummyAnnotator(Annotator):
+
+            target = Stim
+
+            def apply(self, stim):
+                return Note(stim, self, {'constant': 1})
+
+        class DummyIterableAnnotator(Annotator):
+
+            target = Stim
+
+            def apply(self, stim):
+
+                events = []
+                time_bins = np.arange(0., stim.duration, 1.)
+                for i, tb in enumerate(time_bins):
+                    ev = Event(onset=tb, duration=1000)
+                    ev.add_note(Note(stim, self, {'second': i}))
+                return events
+
+        self.dummy_annotator = DummyAnnotator()
+        self.dummy_iter_annotator = DummyIterableAnnotator()
 
     def test_video_stim(self):
         ''' Test VideoStim functionality. '''
@@ -26,7 +57,9 @@ class TestStims(TestCase):
     def test_audio_stim(self):
         audio_dir = join(_get_test_data_path(), 'audio')
         stim = AudioStim(join(audio_dir, 'barber.wav'))
+        self.assertEquals(round(stim.duration), 57)
         self.assertEquals(stim.sampling_rate, 11025)
+        stim.annotate([self.dummy_iter_annotator])
 
     def test_complex_text_stim(self):
         text_dir = join(_get_test_data_path(), 'text')
