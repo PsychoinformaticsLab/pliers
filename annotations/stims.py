@@ -1,23 +1,9 @@
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractmethod
 import cv2
 import six
 from .core import Timeline, Event
 import pandas as pd
 from scipy.io import wavfile
-# from collections import defaultdict
-
-
-class AnnotationRule(object):
-
-    def __init__(self, target, map=False):
-        self.target = target
-        self.map = map
-
-    def apply(self, annotator):
-        if self.map:
-            return map(annotator.apply, self.target)
-        else:
-            return annotator.apply(self.target)
 
 
 class Stim(object):
@@ -28,23 +14,6 @@ class Stim(object):
 
         self.filename = filename
         self.annotations = []
-
-
-    # @abstractproperty
-    def rules(self):
-        pass
-
-    def annotate(self, annotators, period=None, merge_events=True):
-
-        timeline = Timeline(period=period)
-        for ann in annotators:
-            target = ann.target.__name__
-            if target not in self.rules:
-                ann_name = ann.__class__.__name__
-                raise KeyError('Annotation %s must be applied to a stimulus'
-                                 ' of class %s, but none is defined.' \
-                                 % (ann_name, target))
-            self.rules[target].apply(ann)
 
 
 class DynamicStim(Stim):
