@@ -24,7 +24,7 @@ setup(
     install_requires=['numpy', 'scipy', 'pandas', 'six', 'python-magic'],
     packages=["featurex", "featurex.tests"],
     package_data={'featurex': ['data/*'],
-                  'featurex.tests': ['data/*']
+                  'featurex.tests': ['data/*/*']
                   },
     # download_url='https://github.com/tyarkoni/featurex/archive/%s.tar.gz' %
     # __version__,
