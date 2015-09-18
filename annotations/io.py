@@ -6,10 +6,6 @@ from .stims import VideoStim, AudioStim, TextStim, ImageStim
 from abc import ABCMeta, abstractmethod
 import pandas as pd
 
-# Only process files with one of these extensions
-EXTENSIONS = ['mp4', 'mp3', 'avi', 'jpg', 'jpeg', 'bmp', 'gif', 'txt',
-              'csv', 'tsv', 'wav']
-
 
 def load(source, dtype=None):
     """ Load one or more stimuli directly from file, inferring/extracting
@@ -30,8 +26,6 @@ def load(source, dtype=None):
     stims = []
 
     def load_file(source):
-        if source.split('.')[-1] not in EXTENSIONS:
-            return
         mime = magic.from_file(source, mime=True).split('/')[0]
         stim_map = {
             'image': ImageStim,
