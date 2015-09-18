@@ -5,6 +5,7 @@ from annotations.annotators.text import TextDictionaryAnnotator
 from annotations.annotators.audio import STFTAnnotator
 from annotations.stims import ComplexTextStim, AudioStim
 from annotations.io import TimelineExporter
+from annotations.annotators import get_annotator
 
 
 class TestAnnotations(TestCase):
@@ -30,3 +31,7 @@ class TestAnnotations(TestCase):
         timeline = stim.annotate([ann])
         df = timeline.to_df('long')
         self.assertEquals(df.shape, (1671, 4))
+
+    def test_get_annotator_by_name(self):
+        tda = get_annotator('textDictionaryAnNotaTor')
+        assert isinstance(tda, TextDictionaryAnnotator)
