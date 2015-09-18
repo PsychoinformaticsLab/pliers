@@ -33,5 +33,5 @@ class TestAnnotations(TestCase):
         self.assertEquals(df.shape, (1671, 4))
 
     def test_get_annotator_by_name(self):
-        tda = get_annotator('textDictionaryAnNotaTor')
-        assert isinstance(tda, TextDictionaryAnnotator)
+        tda = get_annotator('stFtaNnotaTor')
+        self.assertTrue(isinstance(tda, STFTAnnotator))
