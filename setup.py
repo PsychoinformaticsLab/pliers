@@ -22,6 +22,7 @@ setup(
     author='Tal Yarkoni',
     author_email='tyarkoni@gmail.com',
     url='http://github.com/tyarkoni/annotations',
+    install_requires=['numpy', 'scipy', 'pandas', 'six'],
     packages=["annotations"],
     package_data={'annotations': ['data/*'],
                   'annotations.tests': ['data/*']
