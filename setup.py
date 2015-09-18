@@ -1,7 +1,6 @@
-import os
 import sys
 from setuptools import setup
-from annotations.version import __version__
+from featurex.version import __version__
 
 if len(set(('test', 'easy_install')).intersection(sys.argv)) > 0:
     import setuptools
@@ -16,18 +15,18 @@ if 'setuptools' in sys.modules:
     )
 
 setup(
-    name="annotations",
+    name="featurex",
     version=__version__,
-    description="Multimodal stimulus annotation in Python",
+    description="Multimodal feature extraction in Python",
     author='Tal Yarkoni',
     author_email='tyarkoni@gmail.com',
-    url='http://github.com/tyarkoni/annotations',
+    url='http://github.com/tyarkoni/featurex',
     install_requires=['numpy', 'scipy', 'pandas', 'six', 'python-magic'],
-    packages=["annotations"],
-    package_data={'annotations': ['data/*'],
-                  'annotations.tests': ['data/*']
+    packages=["featurex"],
+    package_data={'featurex': ['data/*'],
+                  'featurex.tests': ['data/*']
                   },
-    # download_url='https://github.com/tyarkoni/annotations/archive/%s.tar.gz' %
+    # download_url='https://github.com/tyarkoni/featurex/archive/%s.tar.gz' %
     # __version__,
     **extra_setuptools_args
 )
