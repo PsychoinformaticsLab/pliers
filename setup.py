@@ -1,19 +1,14 @@
-import sys
-from setuptools import setup
 from featurex.version import __version__
+from setuptools import setup, find_packages
 
-if len(set(('test', 'easy_install')).intersection(sys.argv)) > 0:
-    import setuptools
+extra_setuptools_args = dict(
+    tests_require=['nose'],
+    test_suite='nose.collector',
+    extras_require=dict(
+        test='nose>=0.10.1')
+)
 
-extra_setuptools_args = {}
-if 'setuptools' in sys.modules:
-    extra_setuptools_args = dict(
-        tests_require=['nose'],
-        test_suite='nose.collector',
-        extras_require=dict(
-            test='nose>=0.10.1')
-    )
-
+print(find_packages())
 setup(
     name="featurex",
     version=__version__,
@@ -22,7 +17,7 @@ setup(
     author_email='tyarkoni@gmail.com',
     url='http://github.com/tyarkoni/featurex',
     install_requires=['numpy', 'scipy', 'pandas', 'six', 'python-magic'],
-    packages=["featurex", "featurex.tests"],
+    packages=find_packages(),
     package_data={'featurex': ['data/*'],
                   'featurex.tests': ['data/*/*']
                   },
