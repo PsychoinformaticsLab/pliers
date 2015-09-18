@@ -18,12 +18,12 @@ env:
 install: 
     - source ci/install.sh
 
-# before_script:
-#     - find . -name "*.pyc" | xargs rm -f
-#     - find . -name "*.so" | xargs rm -f
-#     - find . -name "*.pyd" | xargs rm -f
-#     - rm -rf build
-#     - rm -f tags
+before_script:
+    - find . -name "*.pyc" | xargs rm -f
+    - find . -name "*.so" | xargs rm -f
+    - find . -name "*.pyd" | xargs rm -f
+    - rm -rf build
+    - rm -f tags
 
 script:
     - python ci/show-python-package-versions.py

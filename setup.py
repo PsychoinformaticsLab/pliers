@@ -22,7 +22,7 @@ setup(
     author_email='tyarkoni@gmail.com',
     url='http://github.com/tyarkoni/featurex',
     install_requires=['numpy', 'scipy', 'pandas', 'six', 'python-magic'],
-    packages=["featurex"],
+    packages=["featurex", "featurex.tests"],
     package_data={'featurex': ['data/*'],
                   'featurex.tests': ['data/*']
                   },

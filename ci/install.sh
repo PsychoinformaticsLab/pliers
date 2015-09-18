@@ -15,15 +15,6 @@ set -e
 export CC=gcc
 export CXX=g++
 
-create_new_venv() {
-    # At the time of writing numpy 1.9.1 is included in the travis
-    # virtualenv but we want to be in control of the numpy version
-    # we are using for example through apt-get install
-    deactivate
-    virtualenv --system-site-packages testvenv
-    source testvenv/bin/activate
-    pip install nose
-}
 
 print_conda_requirements() {
     # Echo a conda requirement string for example
@@ -33,7 +24,7 @@ print_conda_requirements() {
     # if yes which version to install. For example:
     #   - for numpy, NUMPY_VERSION is used
     #   - for scikit-learn, SCIKIT_LEARN_VERSION is used
-    TO_INSTALL_ALWAYS="pip nose six"
+    TO_INSTALL_ALWAYS="nose six"
     REQUIREMENTS="$TO_INSTALL_ALWAYS"
     TO_INSTALL_MAYBE="python numpy scipy pandas opencv"
     for PACKAGE in $TO_INSTALL_MAYBE; do
@@ -71,15 +62,9 @@ create_new_conda_env() {
     REQUIREMENTS=$(print_conda_requirements)
     echo "conda requirements string: $REQUIREMENTS"
     conda create -n testenv --yes $REQUIREMENTS
+    conda install --yes -n testenv pip
     source activate testenv
-
-    if [[ "$INSTALL_MKL" == "true" ]]; then
-        # Make sure that MKL is used
-        conda install --yes mkl
-    else
-        # Make sure that MKL is not used
-        conda remove --yes --features mkl || echo "MKL not installed"
-    fi
+    pip install python-magic
 }
 
 if [[ "$DISTRIB" == "conda" ]]; then
@@ -93,6 +78,4 @@ if [[ "$COVERAGE" == "true" ]]; then
     pip install coverage coveralls
 fi
 
-# Install any packages we need from PyPI
-pip install python-magic
 python setup.py install
