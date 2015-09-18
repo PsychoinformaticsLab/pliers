@@ -1,11 +1,11 @@
 from unittest import TestCase
 from .utils import _get_test_data_path
-from annotations.stims import (VideoStim, VideoFrameStim, ComplexTextStim,
+from featurex.stims import (VideoStim, VideoFrameStim, ComplexTextStim,
                                AudioStim)
-from annotations.annotators import Annotator
-from annotations.stims import Stim
-from annotations.core import Note
-from annotations.core import Event
+from featurex.extractors import Extractor
+from featurex.stims import Stim
+from featurex.core import Note
+from featurex.core import Event
 import numpy as np
 from os.path import join
 
@@ -15,14 +15,14 @@ class TestStims(TestCase):
     @classmethod
     def setUpClass(self):
 
-        class DummyAnnotator(Annotator):
+        class DummyExtractor(Extractor):
 
             target = Stim
 
             def apply(self, stim):
                 return Note(stim, self, {'constant': 1})
 
-        class DummyIterableAnnotator(Annotator):
+        class DummyIterableExtractor(Extractor):
 
             target = Stim
 
@@ -35,8 +35,8 @@ class TestStims(TestCase):
                     ev.add_note(Note(stim, self, {'second': i}))
                 return events
 
-        self.dummy_annotator = DummyAnnotator()
-        self.dummy_iter_annotator = DummyIterableAnnotator()
+        self.dummy_extractor = DummyExtractor()
+        self.dummy_iter_extractor = DummyIterableExtractor()
 
     def test_video_stim(self):
         ''' Test VideoStim functionality. '''
@@ -59,7 +59,7 @@ class TestStims(TestCase):
         stim = AudioStim(join(audio_dir, 'barber.wav'))
         self.assertEquals(round(stim.duration), 57)
         self.assertEquals(stim.sampling_rate, 11025)
-        stim.annotate([self.dummy_iter_annotator])
+        stim.extract([self.dummy_iter_extractor])
 
     def test_complex_text_stim(self):
         text_dir = join(_get_test_data_path(), 'text')

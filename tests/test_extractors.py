@@ -1,37 +1,37 @@
 from unittest import TestCase
 from os.path import join
 from .utils import _get_test_data_path
-from annotations.annotators.text import TextDictionaryAnnotator
-from annotations.annotators.audio import STFTAnnotator
-from annotations.stims import ComplexTextStim, AudioStim
-from annotations.io import TimelineExporter
-from annotations.annotators import get_annotator
+from featurex.extractors.text import TextDictionaryExtractor
+from featurex.extractors.audio import STFTExtractor
+from featurex.stims import ComplexTextStim, AudioStim
+from featurex.io import TimelineExporter
+from featurex.extractors import get_extractor
 
 
-class TestAnnotations(TestCase):
+class TestExtractors(TestCase):
 
-    def test_text_annotator(self):
+    def test_text_extractor(self):
         text_dir = join(_get_test_data_path(), 'text')
         stim = ComplexTextStim(join(text_dir, 'sample_text.txt'),
                                columns='to', default_duration=1)
-        td = TextDictionaryAnnotator(join(text_dir,
+        td = TextDictionaryExtractor(join(text_dir,
                                           'test_lexical_dictionary.txt'),
                                      variables=['length', 'frequency'])
         self.assertEquals(td.data.shape, (7, 2))
-        timeline = stim.annotate([td])
+        timeline = stim.extract([td])
         df = TimelineExporter.timeline_to_df(timeline)
         self.assertEquals(df.shape, (12, 4))
         self.assertEquals(df.iloc[9, 3], 10.6)
 
-    def test_stft_annotator(self):
+    def test_stft_extractor(self):
         audio_dir = join(_get_test_data_path(), 'audio')
         stim = AudioStim(join(audio_dir, 'barber.wav'))
-        ann = STFTAnnotator(frame_size=1., spectrogram=False,
+        ext = STFTExtractor(frame_size=1., spectrogram=False,
                             bins=[(100, 300), (300, 3000), (3000, 20000)])
-        timeline = stim.annotate([ann])
+        timeline = stim.extract([ext])
         df = timeline.to_df('long')
         self.assertEquals(df.shape, (1671, 4))
 
-    def test_get_annotator_by_name(self):
-        tda = get_annotator('stFtaNnotaTor')
-        self.assertTrue(isinstance(tda, STFTAnnotator))
+    def test_get_extractor_by_name(self):
+        tda = get_extractor('stFteXtrActOr')
+        self.assertTrue(isinstance(tda, STFTExtractor))

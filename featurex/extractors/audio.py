@@ -1,17 +1,17 @@
-from annotations import stims
-from annotations.annotators import Annotator
+from featurex import stims
+from featurex.extractors import Extractor
 import numpy as np
 from scipy import fft
-from annotations.core import Note, Event
+from featurex.core import Note, Event
 
 
-class AudioAnnotator(Annotator):
+class AudioExtractor(Extractor):
 
     target = stims.AudioStim
 
 
-class STFTAnnotator(AudioAnnotator):
-    ''' Short-time Fourier Transform annotator. '''
+class STFTExtractor(AudioExtractor):
+    ''' Short-time Fourier Transform extractor. '''
     def __init__(self, frame_size=0.5, hop_size=0.1, bins=5,
                  spectrogram=False):
         self.frame_size = frame_size

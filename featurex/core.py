@@ -2,11 +2,11 @@ from collections import OrderedDict
 
 
 class Note(object):
-    ''' The smallest unit of annotation. Binds a Stim and Annotator to one or
-    more extracted values.
+    ''' The smallest unit of feature annotation. Binds a Stim and Extractor to
+    one or more extracted values.
     Args:
-        stim (Stim): The Stimulus associated with the annotated value.
-        annotator (Annotator): The Annotator that produced the value.
+        stim (Stim): The Stimulus associated with the extracted value.
+        extractor (Extractor): The Extractor that produced the value.
         data (dict): The value(s) to register, where the dict keys are the
             feature names and the values are the values associated with those
             features.
@@ -16,10 +16,10 @@ class Note(object):
         information. To track temporal context, they must be attached to
         Events.
     '''
-    def __init__(self, stim, annotator, data, description=None):
+    def __init__(self, stim, extractor, data, description=None):
 
         self.stim = stim
-        self.annotator = annotator
+        self.extractor = extractor
         self.data = data
         self.description = description
 

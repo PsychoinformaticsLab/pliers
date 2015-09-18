@@ -1,9 +1,9 @@
 from abc import ABCMeta, abstractproperty, abstractmethod
 
 
-class Annotator(object):
+class Extractor(object):
 
-    ''' Base Annotator class. '''
+    ''' Base Extractor class. '''
 
     def __init__(self, name=None):
         if name is None:
@@ -21,16 +21,16 @@ class Annotator(object):
         pass
 
 
-def get_annotator(name):
-    ''' Scans list of currently available Annotator classes and returns an
+def get_extractor(name):
+    ''' Scans list of currently available Extractor classes and returns an
     instantiation of the first one whose name perfectly matches
     (case-insensitive).
     Args:
-        name (str): The name of the annotator to retrieve. Case-insensitive;
-            e.g., 'stftannotator' or 'CornerDetectionAnnotator'.
+        name (str): The name of the extractor to retrieve. Case-insensitive;
+            e.g., 'stftextractor' or 'CornerDetectionExtractor'.
     '''
 
-    # Recursively get all classes that inherit from Annotator
+    # Recursively get all classes that inherit from Extractor
     def get_subclasses(cls):
         subclasses = []
         for sc in cls.__subclasses__():
@@ -38,8 +38,8 @@ def get_annotator(name):
             subclasses.extend(get_subclasses(sc))
         return subclasses
 
-    annotators = get_subclasses(Annotator)
+    extractors = get_subclasses(Extractor)
 
-    for a in annotators:
+    for a in extractors:
         if a.__name__.lower().split('.')[-1] == name.lower():
             return a()

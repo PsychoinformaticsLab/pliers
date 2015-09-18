@@ -1,16 +1,16 @@
-from annotations import stims
-from annotations.annotators import Annotator
-from annotations.core import Note, Event
+from featurex import stims
+from featurex.extractors import Extractor
+from featurex.core import Note, Event
 import cv2
 import numpy as np
 
 
-class VideoAnnotator(Annotator):
+class VideoExtractor(Extractor):
 
     target = stims.VideoStim
 
 
-class DenseOpticalFlowAnnotator(VideoAnnotator):
+class DenseOpticalFlowExtractor(VideoExtractor):
 
     def __init__(self):
         super(self.__class__, self).__init__()

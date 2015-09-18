@@ -1,15 +1,15 @@
-from annotations import stims
-from annotations.annotators import Annotator
+from featurex import stims
+from featurex.extractors import Extractor
 import cv2
-from annotations.core import Note
+from featurex.core import Note
 
 
-class ImageAnnotator(Annotator):
+class ImageExtractor(Extractor):
 
     target = stims.ImageStim
 
 
-class CornerDetectionAnnotator(ImageAnnotator):
+class CornerDetectionExtractor(ImageExtractor):
 
     def __init__(self):
         super(self.__class__, self).__init__()
@@ -20,7 +20,7 @@ class CornerDetectionAnnotator(ImageAnnotator):
         return Note(img, self, {'corners_detected': kp})
 
 
-class FaceDetectionAnnotator(ImageAnnotator):
+class FaceDetectionExtractor(ImageExtractor):
 
     def __init__(self):
         self.cascade = cv2.CascadeClassifier(

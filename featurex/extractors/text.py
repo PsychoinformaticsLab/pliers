@@ -1,16 +1,16 @@
-from annotations import stims
-from annotations.annotators import Annotator
+from featurex import stims
+from featurex.extractors import Extractor
 import numpy as np
-from annotations.core import Note
+from featurex.core import Note
 import pandas as pd
 
 
-class TextAnnotator(Annotator):
+class TextExtractor(Extractor):
 
     target = stims.TextStim
 
 
-class TextDictionaryAnnotator(TextAnnotator):
+class TextDictionaryExtractor(TextExtractor):
 
     def __init__(self, dictionary, variables=None, missing='nan'):
         self.data = pd.read_csv(dictionary, sep='\t', index_col=0)

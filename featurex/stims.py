@@ -15,7 +15,7 @@ class Stim(object):
     def __init__(self, filename=None):
 
         self.filename = filename
-        self.annotations = []
+        self.features = []
 
 
 class DynamicStim(Stim):
@@ -87,13 +87,13 @@ class VideoStim(DynamicStim):
         for i, f in enumerate(self.frames):
             yield VideoFrameStim(self, i, data=f)
 
-    def annotate(self, annotators, merge_events=True, **kwargs):
+    def extract(self, extractors, merge_events=True, **kwargs):
         period = 1. / self.fps
         timeline = Timeline(period=period)
-        for ann in annotators:
-            # For VideoAnnotators, pass the entire stim
-            if ann.target.__name__ == self.__class__.__name__:
-                events = ann.apply(self, **kwargs)
+        for ext in extractors:
+            # For VideoExtractors, pass the entire stim
+            if ext.target.__name__ == self.__class__.__name__:
+                events = ext.apply(self, **kwargs)
                 for ev in events:
                     timeline.add_event(ev, merge=merge_events)
             # Otherwise, for images, loop over frames
@@ -102,7 +102,7 @@ class VideoStim(DynamicStim):
                 for frame in self:
                     if frame.data is not None:
                         event = Event(onset=c * period)
-                        event.add_note(ann.apply(frame))
+                        event.add_note(ext.apply(frame))
                         timeline.add_event(event, merge=merge_events)
                         c += 1
         return timeline
@@ -120,10 +120,10 @@ class AudioStim(DynamicStim):
     def _extract_duration(self):
         self.duration = len(self.data)*1./self.sampling_rate
 
-    def annotate(self, annotators, merge_events=True):
+    def extract(self, extractors, merge_events=True):
         timeline = Timeline()
-        for ann in annotators:
-            events = ann.apply(self)
+        for ext in extractors:
+            events = ext.apply(self)
             for ev in events:
                 timeline.add_event(ev, merge=merge_events)
         return timeline
@@ -147,18 +147,18 @@ class TranscribedAudioStim(AudioStim):
         self.transcription = transcription
         super(AudioStim, self).__init__(filename)
 
-    def annotate(self, annotators):
+    def extract(self, extractors):
         timeline = Timeline()
-        audio_anns, text_anns = [], []
-        for ann in annotators:
-            if ann.target.__name__ == 'AudioStim':
-                audio_anns.append(ann)
-            elif ann.target.__name__ == 'ComplexTextStim':
-                text_anns.append(ann)
+        audio_exts, text_exts = [], []
+        for ext in extractors:
+            if ext.target.__name__ == 'AudioStim':
+                audio_exts.append(ext)
+            elif ext.target.__name__ == 'ComplexTextStim':
+                text_exts.append(ext)
 
-        audio_tl = super(TranscribedAudioStim, self).annotate(audio_anns)
+        audio_tl = super(TranscribedAudioStim, self).extract(audio_exts)
         timeline.merge(audio_tl)
-        text_tl = self.transcription.annotate(text_anns)
+        text_tl = self.transcription.extract(text_exts)
         timeline.merge(text_tl)
         return timeline
 
@@ -235,17 +235,17 @@ class ComplexTextStim(object):
         for elem in self.elements:
             yield elem
 
-    def annotate(self, annotators, merge_events=True):
+    def extract(self, extractors, merge_events=True):
         timeline = Timeline()
-        for ann in annotators:
-            if ann.target.__name__ == self.__class__.__name__:
-                events = ann.apply(self)
+        for ext in extractors:
+            if ext.target.__name__ == self.__class__.__name__:
+                events = ext.apply(self)
                 for ev in events:
                     timeline.add_event(ev, merge=merge_events)
             else:
                 for elem in self.elements:
                     event = Event(onset=elem.onset)
-                    event.add_note(ann.apply(elem))
+                    event.add_note(ext.apply(elem))
                     timeline.add_event(event, merge=merge_events)
         return timeline
 

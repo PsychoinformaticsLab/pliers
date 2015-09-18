@@ -1,15 +1,15 @@
-from annotations import stims
-from annotations.annotators import Annotator
+from featurex import stims
+from featurex.extractors import Extractor
 import numpy as np
-from annotations.core import Note, Event
+from featurex.core import Note, Event
 import cv2
 
-class ResponseAnnotator(Annotator):
+class ResponseExtractor(Extractor):
 
     pass
 
 
-class VideoResponseAnnotator(ResponseAnnotator):
+class VideoResponseExtractor(ResponseExtractor):
 
     target = stims.VideoStim
 

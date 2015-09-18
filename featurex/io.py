@@ -47,9 +47,9 @@ def load_stims(source, dtype=None):
     return stims
 
 
-def export(annotations, filename=None, format='fsl'):
-    """ Initialize and apply an Exporter once. """
-    pass
+# def export(timelines, filename=None, format='fsl'):
+#     """ Initialize and apply an Exporter once. """
+#     pass
 
 
 class Exporter(object):
