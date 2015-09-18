@@ -2,7 +2,6 @@ from annotations import stims
 from annotations.annotators import Annotator
 import numpy as np
 from scipy import fft
-import matplotlib.pyplot as plt
 from annotations.core import Note, Event
 
 
@@ -31,6 +30,7 @@ class STFTAnnotator(AudioAnnotator):
         X = np.log(X[:, :nyquist_lim])
         X = np.absolute(X)
         if self.spectrogram:
+            import matplotlib.pyplot as plt
             bins = np.fft.fftfreq(framesamp, d=1./stim.sampling_rate)
             bins = bins[:nyquist_lim]
             plt.imshow(X.T, origin='lower', aspect='auto',
