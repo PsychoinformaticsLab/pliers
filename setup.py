@@ -21,7 +21,7 @@ setup(
     package_data={'featurex': ['data/*'],
                   'featurex.tests': ['data/*/*']
                   },
-    # download_url='https://github.com/tyarkoni/featurex/archive/%s.tar.gz' %
-    # __version__,
+    download_url='https://github.com/tyarkoni/featurex/archive/%s.tar.gz' %
+    __version__,
     **extra_setuptools_args
 )

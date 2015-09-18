@@ -9,7 +9,7 @@ A Python package for automated extraction of features from multimodal stimuli.
 ## Dependencies
 
 * Python packages: numpy, pandas, six (see requirements.txt)
-* For image/movie feature extraction, you'll probably OpenCV (installed with Python bindings)
+* For image/movie feature extraction, you'll probably need OpenCV (installed with Python bindings)
 
 ## Quickstart
 
