@@ -80,6 +80,9 @@ create_new_conda_env() {
         # Make sure that MKL is not used
         conda remove --yes --features mkl || echo "MKL not installed"
     fi
+
+    # Install any packages we need from PyPI
+    pip install python-magic
 }
 
 if [[ "$DISTRIB" == "conda" ]]; then
