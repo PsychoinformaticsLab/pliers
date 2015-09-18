@@ -4,6 +4,8 @@ from annotations.stims import VideoStim
 from annotations.annotators.image import FaceDetectionAnnotator
 from annotations.annotators.video import DenseOpticalFlowAnnotator
 from annotations.io import FSLExporter
+from annotations.core import Timeline
+from annotations.lazy import annotate
 from os.path import join
 import tempfile
 import shutil
@@ -24,3 +26,9 @@ class TestCore(TestCase):
         files = glob(join(tmpdir, '*.txt'))
         self.assertEquals(len(files), 2)
         shutil.rmtree(tmpdir)
+
+    def test_lazy_annotation(self):
+        stims = [join(_get_test_data_path(), 'video', 'small.mp4')]
+        annotators = ['denseopticalflowannotator', 'facedetectionannotator']
+        results = annotate(stims, annotators)
+        assert isinstance(results[0], Timeline)

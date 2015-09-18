@@ -8,6 +8,8 @@ from scipy.io import wavfile
 
 class Stim(object):
 
+    ''' Base Stim class. '''
+
     __metaclass__ = ABCMeta
 
     def __init__(self, filename=None):

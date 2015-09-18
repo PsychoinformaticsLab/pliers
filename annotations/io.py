@@ -7,7 +7,7 @@ from abc import ABCMeta, abstractmethod
 import pandas as pd
 
 
-def load(source, dtype=None):
+def load_stims(source, dtype=None):
     """ Load one or more stimuli directly from file, inferring/extracting
     metadata as needed.
     Args:
