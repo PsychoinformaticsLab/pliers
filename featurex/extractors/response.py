@@ -1,8 +1,8 @@
-from featurex import stims
+from featurex import stimuli
 from featurex.extractors import Extractor
-import numpy as np
 from featurex.core import Note, Event
 import cv2
+
 
 class ResponseExtractor(Extractor):
 
@@ -11,7 +11,7 @@ class ResponseExtractor(Extractor):
 
 class VideoResponseExtractor(ResponseExtractor):
 
-    target = stims.VideoStim
+    target = stimuli.video.VideoStim
 
     def apply(self, video):
 

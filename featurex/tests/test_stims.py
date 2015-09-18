@@ -1,9 +1,10 @@
 from unittest import TestCase
 from .utils import _get_test_data_path
-from featurex.stims import (VideoStim, VideoFrameStim, ComplexTextStim,
-                               AudioStim)
+from featurex.stimuli.video import VideoStim, VideoFrameStim
+from featurex.stimuli.text import ComplexTextStim
+from featurex.stimuli.audio import AudioStim
 from featurex.extractors import Extractor
-from featurex.stims import Stim
+from featurex.stimuli import Stim
 from featurex.core import Note
 from featurex.core import Event
 import numpy as np

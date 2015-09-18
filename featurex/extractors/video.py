@@ -1,4 +1,4 @@
-from featurex import stims
+from featurex import stimuli
 from featurex.extractors import Extractor
 from featurex.core import Note, Event
 import cv2
@@ -7,7 +7,7 @@ import numpy as np
 
 class VideoExtractor(Extractor):
 
-    target = stims.VideoStim
+    target = stimuli.video.VideoStim
 
 
 class DenseOpticalFlowExtractor(VideoExtractor):

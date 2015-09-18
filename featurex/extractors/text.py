@@ -1,4 +1,4 @@
-from featurex import stims
+from featurex import stimuli
 from featurex.extractors import Extractor
 import numpy as np
 from featurex.core import Note
@@ -7,7 +7,7 @@ import pandas as pd
 
 class TextExtractor(Extractor):
 
-    target = stims.TextStim
+    target = stimuli.text.TextStim
 
 
 class TextDictionaryExtractor(TextExtractor):

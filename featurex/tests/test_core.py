@@ -1,6 +1,6 @@
 from unittest import TestCase
 from .utils import _get_test_data_path
-from featurex.stims import VideoStim
+from featurex.stimuli.video import VideoStim
 from featurex.extractors.image import FaceDetectionExtractor
 from featurex.extractors.video import DenseOpticalFlowExtractor
 from featurex.io import FSLExporter

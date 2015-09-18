@@ -2,7 +2,9 @@ from six import string_types
 from os.path import exists, isdir, join
 from glob import glob
 import magic
-from .stims import VideoStim, AudioStim, TextStim, ImageStim
+from .stimuli.video import VideoStim, ImageStim
+from .stimuli.audio import AudioStim
+from .stimuli.text import TextStim
 from abc import ABCMeta, abstractmethod
 import pandas as pd
 

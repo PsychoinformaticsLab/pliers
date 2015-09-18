@@ -3,7 +3,8 @@ from os.path import join
 from .utils import _get_test_data_path
 from featurex.extractors.text import TextDictionaryExtractor
 from featurex.extractors.audio import STFTExtractor
-from featurex.stims import ComplexTextStim, AudioStim
+from featurex.stimuli.text import ComplexTextStim
+from featurex.stimuli.audio import AudioStim
 from featurex.io import TimelineExporter
 from featurex.extractors import get_extractor
 
