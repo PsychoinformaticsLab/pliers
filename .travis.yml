@@ -1,0 +1,37 @@
+# Adapted from nilearn
+language: python
+
+virtualenv:
+  system_site_packages: true
+
+env:
+  global:
+    - TEST_RUN_FOLDER="/tmp" # folder where the tests are run from
+    - DEFAULT_TO_LATEST=true # use latest package versions if not explicitly set
+  matrix:
+    - DISTRIB="conda" PYTHON_VERSION="2.7"
+    # OpenCV isn't available through conda for Python 3; we'll need to do some
+    # work to get it to work with travis-ci.
+    # - DISTRIB="conda" PYTHON_VERSION="3.4"
+
+install: 
+    - source ci/install.sh
+
+before_script:
+    - find . -name "*.pyc" | xargs rm -f
+    - find . -name "*.so" | xargs rm -f
+    - find . -name "*.pyd" | xargs rm -f
+    - rm -rf build
+    - rm -f tags
+
+script:
+    - python ci/show-python-package-versions.py
+    - (cd "$TEST_RUN_FOLDER" && nosetests -s featurex)
+
+after_success:
+    # Ignore coveralls failures as the coveralls server is not very reliable
+    # but we don't want travis to report a failure in the github UI just
+    # because the coverage report failed to be published.
+    # coveralls need to be run from the git checkout
+    # so we need to copy the coverage results from TEST_RUN_FOLDER
+    - if [[ "$COVERAGE" == "true" ]]; then cp "$TEST_RUN_FOLDER/.coverage" .; coveralls || echo "failed"; fi
