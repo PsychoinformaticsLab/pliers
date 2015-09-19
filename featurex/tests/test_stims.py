@@ -9,6 +9,7 @@ from featurex.core import Value
 from featurex.core import Event
 import numpy as np
 from os.path import join
+import sys
 
 
 class TestStims(TestCase):
@@ -72,3 +73,30 @@ class TestStims(TestCase):
         stim = ComplexTextStim(join(text_dir, 'complex_stim_with_header.txt'))
         self.assertEquals(len(stim.elements), 4)
         self.assertEquals(stim.elements[2].duration, 0.1)
+
+    def test_complex_stim_from_text(self):
+        textfile = join(_get_test_data_path(), 'text', 'scandal.txt')
+        text = open(textfile).read().strip()
+        # Cache nltk if available
+        try:
+            nltk = __import__('nltk')
+        except:
+            nltk = False
+        # Test with nltk installed
+        if nltk:
+            stim = ComplexTextStim.from_text(text)
+            target = ['To', 'Sherlock', 'Holmes']
+            self.assertEquals([w.text for w in stim.elements[:3]], target)
+            self.assertEquals(len(stim.elements), 228)
+            stim = ComplexTextStim.from_text(text, unit='sent')
+            sys.modules['nltk'] = None
+        # Test without nltk
+        stim = ComplexTextStim.from_text(text)
+        self.assertEquals(len(stim.elements), 208)
+        with self.assertRaises(ImportError):
+            stim = ComplexTextStim.from_text(text, 'sentences')
+        if nltk:
+            sys.modules['nltk'] = nltk  # Restore module
+        # Custom tokenizer
+        stim = ComplexTextStim.from_text(text, tokenizer='(\w+)')
+        self.assertEquals(len(stim.elements), 209)

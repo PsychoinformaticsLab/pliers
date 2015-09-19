@@ -1,6 +1,8 @@
 from featurex.stimuli import Stim
 from featurex.core import Timeline, Event
 import pandas as pd
+from six import string_types
+import re
 
 
 class TextStim(Stim):
@@ -35,7 +37,8 @@ class ComplexTextStim(object):
             'text', 'onset', and 'duration' where available (though only text
             is mandatory). If no header is present in the file, the columns
             argument will be used to infer the indices of the key columns.
-        columns (str): Optional specification of column order. An abbreviated
+        columns (str): Optional specification of column order to use if reading
+            from file (ignored if initializing from text). An abbreviated
             string denoting the column position of text, onset, and duration
             in the file. Use t for text, o for onset, d for duration. For
             example, passing 'ot' indicates that the first column contains
@@ -48,9 +51,14 @@ class ComplexTextStim(object):
             in the input file.
     '''
 
-    def __init__(self, filename, columns='tod', default_duration=None):
+    def __init__(self, filename=None, columns='tod', default_duration=None):
 
         self.elements = []
+
+        if filename is not None:
+            self._from_file(filename, columns, default_duration)
+
+    def _from_file(self, filename, columns, default_duration):
         tod_names = {'t': 'text', 'o': 'onset', 'd': 'duration'}
 
         first_row = open(filename).readline().strip().split('\t')
@@ -91,8 +99,52 @@ class ComplexTextStim(object):
         return timeline
 
     @classmethod
-    def from_text(cls, text, unit='word'):
+    def from_text(cls, text, unit='word', tokenizer=None, language='english'):
         """ Initialize from a single string, by automatically segmenting into
-        individual strings.
+        individual strings. Requires nltk, unless unit == 'word' or an explicit
+        tokenizer is passed.
+        Args:
+            text (str): The text to convert to a ComplexTextStim.
+            unit (str): The unit of segmentation. Either 'word' or 'sentence'.
+            tokenizer: Optional tokenizer to use (will override unit).
+                If a string is passed, it is interpreted as a capturing regex
+                and passed to re.findall(). Otherwise, must be a
+                nltk Tokenizer instance.
+            language (str): The language to use. Only used if tokenizer is
+                None and nltk is installed. Defaults to English.
+        Returns:
+            A ComplexTextStim instance.
         """
-        pass
+
+        if tokenizer is not None:
+            if isinstance(tokenizer, string_types):
+                tokens = re.findall(tokenizer, text)
+            else:
+                tokens = tokenizer.tokenize(text)
+        else:
+            try:
+                import nltk
+                try:
+                    nltk.data.find('punkt.zip')
+                except LookupError:
+                    nltk.download('punkt')
+                if unit == 'word':
+                    tokens = nltk.word_tokenize(text, language)
+                elif unit.startswith('sent'):
+                    tokens = nltk.sent_tokenize(text, language)
+                else:
+                    raise ValueError(
+                        "unit must be either 'word' or 'sentence'")
+            except:
+                if unit != 'word':
+                    raise ImportError("If no tokenizer is passed and nltk is "
+                                      "not installed, unit must be set to "
+                                      " 'word'.")
+                # Could be improved, but should really use nltk anyway
+                patt = "[A-Z\-\']{2,}(?![a-z])|[A-Z\-\'][a-z\-\']+(?=[A-Z])|[\'\w\-]+"
+                tokens = re.findall(patt, text)
+
+        cts = ComplexTextStim()
+        for t in tokens:
+            cts.elements.append(TextStim(t))
+        return cts
