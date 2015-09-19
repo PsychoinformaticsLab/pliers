@@ -1,4 +1,4 @@
-from .stims import Stim
+from .stimuli import Stim
 from .extractors import Extractor, get_extractor
 from .io import load_stims
 
