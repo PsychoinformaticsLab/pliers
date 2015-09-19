@@ -1,7 +1,7 @@
 from unittest import TestCase
 from os.path import join
 from .utils import _get_test_data_path
-from featurex.extractors.text import TextDictionaryExtractor
+from featurex.extractors.text import DictionaryExtractor
 from featurex.extractors.audio import STFTExtractor
 from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.audio import AudioStim
@@ -15,9 +15,8 @@ class TestExtractors(TestCase):
         text_dir = join(_get_test_data_path(), 'text')
         stim = ComplexTextStim(join(text_dir, 'sample_text.txt'),
                                columns='to', default_duration=1)
-        td = TextDictionaryExtractor(join(text_dir,
-                                          'test_lexical_dictionary.txt'),
-                                     variables=['length', 'frequency'])
+        td = DictionaryExtractor(join(text_dir, 'test_lexical_dictionary.txt'),
+                                 variables=['length', 'frequency'])
         self.assertEquals(td.data.shape, (7, 2))
         timeline = stim.extract([td])
         df = TimelineExporter.timeline_to_df(timeline)
