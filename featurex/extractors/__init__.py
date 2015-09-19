@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractproperty, abstractmethod
+from featurex import Value
 
 
 class Extractor(object):
@@ -26,15 +27,16 @@ class StimExtractor(Extractor):
         pass
 
 
-class ExtractorCollection(Extractor):
+class ExtractorCollection(StimExtractor):
 
     def __init__(self, extractors=None):
         if extractors is None:
             extractors = []
-        self.extractors = extractors
+        self.extractors = [get_extractor(s) for s in extractors]
+        super(StimExtractor, self).__init__()
 
-    def apply(self, stim):
-        pass
+    def apply(self, stim, *args, **kwargs):
+        return stim.extract(self.extractors, *args, **kwargs)
 
 
 def get_extractor(name):
@@ -48,8 +50,15 @@ def get_extractor(name):
             'stft' is equivalent to passing 'stftextractor'.
     '''
 
-    if not name.lower().endswith('extractor'):
+    name = name.lower()
+    if not (name.endswith('extractor') or name.endswith('collection')):
         name += 'extractor'
+
+    # Import all submodules so we have a comprehensive list of extractors
+    import audio
+    import image
+    import text
+    import video
 
     # Recursively get all classes that inherit from Extractor
     def get_subclasses(cls):
@@ -59,8 +68,7 @@ def get_extractor(name):
             subclasses.extend(get_subclasses(sc))
         return subclasses
 
-    extractors = get_subclasses(StimExtractor) + get_subclasses(ExtractorCollection)
-
+    extractors = get_subclasses(Extractor)
     for a in extractors:
         if a.__name__.lower().split('.')[-1] == name.lower():
             return a()
