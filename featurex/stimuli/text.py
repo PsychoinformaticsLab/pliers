@@ -1,5 +1,5 @@
 from featurex.stimuli import Stim
-from featurex.core import Timeline, Event
+from featurex.core import Timeline, Event, Value
 import pandas as pd
 from six import string_types
 import re
@@ -9,8 +9,16 @@ class TextStim(Stim):
 
     ''' Any text stimulus. '''
 
-    def __init__(self, text):
+    def __init__(self, filename=None, text=None):
+        if filename is not None:
+            text = open(filename).read()
         self.text = text
+
+    def extract(self, extractors):
+        vals = {}
+        for e in extractors:
+            vals[e.name] = e.apply(self)
+        return Value(self, e, vals)
 
 
 class DynamicTextStim(TextStim):
@@ -21,7 +29,7 @@ class DynamicTextStim(TextStim):
         self.order = order
         self.onset = onset
         self.duration = duration
-        super(DynamicTextStim, self).__init__(text)
+        super(DynamicTextStim, self).__init__(text=text)
 
 
 class ComplexTextStim(object):
@@ -145,5 +153,5 @@ class ComplexTextStim(object):
 
         cts = ComplexTextStim()
         for t in tokens:
-            cts.elements.append(TextStim(t))
+            cts.elements.append(TextStim(text=t))
         return cts
