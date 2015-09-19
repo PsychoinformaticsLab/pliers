@@ -27,8 +27,13 @@ def get_extractor(name):
     (case-insensitive).
     Args:
         name (str): The name of the extractor to retrieve. Case-insensitive;
-            e.g., 'stftextractor' or 'CornerDetectionExtractor'.
+            e.g., 'stftextractor' or 'CornerDetectionExtractor'. For
+            convenience, the 'extractor' suffix can be dropped--i.e., passing
+            'stft' is equivalent to passing 'stftextractor'.
     '''
+
+    if not name.lower().endswith('extractor'):
+        name += 'extractor'
 
     # Recursively get all classes that inherit from Extractor
     def get_subclasses(cls):
@@ -43,3 +48,5 @@ def get_extractor(name):
     for a in extractors:
         if a.__name__.lower().split('.')[-1] == name.lower():
             return a()
+
+    raise KeyError("No extractor named '%s' found." % name)
