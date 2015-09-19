@@ -2,7 +2,7 @@ from featurex import stimuli
 from featurex.extractors import Extractor
 import numpy as np
 from scipy import fft
-from featurex.core import Note, Event
+from featurex.core import Value, Event
 
 
 class AudioExtractor(Extractor):
@@ -56,14 +56,14 @@ class STFTExtractor(AudioExtractor):
 
         for i, tb in enumerate(time_bins):
             ev = Event(onset=tb, duration=self.frame_size)
-            note_data = {}
+            value_data = {}
             for fb in self.freq_bins:
                 label = '%d_%d' % fb
                 start, stop = fb
                 val = data[i, start:stop].mean()
                 if np.isinf(val):
                     val = 0.
-                note_data[label] = val
-            ev.add_note(Note(stim, self, note_data))
+                value_data[label] = val
+            ev.add_value(Value(stim, self, value_data))
             events.append(ev)
         return events

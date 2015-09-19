@@ -1,2 +1,2 @@
 # Import key objects into namespace
-from .core import Note, Event, Timeline
+from .core import Value, Event, Timeline

@@ -1,7 +1,7 @@
 from featurex import stimuli
 from featurex.extractors import Extractor
 import numpy as np
-from featurex.core import Note
+from featurex.core import Value
 import pandas as pd
 
 
@@ -26,4 +26,4 @@ class TextDictionaryExtractor(TextExtractor):
             vals = pd.Series(self.missing, self.variables)
         else:
             vals = self.data.loc[stim.text]
-        return Note(stim, self, vals.to_dict())
+        return Value(stim, self, vals.to_dict())

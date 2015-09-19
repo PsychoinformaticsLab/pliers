@@ -71,28 +71,28 @@ class TimelineExporter(Exporter):
 
     @staticmethod
     def timeline_to_df(timeline, format='long'):
-        ''' Extracts all note data from a timeline and converts it to a
+        ''' Extracts all values from a timeline and converts it to a
         pandas DataFrame.
         Args:
             timeline: the Timeline instance to convert
             format (str): The format of the returned DF. Either 'long'
                 (default) or 'wide'. In long format, each row is a single
-                key/value pair in a single Note). In wide format, each row is
-                a single event, and all note values are represented in columns.
+                key/value pair in a single Value). In wide format, each row is
+                a single event, and all Values are represented in columns.
         Returns: a pandas DataFrame.
         '''
         data = []
         for onset, event in timeline.events.items():
-            for note in event.notes:
-                duration = event.duration or note.stim.duration
+            for value in event.values:
+                duration = event.duration or value.stim.duration
                 if duration is None:
                     raise AttributeError(
                         'Duration information is missing for at least one '
                         'Event. A valid duration attribute must be set in '
                         'either the Event instance, or in the Stim '
-                        'instance associated with every Note in the '
+                        'instance associated with every Value in the '
                         'Event.')
-                for var, value in note.data.items():
+                for var, value in value.data.items():
                     data.append([onset, var, duration, value])
         data = pd.DataFrame(data,
                             columns=['onset', 'name', 'duration', 'amplitude'])

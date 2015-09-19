@@ -1,7 +1,7 @@
 from featurex import stimuli
 from featurex.extractors import Extractor
 import cv2
-from featurex.core import Note
+from featurex.core import Value
 
 
 class ImageExtractor(Extractor):
@@ -17,7 +17,7 @@ class CornerDetectionExtractor(ImageExtractor):
 
     def apply(self, img):
         kp = self.fast.detect(img, None)
-        return Note(img, self, {'corners_detected': kp})
+        return Value(img, self, {'corners_detected': kp})
 
 
 class FaceDetectionExtractor(ImageExtractor):
@@ -44,4 +44,4 @@ class FaceDetectionExtractor(ImageExtractor):
             cv2.imshow('frame', data)
             cv2.waitKey(1)
 
-        return Note(img, self, {'num_faces': len(faces)})
+        return Value(img, self, {'num_faces': len(faces)})

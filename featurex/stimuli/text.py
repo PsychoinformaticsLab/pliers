@@ -86,7 +86,7 @@ class ComplexTextStim(object):
             else:
                 for elem in self.elements:
                     event = Event(onset=elem.onset)
-                    event.add_note(ext.apply(elem))
+                    event.add_value(ext.apply(elem))
                     timeline.add_event(event, merge=merge_events)
         return timeline
 

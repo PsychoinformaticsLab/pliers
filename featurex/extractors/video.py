@@ -1,6 +1,6 @@
 from featurex import stimuli
 from featurex.extractors import Extractor
-from featurex.core import Note, Event
+from featurex.core import Value, Event
 import cv2
 import numpy as np
 
@@ -38,8 +38,8 @@ class DenseOpticalFlowExtractor(VideoExtractor):
             last_frame = img
             total_flow = flow.sum()
 
-            note = Note(video, self, {'total_flow': total_flow})
-            event = Event(onset=f.onset, duration=f.duration, notes=[note])
+            value = Value(video, self, {'total_flow': total_flow})
+            event = Event(onset=f.onset, duration=f.duration, values=[value])
             events.append(event)
 
         return events

@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
 
-class Note(object):
+class Value(object):
     ''' The smallest unit of feature annotation. Binds a Stim and Extractor to
     one or more extracted values.
     Args:
@@ -10,9 +10,9 @@ class Note(object):
         data (dict): The value(s) to register, where the dict keys are the
             feature names and the values are the values associated with those
             features.
-        description (str): Optional description of the Note.
+        description (str): Optional description of the Value.
     Notes:
-        Note instances are atemporal; they have no onset or duration
+        Value instances are atemporal; they have no onset or duration
         information. To track temporal context, they must be attached to
         Events.
     '''
@@ -25,25 +25,25 @@ class Note(object):
 
 
 class Event(object):
-    ''' A container for one or more Notes; typically associated with a
+    ''' A container for one or more Values; typically associated with a
     particular onset and duration.
     Args:
         onset (float): Onset of the Event relative to start of the associated
             stimulus.
-        notes (list): A list of Note instances associated with the Event.
+        values (list): A list of Value instances associated with the Event.
         duration (float): The Duration of the Event.
     '''
-    def __init__(self, onset=None, notes=None, duration=None):
+    def __init__(self, onset=None, values=None, duration=None):
 
         self.onset = onset
-        if notes is None:
-            notes = []
-        self.notes = notes
+        if values is None:
+            values = []
+        self.values = values
         self.duration = duration
 
-    def add_note(self, note):
-        ''' Add a new Note to the Event. '''
-        self.notes.append(note)
+    def add_value(self, value):
+        ''' Add a new Value to the Event. '''
+        self.values.append(value)
 
 
 class Timeline(object):
@@ -56,7 +56,7 @@ class Timeline(object):
             property set, and the onsets will be used to register the Events
             at the appropriate point in the timeline. If a period value is
             passed, any events without an onset will be registered to the
-            timeline based on their index (see Notes).
+            timeline based on their index (see Values).
     Notes:
         For any Event without an existing onset value, the onset will be
         set to equal (period * i), where i is the index of the current event
@@ -98,8 +98,8 @@ class Timeline(object):
             onset (float): The onset/onset at which to insert the Event.
                 If None, the event must have a valid onset property.
             sort (bool): Whether or not to resort events by onset after adding.
-            merge (bool): If True, all notes in the passed event will be merged
-                with any notes in the existing event (with duplicates ignored).
+            merge (bool): If True, all values in the passed event will be merged
+                with any values in the existing event (with duplicates ignored).
                 If False (default), new events will overwrite existing ones.
         '''
         if onset is None:
@@ -111,7 +111,7 @@ class Timeline(object):
                              "attribute.")
 
         if onset in self.events and merge:
-            event.notes = list(set(event.notes + self.events[onset].notes))
+            event.values = list(set(event.values + self.events[onset].values))
 
         self.events[onset] = event
 

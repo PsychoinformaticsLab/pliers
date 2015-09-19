@@ -5,7 +5,7 @@ from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.audio import AudioStim
 from featurex.extractors import Extractor
 from featurex.stimuli import Stim
-from featurex.core import Note
+from featurex.core import Value
 from featurex.core import Event
 import numpy as np
 from os.path import join
@@ -21,7 +21,7 @@ class TestStims(TestCase):
             target = Stim
 
             def apply(self, stim):
-                return Note(stim, self, {'constant': 1})
+                return Value(stim, self, {'constant': 1})
 
         class DummyIterableExtractor(Extractor):
 
@@ -33,7 +33,7 @@ class TestStims(TestCase):
                 time_bins = np.arange(0., stim.duration, 1.)
                 for i, tb in enumerate(time_bins):
                     ev = Event(onset=tb, duration=1000)
-                    ev.add_note(Note(stim, self, {'second': i}))
+                    ev.add_value(Value(stim, self, {'second': i}))
                 return events
 
         self.dummy_extractor = DummyExtractor()

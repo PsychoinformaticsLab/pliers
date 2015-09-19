@@ -1,6 +1,6 @@
 from featurex import stimuli
 from featurex.extractors import Extractor
-from featurex.core import Note, Event
+from featurex.core import Value, Event
 import cv2
 
 
@@ -26,7 +26,7 @@ class VideoResponseExtractor(ResponseExtractor):
             resp = int(key == 32)
             print resp, key
 
-            note = Note(video, self, {'response': resp})
-            event = Event(onset=f.onset, duration=f.duration, notes=[note])
+            value = Value(video, self, {'response': resp})
+            event = Event(onset=f.onset, duration=f.duration, values=[value])
             events.append(event)
         return events

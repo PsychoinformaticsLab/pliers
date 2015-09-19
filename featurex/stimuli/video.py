@@ -73,7 +73,7 @@ class VideoStim(DynamicStim):
                 for frame in self:
                     if frame.data is not None:
                         event = Event(onset=c * period)
-                        event.add_note(ext.apply(frame))
+                        event.add_value(ext.apply(frame))
                         timeline.add_event(event, merge=merge_events)
                         c += 1
         return timeline
