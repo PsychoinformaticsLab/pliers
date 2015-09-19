@@ -1,10 +1,10 @@
 from featurex import stimuli
-from featurex.extractors import Extractor
+from featurex.extractors import StimExtractor
 import cv2
 from featurex.core import Value
 
 
-class ImageExtractor(Extractor):
+class ImageExtractor(StimExtractor):
 
     target = stimuli.video.ImageStim
 

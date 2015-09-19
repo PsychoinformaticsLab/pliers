@@ -1,10 +1,10 @@
 from featurex import stimuli
-from featurex.extractors import Extractor
+from featurex.extractors import StimExtractor
 from featurex.core import Value, Event
 import cv2
 
 
-class ResponseExtractor(Extractor):
+class ResponseExtractor(StimExtractor):
 
     pass
 

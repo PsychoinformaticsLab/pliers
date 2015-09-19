@@ -16,8 +16,24 @@ class Extractor(object):
     def apply(self):
         pass
 
+
+class StimExtractor(Extractor):
+
+    ''' Abstract class for stimulus-specific extractors. Defines a target Stim
+    class that all subclasses must override. '''
     @abstractproperty
     def target(self):
+        pass
+
+
+class ExtractorCollection(Extractor):
+
+    def __init__(self, extractors=None):
+        if extractors is None:
+            extractors = []
+        self.extractors = extractors
+
+    def apply(self, stim):
         pass
 
 
@@ -43,7 +59,7 @@ def get_extractor(name):
             subclasses.extend(get_subclasses(sc))
         return subclasses
 
-    extractors = get_subclasses(Extractor)
+    extractors = get_subclasses(StimExtractor) + get_subclasses(ExtractorCollection)
 
     for a in extractors:
         if a.__name__.lower().split('.')[-1] == name.lower():
