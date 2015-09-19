@@ -1,4 +1,4 @@
-from featurex import stimuli
+from featurex.stimuli import audio
 from featurex.extractors import StimExtractor
 import numpy as np
 from scipy import fft
@@ -7,7 +7,7 @@ from featurex.core import Value, Event
 
 class AudioExtractor(StimExtractor):
 
-    target = stimuli.audio.AudioStim
+    target = audio.AudioStim
 
 
 class STFTExtractor(AudioExtractor):

@@ -1,4 +1,4 @@
-from featurex import stimuli
+from featurex.stimuli import video
 from featurex.extractors import StimExtractor
 import cv2
 from featurex.core import Value
@@ -6,7 +6,7 @@ from featurex.core import Value
 
 class ImageExtractor(StimExtractor):
 
-    target = stimuli.video.ImageStim
+    target = video.ImageStim
 
 
 class CornerDetectionExtractor(ImageExtractor):
