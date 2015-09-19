@@ -37,8 +37,7 @@ class ComplexTextStim(object):
             'text', 'onset', and 'duration' where available (though only text
             is mandatory). If no header is present in the file, the columns
             argument will be used to infer the indices of the key columns.
-        columns (str): Optional specification of column order to use if reading
-            from file (ignored if initializing from text). An abbreviated
+        columns (str): Optional specification of column order. An abbreviated
             string denoting the column position of text, onset, and duration
             in the file. Use t for text, o for onset, d for duration. For
             example, passing 'ot' indicates that the first column contains
