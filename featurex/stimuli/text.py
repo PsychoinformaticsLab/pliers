@@ -8,7 +8,7 @@ import re
 
 class TextStim(Stim):
 
-    ''' Any text stimulus. '''
+    ''' Any simple text stimulus--most commonly a single word. '''
 
     def __init__(self, filename=None, text=None):
         if filename is not None:
@@ -94,6 +94,9 @@ class ComplexTextStim(object):
 
     def extract(self, extractors, merge_events=True):
         timeline = Timeline()
+        # Extractors can either take ComplexTextStim input, in which case we
+        # pass the current instance, or TextStim input, in which case we loop
+        # over all elements.
         for ext in extractors:
             if ext.target.__name__ == self.__class__.__name__:
                 events = ext.apply(self)
@@ -142,25 +145,6 @@ class ComplexTextStim(object):
                         "unit must be either 'word' or 'sentence'")
 
             tokens = tokenize_text(text)
-
-            # try:
-            #     import nltk
-            #     try:
-            #         nltk.data.find('punkt.zip')
-            #     except LookupError:
-            #         nltk.download('punkt')
-            #     if unit == 'word':
-            #         tokens = nltk.word_tokenize(text, language)
-            #     elif unit.startswith('sent'):
-            #         tokens = nltk.sent_tokenize(text, language)
-            #     else:
-            #         raise ValueError(
-            #             "unit must be either 'word' or 'sentence'")
-            # except:
-            #     if unit != 'word':
-            #         raise ImportError("If no tokenizer is passed and nltk is "
-            #                           "not installed, unit must be set to "
-            #                           " 'word'.")
 
         cts = ComplexTextStim()
         for t in tokens:

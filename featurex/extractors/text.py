@@ -1,4 +1,4 @@
-from featurex.stimuli import text
+from featurex.stimuli.text import TextStim, ComplexTextStim
 from featurex.extractors import StimExtractor, ExtractorCollection
 import numpy as np
 from featurex.core import Value
@@ -6,12 +6,21 @@ import pandas as pd
 
 
 class TextExtractor(StimExtractor):
+
     ''' Base Text Extractor class; all subclasses can only be applied to text.
     '''
-    target = text.TextStim
+    target = TextStim
+
+
+class ComplexTextExtractor(StimExtractor):
+    ''' Base ComplexTextStim Extractor class; all subclasses can only be
+    applied to ComplexTextStim instance.
+    '''
+    target = ComplexTextStim
 
 
 class DictionaryExtractor(TextExtractor):
+
     ''' A generic dictionary-based extractor that supports extraction of
     arbitrary features contained in a lookup table.
     Args:
@@ -24,6 +33,7 @@ class DictionaryExtractor(TextExtractor):
         missing: Value to insert if no lookup value is found for a text token.
             Defaults to numpy's NaN.
     '''
+
     def __init__(self, dictionary, variables=None, missing=np.nan):
         self.data = pd.read_csv(dictionary, sep='\t', index_col=0)
         self.variables = variables
@@ -42,6 +52,7 @@ class DictionaryExtractor(TextExtractor):
 
 
 class LengthExtractor(TextExtractor):
+
     ''' Extracts the length of the text in characters. '''
 
     def apply(self, stim):
@@ -49,6 +60,7 @@ class LengthExtractor(TextExtractor):
 
 
 class NumUniqueWordsExtractor(TextExtractor):
+
     ''' Extracts the number of unique words used in the text. '''
 
     def apply(self, stim, tokenizer=None):
@@ -64,8 +76,10 @@ class NumUniqueWordsExtractor(TextExtractor):
 
 
 class BasicStatsExtractorCollection(ExtractorCollection, TextExtractor):
+
     ''' A collection of basic text statistics. Just a prototype; needs work.
     '''
+
     def __init__(self, statistics=None):
 
         all_stats = {'length', 'numuniquewords'}
