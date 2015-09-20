@@ -1,6 +1,5 @@
-from .stimuli import Stim
+from .stimuli import Stim, load_stims
 from .extractors import Extractor, get_extractor
-from .io import load_stims
 
 
 def extract(stims, extractors, format='df'):

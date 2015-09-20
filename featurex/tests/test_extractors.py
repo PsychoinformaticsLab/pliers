@@ -5,7 +5,7 @@ from featurex.extractors.text import DictionaryExtractor
 from featurex.extractors.audio import STFTExtractor
 from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.audio import AudioStim
-from featurex.io import TimelineExporter
+from featurex.export import TimelineExporter
 from featurex.extractors import get_extractor
 
 

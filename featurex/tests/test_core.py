@@ -3,7 +3,7 @@ from .utils import _get_test_data_path
 from featurex.stimuli.video import VideoStim
 from featurex.extractors.image import FaceDetectionExtractor
 from featurex.extractors.video import DenseOpticalFlowExtractor
-from featurex.io import FSLExporter
+from featurex.export import FSLExporter
 from featurex.core import Timeline
 from featurex.lazy import extract
 from os.path import join
@@ -32,3 +32,5 @@ class TestCore(TestCase):
         extractors = ['denseopticalflowextractor', 'facedetectionextractor']
         results = extract(stims, extractors)
         assert isinstance(results[0], Timeline)
+        textfile = join(_get_test_data_path(), 'text', 'scandal.txt')
+        results = extract([textfile], ['basicstatsextractorcollection'])

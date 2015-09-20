@@ -135,5 +135,5 @@ class Timeline(object):
             samples are in rows and features are in columns.
         '''
         # local import to prevent circularity
-        from .io import TimelineExporter
+        from .export import TimelineExporter
         return TimelineExporter.timeline_to_df(self, format)

@@ -1,6 +1,6 @@
 from unittest import TestCase
 from .utils import _get_test_data_path
-from featurex.io import load_stims
+from featurex.stimuli import load_stims
 from os.path import join
 from six import string_types
 
