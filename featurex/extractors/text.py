@@ -16,6 +16,7 @@ class TextExtractor(StimExtractor):
 
 
 class ComplexTextExtractor(StimExtractor):
+
     ''' Base ComplexTextStim Extractor class; all subclasses can only be
     applied to ComplexTextStim instance.
     '''
@@ -59,7 +60,7 @@ class LengthExtractor(TextExtractor):
     ''' Extracts the length of the text in characters. '''
 
     def apply(self, stim):
-        return len(stim.text)
+        return Value(stim, self, {'text_length': len(stim.text)})
 
 
 class NumUniqueWordsExtractor(TextExtractor):
@@ -76,7 +77,8 @@ class NumUniqueWordsExtractor(TextExtractor):
             except:
                 return len(text.split())
         else:
-            return tokenizer.tokenize(text)
+            return Value(stim, self,
+                         {'num_unique_words': tokenizer.tokenize(text)})
 
 
 class PartOfSpeechExtractor(ComplexTextExtractor):
