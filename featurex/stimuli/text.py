@@ -104,8 +104,9 @@ class ComplexTextStim(object):
                     timeline.add_event(ev, merge=merge_events)
             else:
                 for elem in self.elements:
-                    event = Event(onset=elem.onset)
-                    event.add_value(ext.apply(elem))
+                    # If no onset is available, index with order
+                    onset = elem.onset or elem.order
+                    event = Event(onset=onset, values=[ext.apply(elem)])
                     timeline.add_event(event, merge=merge_events)
         return timeline
 
@@ -147,6 +148,7 @@ class ComplexTextStim(object):
             tokens = tokenize_text(text)
 
         cts = ComplexTextStim()
-        for t in tokens:
-            cts.elements.append(TextStim(text=t))
+        for i, t in enumerate(tokens):
+            cts.elements.append(DynamicTextStim(text=t, order=i, onset=i,
+                                                duration=1))
         return cts
