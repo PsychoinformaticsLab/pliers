@@ -6,19 +6,21 @@ import numpy as np
 
 
 class VideoExtractor(StimExtractor):
-
+    ''' Base Video Extractor class; all subclasses can only be applied to
+    video. '''
     target = VideoStim
 
 
 class DenseOpticalFlowExtractor(VideoExtractor):
+    ''' Extracts total amount of optical flow between every pair of video
+    frames.
 
-    def __init__(self):
-        super(self.__class__, self).__init__()
+    '''
 
-    def apply(self, video, show=False):
+    def apply(self, stim, show=False):
 
         events = []
-        for i, f in enumerate(video):
+        for i, f in enumerate(stim):
 
             img = f.data
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -38,7 +40,7 @@ class DenseOpticalFlowExtractor(VideoExtractor):
             last_frame = img
             total_flow = flow.sum()
 
-            value = Value(video, self, {'total_flow': total_flow})
+            value = Value(stim, self, {'total_flow': total_flow})
             event = Event(onset=f.onset, duration=f.duration, values=[value])
             events.append(event)
 

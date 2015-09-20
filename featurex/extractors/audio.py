@@ -7,11 +7,32 @@ from featurex.core import Value, Event
 
 class AudioExtractor(StimExtractor):
 
+    ''' Base Audio Extractor class; all subclasses can only be applied to
+    audio. '''
     target = audio.AudioStim
 
 
 class STFTExtractor(AudioExtractor):
-    ''' Short-time Fourier Transform extractor. '''
+
+    ''' Short-time Fourier Transform extractor.
+    Args:
+        frame_size (float): The width of the frame/window to apply an FFT to,
+            in seconds.
+        hop_size (float): The step size to increment the window by on each
+            iteration, in seconds (effectively, the sampling rate).
+        bins (list or int): The set of bins or frequency bands to extract
+            power for. If an int is passed, this is the number of bins
+            returned, with each bin spanning an equal range of frequencies.
+            E.g., if bins=5 and the frequency spectrum runs from 0 to 20KHz,
+            each bin will span 4KHz. If a list is passed, each element must be
+            a tuple or list of lower and upper frequency bounds. E.g., passing
+            [(0, 300), (300, 3000)] would compute power in two bands, one
+            between 0 and 300Hz, and one between 300Hz and 3KHz.
+        spectrogram (bool): If True, plots a spectrogram of the results.
+
+    Notes: code adapted from http://stackoverflow.com/questions/2459295/invertible-stft-and-istft-in-python
+    '''
+
     def __init__(self, frame_size=0.5, hop_size=0.1, bins=5,
                  spectrogram=False):
         self.frame_size = frame_size
@@ -19,13 +40,13 @@ class STFTExtractor(AudioExtractor):
         self.spectrogram = spectrogram
         self.freq_bins = bins
 
-    def stft(self, stim):
-        ''' code adapted from http://stackoverflow.com/questions/2459295/invertible-stft-and-istft-in-python '''
+    def _stft(self, stim):
         x = stim.data
         framesamp = int(self.frame_size*stim.sampling_rate)
         hopsamp = int(self.hop_size*stim.sampling_rate)
         w = np.hanning(framesamp)
-        X = np.array([fft(w*x[i:(i+framesamp)]) for i in range(0, len(x)-framesamp, hopsamp)])
+        X = np.array([fft(w*x[i:(i+framesamp)])
+                      for i in range(0, len(x)-framesamp, hopsamp)])
         nyquist_lim = X.shape[1]/2
         X = np.log(X[:, :nyquist_lim])
         X = np.absolute(X)
@@ -43,7 +64,7 @@ class STFTExtractor(AudioExtractor):
         return X
 
     def apply(self, stim):
-        data = self.stft(stim)
+        data = self._stft(stim)
         events = []
         time_bins = np.arange(0., stim.duration-self.frame_size, self.hop_size)
 

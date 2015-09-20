@@ -5,11 +5,14 @@ from featurex.core import Value
 
 
 class ImageExtractor(StimExtractor):
-
+    ''' Base Image Extractor class; all subclasses can only be applied to
+    images. '''
     target = video.ImageStim
 
 
 class CornerDetectionExtractor(ImageExtractor):
+    ''' Wraps OpenCV's FastFeatureDetector; should not be used for anything
+    important yet. '''
 
     def __init__(self):
         super(self.__class__, self).__init__()
@@ -21,7 +24,9 @@ class CornerDetectionExtractor(ImageExtractor):
 
 
 class FaceDetectionExtractor(ImageExtractor):
-
+    ''' Face detection based on OpenCV's CascadeClassifier. This will generally
+    not work well without training, and should not be used for anything
+    important at the moment. '''
     def __init__(self):
         self.cascade = cv2.CascadeClassifier(
             '/Users/tal/Downloads/cascade.xml')

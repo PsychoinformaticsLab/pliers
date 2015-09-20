@@ -6,11 +6,24 @@ import pandas as pd
 
 
 class TextExtractor(StimExtractor):
+    ''' Base Text Extractor class; all subclasses can only be applied to text.
+    '''
     target = text.TextStim
 
 
 class DictionaryExtractor(TextExtractor):
-
+    ''' A generic dictionary-based extractor that supports extraction of
+    arbitrary features contained in a lookup table.
+    Args:
+        dictionary (str): The filename of the dictionary containing the feature
+            values. Format must be tab-delimited, with the first column
+            containing the text key used for lookup. Subsequent columns each
+            represent a single feature that can be used in extraction.
+        variables (list): Optional subset of columns to keep from the
+            dictionary.
+        missing: Value to insert if no lookup value is found for a text token.
+            Defaults to numpy's NaN.
+    '''
     def __init__(self, dictionary, variables=None, missing=np.nan):
         self.data = pd.read_csv(dictionary, sep='\t', index_col=0)
         self.variables = variables
@@ -29,12 +42,14 @@ class DictionaryExtractor(TextExtractor):
 
 
 class LengthExtractor(TextExtractor):
+    ''' Extracts the length of the text in characters. '''
 
     def apply(self, stim):
         return len(stim.text)
 
 
 class NumUniqueWordsExtractor(TextExtractor):
+    ''' Extracts the number of unique words used in the text. '''
 
     def apply(self, stim, tokenizer=None):
         text = stim.text
@@ -49,7 +64,8 @@ class NumUniqueWordsExtractor(TextExtractor):
 
 
 class BasicStatsExtractorCollection(ExtractorCollection, TextExtractor):
-
+    ''' A collection of basic text statistics. Just a prototype; needs work.
+    '''
     def __init__(self, statistics=None):
 
         all_stats = {'length', 'numuniquewords'}
