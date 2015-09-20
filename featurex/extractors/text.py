@@ -1,8 +1,11 @@
 from featurex.stimuli.text import TextStim, ComplexTextStim
 from featurex.extractors import StimExtractor, ExtractorCollection
+from featurex.support.exceptions import FeatureXError
+from featurex.support.decorators import requires_nltk_corpus
 import numpy as np
-from featurex.core import Value
+from featurex.core import Value, Event
 import pandas as pd
+import nltk
 
 
 class TextExtractor(StimExtractor):
@@ -63,6 +66,7 @@ class NumUniqueWordsExtractor(TextExtractor):
 
     ''' Extracts the number of unique words used in the text. '''
 
+    @requires_nltk_corpus
     def apply(self, stim, tokenizer=None):
         text = stim.text
         if tokenizer is None:
@@ -73,6 +77,27 @@ class NumUniqueWordsExtractor(TextExtractor):
                 return len(text.split())
         else:
             return tokenizer.tokenize(text)
+
+
+class PartOfSpeechExtractor(ComplexTextExtractor):
+
+    ''' Tags parts of speech in text with nltk. '''
+
+    @requires_nltk_corpus
+    def apply(self, stim):
+        words = [w.text for w in stim]
+        pos = nltk.pos_tag(words)
+        if len(words) != len(pos):
+            raise FeatureXError(
+                "The number of words in the ComplexTextStim does not match "
+                "the number of tagged words returned by nltk's part-of-speech"
+                " tagger.")
+        events = []
+        for i, w in enumerate(stim):
+            value = Value(stim, self, {'part_of_speech': pos[i][1]})
+            event = Event(onset=w.onset, duration=w.duration, values=[value])
+            events.append(event)
+        return events
 
 
 class BasicStatsExtractorCollection(ExtractorCollection, TextExtractor):

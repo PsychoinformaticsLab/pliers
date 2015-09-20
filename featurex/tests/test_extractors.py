@@ -1,21 +1,22 @@
 from unittest import TestCase
 from os.path import join
 from .utils import _get_test_data_path
-from featurex.extractors.text import DictionaryExtractor
+from featurex.extractors.text import DictionaryExtractor, PartOfSpeechExtractor
 from featurex.extractors.audio import STFTExtractor
 from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.audio import AudioStim
 from featurex.export import TimelineExporter
 from featurex.extractors import get_extractor
 
+TEXT_DIR = join(_get_test_data_path(), 'text')
+
 
 class TestExtractors(TestCase):
 
     def test_text_extractor(self):
-        text_dir = join(_get_test_data_path(), 'text')
-        stim = ComplexTextStim(join(text_dir, 'sample_text.txt'),
+        stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
                                columns='to', default_duration=1)
-        td = DictionaryExtractor(join(text_dir, 'test_lexical_dictionary.txt'),
+        td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
                                  variables=['length', 'frequency'])
         self.assertEquals(td.data.shape, (7, 2))
         timeline = stim.extract([td])
@@ -35,3 +36,9 @@ class TestExtractors(TestCase):
     def test_get_extractor_by_name(self):
         tda = get_extractor('stFteXtrActOr')
         self.assertTrue(isinstance(tda, STFTExtractor))
+
+    def test_part_of_speech_extractor(self):
+        stim = ComplexTextStim(join(TEXT_DIR, 'complex_stim_with_header.txt'))
+        tl = stim.extract([PartOfSpeechExtractor()]).to_df()
+        self.assertEquals(tl.iloc[1, 3], 'NN')
+        self.assertEquals(tl.shape, (4, 4))

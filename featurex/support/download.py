@@ -1,6 +1,6 @@
 import nltk
 
-CORPORA = ['punkt']
+CORPORA = ['punkt', 'maxent_treebank_pos_tagger']
 
 
 def download_nltk_data():
