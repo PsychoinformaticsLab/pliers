@@ -44,7 +44,7 @@ class TimelineExporter(Exporter):
                 for var, value in value.data.items():
                     data.append([onset, var, duration, value])
         data = pd.DataFrame(data,
-                            columns=['onset', 'name', 'duration', 'amplitude'])
+                            columns=['onset', 'name', 'duration', 'value'])
         if format == 'wide':
             data = data.pivot(index='onset', columns='name')
         return data
@@ -52,7 +52,7 @@ class TimelineExporter(Exporter):
 
 class FSLExporter(TimelineExporter):
 
-    ''' Exports a Timeline as tsv files with onset, duration, and amplitude
+    ''' Exports a Timeline as tsv files with onset, duration, and value
     columns. A separate file is created for each variable or 'condition'. '''
 
     def export(self, timeline, path=None):
@@ -67,7 +67,7 @@ class FSLExporter(TimelineExporter):
         results = {}
         for var in data['name'].unique():
             results[var] = data[data['name'] == var][['onset', 'duration',
-                                                      'amplitude']]
+                                                      'value']]
 
         if path is not None:
             if not exists(path) or not isdir(path):
