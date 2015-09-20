@@ -1,5 +1,5 @@
 numpy>=1.8.1
+nltk>=3.0.0
 pandas>=0.14.0
-python-magic
 scipy>=0.13.3
 six

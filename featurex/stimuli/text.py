@@ -1,5 +1,6 @@
 from featurex.stimuli import Stim
 from featurex.core import Timeline, Event, Value
+from featurex.support.decorators import requires_nltk_corpus
 import pandas as pd
 from six import string_types
 import re
@@ -108,17 +109,16 @@ class ComplexTextStim(object):
     @classmethod
     def from_text(cls, text, unit='word', tokenizer=None, language='english'):
         """ Initialize from a single string, by automatically segmenting into
-        individual strings. Requires nltk, unless unit == 'word' or an explicit
-        tokenizer is passed.
-        Args:
+        individual strings. Requires nltk unless tokenizer argument is passed.
             text (str): The text to convert to a ComplexTextStim.
             unit (str): The unit of segmentation. Either 'word' or 'sentence'.
-            tokenizer: Optional tokenizer to use (will override unit).
-                If a string is passed, it is interpreted as a capturing regex
-                and passed to re.findall(). Otherwise, must be a
-                nltk Tokenizer instance.
-            language (str): The language to use. Only used if tokenizer is
-                None and nltk is installed. Defaults to English.
+            tokenizer: Optional tokenizer to use. If passed, will override
+                the default nltk tokenizers. If a string is passed, it is
+                interpreted as a capturing regex and passed to re.findall().
+                Otherwise, must be an object that implements a tokenize()
+                method and returns a list of tokens.
+            language (str): The language to use; passed to nltk. Only used if
+                tokenizer is None. Defaults to English.
         Returns:
             A ComplexTextStim instance.
         """
@@ -129,27 +129,38 @@ class ComplexTextStim(object):
             else:
                 tokens = tokenizer.tokenize(text)
         else:
-            try:
-                import nltk
-                try:
-                    nltk.data.find('punkt.zip')
-                except LookupError:
-                    nltk.download('punkt')
+            import nltk
+
+            @requires_nltk_corpus
+            def tokenize_text(text):
                 if unit == 'word':
-                    tokens = nltk.word_tokenize(text, language)
+                    return nltk.word_tokenize(text, language)
                 elif unit.startswith('sent'):
-                    tokens = nltk.sent_tokenize(text, language)
+                    return nltk.sent_tokenize(text, language)
                 else:
                     raise ValueError(
                         "unit must be either 'word' or 'sentence'")
-            except:
-                if unit != 'word':
-                    raise ImportError("If no tokenizer is passed and nltk is "
-                                      "not installed, unit must be set to "
-                                      " 'word'.")
-                # Could be improved, but should really use nltk anyway
-                patt = "[A-Z\-\']{2,}(?![a-z])|[A-Z\-\'][a-z\-\']+(?=[A-Z])|[\'\w\-]+"
-                tokens = re.findall(patt, text)
+
+            tokens = tokenize_text(text)
+
+            # try:
+            #     import nltk
+            #     try:
+            #         nltk.data.find('punkt.zip')
+            #     except LookupError:
+            #         nltk.download('punkt')
+            #     if unit == 'word':
+            #         tokens = nltk.word_tokenize(text, language)
+            #     elif unit.startswith('sent'):
+            #         tokens = nltk.sent_tokenize(text, language)
+            #     else:
+            #         raise ValueError(
+            #             "unit must be either 'word' or 'sentence'")
+            # except:
+            #     if unit != 'word':
+            #         raise ImportError("If no tokenizer is passed and nltk is "
+            #                           "not installed, unit must be set to "
+            #                           " 'word'.")
 
         cts = ComplexTextStim()
         for t in tokens:
