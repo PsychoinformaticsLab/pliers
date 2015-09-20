@@ -79,7 +79,7 @@ class TestStims(TestCase):
         stim = ComplexTextStim.from_text(text)
         target = ['To', 'Sherlock', 'Holmes']
         self.assertEquals([w.text for w in stim.elements[:3]], target)
-        self.assertEquals(len(stim.elements), 228)
+        self.assertEquals(len(stim.elements), 231)
         stim = ComplexTextStim.from_text(text, unit='sent')
         # Custom tokenizer
         stim = ComplexTextStim.from_text(text, tokenizer='(\w+)')
