@@ -50,3 +50,18 @@ class FaceDetectionExtractor(ImageExtractor):
             cv2.waitKey(1)
 
         return Value(img, self, {'num_faces': len(faces)})
+
+
+class BrightnessExtractor(ImageExtractor):
+    ''' Gets the average luminosity of the pixels in the image '''
+
+    def __init__(self):
+        super(self.__class__, self).__init__()
+
+    def apply(self, img):
+        data = img.data
+        hsv = cv2.cvtColor(data, cv2.COLOR_BGR2HSV)
+        avg_brightness = hsv[:,:,2].mean()
+
+        return Value(img, self, {'avg_brightness': avg_brightness})
+
