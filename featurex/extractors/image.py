@@ -1,6 +1,7 @@
 from featurex.stimuli import video
 from featurex.extractors import StimExtractor
 import cv2
+import numpy as np
 from featurex.core import Value
 
 
@@ -64,4 +65,18 @@ class BrightnessExtractor(ImageExtractor):
         avg_brightness = hsv[:,:,2].mean()
 
         return Value(img, self, {'avg_brightness': avg_brightness})
+
+class SharpnessExtractor(ImageExtractor):
+    ''' Gets the degree of blur/sharpness of the image '''
+    def __init__(self):
+        super(self.__class__, self).__init__()
+
+    def apply(self, img):
+        # Taken from http://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry?lq=1
+        # I don't understand the math behind this
+        data = img.data
+        gray_image = cv2.cvtColor(data, cv2.COLOR_BGR2GRAY) 
+        
+        sharpness = np.max(cv2.convertScaleAbs(cv2.Laplacian(gray_image, 3)))
+        return Value(img, self, {'sharpness': sharpness})
 
