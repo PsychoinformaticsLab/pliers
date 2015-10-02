@@ -5,7 +5,7 @@ import time
 import numpy as np
 from featurex.core import Value
 
-from metamind.api import set_api_key, general_image_classifier
+from metamind.api import set_api_key, general_image_classifier, ClassificationModel
 
 
 class ImageExtractor(StimExtractor):
@@ -83,21 +83,32 @@ class SharpnessExtractor(ImageExtractor):
         sharpness = np.max(cv2.convertScaleAbs(cv2.Laplacian(gray_image, 3)))
         return Value(img, self, {'sharpness': sharpness})
 
-class NaturalFeaturesExtractor(ImageExtractor):
-    ''' Uses the MetaMind API to extract features within the general classifier dataset '''
+class MetamindFeaturesExtractor(ImageExtractor):
+    ''' Uses the MetaMind API to extract features with an existing classifier '''
     def __init__(self):
-        super(self.__class__, self).__init__()
+        ImageExtractor.__init__(self)
         set_api_key('1s8nqbHlFfPf82IrDlGFmz2uEXHlSJ6DveJx7r8Ycoz8ahqBwq')
+        self.classifier = general_image_classifier
 
     def apply(self, img):
         data = img.data
         temp_file = 'temp.jpg'
         cv2.imwrite(temp_file, data)
-        labels = general_image_classifier.predict(temp_file, input_type='files')
+        labels = self.classifier.predict(temp_file, input_type='files')
         top_label = labels[0]['label']
         print top_label
         time.sleep(1.0)
 
         return Value(img, self, {'labels': labels})
 
+class IndoorOutdoorExtractor(MetamindFeaturesExtractor):
+    ''' Classify if the image is indoor or outdoor '''
+    def __init__(self):
+        super(self.__class__, self).__init__()
+        self.classifier = ClassificationModel(id=25463)
 
+class FacialExpressionExtractor(MetamindFeaturesExtractor):
+    ''' Classify if the image for facial expressions '''
+    def __init__(self):
+        super(self.__class__, self).__init__()
+        self.classifier = ClassificationModel(id=30198)
