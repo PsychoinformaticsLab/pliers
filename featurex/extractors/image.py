@@ -1,8 +1,11 @@
 from featurex.stimuli import video
 from featurex.extractors import StimExtractor
 import cv2
+import time
 import numpy as np
 from featurex.core import Value
+
+from metamind.api import set_api_key, general_image_classifier, ClassificationModel
 
 
 class ImageExtractor(StimExtractor):
@@ -73,10 +76,38 @@ class SharpnessExtractor(ImageExtractor):
 
     def apply(self, img):
         # Taken from http://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry?lq=1
-        # I don't understand the math behind this
         data = img.data
         gray_image = cv2.cvtColor(data, cv2.COLOR_BGR2GRAY) 
         
         sharpness = np.max(cv2.convertScaleAbs(cv2.Laplacian(gray_image, 3)))
         return Value(img, self, {'sharpness': sharpness})
 
+class MetamindFeaturesExtractor(ImageExtractor):
+    ''' Uses the MetaMind API to extract features with an existing classifier '''
+    def __init__(self):
+        ImageExtractor.__init__(self)
+        set_api_key('1s8nqbHlFfPf82IrDlGFmz2uEXHlSJ6DveJx7r8Ycoz8ahqBwq')
+        self.classifier = general_image_classifier
+
+    def apply(self, img):
+        data = img.data
+        temp_file = 'temp.jpg'
+        cv2.imwrite(temp_file, data)
+        labels = self.classifier.predict(temp_file, input_type='files')
+        # labels contains a list of JSON objects, one per detected feature
+
+        time.sleep(1.0) # Prevents server error somewhat
+
+        return Value(img, self, {'labels': labels})
+
+class IndoorOutdoorExtractor(MetamindFeaturesExtractor):
+    ''' Classify if the image is indoor or outdoor '''
+    def __init__(self):
+        super(self.__class__, self).__init__()
+        self.classifier = ClassificationModel(id=25463)
+
+class FacialExpressionExtractor(MetamindFeaturesExtractor):
+    ''' Classify the image for facial expression '''
+    def __init__(self):
+        super(self.__class__, self).__init__()
+        self.classifier = ClassificationModel(id=30198)
