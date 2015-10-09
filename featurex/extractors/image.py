@@ -76,7 +76,6 @@ class SharpnessExtractor(ImageExtractor):
 
     def apply(self, img):
         # Taken from http://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry?lq=1
-        # I don't understand the math behind this
         data = img.data
         gray_image = cv2.cvtColor(data, cv2.COLOR_BGR2GRAY) 
         
@@ -95,9 +94,9 @@ class MetamindFeaturesExtractor(ImageExtractor):
         temp_file = 'temp.jpg'
         cv2.imwrite(temp_file, data)
         labels = self.classifier.predict(temp_file, input_type='files')
-        top_label = labels[0]['label']
-        print top_label
-        time.sleep(1.0)
+        # labels contains a list of JSON objects, one per detected feature
+
+        time.sleep(1.0) # Prevents server error somewhat
 
         return Value(img, self, {'labels': labels})
 
@@ -108,7 +107,7 @@ class IndoorOutdoorExtractor(MetamindFeaturesExtractor):
         self.classifier = ClassificationModel(id=25463)
 
 class FacialExpressionExtractor(MetamindFeaturesExtractor):
-    ''' Classify if the image for facial expressions '''
+    ''' Classify the image for facial expression '''
     def __init__(self):
         super(self.__class__, self).__init__()
         self.classifier = ClassificationModel(id=30198)
