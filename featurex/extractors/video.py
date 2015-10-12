@@ -1,8 +1,13 @@
 from featurex.stimuli.video import VideoStim
 from featurex.extractors import StimExtractor
 from featurex.core import Value, Event
-import cv2
 import numpy as np
+
+# Optional dependencies
+try:
+    import cv2
+except ImportError:
+    pass
 
 
 class VideoExtractor(StimExtractor):

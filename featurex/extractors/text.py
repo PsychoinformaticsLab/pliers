@@ -5,8 +5,12 @@ from featurex.support.decorators import requires_nltk_corpus
 import numpy as np
 from featurex.core import Value, Event
 import pandas as pd
-import nltk
 
+# Optional dependencies
+try:
+    import nltk
+except ImportError:
+    pass
 
 class TextExtractor(StimExtractor):
 

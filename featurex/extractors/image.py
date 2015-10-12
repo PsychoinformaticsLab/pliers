@@ -1,11 +1,21 @@
 from featurex.stimuli import video
 from featurex.extractors import StimExtractor
-import cv2
+from featurex.core import Value
 import time
 import numpy as np
-from featurex.core import Value
 
-from metamind.api import set_api_key, general_image_classifier, ClassificationModel
+# Optional dependencies
+try:
+    from metamind.api import set_api_key, general_image_classifier, ClassificationModel
+except ImportError:
+    pass
+
+try:
+    import cv2
+except ImportError:
+    pass
+
+
 
 
 class ImageExtractor(StimExtractor):
