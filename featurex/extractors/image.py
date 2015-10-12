@@ -8,7 +8,7 @@ import os
 
 # Optional dependencies
 try:
-    from metamind.api import set_api_key, general_image_classifier, ClassificationModel
+    from metamind.api import set_api_key, get_api_key, general_image_classifier, ClassificationModel
 except ImportError:
     pass
 
@@ -97,12 +97,28 @@ class SharpnessExtractor(ImageExtractor):
 class MetamindFeaturesExtractor(ImageExtractor):
     ''' Uses the MetaMind API to extract features with an existing classifier.
     Args:
-        api_key (str): A valid key for the MetaMind API.
+        api_key (str): A valid key for the MetaMind API. Only needs to be
+            passed the first time a MetaMindExtractor is initialized.
+        classifier (str, int): The name or ID of the MetaMind classifier to
+            use. If None or 'general', defaults to the general image
+            classifier. Otherwise, must be an integer ID for the desired
+            classifier.
     '''
-    def __init__(self, api_key):
+    def __init__(self, api_key=None, classifier=None):
         ImageExtractor.__init__(self)
-        set_api_key(api_key)
-        self.classifier = general_image_classifier
+        api_key = get_api_key() if api_key is None else api_key
+        if api_key is None:
+            raise ValueError("A valid MetaMind API key must be passed the "
+                             "first time a MetaMind extractor is initialized.")
+        set_api_key(api_key, verbose=False)
+
+        # TODO: Can add a lookup dictionary somewhere that has name --> ID
+        # translation for commonly used classifiers.
+        if classifier is None:
+            self.classifier = general_image_classifier
+        else:
+            self.classifier = ClassificationModel(id=classifier)
+
 
     def apply(self, img):
         data = img.data
@@ -112,15 +128,3 @@ class MetamindFeaturesExtractor(ImageExtractor):
         os.remove(temp_file)
         time.sleep(1.0) # Prevents server error somewhat
         return Value(img, self, {'labels': labels})
-
-class IndoorOutdoorExtractor(MetamindFeaturesExtractor):
-    ''' Classify if the image is indoor or outdoor '''
-    def __init__(self):
-        super(self.__class__, self).__init__()
-        self.classifier = ClassificationModel(id=25463)
-
-class FacialExpressionExtractor(MetamindFeaturesExtractor):
-    ''' Classify the image for facial expression '''
-    def __init__(self):
-        super(self.__class__, self).__init__()
-        self.classifier = ClassificationModel(id=30198)
