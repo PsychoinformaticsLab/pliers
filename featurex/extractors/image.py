@@ -93,10 +93,13 @@ class SharpnessExtractor(ImageExtractor):
         return Value(img, self, {'sharpness': sharpness})
 
 class MetamindFeaturesExtractor(ImageExtractor):
-    ''' Uses the MetaMind API to extract features with an existing classifier '''
-    def __init__(self):
+    ''' Uses the MetaMind API to extract features with an existing classifier.
+    Args:
+        api_key (str): A valid key for the MetaMind API.
+    '''
+    def __init__(self, api_key):
         ImageExtractor.__init__(self)
-        set_api_key('1s8nqbHlFfPf82IrDlGFmz2uEXHlSJ6DveJx7r8Ycoz8ahqBwq')
+        set_api_key(api_key)
         self.classifier = general_image_classifier
 
     def apply(self, img):
@@ -105,7 +108,7 @@ class MetamindFeaturesExtractor(ImageExtractor):
         cv2.imwrite(temp_file, data)
         labels = self.classifier.predict(temp_file, input_type='files')
         # labels contains a list of JSON objects, one per detected feature
-
+ds
         time.sleep(1.0) # Prevents server error somewhat
 
         return Value(img, self, {'labels': labels})
