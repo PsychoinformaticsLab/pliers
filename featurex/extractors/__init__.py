@@ -1,5 +1,4 @@
 from abc import ABCMeta, abstractproperty, abstractmethod
-from featurex import Value
 
 
 class Extractor(object):
@@ -55,10 +54,10 @@ def get_extractor(name):
         name += 'extractor'
 
     # Import all submodules so we have a comprehensive list of extractors
-    import audio
-    import image
-    import text
-    import video
+    from featurex.extractors import audio
+    from featurex.extractors import image
+    from featurex.extractors import text
+    from featurex.extractors import video
 
     # Recursively get all classes that inherit from Extractor
     def get_subclasses(cls):
