@@ -3,6 +3,8 @@ from featurex.extractors import StimExtractor
 from featurex.core import Value
 import time
 import numpy as np
+import tempfile
+import os
 
 # Optional dependencies
 try:
@@ -104,13 +106,11 @@ class MetamindFeaturesExtractor(ImageExtractor):
 
     def apply(self, img):
         data = img.data
-        temp_file = 'temp.jpg'
+        temp_file = tempfile.mktemp()
         cv2.imwrite(temp_file, data)
         labels = self.classifier.predict(temp_file, input_type='files')
-        # labels contains a list of JSON objects, one per detected feature
-ds
+        os.remove(temp_file)
         time.sleep(1.0) # Prevents server error somewhat
-
         return Value(img, self, {'labels': labels})
 
 class IndoorOutdoorExtractor(MetamindFeaturesExtractor):
