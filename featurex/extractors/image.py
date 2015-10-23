@@ -137,4 +137,5 @@ class MetamindFeaturesExtractor(ImageExtractor):
         labels = self.classifier.predict(temp_file, input_type='files')
         os.remove(temp_file)
         time.sleep(1.0)  # Prevents server error somewhat
+
         return Value(img, self, {'labels': labels})
