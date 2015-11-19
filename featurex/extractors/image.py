@@ -80,8 +80,7 @@ class BrightnessExtractor(ImageExtractor):
 
     def apply(self, img):
         data = img.data
-        hsv = cv2.cvtColor(data, cv2.COLOR_BGR2HSV)
-        avg_brightness = hsv[:, :, 2].mean() / 255.0
+        avg_brightness = np.amax(data, 2).mean() / 255.0
 
         return Value(img, self, {'avg_brightness': avg_brightness})
 
@@ -101,6 +100,19 @@ class SharpnessExtractor(ImageExtractor):
 
         sharpness = np.max(cv2.convertScaleAbs(cv2.Laplacian(gray_image, 3))) / 255.0
         return Value(img, self, {'sharpness': sharpness})
+
+
+class VibranceExtractor(ImageExtractor):
+
+    ''' Gets the variance of color channels of the image '''
+
+    def __init__(self):
+        super(self.__class__, self).__init__()
+
+    def apply(self, img):
+        data = img.data
+        avg_color = np.var(data, 2).mean()
+        return Value(img, self, {'avg_color': avg_color})
 
 
 class MetamindFeaturesExtractor(ImageExtractor):
