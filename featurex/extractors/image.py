@@ -80,8 +80,7 @@ class BrightnessExtractor(ImageExtractor):
 
     def apply(self, img):
         data = img.data
-        hsv = cv2.cvtColor(data, cv2.COLOR_BGR2HSV)
-        avg_brightness = hsv[:, :, 2].mean()
+        avg_brightness = np.amax(data, 2).mean() / 255.0
 
         return Value(img, self, {'avg_brightness': avg_brightness})
 
@@ -99,8 +98,21 @@ class SharpnessExtractor(ImageExtractor):
         data = img.data
         gray_image = cv2.cvtColor(data, cv2.COLOR_BGR2GRAY)
 
-        sharpness = np.max(cv2.convertScaleAbs(cv2.Laplacian(gray_image, 3)))
+        sharpness = np.max(cv2.convertScaleAbs(cv2.Laplacian(gray_image, 3))) / 255.0
         return Value(img, self, {'sharpness': sharpness})
+
+
+class VibranceExtractor(ImageExtractor):
+
+    ''' Gets the variance of color channels of the image '''
+
+    def __init__(self):
+        super(self.__class__, self).__init__()
+
+    def apply(self, img):
+        data = img.data
+        avg_color = np.var(data, 2).mean()
+        return Value(img, self, {'avg_color': avg_color})
 
 
 class MetamindFeaturesExtractor(ImageExtractor):
@@ -132,9 +144,10 @@ class MetamindFeaturesExtractor(ImageExtractor):
 
     def apply(self, img):
         data = img.data
-        temp_file = tempfile.mktemp()
+        temp_file = tempfile.mktemp() + '.png'
         cv2.imwrite(temp_file, data)
         labels = self.classifier.predict(temp_file, input_type='files')
         os.remove(temp_file)
         time.sleep(1.0)  # Prevents server error somewhat
+
         return Value(img, self, {'labels': labels})
