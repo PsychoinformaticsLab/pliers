@@ -14,6 +14,11 @@ except ImportError:
     pass
 
 try:
+    from clarifai.client import ClarifaiApi
+except ImportError:
+    pass
+
+try:
     import cv2
 except ImportError:
     pass
@@ -151,3 +156,42 @@ class MetamindFeaturesExtractor(ImageExtractor):
         time.sleep(1.0)  # Prevents server error somewhat
 
         return Value(img, self, {'labels': labels})
+
+
+class ClarifaiFeaturesExtractor(ImageExtractor):
+
+    ''' Uses the Clarifai API to extract tags of images.
+    Args:
+        app_id (str): A valid APP_ID for the Clarifai API. Only needs to be
+            passed the first time the extractor is initialized.
+        app_secret (str): A valid APP_SECRET for the Clarifai API. 
+            Only needs to be passed the first time the extractor is initialized.
+        model (str): The name of the Clarifai model to use. 
+            If None, defaults to the general image tagger. 
+    '''
+
+    def __init__(self, app_id=None, app_secret=None, model=None):
+        ImageExtractor.__init__(self)
+        if app_id is None or app_secret is None:
+            try:
+                app_id = os.environ['CLARIFAI_APP_ID']
+                app_secret = os.environ['CLARIFAI_APP_SECRET']
+            except KeyError:
+                raise ValueError("A valid Clarifai API APP_ID and APP_SECRET"
+                                 "must be passed the first time a Clarifai "
+                                 "extractor is initialized.")
+        os.environ['CLARIFAI_APP_ID'] = app_id
+        os.environ['CLARIFAI_APP_SECRET'] = app_secret
+
+        self.tagger = ClarifaiApi()
+        if not (model is None):
+            self.tagger.set_model(model)
+
+    def apply(self, img):
+        data = img.data
+        temp_file = tempfile.mktemp() + '.png'
+        cv2.imwrite(temp_file, data)
+        tags = self.tagger.tag_images(open(temp_file, 'rb'))
+        os.remove(temp_file)
+
+        return Value(img, self, {'tags': tags})
