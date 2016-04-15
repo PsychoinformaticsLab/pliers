@@ -170,7 +170,7 @@ class ClarifaiFeaturesExtractor(ImageExtractor):
             If None, defaults to the general image tagger. 
     '''
 
-    def __init__(self, app_id=None, app_secret=None, model=None):
+    def __init__(self, app_id=None, app_secret=None, model=None, select_classes=None):
         ImageExtractor.__init__(self)
         if app_id is None or app_secret is None:
             try:
@@ -185,11 +185,13 @@ class ClarifaiFeaturesExtractor(ImageExtractor):
         if not (model is None):
             self.tagger.set_model(model)
 
+        self.select_classes = select_classes
+
     def apply(self, img):
         data = img.data
         temp_file = tempfile.mktemp() + '.png'
         cv2.imwrite(temp_file, data)
-        tags = self.tagger.tag_images(open(temp_file, 'rb'))
+        tags = self.tagger.tag_images(open(temp_file, 'rb'), select_classes=self.select_classes)
         os.remove(temp_file)
 
         return Value(img, self, {'tags': tags})
