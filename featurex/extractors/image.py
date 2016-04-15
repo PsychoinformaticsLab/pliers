@@ -180,10 +180,8 @@ class ClarifaiFeaturesExtractor(ImageExtractor):
                 raise ValueError("A valid Clarifai API APP_ID and APP_SECRET"
                                  "must be passed the first time a Clarifai "
                                  "extractor is initialized.")
-        os.environ['CLARIFAI_APP_ID'] = app_id
-        os.environ['CLARIFAI_APP_SECRET'] = app_secret
 
-        self.tagger = ClarifaiApi()
+        self.tagger = ClarifaiApi(app_id=app_id, app_secret=app_secret)
         if not (model is None):
             self.tagger.set_model(model)
 
