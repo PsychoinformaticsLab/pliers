@@ -5,6 +5,7 @@ from featurex.support.decorators import requires_nltk_corpus
 import numpy as np
 from featurex.core import Value, Event
 import pandas as pd
+from six import string_types
 
 # Optional dependencies
 try:
@@ -32,8 +33,9 @@ class DictionaryExtractor(TextExtractor):
     ''' A generic dictionary-based extractor that supports extraction of
     arbitrary features contained in a lookup table.
     Args:
-        dictionary (str): The filename of the dictionary containing the feature
-            values. Format must be tab-delimited, with the first column
+        dictionary (str, DataFrame): The dictionary containing the feature
+            values. Either a string giving the path to the dictionary file,
+            or a pandas DF. Format must be tab-delimited, with the first column
             containing the text key used for lookup. Subsequent columns each
             represent a single feature that can be used in extraction.
         variables (list): Optional subset of columns to keep from the
@@ -43,7 +45,9 @@ class DictionaryExtractor(TextExtractor):
     '''
 
     def __init__(self, dictionary, variables=None, missing=np.nan):
-        self.data = pd.read_csv(dictionary, sep='\t', index_col=0)
+        if isinstance(dictionary, string_types):
+            dictionary = pd.read_csv(dictionary, sep='\t', index_col=0)
+        self.data = dictionary
         self.variables = variables
         if variables is not None:
             self.data = self.data[variables]
