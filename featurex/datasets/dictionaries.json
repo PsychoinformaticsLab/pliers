@@ -1,0 +1,34 @@
+{
+    "affect": {
+        "title": "Affective ratings for nearly 14 thousand English words",
+        "description_url": "http://crr.ugent.be/archives/1003",
+        "source": "Warriner, A.B., Kuperman, V., & Brysbaert, M. (2013). Norms of valence, arousal, and dominance for 13,915 English lemmas. Behavior Research Methods, 45, 1191-1207.",
+        "url": "http://crr.ugent.be/papers/Ratings_Warriner_et_al.csv",
+        "license": "http://creativecommons.org/licenses/by-nc-nd/3.0/deed.en_US",
+        "format": "csv",
+        "language": "english",
+        "index": "Word"
+    },
+
+    "aoa": {
+        "title": "Age-of-acquisition (AoA) norms for over 50 thousand English words",
+        "description_url": "http://crr.ugent.be/archives/806",
+        "source": "Kuperman, V., Stadthagen-Gonzalez, H., & Brysbaert, M. (2012). Age-of-acquisition ratings for 30,000 English words. Behavior Research Methods, 44(4), 978-990.",
+        "url": "http://crr.ugent.be/papers/AoA_51715_words.zip",
+        "license": "http://creativecommons.org/licenses/by-nc-nd/3.0/deed.en_US",
+        "rename": {},
+        "format": "xls",
+        "language": "english",
+        "index": "Word"
+    },
+
+    "concreteness": {
+        "title": "Concreteness ratings for 40 thousand English lemmas",
+        "description_url": "http://crr.ugent.be/archives/1330",
+        "source": "Brysbaert, M., Warriner, A.B., & Kuperman, V. (2014). Concreteness ratings for 40 thousand generally known English word lemmas. Behavior Research Methods, 46, 904-911.",
+        "url": "http://crr.ugent.be/papers/Concreteness_ratings_Brysbaert_et_al_BRM.txt",
+        "license": "http://creativecommons.org/licenses/by-nc-nd/3.0/deed.en_US",
+        "format": "tsv",
+        "language": "english"
+    }
+}

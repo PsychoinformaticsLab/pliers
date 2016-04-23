@@ -1,10 +1,13 @@
 from featurex.stimuli.text import TextStim, ComplexTextStim
-from featurex.extractors import StimExtractor, ExtractorCollection
+from featurex.extractors import StimExtractor, ExtractorCollection, strict
 from featurex.support.exceptions import FeatureXError
 from featurex.support.decorators import requires_nltk_corpus
+from featurex.datasets.text import fetch_dictionary, datasets
 import numpy as np
 from featurex.core import Value, Event
 import pandas as pd
+from six import string_types
+from collections import defaultdict
 
 # Optional dependencies
 try:
@@ -32,8 +35,9 @@ class DictionaryExtractor(TextExtractor):
     ''' A generic dictionary-based extractor that supports extraction of
     arbitrary features contained in a lookup table.
     Args:
-        dictionary (str): The filename of the dictionary containing the feature
-            values. Format must be tab-delimited, with the first column
+        dictionary (str, DataFrame): The dictionary containing the feature
+            values. Either a string giving the path to the dictionary file,
+            or a pandas DF. Format must be tab-delimited, with the first column
             containing the text key used for lookup. Subsequent columns each
             represent a single feature that can be used in extraction.
         variables (list): Optional subset of columns to keep from the
@@ -43,20 +47,51 @@ class DictionaryExtractor(TextExtractor):
     '''
 
     def __init__(self, dictionary, variables=None, missing=np.nan):
-        self.data = pd.read_csv(dictionary, sep='\t', index_col=0)
+        if isinstance(dictionary, string_types):
+            dictionary = pd.read_csv(dictionary, sep='\t', index_col=0)
+        self.data = dictionary
         self.variables = variables
         if variables is not None:
             self.data = self.data[variables]
         # Set up response when key is missing
         self.missing = missing
-        super(self.__class__, self).__init__()
+        super(DictionaryExtractor, self).__init__()
 
+    @strict
     def apply(self, stim):
         if stim.text not in self.data.index:
             vals = pd.Series(self.missing, self.variables)
         else:
-            vals = self.data.loc[stim.text]
+            vals = self.data.loc[stim.text].fillna(self.missing)
         return Value(stim, self, vals.to_dict())
+
+
+class PredefinedDictionaryExtractor(DictionaryExtractor):
+
+    def __init__(self, variables, missing=np.nan, case_sensitive=True):
+
+        if isinstance(variables, (list, tuple)):
+            _vars = {}
+            for v in variables:
+                v = v.split('/')
+                if v[0] not in _vars:
+                    _vars[v[0]] = []
+                if len(v) == 2:
+                    _vars[v[0]].append(v[1])
+            variables = _vars
+
+        dicts = []
+        for k, v in variables.items():
+            d = fetch_dictionary(k)
+            if not case_sensitive:
+                d.index = d.index.str.lower()
+            if v:
+                d = d[v]
+            d.columns = ['%s_%s' % (k, c) for c in d.columns]
+            dicts.append(d)
+
+        dictionary = pd.concat(dicts, axis=1, join='outer')
+        super(PredefinedDictionaryExtractor, self).__init__(dictionary, missing=missing)
 
 
 class LengthExtractor(TextExtractor):
