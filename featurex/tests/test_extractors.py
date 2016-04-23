@@ -14,6 +14,14 @@ TEXT_DIR = join(_get_test_data_path(), 'text')
 
 class TestExtractors(TestCase):
 
+    def test_check_target_type(self):
+        audio_dir = join(_get_test_data_path(), 'audio')
+        stim = AudioStim(join(audio_dir, 'barber.wav'))
+        td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
+                                 variables=['length', 'frequency'])
+        with self.assertRaises(TypeError):
+            stim.extract([td])
+
     def test_text_extractor(self):
         download_nltk_data()
         stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
