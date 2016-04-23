@@ -1,7 +1,9 @@
 from unittest import TestCase
 from os.path import join
 from .utils import _get_test_data_path
-from featurex.extractors.text import DictionaryExtractor, PartOfSpeechExtractor
+from featurex.extractors.text import (DictionaryExtractor,
+                                      PartOfSpeechExtractor,
+                                      PredefinedDictionaryExtractor)
 from featurex.extractors.audio import STFTExtractor
 from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.audio import AudioStim
@@ -14,6 +16,11 @@ TEXT_DIR = join(_get_test_data_path(), 'text')
 
 class TestExtractors(TestCase):
 
+    @classmethod
+    def setUpClass(self):
+
+        download_nltk_data()
+
     def test_check_target_type(self):
         audio_dir = join(_get_test_data_path(), 'audio')
         stim = AudioStim(join(audio_dir, 'barber.wav'))
@@ -23,7 +30,6 @@ class TestExtractors(TestCase):
             stim.extract([td])
 
     def test_text_extractor(self):
-        download_nltk_data()
         stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
                                columns='to', default_duration=1)
         td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
@@ -33,6 +39,17 @@ class TestExtractors(TestCase):
         df = TimelineExporter.timeline_to_df(timeline)
         self.assertEquals(df.shape, (12, 4))
         self.assertEquals(df.iloc[9, 3], 10.6)
+
+    def test_predefined_dictionary_extractor(self):
+        text = """enormous chunks of ice that have been frozen for thousands of
+                  years are breaking apart and melting away"""
+        stim = ComplexTextStim.from_text(text)
+        td = PredefinedDictionaryExtractor(['aoa/Freq_pm', 'affect/V.Mean.Sum'])
+        timeline = stim.extract([td])
+        df = TimelineExporter.timeline_to_df(timeline)
+        self.assertEqual(df.shape, (36, 4))
+        valid_rows = df.query('name == "affect_V.Mean.Sum"').dropna()
+        self.assertEqual(len(valid_rows), 3)
 
     def test_stft_extractor(self):
         audio_dir = join(_get_test_data_path(), 'audio')

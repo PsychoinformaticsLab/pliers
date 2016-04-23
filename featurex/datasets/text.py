@@ -76,7 +76,7 @@ def fetch_dictionary(name, url=None, format=None, index=0, rename=None,
     '''
     file_path = os.path.join(_get_dictionary_path(), name + '.csv')
     if os.path.exists(file_path):
-        return pd.read_csv(file_path)
+        return pd.read_csv(file_path, index_col=0)
 
     elif name in datasets:
         url = datasets[name]['url']
