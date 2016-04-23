@@ -7,6 +7,7 @@ from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.audio import AudioStim
 from featurex.export import TimelineExporter
 from featurex.extractors import get_extractor
+from featurex.support.download import download_nltk_data
 
 TEXT_DIR = join(_get_test_data_path(), 'text')
 
@@ -14,6 +15,7 @@ TEXT_DIR = join(_get_test_data_path(), 'text')
 class TestExtractors(TestCase):
 
     def test_text_extractor(self):
+        download_nltk_data()
         stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
                                columns='to', default_duration=1)
         td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),

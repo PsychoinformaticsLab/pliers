@@ -7,6 +7,7 @@ from featurex.extractors import Extractor
 from featurex.stimuli import Stim
 from featurex.core import Value
 from featurex.core import Event
+from featurex.support.download import download_nltk_data
 import numpy as np
 from os.path import join
 
@@ -15,6 +16,8 @@ class TestStims(TestCase):
 
     @classmethod
     def setUpClass(self):
+
+        download_nltk_data()
 
         class DummyExtractor(Extractor):
 
