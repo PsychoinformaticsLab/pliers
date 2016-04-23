@@ -6,7 +6,8 @@
         "url": "http://crr.ugent.be/papers/Ratings_Warriner_et_al.csv",
         "license": "http://creativecommons.org/licenses/by-nc-nd/3.0/deed.en_US",
         "format": "csv",
-        "language": "english"
+        "language": "english",
+        "index": "Word"
     },
 
     "aoa": {
@@ -17,7 +18,8 @@
         "license": "http://creativecommons.org/licenses/by-nc-nd/3.0/deed.en_US",
         "rename": {},
         "format": "xls",
-        "language": "english"
+        "language": "english",
+        "index": "Word"
     },
 
     "concreteness": {
