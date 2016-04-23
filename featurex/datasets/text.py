@@ -25,7 +25,7 @@ def _get_dictionary_path():
     return dir_path
 
 
-def _download_dictionary(url, format=None, rename=None, save=None):
+def _download_dictionary(url, format, rename):
 
     tmpdir = tempfile.mkdtemp()
     _file = os.path.join(tmpdir, os.path.basename(url))
@@ -46,13 +46,34 @@ def _download_dictionary(url, format=None, rename=None, save=None):
 
     if rename is not None:
         data = data.rename(columns=rename)
-    if save is not None:
-        file_path = os.path.join(_get_dictionary_path(), save + '.csv')
-        data.to_csv(file_path, index=False, encoding='utf-8')
     return data
 
 
-def fetch_dictionary(name, url=None, format='csv', rename=None):
+def fetch_dictionary(name, url=None, format=None, index=0, rename=None,
+                     save=True):
+    ''' Retrieve a dictionary of text norms from the web or local storage.
+    Args:
+        name (str): The name of the dictionary. If no url is passed, this must
+            match either one of the keys in the predefined dictionary file (see
+            dictionaries.json), or the name assigned to a previous dictionary
+            retrieved from a specific URL.
+        url (str): The URL of dictionary file to retrieve. Optional if name
+            matches an existing dictionary.
+        format (str): One of 'csv', 'tsv', 'xls', or None. Used to read data
+            appropriately. Note that most forms of compression will be detected
+            and handled automatically, so the format string refers only to the
+            format of the decompressed file. When format is None, the format
+            will be inferred from the filename.
+        index (str, int): The name or numeric index of the column to used as
+            the dictionary index. Passed directly to pd.ix.
+        rename (dict): An optional dictionary passed to pd.rename(); can be
+            used to rename columns in the loaded dictionary. Note that the
+            locally-saved dictionary will retain the renamed columns.
+        save (bool): Whether or not to save the dictionary locally the first
+            time it is retrieved.
+    Returns: A pandas DataFrame indexed by strings (typically words).
+
+    '''
     file_path = os.path.join(_get_dictionary_path(), name + '.csv')
     if os.path.exists(file_path):
         return pd.read_csv(file_path)
@@ -60,13 +81,19 @@ def fetch_dictionary(name, url=None, format='csv', rename=None):
     elif name in datasets:
         url = datasets[name]['url']
         format = datasets[name].get('format', format)
+        index = datasets[name].get('index', index)
         rename = datasets.get('rename', rename)
 
     if url is None:
         raise ValueError("Dataset '%s' not found in local storage or presets, "
                          "and no download URL provided." % name)
-    return _download_dictionary(url, format=format, rename=rename, save=name)
+    data = _download_dictionary(url, format=format, rename=rename)
 
+    if isinstance(index, int):
+        index = data.columns[index]
+    data = data.set_index(index)
 
-if __name__ == '__main__':
-    print(fetch_dictionary('aoa'))
+    if save:
+        file_path = os.path.join(_get_dictionary_path(), name + '.csv')
+        data.to_csv(file_path, encoding='utf-8')
+    return data
