@@ -1,5 +1,7 @@
-from collections import OrderedDict
-
+from collections import OrderedDict, defaultdict
+import pandas as pd
+import numpy as np
+from copy import deepcopy
 
 class Value(object):
     ''' The smallest unit of feature annotation. Binds a Stim and Extractor to
@@ -127,7 +129,7 @@ class Timeline(object):
             self.add_event(event, merge=True)
             # TODO: handle potential period mismatches
 
-    def to_df(self, format='long'):
+    def to_df(self, format='long', dummy_code=False):
         ''' Return the Timeline as a pandas DataFrame.
         Args:
             format (str): Either 'long' (default) or 'wide'. In 'long' format,
@@ -136,4 +138,43 @@ class Timeline(object):
         '''
         # local import to prevent circularity
         from .export import TimelineExporter
-        return TimelineExporter.timeline_to_df(self, format)
+        return TimelineExporter.timeline_to_df(self, format, dummy_code)
+
+    def dummy_code(self, string_only=True):
+        ''' Returns a copy of the Timeline where all string variables (or all
+        variables if string_only is False) are replaced with dummy-coded binary
+        variables.
+
+        Args:
+            string_only (bool): If True (default), only string values are
+                dummy-coded. If False, all values are replaced.
+
+        Notes: Dummy variables are replaced by concatenating the original
+            variable name with the original value. For example, if a variable
+            is named 'A' and has values 'apple' and 'orange', the new variables
+            will be named 'A_apple', 'A_orange', etc.
+        '''
+        # First pass: make dummies for all unique values of all variables
+        dummies = defaultdict(lambda: defaultdict(dict))
+        values = defaultdict(set)
+        for onset, event in self.events.items():
+            for value in event.values:
+                for var, val in value.data.items():
+                    dummies[var]['%s_%s' % (var, val)] = 0
+                    values[var].add(val)
+        dtypes = { k: pd.Series(list(v)).dtype for k, v in values.items() }
+
+        # Second pass: replace string values with dummies
+        result = deepcopy(self)
+        for onset, event in result.events.items():
+            for value in event.values:
+                new_data = {}
+                for var, val in value.data.items():
+                    if dtypes[var] == np.object or not string_only:
+                        _values = dummies[var].copy()
+                        _values['%s_%s' % (var, val)] = 1
+                        new_data.update(_values)
+                    else:
+                        new_data[var] = val
+                value.data = new_data
+        return result
