@@ -39,6 +39,15 @@ class StimExtractor(Extractor):
 
 class ExtractorCollection(StimExtractor):
 
+    ''' ExtractorCollection class -- essentially just a convenient container
+    for multiple Extractors that allows initialization from extractor names.
+    Args:
+        extractors (list): A list of strings corresponding to the names of the
+            extractors to add to the collection. Must exactly match one or more
+            extractor class names (case-insensitive, 'extractor' suffix
+            optional).
+    '''
+
     def __init__(self, extractors=None):
         if extractors is None:
             extractors = []
