@@ -138,7 +138,7 @@ class Timeline(object):
         '''
         # local import to prevent circularity
         from .export import TimelineExporter
-        return TimelineExporter.timeline_to_df(self, format, dummy_code)
+        return TimelineExporter.timeline_to_df(self, format)
 
     def dummy_code(self, string_only=True):
         ''' Returns a copy of the Timeline where all string variables (or all
@@ -148,6 +148,8 @@ class Timeline(object):
         Args:
             string_only (bool): If True (default), only string values are
                 dummy-coded. If False, all values are replaced.
+
+        Returns: A Timeline.
 
         Notes: Dummy variables are replaced by concatenating the original
             variable name with the original value. For example, if a variable

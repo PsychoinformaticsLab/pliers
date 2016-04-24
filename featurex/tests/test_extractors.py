@@ -66,6 +66,7 @@ class TestExtractors(TestCase):
 
     def test_part_of_speech_extractor(self):
         stim = ComplexTextStim(join(TEXT_DIR, 'complex_stim_with_header.txt'))
-        tl = stim.extract([PartOfSpeechExtractor()]).to_df()
-        self.assertEquals(tl.iloc[1, 3], 'NN')
-        self.assertEquals(tl.shape, (4, 4))
+        tl = stim.extract([PartOfSpeechExtractor()])
+        df = tl.to_df()
+        self.assertEquals(df.iloc[1, 3], 'NN')
+        self.assertEquals(df.shape, (4, 4))
