@@ -1,7 +1,7 @@
 from unittest import TestCase
 from .utils import _get_test_data_path
 from featurex.stimuli.video import VideoStim
-from featurex.extractors.image import FaceDetectionExtractor
+from featurex.extractors.image import VibranceExtractor
 from featurex.export import FSLExporter
 from featurex.core import Timeline, Value, Event
 from featurex.lazy import extract
@@ -16,7 +16,7 @@ class TestCore(TestCase):
         ''' Smoke test of entire pipeline, from stimulus loading to
         event file export. '''
         stim = VideoStim(join(_get_test_data_path(), 'video', 'small.mp4'))
-        extractors = [FaceDetectionExtractor()]
+        extractors = [VibranceExtractor()]
         timeline = stim.extract(extractors, show=False)
         exp = FSLExporter()
         tmpdir = tempfile.mkdtemp()
@@ -27,12 +27,9 @@ class TestCore(TestCase):
         shutil.rmtree(tmpdir)
 
     def test_lazy_extraction(self):
-        stims = [join(_get_test_data_path(), 'video', 'small.mp4')]
-        extractors = ['facedetectionextractor']
-        results = extract(stims, extractors)
-        assert isinstance(results[0], Timeline)
         textfile = join(_get_test_data_path(), 'text', 'scandal.txt')
         results = extract([textfile], ['basicstatsextractorcollection'])
+        self.assertIsInstance(results[0], Value)
 
     def test_dummy_code_timeline(self):
         data = [{'A': 12.0, 'B': 'abc'}, { 'A': 7, 'B': 'def'}, { 'C': 40 }]
