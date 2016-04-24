@@ -10,6 +10,7 @@ from featurex.stimuli.audio import AudioStim
 from featurex.export import TimelineExporter
 from featurex.extractors import get_extractor
 from featurex.support.download import download_nltk_data
+import numpy as np
 
 TEXT_DIR = join(_get_test_data_path(), 'text')
 
@@ -36,9 +37,11 @@ class TestExtractors(TestCase):
                                  variables=['length', 'frequency'])
         self.assertEquals(td.data.shape, (7, 2))
         timeline = stim.extract([td])
-        df = TimelineExporter.timeline_to_df(timeline)
+        df = timeline.to_df()
+        self.assertTrue(np.isnan(df.iloc[0, 3]))
         self.assertEquals(df.shape, (12, 4))
-        self.assertEquals(df.iloc[9, 3], 10.6)
+        target = df.query('name=="frequency" & onset==5')['value'].values
+        self.assertEquals(target, 10.6)
 
     def test_predefined_dictionary_extractor(self):
         text = """enormous chunks of ice that have been frozen for thousands of
