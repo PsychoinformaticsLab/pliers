@@ -19,44 +19,6 @@ except ImportError:
     pass
 
 
-class MetamindAPIExtractor(APIExtractor, ImageExtractor):
-
-    ''' Uses the MetaMind API to extract features with an existing classifier.
-    Args:
-        api_key (str): A valid key for the MetaMind API. Only needs to be
-            passed the first time a MetaMindExtractor is initialized.
-        classifier (str, int): The name or ID of the MetaMind classifier to
-            use. If None or 'general', defaults to the general image
-            classifier. Otherwise, must be an integer ID for the desired
-            classifier.
-    '''
-
-    def __init__(self, api_key=None, classifier=None):
-        ImageExtractor.__init__(self)
-        api_key = get_api_key() if api_key is None else api_key
-        if api_key is None:
-            raise ValueError("A valid MetaMind API key must be passed the "
-                             "first time a MetaMind extractor is initialized.")
-        set_api_key(api_key, verbose=False)
-
-        # TODO: Can add a lookup dictionary somewhere that has name --> ID
-        # translation for commonly used classifiers.
-        if classifier is None:
-            self.classifier = general_image_classifier
-        else:
-            self.classifier = ClassificationModel(id=classifier)
-
-    def apply(self, img):
-        data = img.data
-        temp_file = tempfile.mktemp() + '.png'
-        imsave(temp_file, data)
-        labels = self.classifier.predict(temp_file, input_type='files')
-        os.remove(temp_file)
-        time.sleep(1.0)  # Prevents server error somewhat
-
-        return Value(img, self, {'labels': labels})
-
-
 class ClarifaiAPIExtractor(APIExtractor, ImageExtractor):
 
     ''' Uses the Clarifai API to extract tags of images.
