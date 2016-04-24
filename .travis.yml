@@ -2,18 +2,17 @@
 # Adapted from nilearn
 language: python
 
-virtualenv:
-  system_site_packages: true
-
 env:
   global:
     - TEST_RUN_FOLDER="/tmp" # folder where the tests are run from
     - DEFAULT_TO_LATEST=true # use latest package versions if not explicitly set
   matrix:
     - DISTRIB="conda" PYTHON_VERSION="2.7"
-    # OpenCV isn't available through conda for Python 3; we'll need to do some
-    # work to get it to work with travis-ci.
-    # - DISTRIB="conda" PYTHON_VERSION="3.4"
+    - DISTRIB="conda" PYTHON_VERSION="3.4"
+
+before_install:
+    - sudo apt-get -qq update
+    - sudo apt-get install ffmpeg
 
 install: 
     - source ci/install.sh
