@@ -66,6 +66,7 @@ create_new_conda_env() {
     conda create -n testenv --yes $REQUIREMENTS
     conda install --yes -n testenv pip
     source activate testenv
+    conda install -c https://conda.anaconda.org/menpo opencv3
     pip install python-magic
 }
 
