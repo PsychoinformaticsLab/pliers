@@ -39,10 +39,10 @@ class VideoStim(DynamicStim):
 
     def __init__(self, filename):
         self.clip = cv2.VideoCapture(filename)
-        self.fps = self.clip.get(cv2.cv.CV_CAP_PROP_FPS)
-        self.n_frames = self.clip.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT)
-        self.width = int(self.clip.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
-        self.height = int(self.clip.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+        self.fps = self.clip.get(cv2.CAP_PROP_FPS)
+        self.n_frames = self.clip.get(cv2.CAP_PROP_FRAME_COUNT)
+        self.width = int(self.clip.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.height = int(self.clip.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
         # Read in all frames
         self.frames = []
