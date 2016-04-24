@@ -1,3 +1,7 @@
+'''
+Extractors that operate primarily or exclusively on Video stimuli.
+'''
+
 from featurex.stimuli.video import VideoStim
 from featurex.extractors import StimExtractor
 from featurex.core import Value, Event

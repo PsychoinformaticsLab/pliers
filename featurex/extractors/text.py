@@ -1,3 +1,7 @@
+'''
+Extractors that operate primarily or exclusively on Text stimuli.
+'''
+
 from featurex.stimuli.text import TextStim, ComplexTextStim
 from featurex.extractors import StimExtractor, ExtractorCollection, strict
 from featurex.support.exceptions import FeatureXError

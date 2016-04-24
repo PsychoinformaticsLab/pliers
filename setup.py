@@ -8,7 +8,6 @@ extra_setuptools_args = dict(
         test='nose>=0.10.1')
 )
 
-print(find_packages())
 setup(
     name="featurex",
     version=__version__,
