@@ -1,7 +1,12 @@
 from featurex.stimuli import Stim, DynamicStim
 from featurex.core import Timeline, Event
-import cv2
 import six
+
+# Optional dependencies
+try:
+    import cv2
+except ImportError:
+    pass
 
 
 class ImageStim(Stim):
