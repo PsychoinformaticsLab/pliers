@@ -19,7 +19,7 @@ except ImportError:
     pass
 
 
-class ClarifaiAPIExtractor(APIExtractor, ImageExtractor):
+class ClarifaiAPIExtractor(ImageExtractor):
 
     ''' Uses the Clarifai API to extract tags of images.
     Args:
