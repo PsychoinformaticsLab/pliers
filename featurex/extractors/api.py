@@ -6,6 +6,7 @@ from featurex.extractors.image import ImageExtractor
 from scipy.misc import imsave
 from featurex.core import Value
 import os
+import tempfile
 
 try:
     from metamind.api import (set_api_key, get_api_key,
