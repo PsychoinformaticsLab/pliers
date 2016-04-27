@@ -5,7 +5,9 @@ from featurex.extractors.text import (DictionaryExtractor,
                                       PartOfSpeechExtractor,
                                       PredefinedDictionaryExtractor)
 from featurex.extractors.audio import STFTExtractor
+from featurex.extractors.api import ClarifaiAPIExtractor
 from featurex.stimuli.text import ComplexTextStim
+from featurex.stimuli.video import ImageStim
 from featurex.stimuli.audio import AudioStim
 from featurex.export import TimelineExporter
 from featurex.extractors import get_extractor
@@ -73,3 +75,16 @@ class TestExtractors(TestCase):
         df = tl.to_df()
         self.assertEquals(df.iloc[1, 3], 'NN')
         self.assertEquals(df.shape, (4, 4))
+
+    def test_api_extractor(self):
+        image_dir = join(_get_test_data_path(), 'image')
+        stim = ImageStim(join(image_dir, 'apple.jpg'))
+        ext = ClarifaiAPIExtractor()
+        output = ext.apply(stim).data['tags']
+        # Check success of request
+        self.assertEquals(output['status_code'], 'OK')
+        # Check success of each image tagged
+        for result in output['results']:
+            self.assertEquals(result['status_code'], 'OK')
+            self.assertTrue(result['result']['tag']['classes'])
+        
