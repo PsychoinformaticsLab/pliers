@@ -10,6 +10,7 @@ class AudioStim(DynamicStim):
     ''' An audio clip. For now, only handles wav files. '''
 
     def __init__(self, filename):
+        self.filename = filename
         self.sampling_rate, self.data = wavfile.read(filename)
         self._extract_duration()
         super(AudioStim, self).__init__(filename)
