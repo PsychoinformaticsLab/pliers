@@ -10,12 +10,6 @@ import os
 import tempfile
 
 try:
-    from metamind.api import (set_api_key, get_api_key,
-                              general_image_classifier, ClassificationModel)
-except ImportError:
-    pass
-
-try:
     from clarifai.client import ClarifaiApi
 except ImportError:
     pass
