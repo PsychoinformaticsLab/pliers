@@ -53,12 +53,12 @@ class TestStims(TestCase):
         filename = join(_get_test_data_path(), 'video', 'small.mp4')
         video = VideoStim(filename)
         self.assertEquals(video.fps, 30)
-        self.assertEquals(video.n_frames, 166)
+        self.assertEquals(video.n_frames, 168)
         self.assertEquals(video.width, 560)
 
         # Test frame iterator
         frames = [f for f in video]
-        self.assertEquals(len(frames), 166)
+        self.assertEquals(len(frames), 168)
         f = frames[100]
         self.assertIsInstance(f, VideoFrameStim)
         self.assertIsInstance(f.onset, float)

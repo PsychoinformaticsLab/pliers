@@ -2,12 +2,7 @@ from featurex.stimuli import Stim, DynamicStim
 from featurex.stimuli.image import ImageStim
 from featurex.core import Timeline, Event
 import six
-
-# Optional dependencies
-try:
-    import cv2
-except ImportError:
-    pass
+from moviepy.video.io.VideoFileClip import VideoFileClip
 
 
 class VideoFrameStim(ImageStim):
@@ -27,20 +22,15 @@ class VideoStim(DynamicStim):
     ''' A video. '''
 
     def __init__(self, filename):
-        self.clip = cv2.VideoCapture(filename)
-        self.fps = self.clip.get(cv2.CAP_PROP_FPS)
-        self.n_frames = self.clip.get(cv2.CAP_PROP_FRAME_COUNT)
-        self.width = int(self.clip.get(cv2.CAP_PROP_FRAME_WIDTH))
-        self.height = int(self.clip.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        # Read in all frames
+        self.clip = VideoFileClip(filename)
+        self.fps = self.clip.fps
+        self.width = self.clip.w
+        self.height = self.clip.h
+
         self.frames = []
-        while self.clip.isOpened():
-            ret, frame = self.clip.read()
-            if not ret:
-                break
-            self.frames.append(frame)
-        self.clip.release()
+        self.frames = [f for f in self.clip.iter_frames()]
+        self.n_frames = len(self.frames)
 
         super(VideoStim, self).__init__(filename)
 
