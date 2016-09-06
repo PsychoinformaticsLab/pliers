@@ -1,4 +1,5 @@
 from featurex.stimuli import Stim, DynamicStim
+from featurex.stimuli.image import ImageStim
 from featurex.core import Timeline, Event
 import six
 
@@ -7,18 +8,6 @@ try:
     import cv2
 except ImportError:
     pass
-
-
-class ImageStim(Stim):
-
-    ''' A static image. '''
-
-    def __init__(self, filename=None, data=None, duration=None):
-        if data is None and isinstance(filename, six.string_types):
-            data = cv2.imread(filename)
-        super(ImageStim, self).__init__(filename)
-        self.data = data
-        self.duration = duration
 
 
 class VideoFrameStim(ImageStim):
