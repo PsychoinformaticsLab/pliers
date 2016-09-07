@@ -26,7 +26,7 @@ before_script:
 
 script:
     - python ci/show-python-package-versions.py
-    - (cd "$TEST_RUN_FOLDER" && nosetests -s featurex)
+    - (cd "$TEST_RUN_FOLDER" && py.test --pyargs featurex)
 
 after_success:
     # Ignore coveralls failures as the coveralls server is not very reliable
