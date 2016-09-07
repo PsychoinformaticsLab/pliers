@@ -104,4 +104,5 @@ class TestStims(TestCase):
         df = pd.read_csv(textfile, sep='\t')
         target = df["text"].tolist()
         srt_stim = ComplexTextStim(srtfile)
-        self.assertEquals([sent.text for sent in srt_stim.elements], target)
+        texts = [sent.text.decode('UTF-8') for sent in srt_stim.elements]
+        self.assertEquals(texts, target)
