@@ -5,11 +5,11 @@ from .utils import _get_test_data_path
 from featurex.extractors.text import (DictionaryExtractor,
                                       PartOfSpeechExtractor,
                                       PredefinedDictionaryExtractor)
-from featurex.extractors.audio import STFTExtractor
+from featurex.extractors.audio import STFTExtractor, MeanAmplitudeExtractor
 from featurex.extractors.api import ClarifaiAPIExtractor
 from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.video import ImageStim
-from featurex.stimuli.audio import AudioStim
+from featurex.stimuli.audio import AudioStim, TranscribedAudioStim
 from featurex.export import TimelineExporter
 from featurex.extractors import get_extractor
 from featurex.support.download import download_nltk_data
@@ -65,6 +65,18 @@ class TestExtractors(TestCase):
         timeline = stim.extract([ext])
         df = timeline.to_df('long')
         self.assertEquals(df.shape, (1671, 4))
+    
+    def test_mean_amplitude_extractor(self):
+        audio_dir = join(_get_test_data_path(), 'audio')
+        text_dir = join(_get_test_data_path(), 'text')
+        stim = TranscribedAudioStim(join(audio_dir, "barber_edited.wav"),
+                                    join(text_dir, "wonderful_edited.srt"))
+        ext = MeanAmplitudeExtractor()
+        timeline = stim.extract([ext])
+        targets = [100., 150.]
+        events = timeline.events
+        values = [events[event].values[0].data["mean_amplitude"] for event in events.keys()]
+        self.assertEquals(values, targets)
 
     def test_get_extractor_by_name(self):
         tda = get_extractor('stFteXtrActOr')
