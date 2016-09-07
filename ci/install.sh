@@ -24,7 +24,7 @@ print_conda_requirements() {
     # if yes which version to install. For example:
     #   - for numpy, NUMPY_VERSION is used
     #   - for scikit-learn, SCIKIT_LEARN_VERSION is used
-    TO_INSTALL_ALWAYS="nose six"
+    TO_INSTALL_ALWAYS="pytest six"
     REQUIREMENTS="$TO_INSTALL_ALWAYS"
     TO_INSTALL_MAYBE="python numpy scipy pandas nltk"
     for PACKAGE in $TO_INSTALL_MAYBE; do
@@ -67,7 +67,7 @@ create_new_conda_env() {
     conda install --yes -n testenv pip
     source activate testenv
     conda install -c https://conda.anaconda.org/menpo opencv3
-    pip install python-magic
+    pip install python-magic moviepy
 }
 
 if [[ "$DISTRIB" == "conda" ]]; then
