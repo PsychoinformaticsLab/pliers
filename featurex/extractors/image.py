@@ -9,12 +9,13 @@ import time
 import numpy as np
 import tempfile
 import os
+from warnings import warn
 
 # Optional dependencies
 try:
     import cv2
 except ImportError:
-    pass
+    
 
 
 class ImageExtractor(StimExtractor):

@@ -3,6 +3,7 @@ from .utils import _get_test_data_path
 from featurex.stimuli.video import VideoStim, VideoFrameStim
 from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.audio import AudioStim
+from featurex.stimuli.image import ImageStim
 from featurex.extractors import Extractor
 from featurex.stimuli import Stim
 from featurex.core import Value
@@ -42,17 +43,22 @@ class TestStims(TestCase):
         self.dummy_extractor = DummyExtractor()
         self.dummy_iter_extractor = DummyIterableExtractor()
 
+    def test_image_stim(self):
+        filename = join(_get_test_data_path(), 'image', 'apple.jpg')
+        stim = ImageStim(filename)
+        assert stim.data.shape == (288, 420, 3)
+
     def test_video_stim(self):
         ''' Test VideoStim functionality. '''
         filename = join(_get_test_data_path(), 'video', 'small.mp4')
         video = VideoStim(filename)
         self.assertEquals(video.fps, 30)
-        self.assertEquals(video.n_frames, 166)
+        self.assertEquals(video.n_frames, 168)
         self.assertEquals(video.width, 560)
 
         # Test frame iterator
         frames = [f for f in video]
-        self.assertEquals(len(frames), 166)
+        self.assertEquals(len(frames), 168)
         f = frames[100]
         self.assertIsInstance(f, VideoFrameStim)
         self.assertIsInstance(f.onset, float)
