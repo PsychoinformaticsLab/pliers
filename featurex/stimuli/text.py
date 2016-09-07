@@ -104,13 +104,13 @@ class ComplexTextStim(object):
             duration = self.__to_sec__(end_) - start_time
             
             line = row.text
-            line = line.replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
+            line = line.replace("\r\n", " ").replace("\n", " ").replace("\r", " ").replace("\t", " ")
             line = unicodedata.normalize("NFKD", line).encode("ascii", "ignore")
             list_[i] = [line, start_time, duration]
         
         # Convert to pandas DataFrame
         df = pd.DataFrame(columns=["text", "onset", "duration"], data=list_)
-        
+
         for i, r in df.iterrows():
             elem = DynamicTextStim(r['text'], i, r['onset'], r["duration"])
             self.elements.append(elem)

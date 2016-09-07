@@ -11,6 +11,7 @@ from featurex.core import Event
 from featurex.support.download import download_nltk_data
 import numpy as np
 from os.path import join
+import pandas as pd
 
 
 class TestStims(TestCase):
@@ -93,3 +94,12 @@ class TestStims(TestCase):
         # Custom tokenizer
         stim = ComplexTextStim.from_text(text, tokenizer='(\w+)')
         self.assertEquals(len(stim.elements), 209)
+        
+    def test_complex_stim_from_srt(self):
+        srtfile = join(_get_test_data_path(), 'text', 'wonderful.srt')
+        textfile = join(_get_test_data_path(), 'text', 'wonderful.txt')
+        df = pd.read_csv(textfile, sep='\t')
+        target = df["text"].tolist()
+        srt_stim = ComplexTextStim(srtfile)
+        self.assertEquals([sent.text for sent in srt_stim.elements], target)
+        

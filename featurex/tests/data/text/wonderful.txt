@@ -1,0 +1,21 @@
+text	onset	duration
+I owe everything to George Bailey.	85.21	2.794
+Help him, dear Father.	88.422	1.876
+Joseph, Jesus and Mary,	90.674	3.044
+help my friend Mr. Bailey.	93.802	2.627
+Help my son George tonight.	96.889	2.626
+He never thinks about himself, God.	100.35	1.876
+That's why he's in trouble.	102.311	1.75
+George is a good guy.	104.146	1.167
+Give him a break, God.	106.482	1.25
+I love him, dear Lord.	107.816	2.126
+Watch over him tonight.	110.027	1.876
+Please, God.	112.362	1.334
+Something's the matter with Daddy.	113.781	2.292
+Please bring Daddy back.	116.158	2.293
+Please bring Daddy home.	119.036	1.542
+Watch over him tonight.	120.662	2.21
+Please bring Daddy back.	123.248	2.293
+Hello, Joseph. Trouble?	129.421	2.043
+Looks like we'll have to send someone down.	131.548	2.585
+A lot of people asking for help for a man named George Bailey.	134.218	3.085
