@@ -2,7 +2,7 @@
 import sys
 
 DEPENDENCIES = ['numpy', 'scipy', 'pandas', 'python-magic', 'six', 'requests',
-                'moviepy', 'nltk']
+                'moviepy', 'nltk', 'pytest']
 
 
 def print_package_version(package_name, indent='  '):
