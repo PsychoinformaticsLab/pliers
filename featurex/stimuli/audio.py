@@ -44,13 +44,13 @@ class TranscribedAudioStim(AudioStim):
         if isinstance(transcription, six.string_types):
             transcription = ComplexTextStim(transcription, **kwargs)
         self.transcription = transcription
-        super(AudioStim, self).__init__(filename)
+        super(TranscribedAudioStim, self).__init__(filename)
 
     def extract(self, extractors):
         timeline = Timeline()
         audio_exts, text_exts = [], []
         for ext in extractors:
-            if ext.target.__name__ == 'AudioStim':
+            if ext.target.__name__ in ['AudioStim', 'TranscribedAudioStim']:
                 audio_exts.append(ext)
             elif ext.target.__name__ == 'ComplexTextStim':
                 text_exts.append(ext)
