@@ -4,6 +4,7 @@ Extractors that interact with external (e.g., deep learning) services.
 
 from featurex.extractors.image import ImageExtractor
 from featurex.extractors.audio import AudioExtractor
+from featurex.extractors.text import ComplexTextExtractor
 from scipy.misc import imsave
 from featurex.core import Value
 import os
@@ -19,6 +20,65 @@ try:
 except ImportError:
     pass
 
+try:
+    import indicoio as ico
+except ImportError:
+    pass
+
+class IndicoAPIExtractor(ComplexTextExtractor):
+
+    ''' Uses the Indico API to extract sentiment of text.
+    Args:
+        app_key (str): A valid API key for the Indico API. Only needs to be
+            passed the first time the extractor is initialized.
+        model (str): The name of the Indico model to use.  
+    '''
+
+    def __init__(self, api_key=None, model=None):
+        ComplexTextExtractor.__init__(self)
+        if api_key is None:
+            raise ValueError("A valid Indico API Key "                            
+                             "must be passed the first time an Indico "
+                             "extractor is initialized.")
+        else:
+            self.api_key = api_key
+            ico.config.api_key = self.api_key
+        if model is None:
+            raise ValueError("Must enter a valid model to use of possible type: "
+                             "sentiment, sentiment_hq, emotion.")
+        elif model == 'sentiment':
+            self.model = ico.sentiment
+        elif model == 'sentiment_hq':
+            self.model = ico.sentiment_hq
+        elif model == 'emotion':
+            self.model = ico.emotion
+        elif model == 'text_tages':
+            self.model = ico.text_tags
+        elif model == 'language':
+            self.model = ico.language
+        elif model == 'political':
+            self.model = ico.political
+        elif model == 'keywords':
+            self.model = ico.keywords
+        elif model == 'people':
+            self.model = ico.people
+        elif model == 'places':
+            self.model = ico.places
+        elif model == 'organizations':
+            self.model = ico.organizations
+        elif model == 'twitter_engagement':
+            self.model = ico.twitter_engagement
+        elif model == 'personality':
+            self.model = ico.personality
+        elif model == 'personas':
+            self.model = ico.personas
+        elif model == 'text_features':
+            self.model = ico.text_features
+
+    def apply(self, text):
+        tokens = [token.text for token in text]
+        scores = self.model(tokens)
+        return Value(text, self, {'scores': scores})
 
 class ClarifaiAPIExtractor(ImageExtractor):
 
