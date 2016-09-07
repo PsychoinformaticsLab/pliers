@@ -1,5 +1,6 @@
 from unittest import TestCase
 from os.path import join
+import os
 from .utils import _get_test_data_path
 from featurex.extractors.text import (DictionaryExtractor,
                                       PartOfSpeechExtractor,
@@ -79,12 +80,12 @@ class TestExtractors(TestCase):
     def test_api_extractor(self):
         image_dir = join(_get_test_data_path(), 'image')
         stim = ImageStim(join(image_dir, 'apple.jpg'))
-        ext = ClarifaiAPIExtractor()
-        output = ext.apply(stim).data['tags']
-        # Check success of request
-        self.assertEquals(output['status_code'], 'OK')
-        # Check success of each image tagged
-        for result in output['results']:
-            self.assertEquals(result['status_code'], 'OK')
-            self.assertTrue(result['result']['tag']['classes'])
-        
+        if 'CLARIFAI_APP_ID' in os.environ:
+            ext = ClarifaiAPIExtractor()
+            output = ext.apply(stim).data['tags']
+            # Check success of request
+            self.assertEquals(output['status_code'], 'OK')
+            # Check success of each image tagged
+            for result in output['results']:
+                self.assertEquals(result['status_code'], 'OK')
+                self.assertTrue(result['result']['tag']['classes'])
