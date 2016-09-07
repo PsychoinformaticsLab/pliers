@@ -4,7 +4,6 @@ from featurex.support.decorators import requires_nltk_corpus
 import pandas as pd
 from six import string_types
 import re
-import pysrt
 import unicodedata
 
 
@@ -93,6 +92,8 @@ class ComplexTextStim(object):
             self.elements.append(elem)
 
     def _from_srt(self, filename):
+        import pysrt
+        
         data = pysrt.open(filename)
         list_ = [[] for _ in data]
         for i, row in enumerate(data):
