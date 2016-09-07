@@ -4,6 +4,8 @@ from featurex.support.decorators import requires_nltk_corpus
 import pandas as pd
 from six import string_types
 import re
+import pysrt
+import unicodedata
 
 
 class TextStim(Stim):
@@ -64,7 +66,10 @@ class ComplexTextStim(object):
         self.elements = []
 
         if filename is not None:
-            self._from_file(filename, columns, default_duration)
+            if filename.endswith("srt"):
+                self._from_srt(filename)
+            else:
+                self._from_file(filename, columns, default_duration)
 
     def _from_file(self, filename, columns, default_duration):
         tod_names = {'t': 'text', 'o': 'onset', 'd': 'duration'}
@@ -87,10 +92,41 @@ class ComplexTextStim(object):
                 elem = DynamicTextStim(r['text'], i, r['onset'], duration)
             self.elements.append(elem)
 
+    def _from_srt(self, filename):
+        data = pysrt.open(filename)
+        list_ = [[] for _ in data]
+        for i, row in enumerate(data):
+            start = tuple(row.start)
+            start_time = self.__to_sec__(start)
+            
+            end_ = tuple(row.end)
+            duration = self.__to_sec__(end_) - start_time
+            
+            line = row.text
+            line = line.replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
+            line = unicodedata.normalize("NFKD", line).encode("ascii", "ignore")
+            list_[i] = [line, start_time, duration]
+        
+        # Convert to pandas DataFrame
+        df = pd.DataFrame(columns=["text", "onset", "duration"], data=list_)
+        
+        for i, r in df.iterrows():
+            elem = DynamicTextStim(r['text'], i, r['onset'], r["duration"])
+            self.elements.append(elem)
+
     def __iter__(self):
         """ Iterate text elements. """
         for elem in self.elements:
             yield elem
+
+    def __to_sec__(self, tup):
+        hours = tup[0]
+        mins = tup[1]
+        secs = tup[2]
+        msecs = tup[3]
+        total_msecs = (hours * 60 * 60 * 1000) + (mins * 60 * 1000) + (secs * 1000) + msecs
+        total_secs = total_msecs / 1000.
+        return total_secs
 
     def extract(self, extractors, merge_events=True):
         timeline = Timeline()
