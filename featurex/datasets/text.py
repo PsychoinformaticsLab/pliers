@@ -1,4 +1,4 @@
-import urllib
+import requests
 import pandas as pd
 import json
 import os
@@ -29,7 +29,10 @@ def _download_dictionary(url, format, rename):
 
     tmpdir = tempfile.mkdtemp()
     _file = os.path.join(tmpdir, os.path.basename(url))
-    urllib.urlretrieve(url, _file)
+    url = 'http://www.example.com/image.jpg'
+    r = requests.get(url)
+    with open(_file, 'wb') as f:
+        f.write(r.content)
 
     if zipfile.is_zipfile(_file):
         with zipfile.ZipFile(_file) as zf:

@@ -2,7 +2,7 @@ from featurex.version import __version__
 from setuptools import setup, find_packages
 
 extra_setuptools_args = dict(
-    tests_require=['nose'],
+    tests_require=['pytest'],
     test_suite='nose.collector',
     extras_require=dict(
         test='nose>=0.10.1')
@@ -15,7 +15,7 @@ setup(
     author='Tal Yarkoni',
     author_email='tyarkoni@gmail.com',
     url='http://github.com/tyarkoni/featurex',
-    install_requires=['numpy', 'scipy', 'pandas', 'six', 'python-magic'],
+    install_requires=['numpy', 'scipy', 'pandas', 'six', 'python-magic', 'requests'],
     packages=find_packages(),
     package_data={'featurex': ['data/*'],
                   'featurex.tests': ['data/*/*']

@@ -6,11 +6,11 @@ from featurex.stimuli.audio import AudioStim
 from featurex.stimuli.image import ImageStim
 from featurex.extractors import Extractor
 from featurex.stimuli import Stim
-from featurex.core import Value
-from featurex.core import Event
+from featurex.core import Value, Event, Timeline
 from featurex.support.download import download_nltk_data
 import numpy as np
 from os.path import join
+import pandas as pd
 
 
 class TestStims(TestCase):
@@ -47,6 +47,9 @@ class TestStims(TestCase):
         filename = join(_get_test_data_path(), 'image', 'apple.jpg')
         stim = ImageStim(filename)
         assert stim.data.shape == (288, 420, 3)
+        values = stim.extract([self.dummy_iter_extractor])
+        assert isinstance(values, Value)
+
 
     def test_video_stim(self):
         ''' Test VideoStim functionality. '''
@@ -69,7 +72,8 @@ class TestStims(TestCase):
         stim = AudioStim(join(audio_dir, 'barber.wav'))
         self.assertEquals(round(stim.duration), 57)
         self.assertEquals(stim.sampling_rate, 11025)
-        stim.extract([self.dummy_iter_extractor])
+        tl = stim.extract([self.dummy_iter_extractor])
+        assert isinstance(tl, Timeline)
 
     def test_complex_text_stim(self):
         text_dir = join(_get_test_data_path(), 'text')
@@ -93,3 +97,12 @@ class TestStims(TestCase):
         # Custom tokenizer
         stim = ComplexTextStim.from_text(text, tokenizer='(\w+)')
         self.assertEquals(len(stim.elements), 209)
+        
+    def test_complex_stim_from_srt(self):
+        srtfile = join(_get_test_data_path(), 'text', 'wonderful.srt')
+        textfile = join(_get_test_data_path(), 'text', 'wonderful.txt')
+        df = pd.read_csv(textfile, sep='\t')
+        target = df["text"].tolist()
+        srt_stim = ComplexTextStim(srtfile)
+        texts = [sent.text.decode('UTF-8') for sent in srt_stim.elements]
+        self.assertEquals(texts, target)

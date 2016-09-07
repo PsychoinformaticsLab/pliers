@@ -15,7 +15,7 @@ from warnings import warn
 try:
     import cv2
 except ImportError:
-    
+    pass
 
 
 class ImageExtractor(StimExtractor):

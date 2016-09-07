@@ -1,7 +1,8 @@
 # Borrowed from nilearn (https://github.com/nilearn/nilearn/)
 import sys
 
-DEPENDENCIES = ['numpy', 'scipy', 'cv2', 'pandas', 'python-magic', 'six']
+DEPENDENCIES = ['numpy', 'scipy', 'pandas', 'python-magic', 'six', 'requests',
+                'moviepy', 'nltk', 'pytest']
 
 
 def print_package_version(package_name, indent='  '):
