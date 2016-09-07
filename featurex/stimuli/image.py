@@ -1,4 +1,5 @@
 from featurex.stimuli import Stim
+from featurex.core import Value
 from scipy.misc import imread
 import six
 
@@ -13,3 +14,9 @@ class ImageStim(Stim):
         super(ImageStim, self).__init__(filename)
         self.data = data
         self.duration = duration
+
+    def extract(self, extractors):
+        vals = {}
+        for e in extractors:
+            vals[e.name] = e.apply(self)
+        return Value(self, e, vals)
