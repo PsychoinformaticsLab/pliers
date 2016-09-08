@@ -92,9 +92,9 @@ def test_saliency_extractor(self):
         stim = ImageStim(join(image_dir, 'apple.jpg'))
         tl = stim.extract([SaliencyExtractor()])
         ms = tl.data['SaliencyExtractor'].data['max_saliency']
-        assert ((ms >= 0) & (ms <= 1))
+        assert np.isclose(ms,0.99669953)
         sf = tl.data['SaliencyExtractor'].data['frac_high_saliency']
-        assert ((sf >= 0) & (sf <= 1))
+        assert np.isclose(sf,0.27461971)
 
 def test_clarifaiAPI_extractor():
     image_dir = join(_get_test_data_path(), 'image')
