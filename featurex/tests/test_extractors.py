@@ -7,6 +7,7 @@ from featurex.extractors.text import (DictionaryExtractor,
                                       PredefinedDictionaryExtractor)
 from featurex.extractors.audio import STFTExtractor, MeanAmplitudeExtractor
 from featurex.extractors.api import ClarifaiAPIExtractor
+from featurex.extractors.api import IndicoAPIExtractor
 from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.video import ImageStim
 from featurex.stimuli.audio import AudioStim, TranscribedAudioStim
@@ -89,7 +90,7 @@ class TestExtractors(TestCase):
         self.assertEquals(df.iloc[1, 3], 'NN')
         self.assertEquals(df.shape, (4, 4))
 
-    def test_api_extractor(self):
+    def test_clarifaiAPI_extractor(self):
         image_dir = join(_get_test_data_path(), 'image')
         stim = ImageStim(join(image_dir, 'apple.jpg'))
         if 'CLARIFAI_APP_ID' in os.environ:
@@ -101,3 +102,18 @@ class TestExtractors(TestCase):
             for result in output['results']:
                 self.assertEquals(result['status_code'], 'OK')
                 self.assertTrue(result['result']['tag']['classes'])
+
+    def test_indicoAPI_extractor(self):
+        srtfile = join(_get_test_data_path(), 'text', 'wonderful.srt')
+        srt_stim = ComplexTextStim(srtfile)
+        if 'INDICO_APP_KEY' in os.environ:
+            ext = IndicoAPIExtractor(api_key=os.environ['INDICO_APP_KEY'],model = 'emotion')
+            output = ext.apply(srt_stim)
+            outdfKeys = set(output.to_df()['name'])
+            outdfKeysCheck = set([
+                'emotion_anger',
+                'emotion_fear',
+                'emotion_joy',
+                'emotion_sadness',
+                'emotion_surprise'])
+            assert outdfKeys == outdfKeysCheck
