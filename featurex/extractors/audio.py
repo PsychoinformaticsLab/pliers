@@ -12,6 +12,13 @@ class AudioExtractor(StimExtractor):
     target = audio.AudioStim
 
 
+class TranscribedAudioExtractor(AudioExtractor):
+    
+    ''' Base Transcribed Audio Extractor class; all subclasses can only be
+    applied to transcribed audio. '''
+    target = audio.TranscribedAudioStim
+
+
 class STFTExtractor(AudioExtractor):
 
     ''' Short-time Fourier Transform extractor.
@@ -86,5 +93,35 @@ class STFTExtractor(AudioExtractor):
                     val = 0.
                 value_data[label] = val
             ev.add_value(Value(stim, self, value_data))
+            events.append(ev)
+        return events
+
+
+class MeanAmplitudeExtractor(TranscribedAudioExtractor):
+    
+    ''' Mean amplitude extractor for blocks of audio with transcription.
+    '''
+    
+    def __init__(self):
+        pass
+    
+    def apply(self, stim):
+        amps = stim.data
+        sampling_rate = stim.sampling_rate
+        elements = stim.transcription.elements
+        events = []
+        for i, el in enumerate(elements):
+            onset = sampling_rate * el.onset
+            duration = sampling_rate * el.duration
+            
+            r_onset = np.round(onset).astype(int)
+            r_offset = np.round(onset+duration).astype(int)
+            if not r_offset <= amps.shape[0]:
+                raise Exception('Block ends after data.')
+            
+            mean_amplitude = np.mean(amps[r_onset:r_offset])
+            amplitude_data = {'mean_amplitude': mean_amplitude}
+            ev = Event(onset=onset, duration=duration)
+            ev.add_value(Value(stim, self, amplitude_data))
             events.append(ev)
         return events

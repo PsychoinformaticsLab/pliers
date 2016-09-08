@@ -1,0 +1,5 @@
+clarifai
+cv2
+matplotlib
+pysrt
+SpeechRecognition

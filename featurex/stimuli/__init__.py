@@ -18,7 +18,7 @@ class Stim(object):
 
 class DynamicStim(Stim):
 
-    ''' Any Stim that has as a temporal dimension. '''
+    ''' Any Stim that has a temporal dimension. '''
 
     __metaclass__ = ABCMeta
 

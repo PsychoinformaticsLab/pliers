@@ -125,8 +125,8 @@ class Timeline(object):
         Args:
             timeline (Timeline): the Timeline to merge with the current one.
         '''
-        for event in timeline.events:
-            self.add_event(event, merge=True)
+        for event in timeline.events.keys():
+            self.add_event(timeline.events[event], onset=event, merge=True)
             # TODO: handle potential period mismatches
 
     def to_df(self, format='long', dummy_code=False):
