@@ -4,8 +4,9 @@ Extractors that interact with external (e.g., deep learning) services.
 
 from featurex.extractors.image import ImageExtractor
 from featurex.extractors.audio import AudioExtractor
+from featurex.extractors.text import ComplexTextExtractor
 from scipy.misc import imsave
-from featurex.core import Value
+from featurex.core import Value, Event
 import os
 import tempfile
 
@@ -19,6 +20,60 @@ try:
 except ImportError:
     pass
 
+try:
+    import indicoio as ico
+except ImportError:
+    pass
+
+class IndicoAPIExtractor(ComplexTextExtractor):
+
+    ''' Uses the Indico API to extract sentiment of text.
+    Args:
+        app_key (str): A valid API key for the Indico API. Only needs to be
+            passed the first time the extractor is initialized.
+        model (str): The name of the Indico model to use.  
+    '''
+
+    def __init__(self, api_key=None, model=None):
+        ComplexTextExtractor.__init__(self)
+        if api_key is None:
+            try:
+                api_key = os.environ['INDICO_APP_KEY']
+            except KeyError:
+                raise ValueError("A valid Indico API Key "                            
+                                 "must be passed the first time an Indico "
+                                 "extractor is initialized.")
+        else:
+            self.api_key = api_key
+            ico.config.api_key = self.api_key
+        if model is None:
+            raise ValueError("Must enter a valid model to use of possible type: "
+                             "sentiment, sentiment_hq, emotion.")
+        else:
+            try:
+                self.model = getattr(ico, model)
+                self.name = model
+            except AttributeError:
+                raise ValueError("Unsupported model specified. Muse use of of the following:\n"
+                                "sentiment, sentiment_hq, emotion, text_tags, language, "
+                                "political, keywords, people, places, organizations, "
+                                "twitter_engagement, personality, personas, text_features")
+
+    def apply(self, text):
+        tokens = [token.text for token in text]
+        scores = self.model(tokens)
+        events = []
+        for i, w in enumerate(text):
+            if type(scores[i]) == float:
+                values = [Value(text, self, {self.name: scores[i]})]
+            elif type(scores[i]) == dict:
+                values = []
+                for k in scores[i].keys():
+                    values.append(Value(text, self, {self.name + '_' + k: scores[i][k]}))
+            # parse dictionary into list if getting dict back
+            event = Event(onset= w.onset, duration=w.duration, values=values)
+            events.append(event)
+        return events
 
 class ClarifaiAPIExtractor(ImageExtractor):
 
