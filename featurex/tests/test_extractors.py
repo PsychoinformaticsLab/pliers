@@ -7,7 +7,7 @@ from featurex.extractors.text import (DictionaryExtractor,
                                       PredefinedDictionaryExtractor)
 from featurex.extractors.audio import STFTExtractor
 from featurex.extractors.api import ClarifaiAPIExtractor
-from featurex.extractors.api import IndicioAPIExtractor
+from featurex.extractors.api import IndicoAPIExtractor
 from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.video import ImageStim
 from featurex.stimuli.audio import AudioStim
@@ -95,7 +95,7 @@ class TestExtractors(TestCase):
         srtfile = join(_get_test_data_path(), 'text', 'wonderful.srt')
         srt_stim = ComplexTextStim(srtfile)
         if 'INDICO_APP_KEY' in os.environ:
-            ext = IndicioAPIExtractor(api_key=os.environ['INDICO_APP_KEY'],model = 'emotion')
+            ext = IndicoAPIExtractor(api_key=os.environ['INDICO_APP_KEY'],model = 'emotion')
             output = ext.apply(srt_stim)
             outdfKeys = set(output.to_df()['name'])
             outdfKeysCheck = set([
