@@ -6,7 +6,7 @@ from featurex.extractors.image import ImageExtractor
 from featurex.extractors.audio import AudioExtractor
 from featurex.extractors.text import ComplexTextExtractor
 from scipy.misc import imsave
-from featurex.core import Value
+from featurex.core import Value, Event
 import os
 import tempfile
 
@@ -37,48 +37,43 @@ class IndicoAPIExtractor(ComplexTextExtractor):
     def __init__(self, api_key=None, model=None):
         ComplexTextExtractor.__init__(self)
         if api_key is None:
-            raise ValueError("A valid Indico API Key "                            
-                             "must be passed the first time an Indico "
-                             "extractor is initialized.")
+            try:
+                api_key = os.environ['INDICO_APP_KEY']
+            except KeyError:
+                raise ValueError("A valid Indico API Key "                            
+                                 "must be passed the first time an Indico "
+                                 "extractor is initialized.")
         else:
             self.api_key = api_key
             ico.config.api_key = self.api_key
         if model is None:
             raise ValueError("Must enter a valid model to use of possible type: "
                              "sentiment, sentiment_hq, emotion.")
-        elif model == 'sentiment':
-            self.model = ico.sentiment
-        elif model == 'sentiment_hq':
-            self.model = ico.sentiment_hq
-        elif model == 'emotion':
-            self.model = ico.emotion
-        elif model == 'text_tages':
-            self.model = ico.text_tags
-        elif model == 'language':
-            self.model = ico.language
-        elif model == 'political':
-            self.model = ico.political
-        elif model == 'keywords':
-            self.model = ico.keywords
-        elif model == 'people':
-            self.model = ico.people
-        elif model == 'places':
-            self.model = ico.places
-        elif model == 'organizations':
-            self.model = ico.organizations
-        elif model == 'twitter_engagement':
-            self.model = ico.twitter_engagement
-        elif model == 'personality':
-            self.model = ico.personality
-        elif model == 'personas':
-            self.model = ico.personas
-        elif model == 'text_features':
-            self.model = ico.text_features
+        else:
+            try:
+                self.model = getattr(ico, model)
+                self.name = model
+            except AttributeError:
+                raise ValueError("Unsupported model specified. Muse use of of the following:\n"
+                                "sentiment, sentiment_hq, emotion, text_tags, language, "
+                                "political, keywords, people, places, organizations, "
+                                "twitter_engagement, personality, personas, text_features")
 
     def apply(self, text):
         tokens = [token.text for token in text]
         scores = self.model(tokens)
-        return Value(text, self, {'scores': scores})
+        events = []
+        for i, w in enumerate(text):
+            if type(scores[i]) == float:
+                values = [Value(text, self, {self.name: scores[i]})]
+            elif type(scores[i]) == dict:
+                values = []
+                for k in scores[i].keys():
+                    values.append(Value(text, self, {self.name + '_' + k: scores[i][k]}))
+            # parse dictionary into list if getting dict back
+            event = Event(onset= w.onset, duration=w.duration, values=values)
+            events.append(event)
+        return events
 
 class ClarifaiAPIExtractor(ImageExtractor):
 
