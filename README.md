@@ -2,6 +2,10 @@
 
 A Python package for automated extraction of features from multimodal stimuli.
 
+## Status
+* [![Build Status](https://travis-ci.org/tyarkoni/featureX.svg?branch=master)](https://travis-ci.org/tyarkoni/featureX)
+* [![Coverage Status](https://coveralls.io/repos/github/tyarkoni/featureX/badge.svg?branch=master)](https://coveralls.io/github/tyarkoni/featureX?branch=master)
+
 ## Installation
 
 > pip install featurex
