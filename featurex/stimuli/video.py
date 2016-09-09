@@ -10,20 +10,17 @@ class VideoFrameStim(ImageStim):
 
     ''' A single frame of video. '''
 
-    def __init__(self, video, frame_num, filename=None, data=None):
+    def __init__(self, video, frame_num, duration=None, filename=None, data=None):
         super(VideoFrameStim, self).__init__(filename, data)
         self.video = video
         self.frame_num = frame_num
-        self.duration = 1. / video.fps
-        self.onset = frame_num * self.duration
-    
-class VideoKeyframeStim(VideoFrameStim):
-    """
-    A single keyframe of video, representing a scene (with duration).
-    """
-    def __init__(self, video, frame_num, duration, filename=None, data=None):
-        super(VideoKeyframeStim, self).__init__(video, frame_num, filename, data)
-        self.duration = duration
+        spf = 1. / video.fps
+        if duration is None:
+            self.duration = spf
+        else:
+            self.duration = duration
+        self.onset = frame_num * spf
+
 
 class VideoStim(DynamicStim):
 
@@ -112,5 +109,6 @@ class DerivedVideoStim(VideoStim):
         
         self.elements = []
         for i, f in enumerate(self.frame_index):
-            elem = VideoKeyframeStim(self.clip, f, self.durations[i])
+            elem = VideoFrameStim(video=self.clip, frame_num=f,
+                                  duration=self.durations[i])
             self.elements.append(elem)
