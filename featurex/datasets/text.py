@@ -29,7 +29,6 @@ def _download_dictionary(url, format, rename):
 
     tmpdir = tempfile.mkdtemp()
     _file = os.path.join(tmpdir, os.path.basename(url))
-    url = 'http://www.example.com/image.jpg'
     r = requests.get(url)
     with open(_file, 'wb') as f:
         f.write(r.content)
