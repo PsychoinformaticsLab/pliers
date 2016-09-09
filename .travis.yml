@@ -38,7 +38,10 @@ before_install:
 
 install:
 - pip install -r requirements.txt
-- pip install coveralls pytest-cov
+- pip install coveralls pytest-cov pysrt
+
+before_script:
+  - python -m featurex.support.download
 
 script:
 - py.test --pyargs featurex --cov-report term-missing --cov=featurex
