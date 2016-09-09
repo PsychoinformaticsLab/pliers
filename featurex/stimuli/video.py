@@ -1,20 +1,25 @@
-from featurex.stimuli import Stim, DynamicStim
+from __future__ import division
+from featurex.stimuli import DynamicStim
 from featurex.stimuli.image import ImageStim
 from featurex.core import Timeline, Event
-import six
 from moviepy.video.io.VideoFileClip import VideoFileClip
+import pandas as pd
 
 
 class VideoFrameStim(ImageStim):
 
     ''' A single frame of video. '''
 
-    def __init__(self, video, frame_num, filename=None, data=None):
+    def __init__(self, video, frame_num, duration=None, filename=None, data=None):
         super(VideoFrameStim, self).__init__(filename, data)
         self.video = video
         self.frame_num = frame_num
-        self.duration = 1. / video.fps
-        self.onset = frame_num * self.duration
+        spf = 1. / video.fps
+        if duration is None:
+            self.duration = spf
+        else:
+            self.duration = duration
+        self.onset = frame_num * spf
 
 
 class VideoStim(DynamicStim):
@@ -61,3 +66,49 @@ class VideoStim(DynamicStim):
                         timeline.add_event(event, merge=merge_events)
                         c += 1
         return timeline
+
+
+class DerivedVideoStim(VideoStim):
+    """
+    VideoStim containing keyframes (for API calls). Each keyframe is associated
+    with a duration reflecting the length of its "scene."
+    """
+    def __init__(self, filename, **kwargs):
+        super(DerivedVideoStim, self).__init__(filename)
+        self.history = pd.DataFrame(columns=["filter", "value", "n_frames"])
+        self.tagged_frames = self.frames
+        self.frame_index = range(len(self.frames))
+        self._filter(**kwargs)
+        
+    def filter(self, **kwargs):
+        self._filter(**kwargs)
+
+    def _filter(self, every=None, hertz=None):
+        if every is not None:
+            name = "every"
+            thresh = every
+            new_idx = range(self.n_frames)[::every]
+            self.frame_index = sorted(list(set(self.frame_index).intersection(new_idx)))
+        elif hertz is not None:
+            name = "hertz"
+            thresh = hertz
+            interval = int(self.fps / hertz)
+            new_idx = range(self.n_frames)[::interval]
+        self.frame_index = sorted(list(set(self.frame_index).intersection(new_idx)))
+        self.tagged_frames = [self.frames[i] for i in self.frame_index]
+        self.history.loc[self.history.shape[0]] = [name, thresh, len(self.tagged_frames)]        
+        
+        self.onsets = [frame_num * (1. / self.fps) for frame_num in self.frame_index]
+        self.durations = []
+        for i, idx in enumerate(self.frame_index):
+            if idx != self.frame_index[-1]:
+                dur = self.onsets[i+1] - self.onsets[i]
+            else:
+                dur = (len(self.frames) / self.fps) - self.onsets[i]
+            self.durations.append(dur)
+        
+        self.elements = []
+        for i, f in enumerate(self.frame_index):
+            elem = VideoFrameStim(video=self.clip, frame_num=f,
+                                  duration=self.durations[i])
+            self.elements.append(elem)
