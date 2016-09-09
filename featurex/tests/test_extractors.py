@@ -47,12 +47,10 @@ def test_predefined_dictionary_extractor():
     text = """enormous chunks of ice that have been frozen for thousands of
               years are breaking apart and melting away"""
     stim = ComplexTextStim.from_text(text)
-    td = PredefinedDictionaryExtractor(['aoa/Freq_pm', 'affect/V.Mean.Sum'])
+    td = PredefinedDictionaryExtractor(['aoa/Freq_pm'])
     timeline = stim.extract([td])
     df = TimelineExporter.timeline_to_df(timeline)
-    assert df.shape == (36, 4)
-    valid_rows = df.query('name == "affect_V.Mean.Sum"').dropna()
-    assert len(valid_rows) == 3
+    assert df.shape == (18, 4)
 
 def test_stft_extractor():
     audio_dir = join(_get_test_data_path(), 'audio')
