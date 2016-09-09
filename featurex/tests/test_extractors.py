@@ -5,6 +5,7 @@ from featurex.extractors.text import (DictionaryExtractor,
                                       PartOfSpeechExtractor,
                                       PredefinedDictionaryExtractor)
 from featurex.extractors.audio import STFTExtractor, MeanAmplitudeExtractor
+from featurex.extractors.image import SaliencyExtractor
 from featurex.extractors.api import ClarifaiAPIExtractor
 from featurex.extractors.api import IndicoAPIExtractor
 from featurex.stimuli.text import ComplexTextStim
@@ -83,6 +84,15 @@ def test_part_of_speech_extractor():
     df = tl.to_df()
     assert df.iloc[1, 3] == 'NN'
     assert df.shape == (4, 4)
+
+def test_saliency_extractor(self):
+        image_dir = join(_get_test_data_path(), 'image')
+        stim = ImageStim(join(image_dir, 'apple.jpg'))
+        tl = stim.extract([SaliencyExtractor()])
+        ms = tl.data['SaliencyExtractor'].data['max_saliency']
+        assert np.isclose(ms,0.99669953)
+        sf = tl.data['SaliencyExtractor'].data['frac_high_saliency']
+        assert np.isclose(sf,0.27461971)
 
 def test_clarifaiAPI_extractor():
     image_dir = join(_get_test_data_path(), 'image')
