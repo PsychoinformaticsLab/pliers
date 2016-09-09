@@ -105,7 +105,6 @@ class ComplexTextStim(object):
             
             line = row.text
             line = line.replace("\r\n", " ").replace("\n", " ").replace("\r", " ").replace("\t", " ")
-            line = unicodedata.normalize("NFKD", line).encode("ascii", "ignore")
             list_[i] = [line, start_time, duration]
         
         # Convert to pandas DataFrame
