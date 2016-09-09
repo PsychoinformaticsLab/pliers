@@ -129,16 +129,19 @@ class Timeline(object):
             self.add_event(timeline.events[event], onset=event, merge=True)
             # TODO: handle potential period mismatches
 
-    def to_df(self, format='long', dummy_code=False):
+    def to_df(self, format='long', extractor=False):
         ''' Return the Timeline as a pandas DataFrame.
         Args:
             format (str): Either 'long' (default) or 'wide'. In 'long' format,
             each row is a single sample for a single feature. In 'wide' format,
             samples are in rows and features are in columns.
+            extractor (bool): If True, includes the name of the Extractor in
+                the output (a separate column in the case of long format, and
+                prepended to the column name in the case of wide).
         '''
         # local import to prevent circularity
         from .export import TimelineExporter
-        return TimelineExporter.timeline_to_df(self, format)
+        return TimelineExporter.timeline_to_df(self, format, extractor)
 
     def dummy_code(self, string_only=True):
         ''' Returns a copy of the Timeline where all string variables (or all
