@@ -2,7 +2,7 @@ sudo: false
 
 env:
   global:
-    - CONDA_DEPS="pip pytest numpy pandas requests scipy nltk six"
+    - CONDA_DEPS="pip pytest numpy pillow pandas requests scipy nltk six"
 
 matrix:
   include:
