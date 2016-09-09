@@ -32,11 +32,11 @@ class BrightnessExtractor(ImageExtractor):
     def __init__(self):
         super(self.__class__, self).__init__()
 
-    def apply(self, img):
-        data = img.data
+    def apply(self, stim):
+        data = stim.data
         avg_brightness = np.amax(data, 2).mean() / 255.0
 
-        return Value(img, self, {'avg_brightness': avg_brightness})
+        return Value(stim, self, {'avg_brightness': avg_brightness})
 
 
 class SharpnessExtractor(ImageExtractor):
@@ -46,14 +46,14 @@ class SharpnessExtractor(ImageExtractor):
     def __init__(self):
         super(self.__class__, self).__init__()
 
-    def apply(self, img):
+    def apply(self, stim):
         # Taken from
         # http://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry?lq=1
-        data = img.data
+        data = stim.data
         gray_image = cv2.cvtColor(data, cv2.COLOR_BGR2GRAY)
 
         sharpness = np.max(cv2.convertScaleAbs(cv2.Laplacian(gray_image, 3))) / 255.0
-        return Value(img, self, {'sharpness': sharpness})
+        return Value(stim, self, {'sharpness': sharpness})
 
 
 class VibranceExtractor(ImageExtractor):
@@ -63,7 +63,36 @@ class VibranceExtractor(ImageExtractor):
     def __init__(self):
         super(self.__class__, self).__init__()
 
-    def apply(self, img):
-        data = img.data
+    def apply(self, stim):
+        data = stim.data
         avg_color = np.var(data, 2).mean()
-        return Value(img, self, {'avg_color': avg_color})
+        return Value(stim, self, {'avg_color': avg_color})
+
+class SaliencyExtractor(ImageExtractor):
+
+    ''' Determines the saliency of the image using Itti & Koch (1998) algorithm implemented in pySaliencyMap '''
+
+    def __init__(self):
+        super(self.__class__, self).__init__()
+
+    def apply(self, stim):
+        from featurex.external import pySaliencyMap
+        # pySaliencyMap from https://github.com/akisato-/pySaliencyMap
+        data = stim.data
+
+        # Initialize variables
+        h, w, c = stim.data.shape
+        sm = pySaliencyMap.pySaliencyMap(h, w)
+
+        # Compute saliency maps and store full maps as derivatives
+        stim.derivatives = dict()
+        stim.derivatives['saliency_map'] = sm.SMGetSM(stim.data)
+        stim.derivatives['binarized_map'] = sm.SMGetBinarizedSM(stim.data) #thresholding done using Otsu
+
+        # Compute summary statistics
+        output = {}
+        output['max_saliency'] = np.max(stim.derivatives['saliency_map'])
+        output['max_y'], output['max_x'] = [list(i)[0] for i in np.where(stim.derivatives['saliency_map']==output['max_saliency'])]
+        output['frac_high_saliency'] = np.sum(stim.derivatives['binarized_map']/255.0)/(h * w)
+
+        return Value(stim, self, output)
