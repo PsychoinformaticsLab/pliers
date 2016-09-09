@@ -9,7 +9,6 @@ import time
 import numpy as np
 import tempfile
 import os
-import pySaliencyMap
 from warnings import warn
 
 # Optional dependencies
@@ -77,6 +76,7 @@ class SaliencyExtractor(ImageExtractor):
         super(self.__class__, self).__init__()
 
     def apply(self, stim):
+        from featurex.external import pySaliencyMap
         # pySaliencyMap from https://github.com/akisato-/pySaliencyMap
         data = stim.data
 

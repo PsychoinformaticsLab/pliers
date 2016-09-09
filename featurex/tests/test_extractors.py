@@ -85,7 +85,8 @@ def test_part_of_speech_extractor():
     assert df.iloc[1, 3] == 'NN'
     assert df.shape == (4, 4)
 
-def test_saliency_extractor(self):
+def test_saliency_extractor():
+        pytest.importorskip('cv2')
         image_dir = join(_get_test_data_path(), 'image')
         stim = ImageStim(join(image_dir, 'apple.jpg'))
         tl = stim.extract([SaliencyExtractor()])
@@ -94,30 +95,30 @@ def test_saliency_extractor(self):
         sf = tl.data['SaliencyExtractor'].data['frac_high_saliency']
         assert np.isclose(sf,0.27461971)
 
+@pytest.mark.skipif("'CLARIFAI_APP_ID' not in os.environ")
 def test_clarifaiAPI_extractor():
     image_dir = join(_get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    if 'CLARIFAI_APP_ID' in os.environ:
-        ext = ClarifaiAPIExtractor()
-        output = ext.apply(stim).data['tags']
-        # Check success of request
-        assert output['status_code'] == 'OK'
-        # Check success of each image tagged
-        for result in output['results']:
-            assert result['status_code'] == 'OK'
-            assert result['result']['tag']['classes']
+    ext = ClarifaiAPIExtractor()
+    output = ext.apply(stim).data['tags']
+    # Check success of request
+    assert output['status_code'] == 'OK'
+    # Check success of each image tagged
+    for result in output['results']:
+        assert result['status_code'] == 'OK'
+        assert result['result']['tag']['classes']
 
+@pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
 def test_indicoAPI_extractor():
     srtfile = join(_get_test_data_path(), 'text', 'wonderful.srt')
     srt_stim = ComplexTextStim(srtfile)
-    if 'INDICO_APP_KEY' in os.environ:
-        ext = IndicoAPIExtractor(api_key=os.environ['INDICO_APP_KEY'],model = 'emotion')
-        output = ext.apply(srt_stim)
-        outdfKeys = set(output.to_df()['name'])
-        outdfKeysCheck = set([
-            'emotion_anger',
-            'emotion_fear',
-            'emotion_joy',
-            'emotion_sadness',
-            'emotion_surprise'])
-        assert outdfKeys == outdfKeysCheck
+    ext = IndicoAPIExtractor(api_key=os.environ['INDICO_APP_KEY'],model = 'emotion')
+    output = ext.apply(srt_stim)
+    outdfKeys = set(output.to_df()['name'])
+    outdfKeysCheck = set([
+        'emotion_anger',
+        'emotion_fear',
+        'emotion_joy',
+        'emotion_sadness',
+        'emotion_surprise'])
+    assert outdfKeys == outdfKeysCheck
