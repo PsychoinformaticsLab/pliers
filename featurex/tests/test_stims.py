@@ -111,5 +111,5 @@ def test_complex_stim_from_srt():
     df = pd.read_csv(textfile, sep='\t')
     target = df["text"].tolist()
     srt_stim = ComplexTextStim(srtfile)
-    texts = [sent.text.decode('UTF-8') for sent in srt_stim.elements]
+    texts = [sent.text for sent in srt_stim.elements]
     assert texts == target
