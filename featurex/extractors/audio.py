@@ -46,6 +46,7 @@ class STFTExtractor(AudioExtractor):
         self.hop_size = hop_size
         self.spectrogram = spectrogram
         self.freq_bins = bins
+        super(STFTExtractor, self).__init__()
 
     def _stft(self, stim):
         x = stim.data
