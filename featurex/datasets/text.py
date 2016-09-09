@@ -10,7 +10,7 @@ import shutil
 def _load_datasets():
     path = os.path.abspath(__file__)
     path = os.path.join(os.path.dirname(path), 'dictionaries.json')
-    dicts = json.load(open(path, encoding='utf-8'))
+    dicts = json.load(open(path), encoding='utf-8')
     return dicts
 
 datasets = _load_datasets()
@@ -29,7 +29,6 @@ def _download_dictionary(url, format, rename):
 
     tmpdir = tempfile.mkdtemp()
     _file = os.path.join(tmpdir, os.path.basename(url))
-    url = 'http://www.example.com/image.jpg'
     r = requests.get(url)
     with open(_file, 'wb') as f:
         f.write(r.content)

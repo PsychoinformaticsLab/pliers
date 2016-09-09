@@ -38,14 +38,14 @@ class IndicoAPIExtractor(ComplexTextExtractor):
         ComplexTextExtractor.__init__(self)
         if api_key is None:
             try:
-                api_key = os.environ['INDICO_APP_KEY']
+                self.api_key = os.environ['INDICO_APP_KEY']
             except KeyError:
                 raise ValueError("A valid Indico API Key "                            
                                  "must be passed the first time an Indico "
                                  "extractor is initialized.")
         else:
             self.api_key = api_key
-            ico.config.api_key = self.api_key
+        ico.config.api_key = self.api_key
         if model is None:
             raise ValueError("Must enter a valid model to use of possible type: "
                              "sentiment, sentiment_hq, emotion.")

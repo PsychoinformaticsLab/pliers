@@ -55,7 +55,10 @@ def load_stims(source, dtype=None):
     stims = []
 
     def load_file(source):
-        mime = magic.from_file(source, mime=True).decode('utf-8').split('/')[0]
+        mime = magic.from_file(source, mime=True)
+        if not isinstance(mime, string_types):
+            mime = mime.decode('utf-8')
+        mime = mime.split('/')[0]
         stim_map = {
             'image': ImageStim,
             'video': VideoStim,

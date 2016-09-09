@@ -19,7 +19,7 @@ class TimelineExporter(Exporter):
     ''' Exporter that handles Timelines. '''
 
     @staticmethod
-    def timeline_to_df(timeline, format='long'):
+    def timeline_to_df(timeline, format='long', extractor=False):
         ''' Extracts all values from a timeline and converts it to a
         pandas DataFrame.
         Args:
@@ -28,11 +28,17 @@ class TimelineExporter(Exporter):
                 (default) or 'wide'. In long format, each row is a single
                 key/value pair in a single Value). In wide format, each row is
                 a single event, and all Values are represented in columns.
+            extractor (bool): If True, includes the name of the Extractor in
+                the output (a separate column in the case of long format, and
+                prepended to the column name in the case of wide).
+
         Returns: a pandas DataFrame.
         '''
+
         data = []
         for onset, event in timeline.events.items():
             for value in event.values:
+                ext_name = value.extractor.name if value.extractor is not None else None
                 duration = event.duration or value.stim.duration
                 if duration is None:
                     raise AttributeError(
@@ -41,12 +47,22 @@ class TimelineExporter(Exporter):
                         'either the Event instance, or in the Stim '
                         'instance associated with every Value in the '
                         'Event.')
-                for var, value in value.data.items():
-                    data.append([onset, var, duration, value])
-        data = pd.DataFrame(data,
-                            columns=['onset', 'name', 'duration', 'value'])
+                for var, val in value.data.items():
+                    row = [onset, var, duration, val, ext_name]
+                    data.append(row)
+
+        columns=['onset', 'name', 'duration', 'value', 'extractor']
+        data = pd.DataFrame(data, columns=columns)
+
         if format == 'wide':
-            data = data.pivot(index='onset', columns='name')
+            pivot_cols = ['extractor', 'name']
+            data = pd.pivot_table(data, index='onset', columns=pivot_cols)
+            data = data.reorder_levels([-2, -1, -3], 1)
+            data = data.sortlevel(0, axis=1)
+            if not extractor:
+                data.columns = data.columns.droplevel()
+        elif not extractor:
+            data = data.drop('extractor', 1)
         return data
 
 

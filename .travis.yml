@@ -1,37 +1,52 @@
-#
-# Adapted from nilearn
-language: python
+sudo: false
 
 env:
   global:
-    - TEST_RUN_FOLDER="/tmp" # folder where the tests are run from
-    - DEFAULT_TO_LATEST=true # use latest package versions if not explicitly set
-  matrix:
-    - DISTRIB="conda" PYTHON_VERSION="2.7"
-    - DISTRIB="conda" PYTHON_VERSION="3.4"
+    - CONDA_DEPS="pip pytest numpy pillow pandas requests scipy nltk six"
+
+matrix:
+  include:
+    - os: linux
+      env:
+         - PYTHON_VERSION=3.5
+         - MINICONDA_URL="https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh"
+    - os: linux
+      env:
+         - PYTHON_VERSION=2.7
+         - MINICONDA_URL="https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh"
 
 before_install:
-    - sudo apt-get -qq update
-    - sudo apt-get install ffmpeg
+- export MINICONDA=$HOME/miniconda
+- export PATH="$MINICONDA/bin:$PATH"
+- hash -r
+- echo $MINICONDA_URL
+- wget $MINICONDA_URL -O miniconda.sh;
+- bash miniconda.sh -b -f -p $MINICONDA;
+- conda config --set always_yes yes
+- conda update conda
+- conda info -a
+- conda config --add channels conda-forge
+- conda install python=$PYTHON_VERSION $CONDA_DEPS
 
-install: 
-    - source ci/install.sh
+install:
+- pip install -r requirements.txt
+- pip install coveralls pytest-cov pysrt xlrd
 
 before_script:
-    - find . -name "*.pyc" | xargs rm -f
-    - find . -name "*.so" | xargs rm -f
-    - find . -name "*.pyd" | xargs rm -f
-    - rm -rf build
-    - rm -f tags
+  - python -m featurex.support.download
 
 script:
-    - python ci/show-python-package-versions.py
-    - (cd "$TEST_RUN_FOLDER" && py.test --pyargs featurex)
+- py.test --pyargs featurex --cov-report term-missing --cov=featurex
 
 after_success:
-    # Ignore coveralls failures as the coveralls server is not very reliable
-    # but we don't want travis to report a failure in the github UI just
-    # because the coverage report failed to be published.
-    # coveralls need to be run from the git checkout
-    # so we need to copy the coverage results from TEST_RUN_FOLDER
-    - if [[ "$COVERAGE" == "true" ]]; then cp "$TEST_RUN_FOLDER/.coverage" .; coveralls || echo "failed"; fi
+- coveralls
+
+before_cache:
+# clean unused packages & installed files from conda cache
+# this makes the cache rebuilt less frequently
+- conda clean --tarballs --packages --index-cache
+- rm -rf $HOME/miniconda/pkgs/cache
+
+cache:
+  directories:
+    - $HOME/miniconda
