@@ -17,6 +17,15 @@ try:
 except ImportError:
     pass
 
+try:
+    import pytesseract
+except ImportError:
+    pass
+
+try:
+    import Image
+except ImportError:
+    from PIL import Image
 
 class ImageExtractor(StimExtractor):
 
@@ -67,6 +76,21 @@ class VibranceExtractor(ImageExtractor):
         data = stim.data
         avg_color = np.var(data, 2).mean()
         return Value(stim, self, {'avg_color': avg_color})
+
+
+class TesseractExtractor(ImageExtractor):
+
+    ''' Uses the Tesseract library to extract text from images '''
+
+    def __init__(self):
+        ImageExtractor.__init__(self)
+
+    def apply(self, img):
+        data = img.data
+        text = pytesseract.image_to_string(Image.fromarray(data))
+
+        return Value(img, self, {'text': text})
+
 
 class SaliencyExtractor(ImageExtractor):
 
