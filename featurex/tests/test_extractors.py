@@ -9,7 +9,9 @@ from featurex.extractors.image import (BrightnessExtractor,
                                         SharpnessExtractor,
                                         VibranceExtractor,
                                         SaliencyExtractor)
-from featurex.extractors.api import ClarifaiAPIExtractor
+from featurex.extractors.api import (IndicoAPIExtractor,
+                                        ClarifaiAPIExtractor,
+                                        WitTranscriptionExtractor)
 from featurex.extractors.api import IndicoAPIExtractor
 from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.video import ImageStim
@@ -123,6 +125,21 @@ def test_saliency_extractor():
     sf = tl.data['SaliencyExtractor'].data['frac_high_saliency']
     assert np.isclose(sf,0.27461971)
 
+@pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
+def test_indicoAPI_extractor():
+    srtfile = join(_get_test_data_path(), 'text', 'wonderful.srt')
+    srt_stim = ComplexTextStim(srtfile)
+    ext = IndicoAPIExtractor(api_key=os.environ['INDICO_APP_KEY'],model = 'emotion')
+    output = srt_stim.extract([ext])
+    outdfKeys = set(output.to_df()['name'])
+    outdfKeysCheck = set([
+        'emotion_anger',
+        'emotion_fear',
+        'emotion_joy',
+        'emotion_sadness',
+        'emotion_surprise'])
+    assert outdfKeys == outdfKeysCheck
+
 @pytest.mark.skipif("'CLARIFAI_APP_ID' not in os.environ")
 def test_clarifaiAPI_extractor():
     image_dir = join(_get_test_data_path(), 'image')
@@ -136,17 +153,10 @@ def test_clarifaiAPI_extractor():
         assert result['status_code'] == 'OK'
         assert result['result']['tag']['classes']
 
-@pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
-def test_indicoAPI_extractor():
-    srtfile = join(_get_test_data_path(), 'text', 'wonderful.srt')
-    srt_stim = ComplexTextStim(srtfile)
-    ext = IndicoAPIExtractor(api_key=os.environ['INDICO_APP_KEY'],model = 'emotion')
-    output = ext.apply(srt_stim)
-    outdfKeys = set(output.to_df()['name'])
-    outdfKeysCheck = set([
-        'emotion_anger',
-        'emotion_fear',
-        'emotion_joy',
-        'emotion_sadness',
-        'emotion_surprise'])
-    assert outdfKeys == outdfKeysCheck
+@pytest.mark.skipif("'WIT_AI_APP_KEY' not in os.environ")
+def test_witaiAPI_extractor():
+    audio_dir = join(_get_test_data_path(), 'audio')
+    stim = AudioStim(join(audio_dir, 'homer.wav'))
+    ext = WitTranscriptionExtractor()
+    text = ext.apply(stim).data['text']
+    assert 'laws of thermodynamics' in text
