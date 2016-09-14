@@ -5,7 +5,10 @@ from featurex.extractors.text import (DictionaryExtractor,
                                       PartOfSpeechExtractor,
                                       PredefinedDictionaryExtractor)
 from featurex.extractors.audio import STFTExtractor, MeanAmplitudeExtractor
-from featurex.extractors.image import SaliencyExtractor
+from featurex.extractors.image import (BrightnessExtractor,
+                                        SharpnessExtractor,
+                                        VibranceExtractor,
+                                        SaliencyExtractor)
 from featurex.extractors.api import ClarifaiAPIExtractor
 from featurex.extractors.api import IndicoAPIExtractor
 from featurex.stimuli.text import ComplexTextStim
@@ -85,15 +88,40 @@ def test_part_of_speech_extractor():
     assert df.iloc[1, 3] == 'NN'
     assert df.shape == (4, 4)
 
+def test_brightness_extractor():
+    image_dir = join(_get_test_data_path(), 'image')
+    stim = ImageStim(join(image_dir, 'apple.jpg'))
+    val = stim.extract([BrightnessExtractor()])
+    brightness = val.data['BrightnessExtractor'].data['avg_brightness']
+    print brightness
+    assert np.isclose(brightness,0.88784294)
+
+def test_sharpness_extractor():
+    pytest.importorskip('cv2')
+    image_dir = join(_get_test_data_path(), 'image')
+    stim = ImageStim(join(image_dir, 'apple.jpg'))
+    val = stim.extract([SharpnessExtractor()])
+    sharpness = val.data['SharpnessExtractor'].data['sharpness']
+    print sharpness
+    assert np.isclose(sharpness,1.0)
+
+def test_vibrance_extractor():
+    image_dir = join(_get_test_data_path(), 'image')
+    stim = ImageStim(join(image_dir, 'apple.jpg'))
+    val = stim.extract([VibranceExtractor()])
+    color = val.data['VibranceExtractor'].data['avg_color']
+    print color
+    assert np.isclose(color,1370.65482988)
+
 def test_saliency_extractor():
-        pytest.importorskip('cv2')
-        image_dir = join(_get_test_data_path(), 'image')
-        stim = ImageStim(join(image_dir, 'apple.jpg'))
-        tl = stim.extract([SaliencyExtractor()])
-        ms = tl.data['SaliencyExtractor'].data['max_saliency']
-        assert np.isclose(ms,0.99669953)
-        sf = tl.data['SaliencyExtractor'].data['frac_high_saliency']
-        assert np.isclose(sf,0.27461971)
+    pytest.importorskip('cv2')
+    image_dir = join(_get_test_data_path(), 'image')
+    stim = ImageStim(join(image_dir, 'apple.jpg'))
+    tl = stim.extract([SaliencyExtractor()])
+    ms = tl.data['SaliencyExtractor'].data['max_saliency']
+    assert np.isclose(ms,0.99669953)
+    sf = tl.data['SaliencyExtractor'].data['frac_high_saliency']
+    assert np.isclose(sf,0.27461971)
 
 @pytest.mark.skipif("'CLARIFAI_APP_ID' not in os.environ")
 def test_clarifaiAPI_extractor():
