@@ -9,12 +9,12 @@ from featurex.extractors.image import (BrightnessExtractor,
                                         SharpnessExtractor,
                                         VibranceExtractor,
                                         SaliencyExtractor)
+from featurex.extractors.video import DenseOpticalFlowExtractor
 from featurex.extractors.api import (IndicoAPIExtractor,
                                         ClarifaiAPIExtractor,
                                         WitTranscriptionExtractor)
-from featurex.extractors.api import IndicoAPIExtractor
 from featurex.stimuli.text import ComplexTextStim
-from featurex.stimuli.video import ImageStim
+from featurex.stimuli.video import ImageStim, VideoStim
 from featurex.stimuli.audio import AudioStim, TranscribedAudioStim
 from featurex.export import TimelineExporter
 from featurex.extractors import get_extractor
@@ -124,6 +124,17 @@ def test_saliency_extractor():
     assert np.isclose(ms,0.99669953)
     sf = tl.data['SaliencyExtractor'].data['frac_high_saliency']
     assert np.isclose(sf,0.27461971)
+
+def test_optical_flow_extractor():
+    pytest.importorskip('cv2')
+    video_dir = join(_get_test_data_path(), 'video')
+    stim = VideoStim(join(video_dir, 'small.mp4'))
+    ext = DenseOpticalFlowExtractor()
+    timeline = stim.extract([ext])
+    df = timeline.to_df()
+    assert df.shape == (168, 4)
+    target = df.query('name=="total_flow" & onset==3.0')['value'].values
+    assert np.isclose(target, 86248.05)
 
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
 def test_indicoAPI_extractor():
