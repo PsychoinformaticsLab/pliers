@@ -2,6 +2,8 @@ from collections import OrderedDict, defaultdict
 import pandas as pd
 import numpy as np
 from copy import deepcopy
+from abc import ABCMeta, abstractmethod, abstractproperty
+
 
 class Value(object):
     ''' The smallest unit of feature annotation. Binds a Stim and Extractor to
@@ -183,3 +185,25 @@ class Timeline(object):
                         new_data[var] = val
                 value.data = new_data
         return result
+
+
+class Transformer(object):
+
+    __metaclass__ = ABCMeta
+
+    def __init__(self, name=None):
+        if name is None:
+            name = self.__class__.__name__
+        self.name = name
+
+    @abstractmethod
+    def transform(self):
+        pass
+
+    @abstractproperty
+    def target(self):
+        pass
+
+    @abstractproperty
+    def __version__(self):
+        pass

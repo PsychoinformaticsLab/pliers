@@ -1,5 +1,5 @@
-from abc import abstractproperty
-from featurex.transformers import Transformer
+from abc import abstractmethod
+from featurex.core import Transformer
 
 def strict(func):
     def wrapper(*args, **kwargs):
@@ -17,8 +17,8 @@ class Extractor(Transformer):
 
     ''' Base Extractor class. Defines a target Stim class that all subclasses
     must override. '''
-    @abstractproperty
-    def target(self):
+    @abstractmethod
+    def extract(self):
         pass
 
 
