@@ -97,6 +97,7 @@ def test_saliency_extractor():
         assert np.isclose(sf,0.27461971)
 
 def test_tesseract_extractor():
+    pytest.importorskip('pytesseract')
     image_dir = join(_get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'button.jpg'))
     ext = TesseractExtractor()
