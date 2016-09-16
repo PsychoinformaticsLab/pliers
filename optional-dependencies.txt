@@ -4,3 +4,5 @@ matplotlib
 pysrt
 SpeechRecognition
 pySaliencyMap
+PIL
+pytesseract
