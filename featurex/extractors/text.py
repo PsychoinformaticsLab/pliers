@@ -3,7 +3,7 @@ Extractors that operate primarily or exclusively on Text stimuli.
 '''
 
 from featurex.stimuli.text import TextStim, ComplexTextStim
-from featurex.extractors import StimExtractor, ExtractorCollection, strict
+from featurex.extractors import Extractor, ExtractorCollection, strict
 from featurex.support.exceptions import FeatureXError
 from featurex.support.decorators import requires_nltk_corpus
 from featurex.datasets.text import fetch_dictionary, datasets
@@ -19,14 +19,14 @@ try:
 except ImportError:
     pass
 
-class TextExtractor(StimExtractor):
+class TextExtractor(Extractor):
 
     ''' Base Text Extractor class; all subclasses can only be applied to text.
     '''
     target = TextStim
 
 
-class ComplexTextExtractor(StimExtractor):
+class ComplexTextExtractor(Extractor):
 
     ''' Base ComplexTextStim Extractor class; all subclasses can only be
     applied to ComplexTextStim instance.
@@ -62,7 +62,7 @@ class DictionaryExtractor(TextExtractor):
         super(DictionaryExtractor, self).__init__()
 
     @strict
-    def apply(self, stim):
+    def transform(self, stim):
         if stim.text not in self.data.index:
             vals = pd.Series(self.missing, self.variables)
         else:
@@ -102,7 +102,7 @@ class LengthExtractor(TextExtractor):
 
     ''' Extracts the length of the text in characters. '''
 
-    def apply(self, stim):
+    def transform(self, stim):
         return Value(stim, self, {'text_length': len(stim.text)})
 
 
@@ -111,7 +111,7 @@ class NumUniqueWordsExtractor(TextExtractor):
     ''' Extracts the number of unique words used in the text. '''
 
     @requires_nltk_corpus
-    def apply(self, stim, tokenizer=None):
+    def transform(self, stim, tokenizer=None):
         text = stim.text
         if tokenizer is None:
             try:
@@ -129,7 +129,7 @@ class PartOfSpeechExtractor(ComplexTextExtractor):
     ''' Tags parts of speech in text with nltk. '''
 
     @requires_nltk_corpus
-    def apply(self, stim):
+    def transform(self, stim):
         words = [w.text for w in stim]
         pos = nltk.pos_tag(words)
         if len(words) != len(pos):

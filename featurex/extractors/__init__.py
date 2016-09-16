@@ -1,4 +1,5 @@
-from abc import ABCMeta, abstractproperty, abstractmethod
+from abc import abstractproperty
+from featurex.transformers import Transformer
 
 def strict(func):
     def wrapper(*args, **kwargs):
@@ -12,32 +13,16 @@ def strict(func):
     return wrapper
 
 
-class Extractor(object):
+class Extractor(Transformer):
 
-    ''' Base Extractor class. '''
-
-    def __init__(self, name=None):
-        if name is None:
-            name = self.__class__.__name__
-        self.name = name
-
-    __metaclass__ = ABCMeta
-
-    @abstractmethod
-    def apply(self):
-        pass
-
-
-class StimExtractor(Extractor):
-
-    ''' Abstract class for stimulus-specific extractors. Defines a target Stim
-    class that all subclasses must override. '''
+    ''' Base Extractor class. Defines a target Stim class that all subclasses
+    must override. '''
     @abstractproperty
     def target(self):
         pass
 
 
-class ExtractorCollection(StimExtractor):
+class ExtractorCollection(Extractor):
 
     ''' ExtractorCollection class -- essentially just a convenient container
     for multiple Extractors that allows initialization from extractor names.
@@ -52,9 +37,9 @@ class ExtractorCollection(StimExtractor):
         if extractors is None:
             extractors = []
         self.extractors = [get_extractor(s) for s in extractors]
-        super(StimExtractor, self).__init__()
+        super(Extractor, self).__init__()
 
-    def apply(self, stim, *args, **kwargs):
+    def transform(self, stim, *args, **kwargs):
         return stim.extract(self.extractors, *args, **kwargs)
 
 

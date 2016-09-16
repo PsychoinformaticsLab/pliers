@@ -1,11 +1,11 @@
 from featurex.stimuli import audio
-from featurex.extractors import StimExtractor
+from featurex.extractors import Extractor
 import numpy as np
 from scipy import fft
 from featurex.core import Value, Event
 
 
-class AudioExtractor(StimExtractor):
+class AudioExtractor(Extractor):
 
     ''' Base Audio Extractor class; all subclasses can only be applied to
     audio. '''
@@ -71,7 +71,7 @@ class STFTExtractor(AudioExtractor):
             plt.show()
         return X
 
-    def apply(self, stim):
+    def transform(self, stim):
         data = self._stft(stim)
         events = []
         time_bins = np.arange(0., stim.duration-self.frame_size, self.hop_size)
@@ -106,7 +106,7 @@ class MeanAmplitudeExtractor(TranscribedAudioExtractor):
     def __init__(self):
         pass
     
-    def apply(self, stim):
+    def transform(self, stim):
         amps = stim.data
         sampling_rate = stim.sampling_rate
         elements = stim.transcription.elements

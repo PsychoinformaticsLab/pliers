@@ -3,7 +3,7 @@ Extractors that operate primarily or exclusively on Video stimuli.
 '''
 
 from featurex.stimuli.video import VideoStim
-from featurex.extractors import StimExtractor
+from featurex.extractors import Extractor
 from featurex.core import Value, Event
 import numpy as np
 
@@ -14,7 +14,7 @@ except ImportError:
     pass
 
 
-class VideoExtractor(StimExtractor):
+class VideoExtractor(Extractor):
     ''' Base Video Extractor class; all subclasses can only be applied to
     video. '''
     target = VideoStim
@@ -26,7 +26,7 @@ class DenseOpticalFlowExtractor(VideoExtractor):
 
     '''
 
-    def apply(self, stim, show=False):
+    def transform(self, stim, show=False):
 
         events = []
         for i, f in enumerate(stim):
