@@ -43,7 +43,7 @@ class ExtractorCollection(Extractor):
         return stim.extract(self.extractors, *args, **kwargs)
 
 
-def get_extractor(name):
+def get_extractor(name, *args, **kwargs):
     ''' Scans list of currently available Extractor classes and returns an
     instantiation of the first one whose name perfectly matches
     (case-insensitive).
@@ -52,6 +52,8 @@ def get_extractor(name):
             e.g., 'stftextractor' or 'CornerDetectionExtractor'. For
             convenience, the 'extractor' suffix can be dropped--i.e., passing
             'stft' is equivalent to passing 'stftextractor'.
+        args, kwargs: Optional positional or keyword arguments to pass onto
+            the Transformer.
     '''
 
     name = name.lower()
@@ -75,6 +77,6 @@ def get_extractor(name):
     extractors = get_subclasses(Extractor)
     for a in extractors:
         if a.__name__.lower().split('.')[-1] == name.lower():
-            return a()
+            return a(*args, **kwargs)
 
     raise KeyError("No extractor named '%s' found." % name)
