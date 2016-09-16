@@ -12,7 +12,7 @@ from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.video import ImageStim
 from featurex.stimuli.audio import AudioStim, TranscribedAudioStim
 from featurex.export import TimelineExporter
-from featurex.extractors import get_extractor
+from featurex.core import get_transformer
 from featurex.support.download import download_nltk_data
 import numpy as np
 import pytest
@@ -74,8 +74,8 @@ def test_mean_amplitude_extractor():
     values = [events[event].values[0].data["mean_amplitude"] for event in events.keys()]
     assert values == targets
 
-def test_get_extractor_by_name():
-    tda = get_extractor('stFteXtrActOr')
+def test_get_transformer_by_name():
+    tda = get_transformer('stFteXtrActOr')
     assert isinstance(tda, STFTExtractor)
 
 def test_part_of_speech_extractor():

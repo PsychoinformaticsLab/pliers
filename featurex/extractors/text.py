@@ -3,7 +3,8 @@ Extractors that operate primarily or exclusively on Text stimuli.
 '''
 
 from featurex.stimuli.text import TextStim, ComplexTextStim
-from featurex.extractors import Extractor, ExtractorCollection, strict
+from featurex.extractors import Extractor, strict
+from featurex.core import TransformerCollection
 from featurex.support.exceptions import FeatureXError
 from featurex.support.decorators import requires_nltk_corpus
 from featurex.datasets.text import fetch_dictionary, datasets
@@ -145,7 +146,7 @@ class PartOfSpeechExtractor(ComplexTextExtractor):
         return events
 
 
-class BasicStatsExtractorCollection(ExtractorCollection, TextExtractor):
+class BasicStatsExtractorCollection(TransformerCollection, TextExtractor):
 
     ''' A collection of basic text statistics. Just a prototype; needs work.
     '''

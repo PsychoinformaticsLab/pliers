@@ -207,3 +207,58 @@ class Transformer(object):
     @abstractproperty
     def __version__(self):
         pass
+
+
+class TransformerCollection(Transformer):
+
+    ''' TransformerCollection class -- essentially just a convenient container
+    for multiple Transformers that allows initialization from transformer names.
+    Args:
+        transformers (list): A list of strings corresponding to the names of
+            the transformers to add to the collection. Must exactly match one
+            or more transformer class names (case-insensitive).
+    '''
+
+    def __init__(self, transformers=None):
+        if transformers is None:
+            transformers = []
+        self.transformers = [get_transformer(s) for s in transformers]
+        super(Transformer, self).__init__()
+
+    def transform(self, stim, *args, **kwargs):
+        return stim.extract(self.transformers, *args, **kwargs)
+
+
+def get_transformer(name, *args, **kwargs):
+    ''' Scans list of currently available Transformer classes and returns an
+    instantiation of the first one whose name perfectly matches
+    (case-insensitive).
+    Args:
+        name (str): The name of the transformer to retrieve. Case-insensitive;
+            e.g., 'stftextractor' or 'CornerDetectionExtractor'.
+        args, kwargs: Optional positional or keyword arguments to pass onto
+            the Transformer.
+    '''
+
+    name = name.lower()
+
+    # Import all submodules so we have a comprehensive list of transformers
+    from featurex.extractors import audio
+    from featurex.extractors import image
+    from featurex.extractors import text
+    from featurex.extractors import video
+
+    # Recursively get all classes that inherit from Extractor
+    def get_subclasses(cls):
+        subclasses = []
+        for sc in cls.__subclasses__():
+            subclasses.append(sc)
+            subclasses.extend(get_subclasses(sc))
+        return subclasses
+
+    transformers = get_subclasses(Transformer)
+    for a in transformers:
+        if a.__name__.lower().split('.')[-1] == name.lower():
+            return a(*args, **kwargs)
+
+    raise KeyError("No transformer named '%s' found." % name)
