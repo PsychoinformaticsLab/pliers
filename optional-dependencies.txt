@@ -3,5 +3,4 @@ cv2
 matplotlib
 pysrt
 SpeechRecognition
-pySaliencyMap
 pytesseract
