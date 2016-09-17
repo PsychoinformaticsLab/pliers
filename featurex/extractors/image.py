@@ -10,22 +10,7 @@ import numpy as np
 import tempfile
 import os
 from warnings import warn
-
-# Optional dependencies
-try:
-    import cv2
-except ImportError:
-    pass
-
-try:
-    import pytesseract
-except ImportError:
-    pass
-
-try:
-    import Image
-except ImportError:
-    from PIL import Image
+from PIL import Image
 
 class ImageExtractor(StimExtractor):
 
@@ -56,6 +41,7 @@ class SharpnessExtractor(ImageExtractor):
         super(self.__class__, self).__init__()
 
     def apply(self, stim):
+        import cv2
         # Taken from
         # http://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry?lq=1
         data = stim.data
@@ -86,6 +72,7 @@ class TesseractExtractor(ImageExtractor):
         ImageExtractor.__init__(self)
 
     def apply(self, img):
+        import pytesseract
         data = img.data
         text = pytesseract.image_to_string(Image.fromarray(data))
 
