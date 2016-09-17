@@ -3,7 +3,7 @@ Extractors that operate primarily or exclusively on Text stimuli.
 '''
 
 from featurex.stimuli.text import TextStim, ComplexTextStim
-from featurex.extractors import Extractor, strict
+from featurex.extractors import Extractor
 from featurex.core import TransformerCollection
 from featurex.support.exceptions import FeatureXError
 from featurex.support.decorators import requires_nltk_corpus
@@ -62,8 +62,7 @@ class DictionaryExtractor(TextExtractor):
         self.missing = missing
         super(DictionaryExtractor, self).__init__()
 
-    @strict
-    def transform(self, stim):
+    def _transform(self, stim):
         if stim.text not in self.data.index:
             vals = pd.Series(self.missing, self.variables)
         else:
@@ -103,7 +102,7 @@ class LengthExtractor(TextExtractor):
 
     ''' Extracts the length of the text in characters. '''
 
-    def transform(self, stim):
+    def _transform(self, stim):
         return Value(stim, self, {'text_length': len(stim.text)})
 
 
@@ -112,7 +111,7 @@ class NumUniqueWordsExtractor(TextExtractor):
     ''' Extracts the number of unique words used in the text. '''
 
     @requires_nltk_corpus
-    def transform(self, stim, tokenizer=None):
+    def _transform(self, stim, tokenizer=None):
         text = stim.text
         if tokenizer is None:
             try:
@@ -130,7 +129,7 @@ class PartOfSpeechExtractor(ComplexTextExtractor):
     ''' Tags parts of speech in text with nltk. '''
 
     @requires_nltk_corpus
-    def transform(self, stim):
+    def _transform(self, stim):
         words = [w.text for w in stim]
         pos = nltk.pos_tag(words)
         if len(words) != len(pos):

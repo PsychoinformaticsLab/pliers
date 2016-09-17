@@ -42,7 +42,7 @@ class GoogleAPIExtractor(ImageExtractor):
                                        discoveryServiceUrl=DISCOVERY_URL)
         super(GoogleAPIExtractor, self).__init__()
 
-    def transform(self, stim):
+    def _transform(self, stim):
         if isinstance(stim, ImageStim):
             is_image = True
             stim = [stim]

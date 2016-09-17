@@ -17,7 +17,7 @@ class DummyExtractor(Extractor):
 
     target = Stim
 
-    def transform(self, stim):
+    def _transform(self, stim):
         return Value(stim, self, {'constant': 1})
 
 
@@ -25,7 +25,7 @@ class DummyIterableExtractor(Extractor):
 
     target = Stim
 
-    def transform(self, stim):
+    def _transform(self, stim):
 
         events = []
         time_bins = np.arange(0., stim.duration, 1.)

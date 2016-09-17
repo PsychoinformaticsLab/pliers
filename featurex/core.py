@@ -195,8 +195,17 @@ class Transformer(with_metaclass(ABCMeta)):
             name = self.__class__.__name__
         self.name = name
 
+    def transform(self, stim, *args, **kwargs):
+        if not isinstance(stim, self.target):
+            msg = "Extractors of type %s can only be applied to stimuli of " \
+                  "type(s) %s, not type %s."
+            msg = msg % (self.__class__.__name__, self.target.__name__,
+                         stim.__class__.__name__)   
+            raise TypeError(msg)      
+        return self._transform(stim, *args, **kwargs)
+
     @abstractmethod
-    def transform(self):
+    def _transform(self):
         pass
 
     @abstractproperty
@@ -225,7 +234,7 @@ class TransformerCollection(Transformer):
         self.transformers = [get_transformer(s) for s in transformers]
         super(TransformerCollection, self).__init__()
 
-    def transform(self, stim, *args, **kwargs):
+    def _transform(self, stim, *args, **kwargs):
         return stim.extract(self.transformers, *args, **kwargs)
 
 
@@ -243,10 +252,7 @@ def get_transformer(name, *args, **kwargs):
     name = name.lower()
 
     # Import all submodules so we have a comprehensive list of transformers
-    from featurex.extractors import audio
-    from featurex.extractors import image
-    from featurex.extractors import text
-    from featurex.extractors import video
+    from featurex.extractors import api, audio, google, image, text, video
 
     # Recursively get all classes that inherit from Extractor
     def get_subclasses(cls):
