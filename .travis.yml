@@ -33,6 +33,8 @@ before_install:
 install:
 - pip install -r requirements.txt
 - pip install coveralls pytest-cov pysrt xlrd
+- conda install -c menpo opencv=2.4.11
+- pip install -r optional-dependencies.txt
 
 before_script:
   - python -m featurex.support.download
