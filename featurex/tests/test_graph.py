@@ -1,6 +1,6 @@
 import pytest
 from featurex.graph import Graph, Node
-from featurex.extractors.image import BrightnessExtractor, SaliencyExtractor
+from featurex.extractors.image import BrightnessExtractor
 from featurex.stimuli.image import ImageStim
 from .utils import get_test_data_path
 from os.path import join
@@ -45,4 +45,3 @@ def test_graph_smoke_test():
     graph = Graph(nodes)
     result = graph.extract([stim])
     assert 'avg_brightness' in result[0].data
-    assert len(set(result[1].data.keys()) & {'max_saliency', 'max_x'}) == 2
