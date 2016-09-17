@@ -7,11 +7,11 @@ from os.path import join
 
 
 def test_node_init():
-    n = Node('my_node', SaliencyExtractor())
-    assert isinstance(n.transformer, SaliencyExtractor)
+    n = Node('my_node', BrightnessExtractor())
+    assert isinstance(n.transformer, BrightnessExtractor)
     assert n.name == 'my_node'
-    n = Node('my_node', 'saliencyextractor')    
-    assert isinstance(n.transformer, SaliencyExtractor)
+    n = Node('my_node', 'brightnessextractor')    
+    assert isinstance(n.transformer, BrightnessExtractor)
 
 
 def test_node_arg_parsing():
@@ -20,7 +20,7 @@ def test_node_arg_parsing():
     args2 = Graph._parse_node_args(n2)
     assert args1 == args2 == {'transformer': 'MyLovelyExtractor'}
 
-    node = (SaliencyExtractor(), 'saliency')
+    node = ('saliencyextractor', 'saliency')
     args = Graph._parse_node_args(node)
     assert set(args.keys()) == {'transformer', 'name'}
 
@@ -38,10 +38,7 @@ def test_graph_smoke_test():
     
     filename = join(get_test_data_path(), 'image', 'obama.jpg')
     stim = ImageStim(filename)
-    nodes = [
-        (BrightnessExtractor(), 'brightness'),
-        'saliencyextractor'
-    ]
+    nodes = [(BrightnessExtractor(), 'brightness')]
     graph = Graph(nodes)
     result = graph.extract([stim])
     assert 'avg_brightness' in result[0].data
