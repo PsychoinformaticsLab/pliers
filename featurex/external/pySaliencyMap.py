@@ -11,7 +11,7 @@
 
 import cv2
 import numpy as np
-import pySaliencyMapDefs
+from featurex.external import pySaliencyMapDefs
 
 class pySaliencyMap:
     # initialization
