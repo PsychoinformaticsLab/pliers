@@ -1,6 +1,6 @@
 from os.path import join
 import os
-from .utils import _get_test_data_path
+from .utils import get_test_data_path
 from featurex.extractors.text import (DictionaryExtractor,
                                       PartOfSpeechExtractor,
                                       PredefinedDictionaryExtractor)
@@ -17,14 +17,14 @@ from featurex.support.download import download_nltk_data
 import numpy as np
 import pytest
 
-TEXT_DIR = join(_get_test_data_path(), 'text')
+TEXT_DIR = join(get_test_data_path(), 'text')
 
 @pytest.fixture(scope='module')
 def get_nltk():
     download_nltk_data()
 
 def test_check_target_type():
-    audio_dir = join(_get_test_data_path(), 'audio')
+    audio_dir = join(get_test_data_path(), 'audio')
     stim = AudioStim(join(audio_dir, 'barber.wav'))
     td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
                              variables=['length', 'frequency'])
@@ -54,7 +54,7 @@ def test_predefined_dictionary_extractor():
     assert df.shape == (18, 4)
 
 def test_stft_extractor():
-    audio_dir = join(_get_test_data_path(), 'audio')
+    audio_dir = join(get_test_data_path(), 'audio')
     stim = AudioStim(join(audio_dir, 'barber.wav'))
     ext = STFTExtractor(frame_size=1., spectrogram=False,
                         bins=[(100, 300), (300, 3000), (3000, 20000)])
@@ -63,8 +63,8 @@ def test_stft_extractor():
     assert df.shape == (1671, 4)
 
 def test_mean_amplitude_extractor():
-    audio_dir = join(_get_test_data_path(), 'audio')
-    text_dir = join(_get_test_data_path(), 'text')
+    audio_dir = join(get_test_data_path(), 'audio')
+    text_dir = join(get_test_data_path(), 'text')
     stim = TranscribedAudioStim(join(audio_dir, "barber_edited.wav"),
                                 join(text_dir, "wonderful_edited.srt"))
     ext = MeanAmplitudeExtractor()
@@ -87,7 +87,7 @@ def test_part_of_speech_extractor():
 
 def test_saliency_extractor():
         pytest.importorskip('cv2')
-        image_dir = join(_get_test_data_path(), 'image')
+        image_dir = join(get_test_data_path(), 'image')
         stim = ImageStim(join(image_dir, 'apple.jpg'))
         tl = stim.extract([SaliencyExtractor()])
         ms = tl.data['SaliencyExtractor'].data['max_saliency']
@@ -97,7 +97,7 @@ def test_saliency_extractor():
 
 @pytest.mark.skipif("'CLARIFAI_APP_ID' not in os.environ")
 def test_clarifaiAPI_extractor():
-    image_dir = join(_get_test_data_path(), 'image')
+    image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
     ext = ClarifaiAPIExtractor()
     output = ext.apply(stim).data['tags']
@@ -110,7 +110,7 @@ def test_clarifaiAPI_extractor():
 
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
 def test_indicoAPI_extractor():
-    srtfile = join(_get_test_data_path(), 'text', 'wonderful.srt')
+    srtfile = join(get_test_data_path(), 'text', 'wonderful.srt')
     srt_stim = ComplexTextStim(srtfile)
     ext = IndicoAPIExtractor(api_key=os.environ['INDICO_APP_KEY'],model = 'emotion')
     output = ext.apply(srt_stim)

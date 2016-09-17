@@ -223,7 +223,7 @@ class TransformerCollection(Transformer):
         if transformers is None:
             transformers = []
         self.transformers = [get_transformer(s) for s in transformers]
-        super(Transformer, self).__init__()
+        super(TransformerCollection, self).__init__()
 
     def transform(self, stim, *args, **kwargs):
         return stim.extract(self.transformers, *args, **kwargs)

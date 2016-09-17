@@ -153,7 +153,7 @@ class BasicStatsExtractorCollection(TransformerCollection, TextExtractor):
 
     def __init__(self, statistics=None):
 
-        all_stats = {'length', 'numuniquewords'}
+        all_stats = {'lengthextractor', 'numuniquewordsextractor'}
         if statistics is not None:
             statistics = set([s.lower() for s in statistics]) & all_stats
         else:

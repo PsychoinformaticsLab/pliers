@@ -11,6 +11,8 @@ class Node(object):
     def __init__(self, name, transformer):
         self.name = name
         self.children = []
+        if isinstance(transformer, string_types):
+            transformer = get_transformer(transformer)
         self.transformer = transformer
 
     def collect(self, stim):
@@ -43,7 +45,8 @@ class Graph(Node):
             node_args = self._parse_node_args(n)
             self.add_node(**node_args, parent=parent)
 
-    def _parse_node_args(self, node):
+    @staticmethod
+    def _parse_node_args(node):
 
         if isinstance(node, dict):
             return node

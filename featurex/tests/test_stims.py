@@ -1,4 +1,4 @@
-from .utils import _get_test_data_path
+from .utils import get_test_data_path
 from featurex.stimuli.video import VideoStim, VideoFrameStim
 from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.audio import AudioStim
@@ -51,7 +51,7 @@ def dummy_iter_extractor():
 
 
 def test_image_stim(dummy_iter_extractor):
-    filename = join(_get_test_data_path(), 'image', 'apple.jpg')
+    filename = join(get_test_data_path(), 'image', 'apple.jpg')
     stim = ImageStim(filename)
     assert stim.data.shape == (288, 420, 3)
     values = stim.extract([dummy_iter_extractor])
@@ -60,7 +60,7 @@ def test_image_stim(dummy_iter_extractor):
 
 def test_video_stim():
     ''' Test VideoStim functionality. '''
-    filename = join(_get_test_data_path(), 'video', 'small.mp4')
+    filename = join(get_test_data_path(), 'video', 'small.mp4')
     video = VideoStim(filename)
     assert video.fps == 30
     assert video.n_frames == 168
@@ -75,7 +75,7 @@ def test_video_stim():
     f.data.shape == (320, 560, 3)
 
 def test_audio_stim(dummy_iter_extractor):
-    audio_dir = join(_get_test_data_path(), 'audio')
+    audio_dir = join(get_test_data_path(), 'audio')
     stim = AudioStim(join(audio_dir, 'barber.wav'))
     assert round(stim.duration) == 57
     assert stim.sampling_rate == 11025
@@ -83,7 +83,7 @@ def test_audio_stim(dummy_iter_extractor):
     assert isinstance(tl, Timeline)
 
 def test_complex_text_stim():
-    text_dir = join(_get_test_data_path(), 'text')
+    text_dir = join(get_test_data_path(), 'text')
     stim = ComplexTextStim(join(text_dir, 'complex_stim_no_header.txt'),
                            columns='ot', default_duration=0.2)
     assert len(stim.elements) == 4
@@ -94,7 +94,7 @@ def test_complex_text_stim():
     assert stim.elements[2].duration == 0.1
 
 def test_complex_stim_from_text():
-    textfile = join(_get_test_data_path(), 'text', 'scandal.txt')
+    textfile = join(get_test_data_path(), 'text', 'scandal.txt')
     text = open(textfile).read().strip()
     stim = ComplexTextStim.from_text(text)
     target = ['To', 'Sherlock', 'Holmes']
@@ -106,8 +106,8 @@ def test_complex_stim_from_text():
     assert len(stim.elements) == 209
     
 def test_complex_stim_from_srt():
-    srtfile = join(_get_test_data_path(), 'text', 'wonderful.srt')
-    textfile = join(_get_test_data_path(), 'text', 'wonderful.txt')
+    srtfile = join(get_test_data_path(), 'text', 'wonderful.srt')
+    textfile = join(get_test_data_path(), 'text', 'wonderful.txt')
     df = pd.read_csv(textfile, sep='\t')
     target = df["text"].tolist()
     srt_stim = ComplexTextStim(srtfile)

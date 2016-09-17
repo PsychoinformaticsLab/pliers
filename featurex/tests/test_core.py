@@ -1,4 +1,4 @@
-from .utils import _get_test_data_path
+from .utils import get_test_data_path
 from featurex.stimuli.video import VideoStim
 from featurex.extractors.image import VibranceExtractor
 from featurex.export import FSLExporter
@@ -12,7 +12,7 @@ import shutil
 def test_full_pipeline():
     ''' Smoke test of entire pipeline, from stimulus loading to
     event file export. '''
-    stim = VideoStim(join(_get_test_data_path(), 'video', 'small.mp4'))
+    stim = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
     extractors = [VibranceExtractor()]
     timeline = stim.extract(extractors, show=False)
     exp = FSLExporter()
@@ -24,7 +24,7 @@ def test_full_pipeline():
     shutil.rmtree(tmpdir)
 
 def test_lazy_extraction():
-    textfile = join(_get_test_data_path(), 'text', 'scandal.txt')
+    textfile = join(get_test_data_path(), 'text', 'scandal.txt')
     results = extract([textfile], ['basicstatsextractorcollection'])
     assert isinstance(results[0], Value)
 
