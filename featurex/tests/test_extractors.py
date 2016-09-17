@@ -5,11 +5,16 @@ from featurex.extractors.text import (DictionaryExtractor,
                                       PartOfSpeechExtractor,
                                       PredefinedDictionaryExtractor)
 from featurex.extractors.audio import STFTExtractor, MeanAmplitudeExtractor
-from featurex.extractors.image import SaliencyExtractor
-from featurex.extractors.api import ClarifaiAPIExtractor
-from featurex.extractors.api import IndicoAPIExtractor
+from featurex.extractors.image import (BrightnessExtractor,
+                                        SharpnessExtractor,
+                                        VibranceExtractor,
+                                        SaliencyExtractor)
+from featurex.extractors.video import DenseOpticalFlowExtractor
+from featurex.extractors.api import (IndicoAPIExtractor,
+                                        ClarifaiAPIExtractor,
+                                        WitTranscriptionExtractor)
 from featurex.stimuli.text import ComplexTextStim
-from featurex.stimuli.video import ImageStim
+from featurex.stimuli.video import ImageStim, VideoStim
 from featurex.stimuli.audio import AudioStim, TranscribedAudioStim
 from featurex.export import TimelineExporter
 from featurex.core import get_transformer
@@ -85,35 +90,55 @@ def test_part_of_speech_extractor():
     assert df.iloc[1, 3] == 'NN'
     assert df.shape == (4, 4)
 
-def test_saliency_extractor():
-        pytest.importorskip('cv2')
-        image_dir = join(get_test_data_path(), 'image')
-        stim = ImageStim(join(image_dir, 'apple.jpg'))
-        tl = stim.extract([SaliencyExtractor()])
-        ms = tl.data['SaliencyExtractor'].data['max_saliency']
-        assert np.isclose(ms,0.99669953)
-        sf = tl.data['SaliencyExtractor'].data['frac_high_saliency']
-        assert np.isclose(sf,0.27461971)
-
-@pytest.mark.skipif("'CLARIFAI_APP_ID' not in os.environ")
-def test_clarifaiAPI_extractor():
+def test_brightness_extractor():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    ext = ClarifaiAPIExtractor()
-    output = ext.apply(stim).data['tags']
-    # Check success of request
-    assert output['status_code'] == 'OK'
-    # Check success of each image tagged
-    for result in output['results']:
-        assert result['status_code'] == 'OK'
-        assert result['result']['tag']['classes']
+    val = stim.extract([BrightnessExtractor()])
+    brightness = val.data['BrightnessExtractor'].data['avg_brightness']
+    assert np.isclose(brightness,0.88784294)
+
+def test_sharpness_extractor():
+    pytest.importorskip('cv2')
+    image_dir = join(get_test_data_path(), 'image')
+    stim = ImageStim(join(image_dir, 'apple.jpg'))
+    val = stim.extract([SharpnessExtractor()])
+    sharpness = val.data['SharpnessExtractor'].data['sharpness']
+    assert np.isclose(sharpness,1.0)
+
+def test_vibrance_extractor():
+    image_dir = join(get_test_data_path(), 'image')
+    stim = ImageStim(join(image_dir, 'apple.jpg'))
+    val = stim.extract([VibranceExtractor()])
+    color = val.data['VibranceExtractor'].data['avg_color']
+    assert np.isclose(color,1370.65482988)
+
+def test_saliency_extractor():
+    pytest.importorskip('cv2')
+    image_dir = join(get_test_data_path(), 'image')
+    stim = ImageStim(join(image_dir, 'apple.jpg'))
+    tl = stim.extract([SaliencyExtractor()])
+    ms = tl.data['SaliencyExtractor'].data['max_saliency']
+    assert np.isclose(ms,0.99669953)
+    sf = tl.data['SaliencyExtractor'].data['frac_high_saliency']
+    assert np.isclose(sf,0.27461971)
+
+def test_optical_flow_extractor():
+    pytest.importorskip('cv2')
+    video_dir = join(get_test_data_path(), 'video')
+    stim = VideoStim(join(video_dir, 'small.mp4'))
+    ext = DenseOpticalFlowExtractor()
+    timeline = stim.extract([ext])
+    df = timeline.to_df()
+    assert df.shape == (168, 4)
+    target = df.query('name=="total_flow" & onset==3.0')['value'].values
+    assert np.isclose(target, 86248.05)
 
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
 def test_indicoAPI_extractor():
     srtfile = join(get_test_data_path(), 'text', 'wonderful.srt')
     srt_stim = ComplexTextStim(srtfile)
     ext = IndicoAPIExtractor(api_key=os.environ['INDICO_APP_KEY'],model = 'emotion')
-    output = ext.apply(srt_stim)
+    output = srt_stim.extract([ext])
     outdfKeys = set(output.to_df()['name'])
     outdfKeysCheck = set([
         'emotion_anger',
@@ -122,3 +147,24 @@ def test_indicoAPI_extractor():
         'emotion_sadness',
         'emotion_surprise'])
     assert outdfKeys == outdfKeysCheck
+
+@pytest.mark.skipif("'CLARIFAI_APP_ID' not in os.environ")
+def test_clarifaiAPI_extractor():
+    image_dir = join(get_test_data_path(), 'image')
+    stim = ImageStim(join(image_dir, 'apple.jpg'))
+    ext = ClarifaiAPIExtractor()
+    output = ext.transform(stim).data['tags']
+    # Check success of request
+    assert output['status_code'] == 'OK'
+    # Check success of each image tagged
+    for result in output['results']:
+        assert result['status_code'] == 'OK'
+        assert result['result']['tag']['classes']
+
+@pytest.mark.skipif("'WIT_AI_APP_KEY' not in os.environ")
+def test_witaiAPI_extractor():
+    audio_dir = join(get_test_data_path(), 'audio')
+    stim = AudioStim(join(audio_dir, 'homer.wav'))
+    ext = WitTranscriptionExtractor()
+    text = ext.transform(stim).data['text']
+    assert 'laws of thermodynamics' in text
