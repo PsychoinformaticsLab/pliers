@@ -96,8 +96,22 @@ def test_brightness_extractor():
     stim = ImageStim(join(image_dir, 'apple.jpg'))
     val = stim.extract([BrightnessExtractor()])
     brightness = val.data['BrightnessExtractor'].data['avg_brightness']
-    print brightness
     assert np.isclose(brightness,0.88784294)
+
+def test_sharpness_extractor():
+    pytest.importorskip('cv2')
+    image_dir = join(_get_test_data_path(), 'image')
+    stim = ImageStim(join(image_dir, 'apple.jpg'))
+    val = stim.extract([SharpnessExtractor()])
+    sharpness = val.data['SharpnessExtractor'].data['sharpness']
+    assert np.isclose(sharpness,1.0)
+
+def test_vibrance_extractor():
+    image_dir = join(_get_test_data_path(), 'image')
+    stim = ImageStim(join(image_dir, 'apple.jpg'))
+    val = stim.extract([VibranceExtractor()])
+    color = val.data['VibranceExtractor'].data['avg_color']
+    assert np.isclose(color,1370.65482988)
 
 def test_tesseract_extractor():
     pytest.importorskip('pytesseract')
@@ -106,23 +120,6 @@ def test_tesseract_extractor():
     ext = TesseractExtractor()
     output = ext.apply(stim).data['text']
     assert output == 'Exit'
-
-def test_sharpness_extractor():
-    pytest.importorskip('cv2')
-    image_dir = join(_get_test_data_path(), 'image')
-    stim = ImageStim(join(image_dir, 'apple.jpg'))
-    val = stim.extract([SharpnessExtractor()])
-    sharpness = val.data['SharpnessExtractor'].data['sharpness']
-    print sharpness
-    assert np.isclose(sharpness,1.0)
-
-def test_vibrance_extractor():
-    image_dir = join(_get_test_data_path(), 'image')
-    stim = ImageStim(join(image_dir, 'apple.jpg'))
-    val = stim.extract([VibranceExtractor()])
-    color = val.data['VibranceExtractor'].data['avg_color']
-    print color
-    assert np.isclose(color,1370.65482988)
 
 def test_saliency_extractor():
     pytest.importorskip('cv2')
