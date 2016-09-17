@@ -37,13 +37,13 @@ class Graph(Node):
     def add_branch(self, nodes, parent=None):
         for n in nodes:
             node_args = self._parse_node_args(n)
-            node = self.add_node(**node_args, parent=parent, return_node=True)
+            node = self.add_node(parent=parent, return_node=True, **node_args)
             parent = node
 
     def add_children(self, nodes, parent=None):
         for n in nodes:
             node_args = self._parse_node_args(n)
-            self.add_node(**node_args, parent=parent)
+            self.add_node(parent=parent, **node_args)
 
     @staticmethod
     def _parse_node_args(node):
@@ -79,7 +79,7 @@ class Graph(Node):
         if children is not None:
             for c in children:
                 c_kwargs = self._parse_node_args(c)
-                self.add_node(**c, parent=node)
+                self.add_node(parent=node, **c)
 
         if return_node:
             return node

@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from copy import deepcopy
 from abc import ABCMeta, abstractmethod, abstractproperty
+from six import with_metaclass
 
 
 class Value(object):
@@ -187,9 +188,7 @@ class Timeline(object):
         return result
 
 
-class Transformer(object):
-
-    __metaclass__ = ABCMeta
+class Transformer(with_metaclass(ABCMeta)):
 
     def __init__(self, name=None):
         if name is None:
@@ -204,9 +203,10 @@ class Transformer(object):
     def target(self):
         pass
 
-    @abstractproperty
-    def __version__(self):
-        pass
+    # TODO: implement versioning on all subclasses
+    # @abstractproperty
+    # def __version__(self):
+    #     pass
 
 
 class TransformerCollection(Transformer):
