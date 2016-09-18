@@ -3,10 +3,18 @@ from featurex.core import Transformer
 from six import with_metaclass
 
 
-class Extractor(with_metaclass(ABCMeta, Transformer)):
+__all__ = ['api', 'audio', 'google', 'image', 'text', 'video']
 
-    ''' Base Extractor class. Defines a target Stim class that all subclasses
-    must override. '''
-    # @abstractmethod
-    # def extract(self):
-    #     pass
+
+class Extractor(with_metaclass(ABCMeta, Transformer)):
+    ''' Base class for Converters.'''
+
+    def extract(self, stim, *args, **kwargs):
+        return self._extract(stim, *args, **kwargs)
+
+    @abstractmethod
+    def _extract(self, stim):
+        pass
+
+    def _transform(self, stim, *args, **kwargs):
+        return self.extract(stim, *args, **kwargs)
