@@ -2,7 +2,7 @@
 Extractors that operate primarily or exclusively on Image stimuli.
 '''
 
-from featurex.stimuli import video
+from featurex.stimuli.image import ImageStim
 from featurex.extractors import Extractor
 from featurex.core import Value
 import time
@@ -22,7 +22,7 @@ class ImageExtractor(Extractor):
 
     ''' Base Image Extractor class; all subclasses can only be applied to
     images. '''
-    target = video.ImageStim
+    target = ImageStim
 
 
 class BrightnessExtractor(ImageExtractor):
@@ -32,7 +32,7 @@ class BrightnessExtractor(ImageExtractor):
     def __init__(self):
         super(self.__class__, self).__init__()
 
-    def _transform(self, stim):
+    def _extract(self, stim):
         data = stim.data
         avg_brightness = np.amax(data, 2).mean() / 255.0
 
@@ -46,7 +46,7 @@ class SharpnessExtractor(ImageExtractor):
     def __init__(self):
         super(self.__class__, self).__init__()
 
-    def _transform(self, stim):
+    def _extract(self, stim):
         # Taken from
         # http://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry?lq=1
         data = stim.data
@@ -63,7 +63,7 @@ class VibranceExtractor(ImageExtractor):
     def __init__(self):
         super(self.__class__, self).__init__()
 
-    def _transform(self, stim):
+    def _extract(self, stim):
         data = stim.data
         avg_color = np.var(data, 2).mean()
         return Value(stim, self, {'avg_color': avg_color})
@@ -75,7 +75,7 @@ class SaliencyExtractor(ImageExtractor):
     def __init__(self):
         super(self.__class__, self).__init__()
 
-    def _transform(self, stim):
+    def _extract(self, stim):
         from featurex.external import pySaliencyMap
         # pySaliencyMap from https://github.com/akisato-/pySaliencyMap
         data = stim.data

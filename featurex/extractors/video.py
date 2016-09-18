@@ -26,7 +26,7 @@ class DenseOpticalFlowExtractor(VideoExtractor):
 
     '''
 
-    def _transform(self, stim, show=False):
+    def _extract(self, stim, show=False):
 
         events = []
         for i, f in enumerate(stim):

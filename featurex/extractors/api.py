@@ -59,7 +59,7 @@ class IndicoAPIExtractor(ComplexTextExtractor):
                                 "political, keywords, people, places, organizations, "
                                 "twitter_engagement, personality, personas, text_features")
 
-    def _transform(self, text):
+    def _extract(self, text):
         tokens = [token.text for token in text]
         scores = self.model(tokens)
         events = []
@@ -104,7 +104,7 @@ class ClarifaiAPIExtractor(ImageExtractor):
 
         self.select_classes = select_classes
 
-    def _transform(self, img):
+    def _extract(self, img):
         data = img.data
         temp_file = tempfile.mktemp() + '.png'
         imsave(temp_file, data)
@@ -132,7 +132,7 @@ class WitTranscriptionExtractor(AudioExtractor):
         self.recognizer = sr.Recognizer()
         self.api_key = api_key
 
-    def _transform(self, audio):
+    def _extract(self, audio):
         with sr.AudioFile(audio.filename) as source:
             clip = self.recognizer.record(source)
         text = self.recognizer.recognize_wit(clip, self.api_key)

@@ -71,7 +71,7 @@ class STFTExtractor(AudioExtractor):
             plt.show()
         return X
 
-    def _transform(self, stim):
+    def _extract(self, stim):
         data = self._stft(stim)
         events = []
         time_bins = np.arange(0., stim.duration-self.frame_size, self.hop_size)
@@ -106,7 +106,7 @@ class MeanAmplitudeExtractor(TranscribedAudioExtractor):
     def __init__(self):
         pass
     
-    def _transform(self, stim):
+    def _extract(self, stim):
         amps = stim.data
         sampling_rate = stim.sampling_rate
         elements = stim.transcription.elements
