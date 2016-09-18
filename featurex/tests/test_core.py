@@ -4,6 +4,9 @@ from featurex.extractors.image import VibranceExtractor
 from featurex.export import FSLExporter
 from featurex.core import Timeline, Value, Event
 from featurex.lazy import extract
+from featurex.core import get_transformer
+from featurex.extractors import Extractor
+from featurex.extractors.audio import STFTExtractor
 from os.path import join
 import tempfile
 import shutil
@@ -25,7 +28,7 @@ def test_full_pipeline():
 
 def test_lazy_extraction():
     textfile = join(get_test_data_path(), 'text', 'scandal.txt')
-    results = extract([textfile], ['basicstatsextractorcollection'])
+    results = extract([textfile], ['lengthextractor', 'numuniquewordsextractor'])
     assert isinstance(results[0], Value)
 
 def test_dummy_code_timeline():
@@ -38,3 +41,7 @@ def test_dummy_code_timeline():
     tl = Timeline(events=events, period=1)
     tl_dummy = tl.dummy_code(string_only=False)
     assert tl_dummy.to_df().shape == (9, 4)
+
+def test_get_transformer_by_name():
+    tda = get_transformer('stFteXtrActOr', base=Extractor)
+    assert isinstance(tda, STFTExtractor)
