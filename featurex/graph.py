@@ -25,6 +25,9 @@ class Node(object):
     def add_child(self, node):
         self.children.append(node)
 
+    def is_leaf(self):
+        return len(self.children) > 0
+
 
 class Graph(Node):
 
