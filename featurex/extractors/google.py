@@ -48,11 +48,16 @@ class GoogleAPIExtractor(ImageExtractor):
         if isinstance(stim, ImageStim):
             is_image = True
             stim = [stim]
+        else:
+            is_image = False
         request =  self._build_request(stim)
-        responses = self._query_api(request)[self.response_object]
+        responses = self._query_api(request)
 
         events = []
         for i, response in enumerate(responses):
+            #TODO: what if response is empty
+            #TODO: don't only use the first annotation
+            response = response[self.response_object][0]
             value = self._parse_response(stim[i], response)
             onset = stim[i].onset if hasattr(stim[i], 'onset') else i
             ev = Event(onset=onset, duration=stim[i].duration, values=[value])
@@ -65,7 +70,7 @@ class GoogleAPIExtractor(ImageExtractor):
     def _query_api(self, request):
         resource = getattr(self.service, self.resource)()
         request = resource.annotate(body={'requests': request})
-        return request.execute(num_retries=self.num_retries)['responses'][0]
+        return request.execute(num_retries=self.num_retries)['responses']
 
 
 class GoogleVisionAPIExtractor(GoogleAPIExtractor):
@@ -120,6 +125,19 @@ class GoogleVisionAPITextExtractor(GoogleVisionAPIExtractor):
     request_type = 'TEXT_DETECTION'
     response_object = 'textAnnotations'
 
+    def _parse_response(self, stim, response):
+        data_dict = {}
+        for field, val in response.items():
+            if 'boundingPoly' != field:
+                data_dict[field] = val
+            else:
+                for i, vertex in enumerate(val['vertices']):
+                    for dim in ['x', 'y']:
+                        name = '%s_vertex%d_%s' % (field, i+1, dim)
+                        val = vertex[dim] if dim in vertex else np.nan
+                        data_dict[name] = val
+        return Value(stim=stim, extractor=self, data=data_dict)
+
 
 class GoogleVisionAPILabelExtractor(GoogleVisionAPIExtractor):
 
@@ -131,3 +149,4 @@ class GoogleVisionAPIPropertyExtractor(GoogleVisionAPIExtractor):
 
     request_type = 'IMAGE_PROPERTIES'
     response_object = 'imagePropertiesAnnotations'
+
