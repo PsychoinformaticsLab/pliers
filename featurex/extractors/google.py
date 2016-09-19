@@ -56,11 +56,10 @@ class GoogleAPIExtractor(ImageExtractor):
         events = []
         for i, response in enumerate(responses):
             #TODO: what if response is empty
-            #TODO: don't only use the first annotation
             annotations = response[self.response_object]
-            value = self._parse_annotations(stim[i], annotations)
+            values = self._parse_annotations(stim[i], annotations)
             onset = stim[i].onset if hasattr(stim[i], 'onset') else i
-            ev = Event(onset=onset, duration=stim[i].duration, values=[value])
+            ev = Event(onset=onset, duration=stim[i].duration, values=values)
             events.append(ev)
 
         if is_image:
@@ -102,23 +101,25 @@ class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
     response_object = 'faceAnnotations'
 
     def _parse_annotations(self, stim, annotations):
-        annotations = annotations[0]
-        data_dict = {}
-        for field, val in annotations.items():
-            if field not in ['boundingPoly', 'fdBoundingPoly', 'landmarks']:
-                data_dict[field] = val
-            elif 'oundingPoly' in field:
-                for i, vertex in enumerate(val['vertices']):
-                    for dim in ['x', 'y']:
-                        name = '%s_vertex%d_%s' % (field, i+1, dim)
-                        val = vertex[dim] if dim in vertex else np.nan
-                        data_dict[name] = val
-            elif field == 'landmarks':
-                for lm in val:
-                    name = 'landmark_' + lm['type'] + '_%s'
-                    lm_pos = { name % k : v for (k, v) in lm['position'].items()}
-                    data_dict.update(lm_pos)
-        return Value(stim=stim, extractor=self, data=data_dict)
+        values = []
+        for annotation in annotations:
+            data_dict = {}
+            for field, val in annotation.items():
+                if field not in ['boundingPoly', 'fdBoundingPoly', 'landmarks']:
+                    data_dict[field] = val
+                elif 'oundingPoly' in field:
+                    for i, vertex in enumerate(val['vertices']):
+                        for dim in ['x', 'y']:
+                            name = '%s_vertex%d_%s' % (field, i+1, dim)
+                            val = vertex[dim] if dim in vertex else np.nan
+                            data_dict[name] = val
+                elif field == 'landmarks':
+                    for lm in val:
+                        name = 'landmark_' + lm['type'] + '_%s'
+                        lm_pos = { name % k : v for (k, v) in lm['position'].items()}
+                        data_dict.update(lm_pos)
+            values.append(Value(stim=stim, extractor=self, data=data_dict))
+        return values
 
 
 class GoogleVisionAPITextExtractor(GoogleVisionAPIExtractor):
@@ -127,18 +128,20 @@ class GoogleVisionAPITextExtractor(GoogleVisionAPIExtractor):
     response_object = 'textAnnotations'
 
     def _parse_annotations(self, stim, annotations):
-        annotations = annotations[0]
-        data_dict = {}
-        for field, val in annotations.items():
-            if 'boundingPoly' != field:
-                data_dict[field] = val
-            else:
-                for i, vertex in enumerate(val['vertices']):
-                    for dim in ['x', 'y']:
-                        name = '%s_vertex%d_%s' % (field, i+1, dim)
-                        val = vertex[dim] if dim in vertex else np.nan
-                        data_dict[name] = val
-        return Value(stim=stim, extractor=self, data=data_dict)
+        values = []
+        for annotation in annotations:
+            data_dict = {}
+            for field, val in annotation.items():
+                if 'boundingPoly' != field:
+                    data_dict[field] = val
+                else:
+                    for i, vertex in enumerate(val['vertices']):
+                        for dim in ['x', 'y']:
+                            name = '%s_vertex%d_%s' % (field, i+1, dim)
+                            val = vertex[dim] if dim in vertex else np.nan
+                            data_dict[name] = val
+            values.append(Value(stim=stim, extractor=self, data=data_dict))
+        return values
 
 
 class GoogleVisionAPILabelExtractor(GoogleVisionAPIExtractor):
@@ -147,9 +150,11 @@ class GoogleVisionAPILabelExtractor(GoogleVisionAPIExtractor):
     response_object = 'labelAnnotations'
 
     def _parse_annotations(self, stim, annotations):
-        annotations = annotations[0]
-        data_dict = {field : val for field, val in annotations.items()}
-        return Value(stim=stim, extractor=self, data=data_dict)
+        values = []
+        for annotation in annotations:
+            data_dict = {field : val for field, val in annotation.items()}
+            values.append(Value(stim=stim, extractor=self, data=data_dict))
+        return values
 
 
 class GoogleVisionAPIPropertyExtractor(GoogleVisionAPIExtractor):
@@ -159,4 +164,4 @@ class GoogleVisionAPIPropertyExtractor(GoogleVisionAPIExtractor):
 
     def _parse_annotations(self, stim, annotation):
         data_dict = {field : val for field, val in annotation.items()}
-        return Value(stim=stim, extractor=self, data=data_dict)
+        return [Value(stim=stim, extractor=self, data=data_dict)]

@@ -34,7 +34,8 @@ def test_google_vision_api_face_extractor_inits():
     # Test parsing of individual response
     filename = join(_get_test_data_path(), 'payloads', 'google_vision_api_face_payload.json')
     response = json.load(open(filename, 'r'))
-    result = ext._parse_annotations(stim, response['faceAnnotations'])
+    results = ext._parse_annotations(stim, response['faceAnnotations'])
+    result = results[0]
     assert isinstance(result, Value)
     assert result.stim == stim
     assert result.data['angerLikelihood'] == 'VERY_UNLIKELY'
