@@ -6,7 +6,8 @@
 #
 # Created:     April 24, 2014
 # Copyright:   (c) Akisato Kimura 2014-
-# Licence:     All rights reserved
+# Licence:     MIT
+# URL:         https://github.com/akisato-/pySaliencyMap
 #-------------------------------------------------------------------------------
 
 # parameters for computing optical flows using the Gunner Farneback's algorithm
