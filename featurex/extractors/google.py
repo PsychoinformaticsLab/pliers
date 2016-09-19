@@ -57,8 +57,8 @@ class GoogleAPIExtractor(ImageExtractor):
         for i, response in enumerate(responses):
             #TODO: what if response is empty
             #TODO: don't only use the first annotation
-            response = response[self.response_object][0]
-            value = self._parse_response(stim[i], response)
+            annotations = response[self.response_object]
+            value = self._parse_annotations(stim[i], annotations)
             onset = stim[i].onset if hasattr(stim[i], 'onset') else i
             ev = Event(onset=onset, duration=stim[i].duration, values=[value])
             events.append(ev)
@@ -101,9 +101,10 @@ class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
     request_type = 'FACE_DETECTION'
     response_object = 'faceAnnotations'
 
-    def _parse_response(self, stim, response):
+    def _parse_annotations(self, stim, annotations):
+        annotations = annotations[0]
         data_dict = {}
-        for field, val in response.items():
+        for field, val in annotations.items():
             if field not in ['boundingPoly', 'fdBoundingPoly', 'landmarks']:
                 data_dict[field] = val
             elif 'oundingPoly' in field:
@@ -125,9 +126,10 @@ class GoogleVisionAPITextExtractor(GoogleVisionAPIExtractor):
     request_type = 'TEXT_DETECTION'
     response_object = 'textAnnotations'
 
-    def _parse_response(self, stim, response):
+    def _parse_annotations(self, stim, annotations):
+        annotations = annotations[0]
         data_dict = {}
-        for field, val in response.items():
+        for field, val in annotations.items():
             if 'boundingPoly' != field:
                 data_dict[field] = val
             else:
@@ -144,9 +146,17 @@ class GoogleVisionAPILabelExtractor(GoogleVisionAPIExtractor):
     request_type = 'LABEL_DETECTION'
     response_object = 'labelAnnotations'
 
+    def _parse_annotations(self, stim, annotations):
+        annotations = annotations[0]
+        data_dict = {field : val for field, val in annotations.items()}
+        return Value(stim=stim, extractor=self, data=data_dict)
+
 
 class GoogleVisionAPIPropertyExtractor(GoogleVisionAPIExtractor):
 
     request_type = 'IMAGE_PROPERTIES'
-    response_object = 'imagePropertiesAnnotations'
+    response_object = 'imagePropertiesAnnotation'
 
+    def _parse_annotations(self, stim, annotation):
+        data_dict = {field : val for field, val in annotation.items()}
+        return Value(stim=stim, extractor=self, data=data_dict)
