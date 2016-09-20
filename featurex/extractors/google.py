@@ -55,15 +55,17 @@ class GoogleAPIExtractor(ImageExtractor):
 
         events = []
         for i, response in enumerate(responses):
-            #TODO: what if response is empty
-            annotations = response[self.response_object]
-            values = self._parse_annotations(stim[i], annotations)
-            onset = stim[i].onset if hasattr(stim[i], 'onset') else i
-            ev = Event(onset=onset, duration=stim[i].duration, values=values)
-            events.append(ev)
+            if response:
+                annotations = response[self.response_object]
+                values = self._parse_annotations(stim[i], annotations)
+                onset = stim[i].onset if hasattr(stim[i], 'onset') else i
+                ev = Event(onset=onset, duration=stim[i].duration, values=values)
+                events.append(ev)
+            else:
+                events.append(Event())
 
         if is_image:
-            return events[0].values[0]
+            return events[0].values
         return events
 
     def _query_api(self, request):
