@@ -10,13 +10,7 @@ import numpy as np
 import tempfile
 import os
 from warnings import warn
-
-# Optional dependencies
-try:
-    import cv2
-except ImportError:
-    pass
-
+from PIL import Image
 
 class ImageExtractor(Extractor):
 
@@ -47,6 +41,7 @@ class SharpnessExtractor(ImageExtractor):
         super(self.__class__, self).__init__()
 
     def _extract(self, stim):
+        import cv2
         # Taken from
         # http://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry?lq=1
         data = stim.data
@@ -67,6 +62,22 @@ class VibranceExtractor(ImageExtractor):
         data = stim.data
         avg_color = np.var(data, 2).mean()
         return Value(stim, self, {'avg_color': avg_color})
+
+
+class TesseractExtractor(ImageExtractor):
+
+    ''' Uses the Tesseract library to extract text from images '''
+
+    def __init__(self):
+        super(self.__class__, self).__init__()
+
+    def _extract(self, stim):
+        import pytesseract
+        data = stim.data
+        text = pytesseract.image_to_string(Image.fromarray(data))
+
+        return Value(stim, self, {'text': text})
+
 
 class SaliencyExtractor(ImageExtractor):
 

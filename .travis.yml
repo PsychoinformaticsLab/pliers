@@ -1,4 +1,4 @@
-sudo: false
+sudo: required
 
 env:
   global:
@@ -27,10 +27,12 @@ before_install:
 - conda info -a
 - conda config --add channels conda-forge
 - conda install python=$PYTHON_VERSION $CONDA_DEPS
+- sudo apt-get -qq update
+- sudo apt-get install tesseract-ocr
 
 install:
 - pip install -r requirements.txt
-- pip install coveralls pytest-cov pysrt xlrd
+- pip install coveralls pytest-cov pysrt xlrd clarifai pytesseract matplotlib SpeechRecognition
 
 before_script:
   - python -m featurex.support.download

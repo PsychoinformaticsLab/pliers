@@ -8,6 +8,7 @@ from featurex.extractors.audio import STFTExtractor, MeanAmplitudeExtractor
 from featurex.extractors.image import (BrightnessExtractor,
                                         SharpnessExtractor,
                                         VibranceExtractor,
+                                        TesseractExtractor,
                                         SaliencyExtractor)
 from featurex.extractors.video import DenseOpticalFlowExtractor
 from featurex.extractors.api import (IndicoAPIExtractor,
@@ -107,6 +108,14 @@ def test_vibrance_extractor():
     color = val.data['VibranceExtractor'].data['avg_color']
     assert np.isclose(color,1370.65482988)
 
+def test_tesseract_extractor():
+    pytest.importorskip('pytesseract')
+    image_dir = join(get_test_data_path(), 'image')
+    stim = ImageStim(join(image_dir, 'button.jpg'))
+    ext = TesseractExtractor()
+    output = ext.transform(stim).data['text']
+    assert output == 'Exit'
+
 def test_saliency_extractor():
     pytest.importorskip('cv2')
     image_dir = join(get_test_data_path(), 'image')
@@ -156,10 +165,10 @@ def test_clarifaiAPI_extractor():
         assert result['status_code'] == 'OK'
         assert result['result']['tag']['classes']
 
-@pytest.mark.skipif("'WIT_AI_APP_KEY' not in os.environ")
+@pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
 def test_witaiAPI_extractor():
     audio_dir = join(get_test_data_path(), 'audio')
     stim = AudioStim(join(audio_dir, 'homer.wav'))
     ext = WitTranscriptionExtractor()
     text = ext.transform(stim).data['text']
-    assert 'laws of thermodynamics' in text
+    assert 'laws of thermodynamics' in text or 'we obey' in text
