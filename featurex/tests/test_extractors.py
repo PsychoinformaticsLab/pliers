@@ -171,4 +171,4 @@ def test_witaiAPI_extractor():
     stim = AudioStim(join(audio_dir, 'homer.wav'))
     ext = WitTranscriptionExtractor()
     text = ext.transform(stim).data['text']
-    assert 'laws of thermodynamics' in text
+    assert 'laws of thermodynamics' in text or 'we obey' in text

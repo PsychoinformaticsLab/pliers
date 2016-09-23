@@ -76,7 +76,7 @@ class TesseractExtractor(ImageExtractor):
         data = stim.data
         text = pytesseract.image_to_string(Image.fromarray(data))
 
-        return Value(img, self, {'text': text})
+        return Value(stim, self, {'text': text})
 
 
 class SaliencyExtractor(ImageExtractor):
