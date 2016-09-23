@@ -4,6 +4,7 @@ import os
 import re
 import sys
 from featurex.extractors.image import ImageExtractor
+from featurex.extractors import Extractor
 from featurex.stimuli.image import ImageStim
 from featurex import Value, Event
 import tempfile
@@ -21,7 +22,7 @@ DISCOVERY_URL = 'https://{api}.googleapis.com/$discovery/rest?version={apiVersio
 BATCH_SIZE = 10
 
 
-class GoogleAPIExtractor(ImageExtractor):
+class GoogleAPIExtractor(Extractor):
 
     def __init__(self, discovery_file=None, api_version='v1', max_results=100,
                  num_retries=3):
@@ -72,7 +73,7 @@ class GoogleAPIExtractor(ImageExtractor):
         return request.execute(num_retries=self.num_retries)['responses']
 
 
-class GoogleVisionAPIExtractor(GoogleAPIExtractor):
+class GoogleVisionAPIExtractor(GoogleAPIExtractor, ImageExtractor):
 
     api_name = 'vision'
     resource = 'images'
