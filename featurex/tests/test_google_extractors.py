@@ -50,9 +50,9 @@ def test_google_vision_api_face_extractor_inits():
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_text_extractor():
     ext = GoogleVisionAPITextExtractor(num_retries=5)
-    filename = join(_get_test_data_path(), 'image', 'button.jpg')
+    filename = join(get_test_data_path(), 'image', 'button.jpg')
     stim = ImageStim(filename)
-    values = ext.apply(stim)[0]
+    values = ext.transform(stim)[0]
     assert values.data['locale'] == 'en'
     assert 'Exit' in values.data['description']
     assert np.isfinite(values.data['boundingPoly_vertex2_y'])
@@ -60,31 +60,18 @@ def test_google_vision_api_text_extractor():
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_label_extractor():
     ext = GoogleVisionAPILabelExtractor(num_retries=5)
-    filename = join(_get_test_data_path(), 'image', 'apple.jpg')
+    filename = join(get_test_data_path(), 'image', 'apple.jpg')
     stim = ImageStim(filename)
-    values = ext.apply(stim)[0]
+    values = ext.transform(stim)[0]
     assert values.data['description'] == 'apple'
     assert values.data['score'] > 0.75
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_properties_extractor():
     ext = GoogleVisionAPIPropertyExtractor(num_retries=5)
-    filename = join(_get_test_data_path(), 'image', 'apple.jpg')
+    filename = join(get_test_data_path(), 'image', 'apple.jpg')
     stim = ImageStim(filename)
-    values = ext.apply(stim)[0]
+    values = ext.transform(stim)[0]
     assert 'dominantColors' in values.data
     assert np.isfinite(values.data['dominantColors']['colors'][0]['score'])
     assert np.isfinite(values.data['dominantColors']['colors'][0]['pixelFraction'])
-
-@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
-def test_google_vision_api_extractor_multi_stim():
-    ext = GoogleVisionAPITextExtractor(num_retries=5)
-    filename = join(_get_test_data_path(), 'image', 'button.jpg')
-    stim = ImageStim(filename)
-    filename2 = join(_get_test_data_path(), 'image', 'apple.jpg')
-    stim2 = ImageStim(filename2)
-    events = ext.apply([stim, stim2])
-    assert isinstance(events[0], Event)
-    assert len(events) == 2
-    assert not events[1].values
-
