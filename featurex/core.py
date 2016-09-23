@@ -233,7 +233,7 @@ def get_transformer(name, base=None, *args, **kwargs):
 
     name = name.lower()
 
-    # Recursively get all classes that inherit from Extractor
+    # Recursively get all classes that inherit from the passed base class
     def get_subclasses(cls):
         subclasses = []
         for sc in cls.__subclasses__():
@@ -241,6 +241,7 @@ def get_transformer(name, base=None, *args, **kwargs):
             subclasses.extend(get_subclasses(sc))
         return subclasses
 
+    # Default to searching all kinds of Transformers
     if base is None:
         from featurex.extractors import Extractor
         from featurex.converters import Converter
