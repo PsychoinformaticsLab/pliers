@@ -110,10 +110,10 @@ def test_vibrance_extractor():
 
 def test_tesseract_extractor():
     pytest.importorskip('pytesseract')
-    image_dir = join(_get_test_data_path(), 'image')
+    image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'button.jpg'))
     ext = TesseractExtractor()
-    output = ext.apply(stim).data['text']
+    output = ext.transform(stim).data['text']
     assert output == 'Exit'
 
 def test_saliency_extractor():
@@ -165,7 +165,7 @@ def test_clarifaiAPI_extractor():
         assert result['status_code'] == 'OK'
         assert result['result']['tag']['classes']
 
-@pytest.mark.skipif("'WIT_AI_APP_KEY' not in os.environ")
+@pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
 def test_witaiAPI_extractor():
     audio_dir = join(get_test_data_path(), 'audio')
     stim = AudioStim(join(audio_dir, 'homer.wav'))

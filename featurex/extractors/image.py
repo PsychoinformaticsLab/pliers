@@ -69,11 +69,11 @@ class TesseractExtractor(ImageExtractor):
     ''' Uses the Tesseract library to extract text from images '''
 
     def __init__(self):
-        ImageExtractor.__init__(self)
+        super(self.__class__, self).__init__()
 
-    def apply(self, img):
+    def _extract(self, stim):
         import pytesseract
-        data = img.data
+        data = stim.data
         text = pytesseract.image_to_string(Image.fromarray(data))
 
         return Value(img, self, {'text': text})
