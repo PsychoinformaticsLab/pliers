@@ -6,12 +6,13 @@
 #
 # Created:     April 24, 2014
 # Copyright:   (c) Akisato Kimura 2014-
-# Licence:     All rights reserved
+# Licence:     MIT
+# URL:         https://github.com/akisato-/pySaliencyMap
 #-------------------------------------------------------------------------------
 
 import cv2
 import numpy as np
-import pySaliencyMapDefs
+from featurex.external import pySaliencyMapDefs
 
 class pySaliencyMap:
     # initialization

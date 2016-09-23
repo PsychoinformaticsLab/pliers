@@ -21,7 +21,7 @@ class AudioStim(DynamicStim):
     def extract(self, extractors, merge_events=True):
         timeline = Timeline()
         for ext in extractors:
-            events = ext.apply(self)
+            events = ext.transform(self)
             for ev in events:
                 timeline.add_event(ev, merge=merge_events)
         return timeline
