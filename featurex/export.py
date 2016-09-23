@@ -1,13 +1,12 @@
 from os.path import exists, isdir, join
 from abc import ABCMeta, abstractmethod
 import pandas as pd
+from six import with_metaclass
 
 
-class Exporter(object):
+class Exporter(with_metaclass(ABCMeta)):
 
     ''' Base exporter class. '''
-
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def export(self):
