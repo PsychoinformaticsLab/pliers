@@ -18,5 +18,5 @@ class ImageStim(Stim):
     def extract(self, extractors):
         vals = {}
         for e in extractors:
-            vals[e.name] = e.apply(self)
+            vals[e.name] = e.transform(self)
         return Value(self, e, vals)

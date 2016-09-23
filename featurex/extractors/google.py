@@ -1,5 +1,3 @@
-# export GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/credentials-key.json
-
 import argparse
 import base64
 import os
@@ -44,7 +42,7 @@ class GoogleAPIExtractor(ImageExtractor):
                                        discoveryServiceUrl=DISCOVERY_URL)
         super(GoogleAPIExtractor, self).__init__()
 
-    def apply(self, stim):
+    def _extract(self, stim):
         if isinstance(stim, ImageStim):
             is_image = True
             stim = [stim]

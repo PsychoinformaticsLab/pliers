@@ -19,7 +19,7 @@ class TextStim(Stim):
     def extract(self, extractors):
         vals = {}
         for e in extractors:
-            vals[e.name] = e.apply(self)
+            vals[e.name] = e.transform(self)
         return Value(self, e, vals)
 
 
@@ -135,14 +135,14 @@ class ComplexTextStim(object):
         # over all elements.
         for ext in extractors:
             if ext.target.__name__ == self.__class__.__name__:
-                events = ext.apply(self)
+                events = ext.transform(self)
                 for ev in events:
                     timeline.add_event(ev, merge=merge_events)
             else:
                 for elem in self.elements:
                     # If no onset is available, index with order
                     onset = elem.onset or elem.order
-                    event = Event(onset=onset, values=[ext.apply(elem)])
+                    event = Event(onset=onset, values=[ext.transform(elem)])
                     timeline.add_event(event, merge=merge_events)
         return timeline
 

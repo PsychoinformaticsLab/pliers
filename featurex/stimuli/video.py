@@ -53,7 +53,7 @@ class VideoStim(DynamicStim):
         for ext in extractors:
             # For VideoExtractors, pass the entire stim
             if ext.target.__name__ == self.__class__.__name__:
-                events = ext.apply(self, **kwargs)
+                events = ext.transform(self, **kwargs)
                 for ev in events:
                     timeline.add_event(ev, merge=merge_events)
             # Otherwise, for images, loop over frames
@@ -62,7 +62,7 @@ class VideoStim(DynamicStim):
                 for frame in self:
                     if frame.data is not None:
                         event = Event(onset=c * period)
-                        event.add_value(ext.apply(frame))
+                        event.add_value(ext.transform(frame))
                         timeline.add_event(event, merge=merge_events)
                         c += 1
         return timeline

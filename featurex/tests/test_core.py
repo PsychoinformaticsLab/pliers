@@ -1,9 +1,12 @@
-from .utils import _get_test_data_path
+from .utils import get_test_data_path
 from featurex.stimuli.video import VideoStim
 from featurex.extractors.image import VibranceExtractor
 from featurex.export import FSLExporter
 from featurex.core import Timeline, Value, Event
 from featurex.lazy import extract
+from featurex.core import get_transformer
+from featurex.extractors import Extractor
+from featurex.extractors.audio import STFTExtractor
 from os.path import join
 import tempfile
 import shutil
@@ -12,7 +15,7 @@ import shutil
 def test_full_pipeline():
     ''' Smoke test of entire pipeline, from stimulus loading to
     event file export. '''
-    stim = VideoStim(join(_get_test_data_path(), 'video', 'small.mp4'))
+    stim = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
     extractors = [VibranceExtractor()]
     timeline = stim.extract(extractors, show=False)
     exp = FSLExporter()
@@ -24,8 +27,8 @@ def test_full_pipeline():
     shutil.rmtree(tmpdir)
 
 def test_lazy_extraction():
-    textfile = join(_get_test_data_path(), 'text', 'scandal.txt')
-    results = extract([textfile], ['basicstatsextractorcollection'])
+    textfile = join(get_test_data_path(), 'text', 'scandal.txt')
+    results = extract([textfile], ['lengthextractor', 'numuniquewordsextractor'])
     assert isinstance(results[0], Value)
 
 def test_dummy_code_timeline():
@@ -38,3 +41,7 @@ def test_dummy_code_timeline():
     tl = Timeline(events=events, period=1)
     tl_dummy = tl.dummy_code(string_only=False)
     assert tl_dummy.to_df().shape == (9, 4)
+
+def test_get_transformer_by_name():
+    tda = get_transformer('stFteXtrActOr', base=Extractor)
+    assert isinstance(tda, STFTExtractor)

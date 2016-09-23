@@ -6,7 +6,7 @@ import pytest
 import os
 import json
 from os.path import join
-from .utils import _get_test_data_path
+from .utils import get_test_data_path
 import numpy as np
 
 
@@ -25,11 +25,11 @@ def test_google_vision_api__face_extractor_inits():
     assert ext.service is not None
 
     # Load dummy stim
-    filename = join(_get_test_data_path(), 'image', 'obama.jpg')
+    filename = join(get_test_data_path(), 'image', 'obama.jpg')
     stim = ImageStim(filename)
 
     # Test parsing of individual response
-    filename = join(_get_test_data_path(), 'payloads', 'google_vision_api_face_payload.json')
+    filename = join(get_test_data_path(), 'payloads', 'google_vision_api_face_payload.json')
     response = json.load(open(filename, 'r'))
     result = ext._parse_response(stim, response['faceAnnotations'][0])
     assert isinstance(result, Value)
