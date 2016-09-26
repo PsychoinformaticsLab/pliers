@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 
 from pandas import Series
-from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 def collinearity_diagnostics_matrix(df):
     '''
@@ -15,7 +14,10 @@ def collinearity_diagnostics_matrix(df):
     '''
     eigvals = eigenvalues(df)
     cond_idx = condition_indices(df)
-    pass
+    vifs = variance_inflation_factors(df)
+
+    diagnostics_df = pd.concat([eigvals, cond_idx, vifs], axis=1)
+    return diagnostics_df
 
 
 def correlation_matrix(df):
@@ -39,7 +41,7 @@ def eigenvalues(df):
     '''
     corr = np.corrcoef(df, rowvar=0)
     eigvals = np.linalg.eigvals(corr)
-    return Series(eigvals, df.columns)
+    return Series(eigvals, df.columns, name='eigenvalue')
 
 
 def condition_indices(df):
@@ -51,10 +53,10 @@ def condition_indices(df):
     '''
     eigvals = eigenvalues(df)
     cond_idx = np.sqrt(eigvals.max() / eigvals)
-    return cond_idx
+    return Series(cond_idx, name='condition index')
 
 
-def vifs(df):
+def variance_inflation_factors(df):
     '''
     Computes the variance inflation factor (VIF) for each column in the df.
     Returns a numpy array of VIFs
@@ -62,16 +64,8 @@ def vifs(df):
     Args:
         df: pandas DataFrame with columns to run diagnostics on
     '''
-    # Calculation 1
-    vifs = []
-    for index in range(len(df.columns)):
-        vifs.append(variance_inflation_factor(df.values, index))
-
-    # Calculation 2 (doesn't use statsmodels)
-    corr_df = correlation_matrix(df)
-    corr_inv = np.linalg.inv(corr_df.values)
+    corr = np.corrcoef(df, rowvar=0)
+    corr_inv = np.linalg.inv(corr)
     vifs = np.diagonal(corr_inv)
-
-    # Need to figure out which calculation is correct
-    return Series(vifs, df.columns)
+    return Series(vifs, df.columns, name='VIF')
 

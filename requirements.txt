@@ -7,6 +7,4 @@ pillow
 requests
 scipy>=0.13.3
 six
-statsmodels
-patsy
 seaborn
