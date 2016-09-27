@@ -15,8 +15,10 @@ def collinearity_diagnostics_matrix(df):
     eigvals = eigenvalues(df)
     cond_idx = condition_indices(df)
     vifs = variance_inflation_factors(df)
-
-    diagnostics_df = pd.concat([eigvals, cond_idx, vifs], axis=1)
+    corr = correlation_matrix(df)
+    corr.columns = ['Correlation with %s' % col for col in corr.columns]
+    
+    diagnostics_df = pd.concat([eigvals, cond_idx, vifs, corr], axis=1)
     return diagnostics_df
 
 
@@ -59,7 +61,7 @@ def condition_indices(df):
 def variance_inflation_factors(df):
     '''
     Computes the variance inflation factor (VIF) for each column in the df.
-    Returns a numpy array of VIFs
+    Returns a pandas Series of VIFs
 
     Args:
         df: pandas DataFrame with columns to run diagnostics on
