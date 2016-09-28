@@ -4,6 +4,7 @@ import os
 import re
 import sys
 from featurex.extractors.image import ImageExtractor
+from featurex.extractors import Extractor
 from featurex.stimuli.image import ImageStim
 from featurex import Value, Event
 import tempfile
@@ -21,7 +22,7 @@ DISCOVERY_URL = 'https://{api}.googleapis.com/$discovery/rest?version={apiVersio
 BATCH_SIZE = 10
 
 
-class GoogleAPIExtractor(ImageExtractor):
+class GoogleAPIExtractor(Extractor):
 
     def __init__(self, discovery_file=None, api_version='v1', max_results=100,
                  num_retries=3):
@@ -46,27 +47,33 @@ class GoogleAPIExtractor(ImageExtractor):
         if isinstance(stim, ImageStim):
             is_image = True
             stim = [stim]
+        else:
+            is_image = False
         request =  self._build_request(stim)
-        responses = self._query_api(request)[self.response_object]
+        responses = self._query_api(request)
 
         events = []
         for i, response in enumerate(responses):
-            value = self._parse_response(stim[i], response)
-            onset = stim[i].onset if hasattr(stim[i], 'onset') else i
-            ev = Event(onset=onset, duration=stim[i].duration, values=[value])
-            events.append(ev)
+            if response:
+                annotations = response[self.response_object]
+                values = self._parse_annotations(stim[i], annotations)
+                onset = stim[i].onset if hasattr(stim[i], 'onset') else i
+                ev = Event(onset=onset, duration=stim[i].duration, values=values)
+                events.append(ev)
+            else:
+                events.append(Event())
 
         if is_image:
-            return events[0].values[0]
+            return events[0].values
         return events
 
     def _query_api(self, request):
         resource = getattr(self.service, self.resource)()
         request = resource.annotate(body={'requests': request})
-        return request.execute(num_retries=self.num_retries)['responses'][0]
+        return request.execute(num_retries=self.num_retries)['responses']
 
 
-class GoogleVisionAPIExtractor(GoogleAPIExtractor):
+class GoogleVisionAPIExtractor(GoogleAPIExtractor, ImageExtractor):
 
     api_name = 'vision'
     resource = 'images'
@@ -94,23 +101,26 @@ class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
     request_type = 'FACE_DETECTION'
     response_object = 'faceAnnotations'
 
-    def _parse_response(self, stim, response):
-        data_dict = {}
-        for field, val in response.items():
-            if field not in ['boundingPoly', 'fdBoundingPoly', 'landmarks']:
-                data_dict[field] = val
-            elif 'oundingPoly' in field:
-                for i, vertex in enumerate(val['vertices']):
-                    for dim in ['x', 'y']:
-                        name = '%s_vertex%d_%s' % (field, i+1, dim)
-                        val = vertex[dim] if dim in vertex else np.nan
-                        data_dict[name] = val
-            elif field == 'landmarks':
-                for lm in val:
-                    name = 'landmark_' + lm['type'] + '_%s'
-                    lm_pos = { name % k : v for (k, v) in lm['position'].items()}
-                    data_dict.update(lm_pos)
-        return Value(stim=stim, extractor=self, data=data_dict)
+    def _parse_annotations(self, stim, annotations):
+        values = []
+        for annotation in annotations:
+            data_dict = {}
+            for field, val in annotation.items():
+                if field not in ['boundingPoly', 'fdBoundingPoly', 'landmarks']:
+                    data_dict[field] = val
+                elif 'oundingPoly' in field:
+                    for i, vertex in enumerate(val['vertices']):
+                        for dim in ['x', 'y']:
+                            name = '%s_vertex%d_%s' % (field, i+1, dim)
+                            val = vertex[dim] if dim in vertex else np.nan
+                            data_dict[name] = val
+                elif field == 'landmarks':
+                    for lm in val:
+                        name = 'landmark_' + lm['type'] + '_%s'
+                        lm_pos = { name % k : v for (k, v) in lm['position'].items()}
+                        data_dict.update(lm_pos)
+            values.append(Value(stim=stim, extractor=self, data=data_dict))
+        return values
 
 
 class GoogleVisionAPITextExtractor(GoogleVisionAPIExtractor):
@@ -118,14 +128,41 @@ class GoogleVisionAPITextExtractor(GoogleVisionAPIExtractor):
     request_type = 'TEXT_DETECTION'
     response_object = 'textAnnotations'
 
+    def _parse_annotations(self, stim, annotations):
+        values = []
+        for annotation in annotations:
+            data_dict = {}
+            for field, val in annotation.items():
+                if 'boundingPoly' != field:
+                    data_dict[field] = val
+                else:
+                    for i, vertex in enumerate(val['vertices']):
+                        for dim in ['x', 'y']:
+                            name = '%s_vertex%d_%s' % (field, i+1, dim)
+                            val = vertex[dim] if dim in vertex else np.nan
+                            data_dict[name] = val
+            values.append(Value(stim=stim, extractor=self, data=data_dict))
+        return values
+
 
 class GoogleVisionAPILabelExtractor(GoogleVisionAPIExtractor):
 
     request_type = 'LABEL_DETECTION'
     response_object = 'labelAnnotations'
 
+    def _parse_annotations(self, stim, annotations):
+        values = []
+        for annotation in annotations:
+            data_dict = {field : val for field, val in annotation.items()}
+            values.append(Value(stim=stim, extractor=self, data=data_dict))
+        return values
+
 
 class GoogleVisionAPIPropertyExtractor(GoogleVisionAPIExtractor):
 
     request_type = 'IMAGE_PROPERTIES'
-    response_object = 'imagePropertiesAnnotations'
+    response_object = 'imagePropertiesAnnotation'
+
+    def _parse_annotations(self, stim, annotation):
+        data_dict = {field : val for field, val in annotation.items()}
+        return [Value(stim=stim, extractor=self, data=data_dict)]
