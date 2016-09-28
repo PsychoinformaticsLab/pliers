@@ -4,3 +4,4 @@ matplotlib
 pysrt
 SpeechRecognition
 pytesseract
+IndicoIo
