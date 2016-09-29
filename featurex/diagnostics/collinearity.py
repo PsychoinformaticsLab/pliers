@@ -3,6 +3,7 @@ import pandas as pd
 
 from pandas import Series
 
+
 def collinearity_diagnostics_matrix(df):
     '''
     Aggregates diagnostics related to collinearity.
