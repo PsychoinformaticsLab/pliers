@@ -23,7 +23,7 @@ def test_correlation_matrix():
     assert corr.shape == (df.shape[1], df.shape[1])
     assert np.array_equal(np.diagonal(corr), ([1.0] * df.shape[1]))
     assert np.isfinite(corr['a']['b'])
-    assert corr['a']['b'] == corr['b']['a']
+    assert np.isclose(corr['a']['b'], corr['b']['a'], 1e-05)
 
 def test_eigenvalues():
     df = pd.DataFrame(np.random.randn(100, 2), columns=['a', 'b'])
