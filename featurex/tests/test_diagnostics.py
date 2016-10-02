@@ -8,7 +8,7 @@ from featurex.diagnostics.collinearity import correlation_matrix
 from featurex.diagnostics.collinearity import eigenvalues
 from featurex.diagnostics.collinearity import condition_indices
 from featurex.diagnostics.collinearity import variance_inflation_factors
-from featurex.diagnostics.misc import variances
+from featurex.diagnostics.validity import variances
 
 def test_diagnostics():
     df = pd.DataFrame(np.random.randn(10, 5))
