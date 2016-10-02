@@ -4,6 +4,7 @@ from featurex.stimuli.image import ImageStim
 from featurex.core import Timeline, Event
 from moviepy.video.io.VideoFileClip import VideoFileClip
 import pandas as pd
+import cv2
 
 
 class VideoFrameStim(ImageStim):
@@ -66,6 +67,17 @@ class VideoStim(DynamicStim):
                         timeline.add_event(event, merge=merge_events)
                         c += 1
         return timeline
+
+    def get_keyframes(self, num_frames=20):
+        diffs = []
+        for i, img in enumerate(self):
+            curr = img.data
+            if i == 0:
+                last = curr
+                continue
+            diffs.append(sum(cv2.sumElems(cv2.absdiff(last, curr))))
+            last = curr
+        return sorted(range(len(diffs)), key=lambda i: diffs[i], reverse=True)[:num_frames]
 
 
 class DerivedVideoStim(VideoStim):
