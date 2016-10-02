@@ -3,18 +3,19 @@ import pytest
 import pandas as pd
 import numpy as np
 
-from featurex.diagnostics.collinearity import collinearity_diagnostics_matrix
+from featurex.diagnostics import Diagnostics
 from featurex.diagnostics.collinearity import correlation_matrix
 from featurex.diagnostics.collinearity import eigenvalues
 from featurex.diagnostics.collinearity import condition_indices
 from featurex.diagnostics.collinearity import variance_inflation_factors
 from featurex.diagnostics.misc import variances
 
-def test_collinearity_matrix():
+def test_diagnostics():
     df = pd.DataFrame(np.random.randn(10, 5))
-    coll_matrix = collinearity_diagnostics_matrix(df)
-    assert type(coll_matrix) == pd.DataFrame
-    assert coll_matrix.shape == (df.shape[1], 3 + df.shape[1])
+    diagnostics = Diagnostics(df)
+    results = diagnostics.summary()
+    assert type(results) == pd.DataFrame
+    assert results.shape == (df.shape[1], 3 + df.shape[1])
 
 def test_correlation_matrix():
     df = pd.DataFrame(np.random.randn(10, 5), columns=['a','b','c','d','e'])

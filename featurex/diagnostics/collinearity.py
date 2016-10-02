@@ -1,27 +1,11 @@
+'''
+Diagnostic functions for detecting collinearity between features
+'''
+
 import numpy as np
 import pandas as pd
 
 from pandas import Series
-
-
-def collinearity_diagnostics_matrix(df):
-    '''
-    Aggregates diagnostics related to collinearity.
-    Returns a pandas DataFrame with collinearity diagnostics, modeled 
-    after SPSS regression diagnostics.
-
-    Args:
-        df: pandas DataFrame with columns to run diagnostics on
-    '''
-    eigvals = eigenvalues(df)
-    cond_idx = condition_indices(df)
-    vifs = variance_inflation_factors(df)
-    corr = correlation_matrix(df)
-    corr.columns = ['Correlation with %s' % col for col in corr.columns]
-    
-    diagnostics_df = pd.concat([eigvals, cond_idx, vifs, corr], axis=1)
-    return diagnostics_df
-
 
 def correlation_matrix(df):
     '''
@@ -31,8 +15,8 @@ def correlation_matrix(df):
         df: pandas DataFrame with columns to run diagnostics on
     '''
     columns = df.columns.tolist()
-    corr_df = pd.DataFrame(np.corrcoef(df, rowvar=0), columns=columns, index=columns)
-    return corr_df
+    corr = pd.DataFrame(np.corrcoef(df, rowvar=0), columns=columns, index=columns)
+    return corr
 
 
 def eigenvalues(df):
@@ -44,7 +28,7 @@ def eigenvalues(df):
     '''
     corr = np.corrcoef(df, rowvar=0)
     eigvals = np.linalg.eigvals(corr)
-    return Series(eigvals, df.columns, name='eigenvalue')
+    return Series(eigvals, df.columns, name='Eigenvalue')
 
 
 def condition_indices(df):
@@ -56,7 +40,7 @@ def condition_indices(df):
     '''
     eigvals = eigenvalues(df)
     cond_idx = np.sqrt(eigvals.max() / eigvals)
-    return Series(cond_idx, name='condition index')
+    return Series(cond_idx, df.columns, name='Condition index')
 
 
 def variance_inflation_factors(df):
