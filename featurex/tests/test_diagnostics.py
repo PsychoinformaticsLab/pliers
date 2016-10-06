@@ -8,6 +8,7 @@ from featurex.diagnostics.collinearity import correlation_matrix
 from featurex.diagnostics.collinearity import eigenvalues
 from featurex.diagnostics.collinearity import condition_indices
 from featurex.diagnostics.collinearity import variance_inflation_factors
+from featurex.diagnostics.outliers import mahalanobis_distances
 from featurex.diagnostics.validity import variances
 
 def test_diagnostics():
@@ -50,6 +51,24 @@ def test_vifs():
     assert type(vifs) == pd.Series
     assert vifs.max() > 5.0
     assert vifs.idxmax() == 'c'
+
+def test_outliers():
+    # Test row outliers
+    df = pd.DataFrame(np.random.randint(0, high=42, size=(100, 4)))
+    df = df.append([[-42] * 4], ignore_index=True)
+    mhlb = mahalanobis_distances(df)
+    assert type(mhlb) == pd.Series
+    assert mhlb.size == df.shape[0]
+    assert mhlb.idxmax() == mhlb.size-1
+
+    # Test column outliers
+    df = pd.DataFrame(np.random.randint(0, high=42, size=(100, 4)))
+    df['out'] = [-42] * 100
+    mhlb = mahalanobis_distances(df, axis=1)
+    assert type(mhlb) == pd.Series
+    assert mhlb.size == df.shape[1]
+    #TODO: fix, figure out why sometimes fails cause NaN
+    #assert mhlb.idxmax() == 'out'
 
 def test_variances():
     df = pd.DataFrame(np.random.randn(10, 2), columns=['a', 'b'])

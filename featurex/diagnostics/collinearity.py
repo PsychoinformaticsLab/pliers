@@ -5,8 +5,6 @@ Diagnostic functions for detecting collinearity between features
 import numpy as np
 import pandas as pd
 
-from pandas import Series
-
 def correlation_matrix(df):
     '''
     Returns a pandas DataFrame with the pair-wise correlations of the columns.
@@ -28,7 +26,7 @@ def eigenvalues(df):
     '''
     corr = np.corrcoef(df, rowvar=0)
     eigvals = np.linalg.eigvals(corr)
-    return Series(eigvals, df.columns, name='Eigenvalue')
+    return pd.Series(eigvals, df.columns, name='Eigenvalue')
 
 
 def condition_indices(df):
@@ -40,7 +38,7 @@ def condition_indices(df):
     '''
     eigvals = eigenvalues(df)
     cond_idx = np.sqrt(eigvals.max() / eigvals)
-    return Series(cond_idx, df.columns, name='Condition index')
+    return pd.Series(cond_idx, df.columns, name='Condition index')
 
 
 def variance_inflation_factors(df):
@@ -54,5 +52,5 @@ def variance_inflation_factors(df):
     corr = np.corrcoef(df, rowvar=0)
     corr_inv = np.linalg.inv(corr)
     vifs = np.diagonal(corr_inv)
-    return Series(vifs, df.columns, name='VIF')
+    return pd.Series(vifs, df.columns, name='VIF')
 
