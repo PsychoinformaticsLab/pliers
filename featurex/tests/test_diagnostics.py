@@ -23,7 +23,7 @@ def test_correlation_matrix():
     corr = correlation_matrix(df)
     assert type(corr) == pd.DataFrame
     assert corr.shape == (df.shape[1], df.shape[1])
-    assert np.array_equal(np.diagonal(corr), ([1.0] * df.shape[1]))
+    assert np.allclose(np.diagonal(corr), np.array([1.0] * df.shape[1]))
     assert np.isfinite(corr['a']['b'])
     assert np.isclose(corr['a']['b'], corr['b']['a'], 1e-05)
 
