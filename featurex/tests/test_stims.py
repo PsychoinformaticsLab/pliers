@@ -93,14 +93,18 @@ def test_derived_video_stim():
     assert type(next(f for f in video)) == VideoFrameStim
     assert next(f for f in video).duration == 1 * (1 / 15.0)
 
-    # Should refilter from original frames
+    # Test filter history
+    assert video.history.shape == (3, 3)
+    assert np.array_equal(video.history['filter'], ['None', 'every', 'hertz'])
+
+def test_derived_video_stim_cv2():
+    pytest.importorskip('cv2')
+    filename = join(get_test_data_path(), 'video', 'small.mp4')
+    video = DerivedVideoStim(filename)
+
     video.filter(num_frames=5)
     assert len(video.elements) == 5
     assert type(next(f for f in video)) == VideoFrameStim
-
-    # Test filter history
-    assert video.history.shape == (4, 3)
-    assert np.array_equal(video.history['filter'], ['None', 'every', 'hertz', 'num_frames'])
 
 def test_audio_stim(dummy_iter_extractor):
     audio_dir = join(get_test_data_path(), 'audio')
