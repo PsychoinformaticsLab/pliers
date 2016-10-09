@@ -10,6 +10,7 @@ from featurex.support.download import download_nltk_data
 import numpy as np
 from os.path import join
 import pandas as pd
+import math
 import pytest
 
 
@@ -83,13 +84,13 @@ def test_derived_video_stim():
 
     # Test frame filters
     video.filter(every=3)
-    assert len(video.elements) == video.n_frames / 3
+    assert len(video.elements) == math.ceil(video.n_frames / 3.0)
     assert type(next(f for f in video)) == VideoFrameStim
     assert next(f for f in video).duration == 3 * (1 / 30.0)
 
     # Should refilter from original frames
     video.filter(hertz=15)
-    assert len(video.elements) == video.n_frames / 2
+    assert len(video.elements) == math.ceil(video.n_frames / 2.0)
     assert type(next(f for f in video)) == VideoFrameStim
     assert next(f for f in video).duration == 1 * (1 / 15.0)
 
