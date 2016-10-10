@@ -11,6 +11,9 @@ def mahalanobis_distances(df, axis=0):
     '''
     Returns a pandas Series with Mahalanobis distances for each sample on the axis.
 
+    TODO: does not work well when number of observations < number of dimensions
+    which happens fairly often for axis=1
+
     Args:
         df: pandas DataFrame with columns to run diagnostics on
         axis: 0 to find outlier rows, 1 to find outlier columns

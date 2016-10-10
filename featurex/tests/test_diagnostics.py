@@ -62,13 +62,12 @@ def test_outliers():
     assert mhlb.idxmax() == mhlb.size-1
 
     # Test column outliers
-    df = pd.DataFrame(np.random.randint(0, high=42, size=(100, 4)))
-    df['out'] = [-42] * 100
+    df = pd.DataFrame(np.random.randint(10, high=42, size=(4, 20)))
+    df['out'] = [-42] * 4
     mhlb = mahalanobis_distances(df, axis=1)
     assert type(mhlb) == pd.Series
     assert mhlb.size == df.shape[1]
-    #TODO: fix, figure out why sometimes fails cause NaN
-    #assert mhlb.idxmax() == 'out'
+    assert mhlb.idxmax() == 'out'
 
 def test_variances():
     df = pd.DataFrame(np.random.randn(10, 2), columns=['a', 'b'])
