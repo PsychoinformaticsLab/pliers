@@ -11,12 +11,17 @@ from featurex.diagnostics.collinearity import variance_inflation_factors
 from featurex.diagnostics.outliers import mahalanobis_distances
 from featurex.diagnostics.validity import variances
 
-def test_diagnostics():
+def test_diagnostics(capfd):
     df = pd.DataFrame(np.random.randn(10, 5))
     diagnostics = Diagnostics(df)
-    results = diagnostics.summary()
-    assert type(results) == pd.DataFrame
-    assert results.shape == (df.shape[1], 3 + df.shape[1])
+    assert hasattr(diagnostics, 'eigvals')
+    assert hasattr(diagnostics, 'row_outliers')
+    assert hasattr(diagnostics, 'variances')
+    diagnostics.show()
+    out, err = capfd.readouterr()
+    assert 'Collinearity summary:' in out
+    assert 'Outlier summary:' in out
+    assert 'Validity summary:' in out
 
 def test_correlation_matrix():
     df = pd.DataFrame(np.random.randn(10, 5), columns=['a','b','c','d','e'])
