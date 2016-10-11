@@ -12,8 +12,7 @@ from featurex.extractors.image import (BrightnessExtractor,
                                         SaliencyExtractor)
 from featurex.extractors.video import DenseOpticalFlowExtractor
 from featurex.extractors.api import (IndicoAPIExtractor,
-                                        ClarifaiAPIExtractor,
-                                        WitTranscriptionExtractor)
+                                        ClarifaiAPIExtractor)
 from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.video import ImageStim, VideoStim
 from featurex.stimuli.audio import AudioStim, TranscribedAudioStim
