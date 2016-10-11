@@ -9,11 +9,11 @@ except ImportError:
 
 
 class SpeechRecognitionConverter(AudioToTextConverter):
-    ''' Uses the Wit.AI API (via the SpeechRecognition package) to run speech-
-    to-text transcription on an audio file.
+    ''' Uses the SpeechRecognition API, which interacts with several APIs 
+    like Google and Wit, to run speech-to-text transcription on an audio file.
     Args:
-        api_key (str): Wit.AI API key. Must be passed explicitly or stored in
-            the environment variable WIT_AI_API_KEY.
+        api_key (str): API key. Must be passed explicitly or stored in
+            the environment variable specified in the environ_key field.
     '''
 
     def __init__(self, api_key=None):
