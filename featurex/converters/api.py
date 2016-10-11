@@ -1,6 +1,5 @@
 import os
-from featurex.stimuli.audio import AudioStim
-from featurex.stimuli.text import TextStim
+from featurex.stimuli.text import ComplexTextStim
 from featurex.converters.audio import AudioToTextConverter
 
 try:
@@ -9,7 +8,7 @@ except ImportError:
     pass
 
 
-class WitTranscriptionConverter(AudioToTextConverter):
+class SpeechRecognitionConverter(AudioToTextConverter):
     ''' Uses the Wit.AI API (via the SpeechRecognition package) to run speech-
     to-text transcription on an audio file.
     Args:
@@ -20,39 +19,28 @@ class WitTranscriptionConverter(AudioToTextConverter):
     def __init__(self, api_key=None):
         if api_key is None:
             try:
-                api_key = os.environ['WIT_AI_API_KEY']
+                api_key = os.environ[self.environ_key]
             except KeyError:
-                raise ValueError("A valid Wit.AI API key must be passed when "
-                                 "a WitTranscriptionConverter is initialized.")
+                raise ValueError("A valid API key must be passed when "
+                                 "a SpeechRecognitionConverter is initialized.")
         self.recognizer = sr.Recognizer()
         self.api_key = api_key
 
     def _convert(self, audio):
         with sr.AudioFile(audio.filename) as source:
             clip = self.recognizer.record(source)
-        text = self.recognizer.recognize_wit(clip, self.api_key)
-        return TextStim(text=text)
+        text = getattr(self.recognizer, self.recognize_method)(clip, self.api_key)
+        return ComplexTextStim.from_text(text=text)
 
 
-class GoogleSpeechAPIConverter(AudioToTextConverter):
-    ''' 
-    Uses the Google Speech API (via the SpeechRecognition package) to run speech-
-    to-text transcription on an audio file.
-    '''
+class WitTranscriptionConverter(SpeechRecognitionConverter):
+    
+    environ_key = 'WIT_AI_API_KEY'
+    recognize_method = 'recognize_wit'
 
-    def __init__(self, api_key=None):
-        if api_key is None:
-            try:
-                api_key = os.environ['GOOGLE_API_KEY']
-            except KeyError:
-                raise ValueError("A valid Google API key must be passed when "
-                                 "a GoogleSpeechAPIConverter is initialized.")
-        self.recognizer = sr.Recognizer()
-        self.api_key = api_key
 
-    def _convert(self, audio):
-        with sr.AudioFile(audio.filename) as source:
-            clip = self.recognizer.record(source)
-        text = self.recognizer.recognize_google(clip, key=self.api_key)
-        return TextStim(text=text)
+class GoogleSpeechAPIConverter(SpeechRecognitionConverter):
+
+    environ_key = 'GOOGLE_API_KEY'
+    recognize_method = 'recognize_google'
 
