@@ -164,11 +164,3 @@ def test_clarifaiAPI_extractor():
     for result in output['results']:
         assert result['status_code'] == 'OK'
         assert result['result']['tag']['classes']
-
-@pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
-def test_witaiAPI_extractor():
-    audio_dir = join(get_test_data_path(), 'audio')
-    stim = AudioStim(join(audio_dir, 'homer.wav'))
-    ext = WitTranscriptionExtractor()
-    text = ext.transform(stim).data['text']
-    assert 'laws of thermodynamics' in text or 'we obey' in text
