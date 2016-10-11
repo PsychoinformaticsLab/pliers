@@ -28,15 +28,15 @@ class Diagnostics(object):
 
     def show(self, stdout=True, plot=False):
         if stdout:
-            print 'Collinearity summary:'
-            print pd.concat([self.eigvals, self.cond_idx, self.vifs, self.corr], axis=1)
+            print('Collinearity summary:')
+            print(pd.concat([self.eigvals, self.cond_idx, self.vifs, self.corr], axis=1))
 
-            print 'Outlier summary:'
-            print self.row_outliers
-            print self.column_outliers
+            print('Outlier summary:')
+            print(self.row_outliers)
+            print(self.column_outliers)
 
-            print 'Validity summary:'
-            print self.variances
+            print('Validity summary:')
+            print(self.variances)
         
         if plot:
             ax = plt.axes()
