@@ -1,10 +1,13 @@
 from os.path import join
 from .utils import get_test_data_path
 from featurex.converters.video import FrameSamplingConverter
-from featurex.converters.api import WitTranscriptionConverter, GoogleSpeechAPIConverter
+from featurex.converters.api import (WitTranscriptionConverter, 
+                                        GoogleSpeechAPIConverter,
+                                        TesseractAPIConverter)
 from featurex.stimuli.video import VideoStim, VideoFrameStim, DerivedVideoStim
 from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.audio import AudioStim
+from featurex.stimuli.image import ImageStim
 
 import numpy as np
 import math
@@ -66,3 +69,10 @@ def test_googleAPI_converter():
     text = [elem.text for elem in out_stim]
     assert 'thermodynamics' in text or 'obey' in text
 
+def test_tesseract_converter():
+    pytest.importorskip('pytesseract')
+    image_dir = join(get_test_data_path(), 'image')
+    stim = ImageStim(join(image_dir, 'button.jpg'))
+    conv = TesseractAPIConverter()
+    text = conv.transform(stim).text
+    assert text == 'Exit'

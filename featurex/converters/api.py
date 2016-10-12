@@ -1,6 +1,8 @@
 import os
-from featurex.stimuli.text import ComplexTextStim
+from featurex.stimuli.text import TextStim, ComplexTextStim
 from featurex.converters.audio import AudioToTextConverter
+from featurex.converters.image import ImageToTextConverter
+from PIL import Image
 
 try:
     import speech_recognition as sr
@@ -9,7 +11,7 @@ except ImportError:
 
 
 class SpeechRecognitionConverter(AudioToTextConverter):
-    ''' Uses the SpeechRecognition API, which interacts with several APIs 
+    ''' Uses the SpeechRecognition API, which interacts with several APIs, 
     like Google and Wit, to run speech-to-text transcription on an audio file.
     Args:
         api_key (str): API key. Must be passed explicitly or stored in
@@ -44,3 +46,14 @@ class GoogleSpeechAPIConverter(SpeechRecognitionConverter):
     environ_key = 'GOOGLE_API_KEY'
     recognize_method = 'recognize_google'
 
+
+class TesseractAPIConverter(ImageToTextConverter):
+    ''' Uses the Tesseract library to extract text from images '''
+
+    def __init__(self):
+        super(self.__class__, self).__init__()
+
+    def _convert(self, image):
+        import pytesseract
+        text = pytesseract.image_to_string(Image.fromarray(image.data))
+        return TextStim(text=text)
