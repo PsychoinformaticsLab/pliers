@@ -62,9 +62,9 @@ def test_stft_extractor():
     stim = AudioStim(join(audio_dir, 'barber.wav'))
     ext = STFTExtractor(frame_size=1., spectrogram=False,
                         bins=[(100, 300), (300, 3000), (3000, 20000)])
-    timeline = stim.extract([ext])
-    df = timeline.to_df('long')
-    assert df.shape == (1671, 4)
+    result = ext.extract(stim)
+    df = result.to_df()
+    assert df.shape == (557, 4)
 
 def test_mean_amplitude_extractor():
     audio_dir = join(get_test_data_path(), 'audio')
