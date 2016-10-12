@@ -1,8 +1,12 @@
-from .utils import get_test_data_path
-from featurex.stimuli.video import VideoStim, VideoFrameStim, DerivedVideoStim
-from featurex.converters.video import FrameSamplingConverter
-import numpy as np
 from os.path import join
+from .utils import get_test_data_path
+from featurex.converters.video import FrameSamplingConverter
+from featurex.converters.api import WitTranscriptionConverter, GoogleSpeechAPIConverter
+from featurex.stimuli.video import VideoStim, VideoFrameStim, DerivedVideoStim
+from featurex.stimuli.text import ComplexTextStim
+from featurex.stimuli.audio import AudioStim
+
+import numpy as np
 import math
 import pytest
 
@@ -41,3 +45,24 @@ def test_derived_video_stim_cv2():
     derived = conv.transform(video)
     assert len(derived.elements) == 5
     assert type(next(f for f in derived)) == VideoFrameStim
+
+@pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
+def test_witaiAPI_converter():
+    audio_dir = join(get_test_data_path(), 'audio')
+    stim = AudioStim(join(audio_dir, 'homer.wav'))
+    conv = WitTranscriptionConverter()
+    out_stim = conv.transform(stim)
+    assert type(out_stim) == ComplexTextStim
+    text = [elem.text for elem in out_stim]
+    assert 'thermodynamics' in text or 'obey' in text
+
+@pytest.mark.skipif("'GOOGLE_API_KEY' not in os.environ")
+def test_googleAPI_converter():
+    audio_dir = join(get_test_data_path(), 'audio')
+    stim = AudioStim(join(audio_dir, 'homer.wav'))
+    conv = GoogleSpeechAPIConverter()
+    out_stim = conv.transform(stim)
+    assert type(out_stim) == ComplexTextStim
+    text = [elem.text for elem in out_stim]
+    assert 'thermodynamics' in text or 'obey' in text
+
