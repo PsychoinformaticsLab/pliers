@@ -1,5 +1,7 @@
 from six import with_metaclass
 from abc import ABCMeta, abstractmethod, abstractproperty
+from featurex.utils import listify
+import importlib
 
 
 class Transformer(with_metaclass(ABCMeta)):

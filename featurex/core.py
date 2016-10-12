@@ -2,10 +2,6 @@ from collections import OrderedDict, defaultdict
 import pandas as pd
 import numpy as np
 from copy import deepcopy
-from abc import ABCMeta, abstractmethod, abstractproperty
-from six import with_metaclass
-import importlib
-from featurex.utils import listify
 
 
 class Value(object):
