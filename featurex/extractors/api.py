@@ -16,11 +16,6 @@ except ImportError:
     pass
 
 try:
-    import speech_recognition as sr
-except ImportError:
-    pass
-
-try:
     import indicoio as ico
 except ImportError:
     pass
@@ -112,28 +107,3 @@ class ClarifaiAPIExtractor(ImageExtractor):
         os.remove(temp_file)
 
         return Value(img, self, {'tags': tags})
-
-
-class WitTranscriptionExtractor(AudioExtractor):
-    ''' Uses the Wit.AI API (via the SpeechRecognition package) to run speech-
-    to-text transcription on an audio file.
-    Args:
-        api_key (str): Wit.AI API key. Must be passed explicitly or stored in
-            the environment variable WIT_AI_API_KEY.
-    '''
-
-    def __init__(self, api_key=None):
-        if api_key is None:
-            try:
-                api_key = os.environ['WIT_AI_API_KEY']
-            except KeyError:
-                raise ValueError("A valid Wit.AI API key must be passed when "
-                                 "a WitTranscriptionExtractor is initialized.")
-        self.recognizer = sr.Recognizer()
-        self.api_key = api_key
-
-    def _extract(self, audio):
-        with sr.AudioFile(audio.filename) as source:
-            clip = self.recognizer.record(source)
-        text = self.recognizer.recognize_wit(clip, self.api_key)
-        return Value(text, self, {'text': text})
