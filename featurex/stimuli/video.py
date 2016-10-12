@@ -33,7 +33,6 @@ class VideoStim(DynamicStim):
         self.width = self.clip.w
         self.height = self.clip.h
 
-        self.frames = []
         self.frames = [f for f in self.clip.iter_frames()]
         self.n_frames = len(self.frames)
 
@@ -78,37 +77,52 @@ class DerivedVideoStim(VideoStim):
         self.history = pd.DataFrame(columns=["filter", "value", "n_frames"])
         self.tagged_frames = self.frames
         self.frame_index = range(len(self.frames))
+        self.elements = [VideoFrameStim(self, i, data=f) for i, f in enumerate(self.frames)]
         self._filter(**kwargs)
         
+    def __iter__(self):
+        return self.elements.__iter__()
+
     def filter(self, **kwargs):
         self._filter(**kwargs)
 
-    def _filter(self, every=None, hertz=None):
+    def _filter(self, every=None, hertz=None, num_frames=None):
+        name = "None"
+        thresh = 0
         if every is not None:
             name = "every"
             thresh = every
-            new_idx = range(self.n_frames)[::every]
-            self.frame_index = sorted(list(set(self.frame_index).intersection(new_idx)))
+            self.frame_index = range(self.n_frames)[::every]
         elif hertz is not None:
             name = "hertz"
             thresh = hertz
             interval = int(self.fps / hertz)
-            new_idx = range(self.n_frames)[::interval]
-        self.frame_index = sorted(list(set(self.frame_index).intersection(new_idx)))
+            self.frame_index = range(self.n_frames)[::interval]
+        elif num_frames is not None:
+            import cv2
+            name = "num_frames"
+            thresh = num_frames
+            diffs = []
+            for i, img in enumerate(self.frames):
+                if i == 0:
+                    last = img
+                    continue
+                diffs.append(sum(cv2.sumElems(cv2.absdiff(last, img))))
+                last = img
+            self.frame_index = sorted(range(len(diffs)), key=lambda i: diffs[i], reverse=True)[:num_frames]
+        
         self.tagged_frames = [self.frames[i] for i in self.frame_index]
         self.history.loc[self.history.shape[0]] = [name, thresh, len(self.tagged_frames)]        
         
-        self.onsets = [frame_num * (1. / self.fps) for frame_num in self.frame_index]
-        self.durations = []
-        for i, idx in enumerate(self.frame_index):
-            if idx != self.frame_index[-1]:
-                dur = self.onsets[i+1] - self.onsets[i]
-            else:
-                dur = (len(self.frames) / self.fps) - self.onsets[i]
-            self.durations.append(dur)
+        onsets = [frame_num * (1. / self.fps) for frame_num in self.frame_index]
         
         self.elements = []
         for i, f in enumerate(self.frame_index):
+            if f != self.frame_index[-1]:
+                dur = onsets[i+1] - onsets[i]
+            else:
+                dur = (len(self.frames) / self.fps) - onsets[i]
+
             elem = VideoFrameStim(video=self.clip, frame_num=f,
-                                  duration=self.durations[i])
+                                  duration=dur)
             self.elements.append(elem)

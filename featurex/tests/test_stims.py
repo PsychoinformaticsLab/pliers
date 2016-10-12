@@ -1,5 +1,5 @@
 from .utils import get_test_data_path
-from featurex.stimuli.video import VideoStim, VideoFrameStim
+from featurex.stimuli.video import VideoStim, VideoFrameStim, DerivedVideoStim
 from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.audio import AudioStim
 from featurex.stimuli.image import ImageStim
@@ -10,6 +10,7 @@ from featurex.support.download import download_nltk_data
 import numpy as np
 from os.path import join
 import pandas as pd
+import math
 import pytest
 
 
@@ -57,7 +58,6 @@ def test_image_stim(dummy_iter_extractor):
     values = stim.extract([dummy_iter_extractor])
     assert isinstance(values, Value)
 
-
 def test_video_stim():
     ''' Test VideoStim functionality. '''
     filename = join(get_test_data_path(), 'video', 'small.mp4')
@@ -73,6 +73,39 @@ def test_video_stim():
     assert isinstance(f, VideoFrameStim)
     assert isinstance(f.onset, float)
     f.data.shape == (320, 560, 3)
+
+def test_derived_video_stim():
+    ''' Test DerivedVideoStim functionality. '''
+    filename = join(get_test_data_path(), 'video', 'small.mp4')
+    video = DerivedVideoStim(filename)
+    assert video.fps == 30
+    assert video.n_frames == 168
+    assert video.width == 560
+
+    # Test frame filters
+    video.filter(every=3)
+    assert len(video.elements) == math.ceil(video.n_frames / 3.0)
+    assert type(next(f for f in video)) == VideoFrameStim
+    assert next(f for f in video).duration == 3 * (1 / 30.0)
+
+    # Should refilter from original frames
+    video.filter(hertz=15)
+    assert len(video.elements) == math.ceil(video.n_frames / 2.0)
+    assert type(next(f for f in video)) == VideoFrameStim
+    assert next(f for f in video).duration == 1 * (1 / 15.0)
+
+    # Test filter history
+    assert video.history.shape == (3, 3)
+    assert np.array_equal(video.history['filter'], ['None', 'every', 'hertz'])
+
+def test_derived_video_stim_cv2():
+    pytest.importorskip('cv2')
+    filename = join(get_test_data_path(), 'video', 'small.mp4')
+    video = DerivedVideoStim(filename)
+
+    video.filter(num_frames=5)
+    assert len(video.elements) == 5
+    assert type(next(f for f in video)) == VideoFrameStim
 
 def test_audio_stim(dummy_iter_extractor):
     audio_dir = join(get_test_data_path(), 'audio')
