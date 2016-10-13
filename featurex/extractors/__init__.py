@@ -33,12 +33,15 @@ class ExtractorResult(object):
         self.onsets = onsets if onsets is not None else np.nan
         self.durations = durations if durations is not None else np.nan
 
-    def to_df(self):
+    def to_df(self, stim_name=False):
         df = pd.DataFrame(self.data)
         if self.features is not None:
             df.columns = self.features
         df.insert(0, 'duration', self.durations)
         df.insert(0, 'onset', self.onsets)
+        if stim_name:
+            df['stim'] = self.stim.name
+            df.set_index('stim', append=True, inplace=True)
         return df
 
     @classmethod
@@ -89,14 +92,14 @@ class ExtractorResult(object):
             result = result.drop('duration', axis=1, level=1)
 
         if stim_names:
-            result['stim_name'] = list(stims)[0].name
-            result.set_index('stim_name', append=True, inplace=True)
-            result.index.names = ['row', 'stim']
+            result['stim'] = list(stims)[0].name
+            result.set_index('stim', append=True, inplace=True)
 
         return result
 
     @classmethod
     def merge_stims(cls, results, stim_names=True):
+        results = [r.to_df(True) if isinstance(r, ExtractorResult) else r for r in results]
         return pd.concat(results, axis=0)
 
 
