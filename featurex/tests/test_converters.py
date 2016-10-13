@@ -4,6 +4,7 @@ from featurex.converters.video import FrameSamplingConverter
 from featurex.converters.api import (WitTranscriptionConverter, 
                                         GoogleSpeechAPIConverter,
                                         TesseractAPIConverter)
+from featurex.converters.google import GoogleVisionAPITextConverter
 from featurex.stimuli.video import VideoStim, VideoFrameStim, DerivedVideoStim
 from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.audio import AudioStim
@@ -76,3 +77,11 @@ def test_tesseract_converter():
     conv = TesseractAPIConverter()
     text = conv.transform(stim).text
     assert text == 'Exit'
+
+@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
+def test_google_vision_api_text_converter():
+    conv = GoogleVisionAPITextConverter(num_retries=5)
+    filename = join(get_test_data_path(), 'image', 'button.jpg')
+    stim = ImageStim(filename)
+    text = conv.transform(stim).text
+    assert 'Exit' in text
