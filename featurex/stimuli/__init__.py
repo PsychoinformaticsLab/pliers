@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from six import string_types
-from os.path import exists, isdir, join
+from os.path import exists, isdir, join, basename
 from glob import glob
 from six import with_metaclass
 
@@ -12,6 +12,11 @@ class Stim(with_metaclass(ABCMeta)):
 
         self.filename = filename
         self.features = []
+
+    @property
+    def name(self):
+        filename = self.filename
+        return basename(filename)if filename is not None else self.id
 
 
 class DynamicStim(with_metaclass(ABCMeta, Stim)):
