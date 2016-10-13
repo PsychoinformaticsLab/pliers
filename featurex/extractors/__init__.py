@@ -91,12 +91,13 @@ class ExtractorResult(object):
         if stim_names:
             result['stim_name'] = list(stims)[0].name
             result.set_index('stim_name', append=True, inplace=True)
+            result.index.names = ['row', 'stim']
 
         return result
 
     @classmethod
     def merge_stims(cls, results, stim_names=True):
-        pass
+        return pd.concat(results, axis=0)
 
 
 def merge_results(results, extractor_names=True, stim_names=True):
@@ -118,7 +119,7 @@ def merge_results(results, extractor_names=True, stim_names=True):
         stims[r.stim.name].append(r)
 
     # First concatenate all features separately for each Stim
-    for k, v in stim_lists.items():
+    for k, v in stims.items():
         stims[k] = ExtractorResult.merge_features(v, extractor_names)
 
     # Now concatenate all Stims
