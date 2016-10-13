@@ -78,8 +78,8 @@ class TesseractExtractor(ImageExtractor):
         import pytesseract
         data = stim.data
         text = pytesseract.image_to_string(Image.fromarray(data))
-
-        return Value(stim, self, {'text': text})
+        return ExtractorResult(np.array([[text]]), stim, self,
+                               features=['text'])
 
 
 class SaliencyExtractor(ImageExtractor):
@@ -109,4 +109,5 @@ class SaliencyExtractor(ImageExtractor):
         output['max_y'], output['max_x'] = [list(i)[0] for i in np.where(stim.derivatives['saliency_map']==output['max_saliency'])]
         output['frac_high_saliency'] = np.sum(stim.derivatives['binarized_map']/255.0)/(h * w)
 
-        return Value(stim, self, output)
+        return ExtractorResult(np.array([list(output.values())]), stim, self,
+                               features=list(output.keys()))

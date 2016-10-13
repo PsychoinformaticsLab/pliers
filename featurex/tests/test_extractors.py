@@ -82,7 +82,7 @@ def test_stft_extractor():
                         bins=[(100, 300), (300, 3000), (3000, 20000)])
     result = ext.extract(stim)
     df = result.to_df()
-    assert df.shape == (557, 4)
+    assert df.shape == (557, 5)
 
 
 def test_mean_amplitude_extractor():
@@ -110,8 +110,8 @@ def test_part_of_speech_extractor():
 def test_brightness_extractor():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    val = stim.extract([BrightnessExtractor()])
-    brightness = val.data['BrightnessExtractor'].data['avg_brightness']
+    result = BrightnessExtractor().extract(stim).to_df()
+    brightness = result['avg_brightness'][0]
     assert np.isclose(brightness, 0.88784294)
 
 
@@ -119,17 +119,18 @@ def test_sharpness_extractor():
     pytest.importorskip('cv2')
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    val = stim.extract([SharpnessExtractor()])
-    sharpness = val.data['SharpnessExtractor'].data['sharpness']
+    result = SharpnessExtractor().extract(stim).to_df()
+    sharpness = result['sharpness'][0]
     assert np.isclose(sharpness, 1.0)
 
 
 def test_vibrance_extractor():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    val = stim.extract([VibranceExtractor()])
-    color = val.data['VibranceExtractor'].data['avg_color']
+    result = VibranceExtractor().extract(stim).to_df()
+    color = result['avg_color'][0]
     assert np.isclose(color, 1370.65482988)
+
 
 def test_tesseract_extractor():
     pytest.importorskip('pytesseract')
@@ -139,14 +140,15 @@ def test_tesseract_extractor():
     output = ext.transform(stim).data['text']
     assert output == 'Exit'
 
+
 def test_saliency_extractor():
     pytest.importorskip('cv2')
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    tl = stim.extract([SaliencyExtractor()])
-    ms = tl.data['SaliencyExtractor'].data['max_saliency']
+    result = SaliencyExtractor().extract(stim).to_df()
+    ms = result['max_saliency'][0]
     assert np.isclose(ms, 0.99669953)
-    sf = tl.data['SaliencyExtractor'].data['frac_high_saliency']
+    sf = result['frac_high_saliency'][0]
     assert np.isclose(sf, 0.27461971)
 
 
@@ -244,7 +246,6 @@ def test_merge_extractor_results():
     results = [de.extract(stim1, name) for name in de_names]
     results += [de.extract(stim2, name) for name in de_names]
     df = merge_results(results)
-    print(df, df.shape)
     assert df.shape == (355, 10)
     assert df.columns.levels[0].unique().tolist() == de_names + ['onset', 'stim']
     assert df.columns.levels[1].unique().tolist() == ['duration', 0, 1, 2, '']
