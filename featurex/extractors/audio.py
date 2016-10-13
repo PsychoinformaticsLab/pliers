@@ -3,6 +3,7 @@ from featurex.extractors import Extractor
 import numpy as np
 from scipy import fft
 from featurex.core import Value, Event
+from featurex.extractors import ExtractorResult
 
 
 class AudioExtractor(Extractor):
@@ -83,19 +84,15 @@ class STFTExtractor(AudioExtractor):
                 bins.append((i*bin_size, (i+1)*bin_size))
             self.freq_bins = bins
 
-        for i, tb in enumerate(time_bins):
-            ev = Event(onset=tb, duration=self.frame_size)
-            value_data = {}
-            for fb in self.freq_bins:
-                label = '%d_%d' % fb
-                start, stop = fb
-                val = data[i, start:stop].mean()
-                if np.isinf(val):
-                    val = 0.
-                value_data[label] = val
-            ev.add_value(Value(stim, self, value_data))
-            events.append(ev)
-        return events
+        features = ['%d_%d' % fb for fb in self.freq_bins]
+        index = [tb for tb in time_bins]
+        values = np.zeros((len(index), len(features)))
+        for i, fb in enumerate(self.freq_bins):
+            start, stop = fb
+            values[:, i] = data[:, start:stop].mean(1)
+        values = np.nan_to_num(values)
+        return ExtractorResult(values, stim, self, features=features,
+                               onsets=index, durations=self.hop_size)
 
 
 class MeanAmplitudeExtractor(TranscribedAudioExtractor):

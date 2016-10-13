@@ -1,5 +1,5 @@
 from .stimuli import Stim, load_stims
-from .core import Transformer, get_transformer
+from .transformers import Transformer, get_transformer
 
 
 def extract(stims, transformers, format='df'):

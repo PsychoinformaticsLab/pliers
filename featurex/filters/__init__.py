@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from featurex.core import Transformer
+from featurex.transformers import Transformer
 from six import with_metaclass
 
 

@@ -3,7 +3,7 @@ Extractors that operate primarily or exclusively on Image stimuli.
 '''
 
 from featurex.stimuli.image import ImageStim
-from featurex.extractors import Extractor
+from featurex.extractors import Extractor, ExtractorResult
 from featurex.core import Value
 import time
 import numpy as np
@@ -30,7 +30,8 @@ class BrightnessExtractor(ImageExtractor):
         data = stim.data
         avg_brightness = np.amax(data, 2).mean() / 255.0
 
-        return Value(stim, self, {'avg_brightness': avg_brightness})
+        return ExtractorResult(np.array([[avg_brightness]]), stim, self,
+                               features=['avg_brightness'])
 
 
 class SharpnessExtractor(ImageExtractor):
@@ -48,7 +49,8 @@ class SharpnessExtractor(ImageExtractor):
         gray_image = cv2.cvtColor(data, cv2.COLOR_BGR2GRAY)
 
         sharpness = np.max(cv2.convertScaleAbs(cv2.Laplacian(gray_image, 3))) / 255.0
-        return Value(stim, self, {'sharpness': sharpness})
+        return ExtractorResult(np.array([[sharpness]]), stim, self,
+                               features=['sharpness'])
 
 
 class VibranceExtractor(ImageExtractor):
@@ -61,7 +63,8 @@ class VibranceExtractor(ImageExtractor):
     def _extract(self, stim):
         data = stim.data
         avg_color = np.var(data, 2).mean()
-        return Value(stim, self, {'avg_color': avg_color})
+        return ExtractorResult(np.array([[avg_color]]), stim, self,
+                               features=['avg_color'])
 
 
 class TesseractExtractor(ImageExtractor):

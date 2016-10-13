@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
-from featurex.core import Transformer
+from featurex.transformers import Transformer
 from six import with_metaclass
 
 __all__ = []
@@ -21,3 +21,4 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
 
     def _transform(self, stim, *args, **kwargs):
         return self.convert(stim, *args, **kwargs)
+

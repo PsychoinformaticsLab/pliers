@@ -22,6 +22,10 @@ class TextStim(Stim):
             vals[e.name] = e.transform(self)
         return Value(self, e, vals)
 
+    @property
+    def name(self):
+        return self.text
+
 
 class DynamicTextStim(TextStim):
 
