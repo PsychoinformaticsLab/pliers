@@ -42,15 +42,16 @@ class ExtractorResult(object):
         return df
 
     @classmethod
-    def merge_features(cls, results, extractor_names=True):
+    def merge_features(cls, results, extractor_names=True, stim_names=True):
         ''' Merge a list of ExtractorResults bound to the same Stim into a
         single DataFrame.
 
         Args:
             results (list, tuple): A list of ExtractorResult instances to merge
-            extractor_names (bool): if True, a MultiIndex is used for the
-                columns, with the Extractor name set at the highest level. If
-                False, only the individual feature names are used as col names.
+            extractor_names (bool): if True, stores the associated Extractor
+                names in the top level of the column MultiIndex.
+            stim_names (bool): if True, stores the associated Stim names in the
+                top level of the row MultiIndex.
         '''
 
         # Make sure all ExtractorResults are associated with same Stim.
@@ -87,10 +88,14 @@ class ExtractorResult(object):
         if durations.apply(lambda x: x.nunique()<=1, axis=1).all():
             result = result.drop('duration', axis=1, level=1)
 
+        if stim_names:
+            result['stim_name'] = list(stims)[0].name
+            result.set_index('stim_name', append=True, inplace=True)
+
         return result
 
     @classmethod
-    def merge_stims(cls, results):
+    def merge_stims(cls, results, stim_names=True):
         pass
 
 
