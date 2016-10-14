@@ -2,7 +2,7 @@ import base64
 import os
 import tempfile
 from scipy.misc import imsave
-from featurex.core import Transformer
+from featurex.transformers import Transformer
 
 try:
     from googleapiclient import discovery, errors
