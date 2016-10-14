@@ -62,8 +62,3 @@ class Diagnostics(object):
             self.variances.plot(kind='bar', title='Variances')
             plt.show()
 
-    def rows(self):
-        pass
-
-    def columns(self):
-        pass

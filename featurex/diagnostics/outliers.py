@@ -11,8 +11,9 @@ def mahalanobis_distances(df, axis=0):
     '''
     Returns a pandas Series with Mahalanobis distances for each sample on the axis.
 
-    TODO: does not work well when number of observations < number of dimensions
-    which happens fairly often for axis=1
+    Note: does not work well when # of observations < # of dimensions
+    Will either return NaN in answer 
+    or (in the extreme case) fail with a Singular Matrix LinAlgError
 
     Args:
         df: pandas DataFrame with columns to run diagnostics on
