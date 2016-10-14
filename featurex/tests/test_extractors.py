@@ -17,14 +17,29 @@ from featurex.stimuli.video import ImageStim, VideoStim
 from featurex.stimuli.audio import AudioStim, TranscribedAudioStim
 from featurex.export import TimelineExporter
 from featurex.support.download import download_nltk_data
+from featurex.extractors import Extractor, ExtractorResult, merge_results
 import numpy as np
 import pytest
+from copy import deepcopy
 
 TEXT_DIR = join(get_test_data_path(), 'text')
+
+
+class DummyExtractor(Extractor):
+    target = ImageStim
+
+    def _extract(self, stim, name=None, n_rows=100, n_cols=3, max_time=1000):
+        data = np.random.randint(0, 1000, (n_rows, n_cols))
+        onsets = np.random.choice(n_rows*2, n_rows, False)
+        if name is not None:
+            self.name = name
+        return ExtractorResult(data, stim, deepcopy(self), onsets=onsets)
+
 
 @pytest.fixture(scope='module')
 def get_nltk():
     download_nltk_data()
+
 
 def test_check_target_type():
     audio_dir = join(get_test_data_path(), 'audio')
@@ -33,6 +48,7 @@ def test_check_target_type():
                              variables=['length', 'frequency'])
     with pytest.raises(TypeError):
         stim.extract([td])
+
 
 def test_text_extractor():
     stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
@@ -47,6 +63,7 @@ def test_text_extractor():
     target = df.query('name=="frequency" & onset==5')['value'].values
     assert target == 10.6
 
+
 def test_predefined_dictionary_extractor():
     text = """enormous chunks of ice that have been frozen for thousands of
               years are breaking apart and melting away"""
@@ -56,14 +73,16 @@ def test_predefined_dictionary_extractor():
     df = TimelineExporter.timeline_to_df(timeline)
     assert df.shape == (18, 4)
 
+
 def test_stft_extractor():
     audio_dir = join(get_test_data_path(), 'audio')
     stim = AudioStim(join(audio_dir, 'barber.wav'))
     ext = STFTExtractor(frame_size=1., spectrogram=False,
                         bins=[(100, 300), (300, 3000), (3000, 20000)])
-    timeline = stim.extract([ext])
-    df = timeline.to_df('long')
-    assert df.shape == (1671, 4)
+    result = ext.extract(stim)
+    df = result.to_df()
+    assert df.shape == (557, 5)
+
 
 def test_mean_amplitude_extractor():
     audio_dir = join(get_test_data_path(), 'audio')
@@ -74,8 +93,10 @@ def test_mean_amplitude_extractor():
     timeline = stim.extract([ext])
     targets = [100., 150.]
     events = timeline.events
-    values = [events[event].values[0].data["mean_amplitude"] for event in events.keys()]
+    values = [events[event].values[0].data["mean_amplitude"]
+              for event in events.keys()]
     assert values == targets
+
 
 def test_part_of_speech_extractor():
     stim = ComplexTextStim(join(TEXT_DIR, 'complex_stim_with_header.txt'))
@@ -84,37 +105,42 @@ def test_part_of_speech_extractor():
     assert df.iloc[1, 3] == 'NN'
     assert df.shape == (4, 4)
 
+
 def test_brightness_extractor():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    val = stim.extract([BrightnessExtractor()])
-    brightness = val.data['BrightnessExtractor'].data['avg_brightness']
-    assert np.isclose(brightness,0.88784294)
+    result = BrightnessExtractor().extract(stim).to_df()
+    brightness = result['avg_brightness'][0]
+    assert np.isclose(brightness, 0.88784294)
+
 
 def test_sharpness_extractor():
     pytest.importorskip('cv2')
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    val = stim.extract([SharpnessExtractor()])
-    sharpness = val.data['SharpnessExtractor'].data['sharpness']
-    assert np.isclose(sharpness,1.0)
+    result = SharpnessExtractor().extract(stim).to_df()
+    sharpness = result['sharpness'][0]
+    assert np.isclose(sharpness, 1.0)
+
 
 def test_vibrance_extractor():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    val = stim.extract([VibranceExtractor()])
-    color = val.data['VibranceExtractor'].data['avg_color']
-    assert np.isclose(color,1370.65482988)
+    result = VibranceExtractor().extract(stim).to_df()
+    color = result['avg_color'][0]
+    assert np.isclose(color, 1370.65482988)
+
 
 def test_saliency_extractor():
     pytest.importorskip('cv2')
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    tl = stim.extract([SaliencyExtractor()])
-    ms = tl.data['SaliencyExtractor'].data['max_saliency']
-    assert np.isclose(ms,0.99669953)
-    sf = tl.data['SaliencyExtractor'].data['frac_high_saliency']
-    assert np.isclose(sf,0.27461971)
+    result = SaliencyExtractor().extract(stim).to_df()
+    ms = result['max_saliency'][0]
+    assert np.isclose(ms, 0.99669953)
+    sf = result['frac_high_saliency'][0]
+    assert np.isclose(sf, 0.27461971)
+
 
 def test_optical_flow_extractor():
     pytest.importorskip('cv2')
@@ -127,11 +153,13 @@ def test_optical_flow_extractor():
     target = df.query('name=="total_flow" & onset==3.0')['value'].values
     assert np.isclose(target, 86248.05)
 
+
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
 def test_indicoAPI_extractor():
     srtfile = join(get_test_data_path(), 'text', 'wonderful.srt')
     srt_stim = ComplexTextStim(srtfile)
-    ext = IndicoAPIExtractor(api_key=os.environ['INDICO_APP_KEY'],model = 'emotion')
+    ext = IndicoAPIExtractor(
+        api_key=os.environ['INDICO_APP_KEY'], model='emotion')
     output = srt_stim.extract([ext])
     outdfKeys = set(output.to_df()['name'])
     outdfKeysCheck = set([
@@ -141,6 +169,7 @@ def test_indicoAPI_extractor():
         'emotion_sadness',
         'emotion_surprise'])
     assert outdfKeys == outdfKeysCheck
+
 
 @pytest.mark.skipif("'CLARIFAI_APP_ID' not in os.environ")
 def test_clarifaiAPI_extractor():
@@ -154,3 +183,60 @@ def test_clarifaiAPI_extractor():
     for result in output['results']:
         assert result['status_code'] == 'OK'
         assert result['result']['tag']['classes']
+
+
+@pytest.mark.skipif("'WIT_AI_APP_KEY' not in os.environ")
+def test_witaiAPI_extractor():
+    audio_dir = join(get_test_data_path(), 'audio')
+    stim = AudioStim(join(audio_dir, 'homer.wav'))
+    ext = WitTranscriptionExtractor()
+    text = ext.transform(stim).data['text']
+    assert 'laws of thermodynamics' in text
+
+
+def test_merge_extractor_results_by_features():
+    np.random.seed(100)
+    image_dir = join(get_test_data_path(), 'image')
+    stim = ImageStim(join(image_dir, 'apple.jpg'))
+
+    # Merge results for static Stims (no onsets)
+    extractors = [BrightnessExtractor(), SharpnessExtractor(),
+                  VibranceExtractor()]
+    results = [e.extract(stim) for e in extractors]
+    df = ExtractorResult.merge_features(results)
+
+    de = DummyExtractor()
+    de_names = ['Extractor1', 'Extractor2', 'Extractor3']
+    results = [de.extract(stim, name) for name in de_names]
+    df = ExtractorResult.merge_features(results)
+    assert df.shape == (177, 10)
+    assert df.columns.levels[1].unique().tolist() == ['duration', 0, 1, 2, '']
+    assert df.columns.levels[0].unique().tolist() == de_names + ['onset', 'stim']
+
+
+def test_merge_extractor_results_by_stims():
+    image_dir = join(get_test_data_path(), 'image')
+    stim1 = ImageStim(join(image_dir, 'apple.jpg'))
+    stim2 = ImageStim(join(image_dir, 'obama.jpg'))
+    de = DummyExtractor()
+    results = [de.extract(stim1), de.extract(stim2)]
+    df = ExtractorResult.merge_stims(results)
+    assert df.shape == (200, 5)
+    assert df.columns.tolist() == ['onset', 'duration', 0, 1, 2]
+    assert set(df.index.levels[1].unique()) == set(['obama.jpg', 'apple.jpg'])
+
+
+def test_merge_extractor_results():
+    np.random.seed(100)
+    image_dir = join(get_test_data_path(), 'image')
+    stim1 = ImageStim(join(image_dir, 'apple.jpg'))
+    stim2 = ImageStim(join(image_dir, 'obama.jpg'))
+    de = DummyExtractor()
+    de_names = ['Extractor1', 'Extractor2', 'Extractor3']
+    results = [de.extract(stim1, name) for name in de_names]
+    results += [de.extract(stim2, name) for name in de_names]
+    df = merge_results(results)
+    assert df.shape == (355, 10)
+    assert df.columns.levels[0].unique().tolist() == de_names + ['onset', 'stim']
+    assert df.columns.levels[1].unique().tolist() == ['duration', 0, 1, 2, '']
+    assert set(df.index.levels[1].unique()) == set(['obama.jpg', 'apple.jpg'])

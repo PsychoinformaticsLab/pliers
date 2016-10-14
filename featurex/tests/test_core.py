@@ -4,7 +4,7 @@ from featurex.extractors.image import VibranceExtractor
 from featurex.export import FSLExporter
 from featurex.core import Timeline, Value, Event
 from featurex.lazy import extract
-from featurex.core import get_transformer
+from featurex.transformers import get_transformer
 from featurex.extractors import Extractor
 from featurex.extractors.audio import STFTExtractor
 from os.path import join

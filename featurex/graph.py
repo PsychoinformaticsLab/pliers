@@ -1,5 +1,5 @@
 from featurex.extractors import Extractor
-from featurex.core import get_transformer
+from featurex.transformers import get_transformer
 from itertools import chain
 from featurex.utils import listify
 from six import string_types
@@ -7,6 +7,13 @@ from collections import OrderedDict
 
 
 class Node(object):
+
+    ''' A graph node/vertex. Represents a single transformer, optionally with
+    references to children.
+    Args:
+        name (str): Name of the node
+        transformer (Transformer): the Transformer instance at this node
+    '''
 
     def __init__(self, name, transformer):
         self.name = name
@@ -23,6 +30,7 @@ class Node(object):
         return list(chain(*[c.collect(stim) for c in self.children]))
    
     def add_child(self, node):
+        ''' Append a child to the list of children. '''
         self.children.append(node)
 
     def is_leaf(self):
