@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -12,53 +13,111 @@ from .validity import variances
 __all__ = ['collinearity', 'validity', 'outliers']
 
 class Diagnostics(object):
+    defaults = {
+        'Eigenvalues' : (lambda x: x < 0.05),
+        'ConditionIndices' : (lambda x: x > 20),
+        'VIFs' : (lambda x: x > 10),
+        'CorrelationMatrix' : (lambda x: x > 0.5),
+        'RowMahalanobisDistances' : (lambda x: x > 5),
+        'ColumnMahalanobisDistances' : (lambda x: x > 5),
+        'Variances' : (lambda x: x < 0.15)
+    }
+
 
     ''' Class for holding diagnostics of a design matrix '''
     def __init__(self, data, columns=None):
         self.data = data
 
         cols = self.data.columns if columns == None else columns
-        self.eigvals = eigenvalues(self.data[cols])
-        self.cond_idx = condition_indices(self.data[cols])
-        self.vifs = variance_inflation_factors(self.data[cols])
-        self.corr = correlation_matrix(self.data[cols])
-        self.row_outliers = mahalanobis_distances(self.data[cols])
-        self.column_outliers = mahalanobis_distances(self.data[cols], axis=1)
-        self.variances = variances(self.data[cols])
+        self.results = {}
+        self.results['Eigenvalues'] = eigenvalues(self.data[cols])
+        self.results['ConditionIndices'] = condition_indices(self.data[cols])
+        self.results['VIFs'] = variance_inflation_factors(self.data[cols])
+        self.results['CorrelationMatrix'] = correlation_matrix(self.data[cols])
+        self.results['RowMahalanobisDistances'] = mahalanobis_distances(self.data[cols])
+        self.results['ColumnMahalanobisDistances'] = mahalanobis_distances(self.data[cols], axis=1)
+        self.results['Variances'] = variances(self.data[cols])
+
 
     def show(self, stdout=True, plot=False):
+        """
+        Displays diagnostics to the user
+
+        Args:
+            stdout (bool): print results to the console
+            plot (bool): use Seaborn to plot results
+        """
         if stdout:
             print('Collinearity summary:')
-            print(pd.concat([self.eigvals, self.cond_idx, self.vifs, self.corr], axis=1))
+            print(pd.concat([self.results['Eigenvalues'],
+                            self.results['ConditionIndices'], 
+                            self.results['VIFs'],
+                            self.results['CorrelationMatrix']],
+                            axis=1))
 
             print('Outlier summary:')
-            print(self.row_outliers)
-            print(self.column_outliers)
+            print(self.results['RowMahalanobisDistances'])
+            print(self.results['ColumnMahalanobisDistances'])
 
             print('Validity summary:')
-            print(self.variances)
+            print(self.results['Variances'])
         
         if plot:
-            ax = plt.axes()
-            sns.heatmap(self.corr, cmap='Blues', ax=ax)
-            ax.set_title('Correlation matrix')
-            sns.plt.show()
+            for key, result in self.results.items():
+                if key == 'CorrelationMatrix':
+                    ax = plt.axes()
+                    sns.heatmap(result, cmap='Blues', ax=ax)
+                    ax.set_title(key)
+                    sns.plt.show()
+                else:
+                    result.plot(kind='bar', title=key)
+                    plt.show()
 
-            self.eigvals.plot(kind='bar', title='Eigenvalues')
-            plt.show()
 
-            self.cond_idx.plot(kind='bar', title='Condition indices')
-            plt.show()
+    def flag(self, diagnostic, thresh=None):
+        """
+        Returns indices of diagnostic that satisfy (return True from) the 
+        threshold predicate. Will use class-level default threshold if 
+        None provided.
 
-            self.vifs.plot(kind='bar', title='VIFs')
-            plt.show()
+        Args:
+            diagnostic (str): name of the diagnostic
+            thresh (func): threshold function (boolean predicate) to apply to 
+            each element
+        """
+        if thresh is None:
+            thresh = self.defaults[diagnostic]
 
-            self.row_outliers.plot(kind='bar', title='Row Mahalanobis Distances')
-            plt.show()
+        result = self.results[diagnostic]
+        if isinstance(result, pd.DataFrame):
+            if diagnostic == 'CorrelationMatrix':
+                result = result.copy()
+                np.fill_diagonal(result.values, 0)
+            return result.applymap(thresh).sum().nonzero()[0]
+        else:
+            return result.apply(thresh).nonzero()[0]
 
-            self.column_outliers.plot(kind='bar', title='Column Mahalanobis Distances')
-            plt.show()
 
-            self.variances.plot(kind='bar', title='Variances')
-            plt.show()
+    def flag_all(self, thresh_dict={}):
+        """
+        Returns indices of (rows, columns) that satisfy flag() on any diagnostic
+        Uses user-provided thresholds in thresh_dict
+
+        Args:
+            thresh_dict (dict): dictionary of diagnostic->threshold functions
+        """
+        row_idx = set()
+        col_idx = set()
+        for diagnostic in self.results:
+            if diagnostic in thresh_dict:
+                flagged = self.flag(diagnostic, thresh_dict[diagnostic])
+            else:
+                flagged = self.flag(diagnostic)
+
+            if diagnostic == 'RowMahalanobisDistances':
+                row_idx = row_idx.union(flagged)
+            else:
+                col_idx = col_idx.union(flagged)
+
+        return row_idx, col_idx
 
