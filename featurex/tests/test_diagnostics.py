@@ -16,7 +16,7 @@ def test_diagnostics(capfd):
     diagnostics = Diagnostics(df)
     assert hasattr(diagnostics, 'results')
     assert 'Variances' in diagnostics.results
-    diagnostics.show()
+    diagnostics.summary()
     out, err = capfd.readouterr()
     assert 'Collinearity summary:' in out
     assert 'Outlier summary:' in out
@@ -24,13 +24,28 @@ def test_diagnostics(capfd):
 
 
 def test_flagging():
-    df = pd.DataFrame(np.random.randn(10, 5))
+    df = pd.DataFrame(np.random.randn(100, 2), columns=['a', 'b'])
+    noise = np.random.randn(100)
+    df['c'] = (3*df['a']) + (2*df['b']) + (.5*noise)
     diagnostics = Diagnostics(df)
     rows, cols = diagnostics.flag_all({'VIFs' : (lambda x: x > 0), 
                                 'RowMahalanobisDistances' : (lambda x: x > 0)})
     # Everything should be flagged
-    assert list(rows) == range(10)
-    assert list(cols) == range(5)
+    assert rows == range(df.shape[0])
+    assert cols == range(df.shape[1])
+
+    vif = variance_inflation_factors(df).max()
+    rows, cols = diagnostics.flag_all({'VIFs' : (lambda x: x >= vif)}, 
+                                        include=['VIFs'])
+    assert rows == []
+    assert cols == [2]
+
+    rows, cols = diagnostics.flag_all(exclude=['VIFs', 'ConditionIndices', 
+                                        'Eigenvalues', 'CorrelationMatrix',
+                                        'RowMahalanobisDistances', 'ColumnMahalanobisDistances',
+                                        'Variances'])
+    assert rows == []
+    assert cols == []
 
 
 def test_correlation_matrix():

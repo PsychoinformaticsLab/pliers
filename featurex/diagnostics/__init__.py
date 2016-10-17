@@ -39,14 +39,14 @@ class Diagnostics(object):
         self.results['Variances'] = variances(self.data[cols])
 
 
-    def show(self, stdout=True, plot=False):
-        """
+    def summary(self, stdout=True, plot=False):
+        '''
         Displays diagnostics to the user
 
         Args:
             stdout (bool): print results to the console
             plot (bool): use Seaborn to plot results
-        """
+        '''
         if stdout:
             print('Collinearity summary:')
             print(pd.concat([self.results['Eigenvalues'],
@@ -75,7 +75,7 @@ class Diagnostics(object):
 
 
     def flag(self, diagnostic, thresh=None):
-        """
+        '''
         Returns indices of diagnostic that satisfy (return True from) the 
         threshold predicate. Will use class-level default threshold if 
         None provided.
@@ -84,7 +84,7 @@ class Diagnostics(object):
             diagnostic (str): name of the diagnostic
             thresh (func): threshold function (boolean predicate) to apply to 
             each element
-        """
+        '''
         if thresh is None:
             thresh = self.defaults[diagnostic]
 
@@ -98,17 +98,21 @@ class Diagnostics(object):
             return result.apply(thresh).nonzero()[0]
 
 
-    def flag_all(self, thresh_dict={}):
-        """
+    def flag_all(self, thresh_dict={}, include=None, exclude=None):
+        '''
         Returns indices of (rows, columns) that satisfy flag() on any diagnostic
         Uses user-provided thresholds in thresh_dict
 
         Args:
             thresh_dict (dict): dictionary of diagnostic->threshold functions
-        """
+            include (list): optional sublist of diagnostics to flag
+            exclude (list): optional sublist of diagnostics to not flag
+        '''
         row_idx = set()
         col_idx = set()
-        for diagnostic in self.results:
+        include = self.results if include == None else include
+        include = list(set(include) - set(exclude)) if exclude != None else include
+        for diagnostic in include:
             if diagnostic in thresh_dict:
                 flagged = self.flag(diagnostic, thresh_dict[diagnostic])
             else:
@@ -119,5 +123,5 @@ class Diagnostics(object):
             else:
                 col_idx = col_idx.union(flagged)
 
-        return row_idx, col_idx
+        return sorted(list(row_idx)), sorted(list(col_idx))
 
