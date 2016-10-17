@@ -25,6 +25,12 @@ class GoogleVisionAPITextConverter(GoogleVisionAPITransformer, ImageToTextConver
     request_type = 'TEXT_DETECTION'
     response_object = 'textAnnotations'
 
+
+    def __init__(self, handle_annotations='first', **kwargs):
+        super(GoogleVisionAPITextConverter, self).__init__(**kwargs)
+        self.handle_annotations = handle_annotations
+
+
     def _convert(self, stim):
         request =  self._build_request([stim])
         responses = self._query_api(request)
@@ -32,10 +38,20 @@ class GoogleVisionAPITextConverter(GoogleVisionAPITransformer, ImageToTextConver
 
         if response:
             annotations = response[self.response_object]
-            # Concatenate all the annotation
-            text = ''
-            for annotation in annotations:
-                text += annotation['description']
-            return TextStim(text=text)
+            # Combine the annotations
+            if self.handle_annotations == 'first':
+                text = annotations[0]['description']
+                return TextStim(text=text)
+            elif self.handle_annotations == 'concatenate':
+                text = ''
+                for annotation in annotations:
+                    text += annotation['description']
+                return TextStim(text=text)
+            elif self.handle_annotations == 'list':
+                texts = []
+                for annotation in annotations:
+                    texts.append(TextStim(text=annotation['description']))
+                return texts
+            
         else:
             return TextStim(text='')

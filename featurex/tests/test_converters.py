@@ -40,6 +40,7 @@ def test_derived_video_stim():
     assert derived.history.shape == (2, 3)
     assert np.array_equal(derived.history['filter'], ['every', 'hertz'])
 
+
 def test_derived_video_stim_cv2():
     pytest.importorskip('cv2')
     filename = join(get_test_data_path(), 'video', 'small.mp4')
@@ -49,6 +50,7 @@ def test_derived_video_stim_cv2():
     derived = conv.transform(video)
     assert len(derived.elements) == 5
     assert type(next(f for f in derived)) == VideoFrameStim
+
 
 @pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
 def test_witaiAPI_converter():
@@ -60,6 +62,7 @@ def test_witaiAPI_converter():
     text = [elem.text for elem in out_stim]
     assert 'thermodynamics' in text or 'obey' in text
 
+
 @pytest.mark.skipif("'GOOGLE_API_KEY' not in os.environ")
 def test_googleAPI_converter():
     audio_dir = join(get_test_data_path(), 'audio')
@@ -70,6 +73,7 @@ def test_googleAPI_converter():
     text = [elem.text for elem in out_stim]
     assert 'thermodynamics' in text or 'obey' in text
 
+
 def test_tesseract_converter():
     pytest.importorskip('pytesseract')
     image_dir = join(get_test_data_path(), 'image')
@@ -78,6 +82,7 @@ def test_tesseract_converter():
     text = conv.transform(stim).text
     assert text == 'Exit'
 
+
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_text_converter():
     conv = GoogleVisionAPITextConverter(num_retries=5)
@@ -85,3 +90,8 @@ def test_google_vision_api_text_converter():
     stim = ImageStim(filename)
     text = conv.transform(stim).text
     assert 'Exit' in text
+    
+    conv = GoogleVisionAPITextConverter(handle_annotations='concatenate')
+    text = conv.transform(stim).text
+    assert 'Exit' in text
+
