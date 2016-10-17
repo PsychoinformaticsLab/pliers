@@ -6,8 +6,8 @@ import pandas as pd
 
 class VideoToDerivedVideoConverter(Converter):
 
-    ''' Base AudioToText Converter class; all subclasses can only be applied to
-    audio and convert to text. '''
+    ''' Base VideoToDerivedVideo Converter class; all subclasses can only be
+    applied to video and convert to derived (sampled) video. '''
     target = VideoStim
     _output_type = DerivedVideoStim
 
@@ -19,13 +19,13 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
     Args:
         every (int): takes every nth frame
         hertz (int): takes n frames per second
-        num_frames (int): takes top n frames sorted by the absolute difference
+        top_n (int): takes top n frames sorted by the absolute difference
          with the next frame
     '''
-    def __init__(self, every=None, hertz=None, num_frames=None):
+    def __init__(self, every=None, hertz=None, top_n=None):
         self.every = every
         self.hertz = hertz
-        self.num_frames = num_frames
+        self.top_n = top_n
 
     def _convert(self, video):
         if not hasattr(video, "frame_index"):
@@ -45,7 +45,7 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
             interval = int(video.fps / self.hertz)
             new_idx = range(video.n_frames)[::interval]
             history.loc[history.shape[0]] = ["hertz", self.hertz, len(new_idx)]
-        elif self.num_frames is not None:
+        elif self.top_n is not None:
             import cv2
             diffs = []
             for i, img in enumerate(video.frames):
@@ -54,8 +54,8 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
                     continue
                 diffs.append(sum(cv2.sumElems(cv2.absdiff(last, img))))
                 last = img
-            new_idx = sorted(range(len(diffs)), key=lambda i: diffs[i], reverse=True)[:self.num_frames]
-            history.loc[history.shape[0]] = ["num_frames", self.num_frames, len(new_idx)]
+            new_idx = sorted(range(len(diffs)), key=lambda i: diffs[i], reverse=True)[:self.top_n]
+            history.loc[history.shape[0]] = ["top_n", self.top_n, len(new_idx)]
 
         frame_index = sorted(list(set(frame_index).intersection(new_idx)))
 

@@ -72,7 +72,7 @@ class DerivedVideoStim(VideoStim):
     VideoStim containing keyframes (for API calls). Each keyframe is associated
     with a duration reflecting the length of its "scene."
     """
-    def __init__(self, filename, elements, frame_index, history):
+    def __init__(self, filename, elements, frame_index=None, history=None):
         super(DerivedVideoStim, self).__init__(filename)
         self.elements = elements
         self.frame_index = frame_index

@@ -45,7 +45,7 @@ def test_derived_video_stim_cv2():
     filename = join(get_test_data_path(), 'video', 'small.mp4')
     video = VideoStim(filename)
 
-    conv = FrameSamplingConverter(num_frames=5)
+    conv = FrameSamplingConverter(top_n=5)
     derived = conv.transform(video)
     assert len(derived.elements) == 5
     assert type(next(f for f in derived)) == VideoFrameStim
