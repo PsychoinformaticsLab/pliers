@@ -36,7 +36,7 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
         if not hasattr(video, "history"):
             history = pd.DataFrame(columns=["filter", "value", "n_frames"])
         else:
-            history = video.history
+            history = video.history.copy()
 
         if self.every is not None:
             new_idx = range(video.n_frames)[::self.every]
