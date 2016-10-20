@@ -10,7 +10,6 @@ import numpy as np
 import tempfile
 import os
 from warnings import warn
-from PIL import Image
 
 class ImageExtractor(Extractor):
 
@@ -65,21 +64,6 @@ class VibranceExtractor(ImageExtractor):
         avg_color = np.var(data, 2).mean()
         return ExtractorResult(np.array([[avg_color]]), stim, self,
                                features=['avg_color'])
-
-
-class TesseractExtractor(ImageExtractor):
-
-    ''' Uses the Tesseract library to extract text from images '''
-
-    def __init__(self):
-        super(self.__class__, self).__init__()
-
-    def _extract(self, stim):
-        import pytesseract
-        data = stim.data
-        text = pytesseract.image_to_string(Image.fromarray(data))
-        return ExtractorResult(np.array([[text]]), stim, self,
-                               features=['text'])
 
 
 class SaliencyExtractor(ImageExtractor):

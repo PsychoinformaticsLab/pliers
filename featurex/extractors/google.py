@@ -1,47 +1,11 @@
-import argparse
-import base64
-import os
-import re
-import sys
 from featurex.extractors.image import ImageExtractor
-from featurex.extractors import Extractor
 from featurex.stimuli.image import ImageStim
+from featurex.google import GoogleVisionAPITransformer
 from featurex import Value, Event
-import tempfile
-from scipy.misc import imsave
 import numpy as np
 
-try:
-    from googleapiclient import discovery, errors
-    from oauth2client.client import GoogleCredentials
-except ImportError:
-    pass
 
-
-DISCOVERY_URL = 'https://{api}.googleapis.com/$discovery/rest?version={apiVersion}'
-BATCH_SIZE = 10
-
-
-class GoogleAPIExtractor(Extractor):
-
-    def __init__(self, discovery_file=None, api_version='v1', max_results=100,
-                 num_retries=3):
-
-        if discovery_file is None:
-            if 'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ:
-                raise ValueError("No Google application credentials found. "
-                    "A JSON service account key must be either passed as the "
-                    "discovery_file argument, or set in the "
-                    "GOOGLE_APPLICATION_CREDENTIALS environment variable.")
-            discovery_file = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
-
-        self.credentials = GoogleCredentials.from_stream(discovery_file)
-        self.max_results = max_results
-        self.num_retries = num_retries
-        self.service = discovery.build(self.api_name, api_version,
-                                       credentials=self.credentials,
-                                       discoveryServiceUrl=DISCOVERY_URL)
-        super(GoogleAPIExtractor, self).__init__()
+class GoogleVisionAPIExtractor(GoogleVisionAPITransformer, ImageExtractor):
 
     def _extract(self, stim):
         if isinstance(stim, ImageStim):
@@ -67,34 +31,6 @@ class GoogleAPIExtractor(Extractor):
             return events[0].values
         return events
 
-    def _query_api(self, request):
-        resource = getattr(self.service, self.resource)()
-        request = resource.annotate(body={'requests': request})
-        return request.execute(num_retries=self.num_retries)['responses']
-
-
-class GoogleVisionAPIExtractor(GoogleAPIExtractor, ImageExtractor):
-
-    api_name = 'vision'
-    resource = 'images'
-
-    def _build_request(self, stim):
-        request = []
-        for image in stim:
-            temp_file = tempfile.mktemp() + '.png'
-            imsave(temp_file, image.data)
-            img_data = open(temp_file, 'rb').read()
-            content = base64.b64encode(img_data).decode()
-            request.append(
-                {
-                'image': { 'content': content },
-                'features': [{
-                    'type': self.request_type,
-                    'maxResults': self.max_results,
-                }]
-            })
-        return request
-
 
 class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
 
@@ -119,28 +55,6 @@ class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
                         name = 'landmark_' + lm['type'] + '_%s'
                         lm_pos = { name % k : v for (k, v) in lm['position'].items()}
                         data_dict.update(lm_pos)
-            values.append(Value(stim=stim, extractor=self, data=data_dict))
-        return values
-
-
-class GoogleVisionAPITextExtractor(GoogleVisionAPIExtractor):
-
-    request_type = 'TEXT_DETECTION'
-    response_object = 'textAnnotations'
-
-    def _parse_annotations(self, stim, annotations):
-        values = []
-        for annotation in annotations:
-            data_dict = {}
-            for field, val in annotation.items():
-                if 'boundingPoly' != field:
-                    data_dict[field] = val
-                else:
-                    for i, vertex in enumerate(val['vertices']):
-                        for dim in ['x', 'y']:
-                            name = '%s_vertex%d_%s' % (field, i+1, dim)
-                            val = vertex[dim] if dim in vertex else np.nan
-                            data_dict[name] = val
             values.append(Value(stim=stim, extractor=self, data=data_dict))
         return values
 
