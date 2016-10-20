@@ -1,6 +1,5 @@
 from featurex.extractors.google import (GoogleVisionAPIExtractor,
                                         GoogleVisionAPIFaceExtractor,
-                                        GoogleVisionAPITextExtractor,
                                         GoogleVisionAPILabelExtractor,
                                         GoogleVisionAPIPropertyExtractor)
 from featurex.stimuli.image import ImageStim
@@ -46,16 +45,6 @@ def test_google_vision_api_face_extractor_inits():
     assert isinstance(values, Value)
     assert values.data['rollAngle'] == -1.6712251
     assert values.data['angerLikelihood'] == "VERY_UNLIKELY"
-
-@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
-def test_google_vision_api_text_extractor():
-    ext = GoogleVisionAPITextExtractor(num_retries=5)
-    filename = join(get_test_data_path(), 'image', 'button.jpg')
-    stim = ImageStim(filename)
-    values = ext.transform(stim)[0]
-    assert values.data['locale'] == 'en'
-    assert 'Exit' in values.data['description']
-    assert np.isfinite(values.data['boundingPoly_vertex2_y'])
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_label_extractor():

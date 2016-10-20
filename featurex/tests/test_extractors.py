@@ -8,7 +8,6 @@ from featurex.extractors.audio import STFTExtractor, MeanAmplitudeExtractor
 from featurex.extractors.image import (BrightnessExtractor,
                                         SharpnessExtractor,
                                         VibranceExtractor,
-                                        TesseractExtractor,
                                         SaliencyExtractor)
 from featurex.extractors.video import DenseOpticalFlowExtractor
 from featurex.extractors.api import (IndicoAPIExtractor,
@@ -130,15 +129,6 @@ def test_vibrance_extractor():
     result = VibranceExtractor().extract(stim).to_df()
     color = result['avg_color'][0]
     assert np.isclose(color, 1370.65482988)
-
-
-def test_tesseract_extractor():
-    pytest.importorskip('pytesseract')
-    image_dir = join(get_test_data_path(), 'image')
-    stim = ImageStim(join(image_dir, 'button.jpg'))
-    ext = TesseractExtractor()
-    output = ext.transform(stim).data['text']
-    assert output == 'Exit'
 
 
 def test_saliency_extractor():
