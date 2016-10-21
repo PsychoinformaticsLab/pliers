@@ -157,29 +157,25 @@ def test_indicoAPI_extractor():
     srt_stim = ComplexTextStim(srtfile)
     ext = IndicoAPIExtractor(
         api_key=os.environ['INDICO_APP_KEY'], model='emotion')
-    output = srt_stim.extract([ext])
-    outdfKeys = set(output.to_df()['name'])
+    result = ext.extract(srt_stim).to_df()
     outdfKeysCheck = set([
+        'onset',
+        'duration',
         'emotion_anger',
         'emotion_fear',
         'emotion_joy',
         'emotion_sadness',
         'emotion_surprise'])
-    assert outdfKeys == outdfKeysCheck
+    assert set(result.columns) == outdfKeysCheck
 
 
 @pytest.mark.skipif("'CLARIFAI_APP_ID' not in os.environ")
 def test_clarifaiAPI_extractor():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    ext = ClarifaiAPIExtractor()
-    output = ext.transform(stim).data['tags']
-    # Check success of request
-    assert output['status_code'] == 'OK'
-    # Check success of each image tagged
-    for result in output['results']:
-        assert result['status_code'] == 'OK'
-        assert result['result']['tag']['classes']
+    result = ClarifaiAPIExtractor().extract(stim).to_df()
+    assert result['apple'][0] > 0.5
+    assert result.ix[:,5][0] > 0.0
 
 
 def test_merge_extractor_results_by_features():
