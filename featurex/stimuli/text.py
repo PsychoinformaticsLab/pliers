@@ -66,7 +66,7 @@ class ComplexTextStim(object):
 
     def __init__(self, filename=None, columns='tod', default_duration=None,
                 elements=[]):
-        self.elements = elements
+        self.elements = list(elements)
 
         if filename is not None:
             if filename.endswith("srt"):

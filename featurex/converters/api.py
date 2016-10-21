@@ -6,18 +6,10 @@ from featurex.converters.audio import AudioToTextConverter
 from featurex.converters.image import ImageToTextConverter
 from PIL import Image
 
-try:
-    import speech_recognition as sr
-except ImportError:
-    pass
+from six.moves.urllib.parse import urlencode
+from six.moves.urllib.request import Request, urlopen
+from six.moves.urllib.error import URLError, HTTPError
 
-try:
-    from urllib import urlencode
-    from urllib2 import Request, urlopen, URLError, HTTPError
-except ImportError:
-    from urllib.parse import urlencode
-    from urllib.request import Request, urlopen
-    from urllib.error import URLError, HTTPError
 
 class SpeechRecognitionConverter(AudioToTextConverter):
     ''' Uses the SpeechRecognition API, which interacts with several APIs, 
@@ -28,6 +20,7 @@ class SpeechRecognitionConverter(AudioToTextConverter):
     '''
 
     def __init__(self, api_key=None):
+        import speech_recognition as sr
         if api_key is None:
             try:
                 api_key = os.environ[self.environ_key]
@@ -38,6 +31,7 @@ class SpeechRecognitionConverter(AudioToTextConverter):
         self.api_key = api_key
 
     def _convert(self, audio):
+        import speech_recognition as sr
         with sr.AudioFile(audio.filename) as source:
             clip = self.recognizer.record(source)
         text = getattr(self.recognizer, self.recognize_method)(clip, self.api_key)
@@ -70,6 +64,7 @@ class IBMSpeechAPIConverter(AudioToTextConverter):
     '''
 
     def __init__(self, username=None, password=None):
+        import speech_recognition as sr
         if username is None or password is None:
             try:
                 username = os.environ['IBM_USERNAME']
@@ -82,6 +77,7 @@ class IBMSpeechAPIConverter(AudioToTextConverter):
         self.password = password
 
     def _convert(self, audio):
+        import speech_recognition as sr
         with sr.AudioFile(audio.filename) as source:
             clip = self.recognizer.record(source)
 
