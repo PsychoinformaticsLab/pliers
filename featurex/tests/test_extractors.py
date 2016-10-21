@@ -110,7 +110,7 @@ def test_brightness_extractor():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
     result = BrightnessExtractor().extract(stim).to_df()
-    brightness = result['avg_brightness'][0]
+    brightness = result['brightness'][0]
     assert np.isclose(brightness, 0.88784294)
 
 
@@ -127,7 +127,7 @@ def test_vibrance_extractor():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
     result = VibranceExtractor().extract(stim).to_df()
-    color = result['avg_color'][0]
+    color = result['vibrance'][0]
     assert np.isclose(color, 1370.65482988)
 
 
@@ -146,11 +146,8 @@ def test_optical_flow_extractor():
     pytest.importorskip('cv2')
     video_dir = join(get_test_data_path(), 'video')
     stim = VideoStim(join(video_dir, 'small.mp4'))
-    ext = DenseOpticalFlowExtractor()
-    timeline = stim.extract([ext])
-    df = timeline.to_df()
-    assert df.shape == (168, 4)
-    target = df.query('name=="total_flow" & onset==3.0')['value'].values
+    result = DenseOpticalFlowExtractor().extract(stim).to_df()
+    target = result.query('onset==3.0')['total_flow']
     assert np.isclose(target, 86248.05)
 
 
@@ -183,15 +180,6 @@ def test_clarifaiAPI_extractor():
     for result in output['results']:
         assert result['status_code'] == 'OK'
         assert result['result']['tag']['classes']
-
-
-@pytest.mark.skipif("'WIT_AI_APP_KEY' not in os.environ")
-def test_witaiAPI_extractor():
-    audio_dir = join(get_test_data_path(), 'audio')
-    stim = AudioStim(join(audio_dir, 'homer.wav'))
-    ext = WitTranscriptionExtractor()
-    text = ext.transform(stim).data['text']
-    assert 'laws of thermodynamics' in text
 
 
 def test_merge_extractor_results_by_features():

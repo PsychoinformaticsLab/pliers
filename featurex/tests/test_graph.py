@@ -41,4 +41,4 @@ def test_graph_smoke_test():
     nodes = [(BrightnessExtractor(), 'brightness')]
     graph = Graph(nodes)
     result = graph.extract([stim])
-    assert 'avg_brightness' in result[0].data
+    assert 'brightness' in result[0].data

@@ -27,10 +27,10 @@ class BrightnessExtractor(ImageExtractor):
 
     def _extract(self, stim):
         data = stim.data
-        avg_brightness = np.amax(data, 2).mean() / 255.0
+        brightness = np.amax(data, 2).mean() / 255.0
 
-        return ExtractorResult(np.array([[avg_brightness]]), stim, self,
-                               features=['avg_brightness'])
+        return ExtractorResult(np.array([[brightness]]), stim, self,
+                               features=['brightness'])
 
 
 class SharpnessExtractor(ImageExtractor):
@@ -61,9 +61,9 @@ class VibranceExtractor(ImageExtractor):
 
     def _extract(self, stim):
         data = stim.data
-        avg_color = np.var(data, 2).mean()
-        return ExtractorResult(np.array([[avg_color]]), stim, self,
-                               features=['avg_color'])
+        vibrance = np.var(data, 2).mean()
+        return ExtractorResult(np.array([[vibrance]]), stim, self,
+                               features=['vibrance'])
 
 
 class SaliencyExtractor(ImageExtractor):
