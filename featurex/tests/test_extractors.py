@@ -204,8 +204,7 @@ def test_merge_extractor_results_by_features():
     stim = ImageStim(join(image_dir, 'apple.jpg'))
 
     # Merge results for static Stims (no onsets)
-    extractors = [BrightnessExtractor(), SharpnessExtractor(),
-                  VibranceExtractor()]
+    extractors = [BrightnessExtractor(), VibranceExtractor()]
     results = [e.extract(stim) for e in extractors]
     df = ExtractorResult.merge_features(results)
 
