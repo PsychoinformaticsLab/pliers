@@ -110,12 +110,9 @@ def test_mean_amplitude_extractor():
     stim = TranscribedAudioStim(join(audio_dir, "barber_edited.wav"),
                                 join(text_dir, "wonderful_edited.srt"))
     ext = MeanAmplitudeExtractor()
-    timeline = stim.extract([ext])
+    result = ext.extract(stim).to_df()
     targets = [100., 150.]
-    events = timeline.events
-    values = [events[event].values[0].data["mean_amplitude"]
-              for event in events.keys()]
-    assert values == targets
+    assert np.array_equal(result['mean_amplitude'], targets)
 
 
 def test_part_of_speech_extractor():

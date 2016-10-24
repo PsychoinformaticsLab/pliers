@@ -107,10 +107,14 @@ class MeanAmplitudeExtractor(TranscribedAudioExtractor):
         amps = stim.data
         sampling_rate = stim.sampling_rate
         elements = stim.transcription.elements
-        events = []
+        values = []
+        onsets = []
+        durations = []
         for i, el in enumerate(elements):
             onset = sampling_rate * el.onset
+            onsets.append(onset)
             duration = sampling_rate * el.duration
+            durations.append(duration)
             
             r_onset = np.round(onset).astype(int)
             r_offset = np.round(onset+duration).astype(int)
@@ -118,8 +122,7 @@ class MeanAmplitudeExtractor(TranscribedAudioExtractor):
                 raise Exception('Block ends after data.')
             
             mean_amplitude = np.mean(amps[r_onset:r_offset])
-            amplitude_data = {'mean_amplitude': mean_amplitude}
-            ev = Event(onset=onset, duration=duration)
-            ev.add_value(Value(stim, self, amplitude_data))
-            events.append(ev)
-        return events
+            values.append(mean_amplitude)
+
+        return ExtractorResult(values, stim, self, features=['mean_amplitude'],
+                                onsets=onsets, durations=durations)
