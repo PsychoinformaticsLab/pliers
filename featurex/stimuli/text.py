@@ -1,7 +1,7 @@
 from featurex.stimuli import Stim
 from featurex.core import Timeline
 from featurex.support.decorators import requires_nltk_corpus
-from featurex.extractors import merge_results
+from featurex.extractors import ExtractorResult, merge_results
 import pandas as pd
 from six import string_types
 import re
@@ -18,10 +18,10 @@ class TextStim(Stim):
         self.text = text
 
     def extract(self, extractors):
-        vals = {}
+        vals = []
         for e in extractors:
-            vals[e.name] = e.transform(self)
-        return Value(self, e, vals)
+            vals.append(e.transform(self))
+        return ExtractorResult.merge_features(vals)
 
     @property
     def name(self):
