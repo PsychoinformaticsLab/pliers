@@ -122,8 +122,8 @@ def test_part_of_speech_extractor():
     result = PartOfSpeechExtractor().extract(stim).to_df()
     assert result.shape == (4, 6)
     assert 'NN' in result.columns
-    assert result['NN'].sum() == 2
-    assert result['VBN'][3] == 1
+    assert result['NN'].sum() == 1
+    assert result['VBD'][3] == 1
 
 
 def test_brightness_extractor():
