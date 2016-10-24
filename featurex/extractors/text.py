@@ -149,16 +149,19 @@ class PartOfSpeechExtractor(ComplexTextExtractor):
                 "the number of tagged words returned by nltk's part-of-speech"
                 " tagger.")
 
-        data = []
+        data = {}
         onsets = []
         durations = []
         for i, w in enumerate(stim):
-            data.append(pos[i][1])
+            p = pos[i][1]
+            if p not in data:
+                data[p] = [0] * len(words)
+            data[p][i] += 1
             onsets.append(w.onset)
             durations.append(w.duration)
 
-        return ExtractorResult(np.array(data), stim, self, 
-                                features=['part_of_speech'],
+        return ExtractorResult(np.array(data.values()).transpose(), stim, self,
+                                features=data.keys(),
                                 onsets=onsets, 
                                 durations=durations)
 

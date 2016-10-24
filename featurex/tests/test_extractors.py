@@ -118,9 +118,10 @@ def test_mean_amplitude_extractor():
 def test_part_of_speech_extractor():
     stim = ComplexTextStim(join(TEXT_DIR, 'complex_stim_with_header.txt'))
     result = PartOfSpeechExtractor().extract(stim).to_df()
-    assert result.shape == (4, 3)
-    assert 'part_of_speech' in result.columns
-    assert result['part_of_speech'][1] == 'NN'
+    assert result.shape == (4, 5)
+    assert 'NN' in result.columns
+    assert result['NN'].sum() == 2
+    assert result['VBN'][3] == 1
 
 
 def test_brightness_extractor():
