@@ -61,13 +61,12 @@ class DictionaryExtractor(TextExtractor):
         super(DictionaryExtractor, self).__init__()
 
     def _extract(self, stim):
-        print type(stim)
         if stim.text not in self.data.index:
             vals = pd.Series(self.missing, self.variables)
         else:
             vals = self.data.loc[stim.text].fillna(self.missing)
         vals = vals.to_dict()
-        return ExtractorResult(vals.values(), stim, self, 
+        return ExtractorResult(np.array([vals.values()]), stim, self,
                                 features=vals.keys())
 
 

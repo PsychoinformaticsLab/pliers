@@ -70,28 +70,30 @@ def test_unique_words_extractor():
 
 
 def test_dictionary_extractor():
-    stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
-                           columns='to', default_duration=1)
     td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
                              variables=['length', 'frequency'])
     assert td.data.shape == (7, 2)
-    timeline = stim.extract([td])
-    df = timeline.to_df()
-    assert False
-    assert np.isnan(df.iloc[0, 3])
-    assert df.shape == (12, 4)
-    target = df.query('name=="frequency" & onset==5')['value'].values
-    assert target == 10.6
+
+    stim = TextStim(text='annotation')
+    result = td.extract(stim).to_df()
+    assert np.isnan(result['onset'][0])
+    assert 'length' in result.columns
+    assert result['length'][0] == 10
+
+    stim2 = TextStim(text='some')
+    result = td.extract(stim2).to_df()
+    assert np.isnan(result['onset'][0])
+    assert 'frequency' in result.columns
+    assert np.isnan(result['frequency'][0])
 
 
 def test_predefined_dictionary_extractor():
-    text = """enormous chunks of ice that have been frozen for thousands of
-              years are breaking apart and melting away"""
-    stim = ComplexTextStim.from_text(text)
+    stim = TextStim(text='enormous')
     td = PredefinedDictionaryExtractor(['aoa/Freq_pm'])
-    timeline = stim.extract([td])
-    df = TimelineExporter.timeline_to_df(timeline)
-    assert df.shape == (18, 4)
+    result = td.extract(stim).to_df()
+    assert result.shape == (1, 3)
+    assert 'aoa_Freq_pm' in result.columns
+    assert np.isclose(result['aoa_Freq_pm'][0], 10.313725)
 
 
 def test_stft_extractor():

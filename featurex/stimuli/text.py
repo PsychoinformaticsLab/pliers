@@ -1,6 +1,7 @@
 from featurex.stimuli import Stim
-from featurex.core import Timeline, Event, Value
+from featurex.core import Timeline
 from featurex.support.decorators import requires_nltk_corpus
+from featurex.extractors import merge_results
 import pandas as pd
 from six import string_types
 import re
@@ -133,22 +134,18 @@ class ComplexTextStim(object):
         return total_secs
 
     def extract(self, extractors, merge_events=True):
-        timeline = Timeline()
+        all_results = []
         # Extractors can either take ComplexTextStim input, in which case we
         # pass the current instance, or TextStim input, in which case we loop
         # over all elements.
         for ext in extractors:
             if ext.target.__name__ == self.__class__.__name__:
-                events = ext.transform(self)
-                for ev in events:
-                    timeline.add_event(ev, merge=merge_events)
+                all_results.append(ext.transform(self))
             else:
                 for elem in self.elements:
-                    # If no onset is available, index with order
-                    onset = elem.onset or elem.order
-                    event = Event(onset=onset, values=[ext.transform(elem)])
-                    timeline.add_event(event, merge=merge_events)
-        return timeline
+                    all_results.append(ext.transform(elem))
+        
+        return merge_results(all_results)
 
     @classmethod
     def from_text(cls, text, unit='word', tokenizer=None, language='english'):
