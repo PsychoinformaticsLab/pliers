@@ -3,6 +3,8 @@ import os
 from .utils import get_test_data_path
 from featurex.extractors.text import (DictionaryExtractor,
                                       PartOfSpeechExtractor,
+                                      LengthExtractor,
+                                      NumUniqueWordsExtractor,
                                       PredefinedDictionaryExtractor)
 from featurex.extractors.audio import STFTExtractor, MeanAmplitudeExtractor
 from featurex.extractors.image import (BrightnessExtractor,
@@ -12,7 +14,7 @@ from featurex.extractors.image import (BrightnessExtractor,
 from featurex.extractors.video import DenseOpticalFlowExtractor
 from featurex.extractors.api import (IndicoAPIExtractor,
                                         ClarifaiAPIExtractor)
-from featurex.stimuli.text import ComplexTextStim
+from featurex.stimuli.text import TextStim, ComplexTextStim
 from featurex.stimuli.video import ImageStim, VideoStim
 from featurex.stimuli.audio import AudioStim, TranscribedAudioStim
 from featurex.export import TimelineExporter
@@ -47,10 +49,27 @@ def test_check_target_type():
     td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
                              variables=['length', 'frequency'])
     with pytest.raises(TypeError):
-        stim.extract([td])
+        td.transform(stim)
 
 
-def test_text_extractor():
+def test_text_length_extractor():
+    stim = TextStim(text='hello world')
+    ext = LengthExtractor()
+    result = ext.extract(stim).to_df()
+    assert 'text_length' in result.columns
+    assert result['text_length'][0] == 11
+
+
+def test_unique_words_extractor():
+    stim = TextStim(text='hello hello world')
+    ext = NumUniqueWordsExtractor()
+    result = ext.extract(stim).to_df()
+    print result
+    assert 'num_unique_words' in result.columns
+    assert result['num_unique_words'][0] == 2
+
+
+def test_dictionary_extractor():
     stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
                            columns='to', default_duration=1)
     td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
@@ -58,6 +77,7 @@ def test_text_extractor():
     assert td.data.shape == (7, 2)
     timeline = stim.extract([td])
     df = timeline.to_df()
+    assert False
     assert np.isnan(df.iloc[0, 3])
     assert df.shape == (12, 4)
     target = df.query('name=="frequency" & onset==5')['value'].values
@@ -100,10 +120,10 @@ def test_mean_amplitude_extractor():
 
 def test_part_of_speech_extractor():
     stim = ComplexTextStim(join(TEXT_DIR, 'complex_stim_with_header.txt'))
-    tl = stim.extract([PartOfSpeechExtractor()])
-    df = tl.to_df()
-    assert df.iloc[1, 3] == 'NN'
-    assert df.shape == (4, 4)
+    result = PartOfSpeechExtractor().extract(stim).to_df()
+    assert result.shape == (4, 3)
+    assert 'part_of_speech' in result.columns
+    assert result['part_of_speech'][1] == 'NN'
 
 
 def test_brightness_extractor():
