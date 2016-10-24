@@ -2,7 +2,6 @@ from featurex.extractors.image import ImageExtractor
 from featurex.stimuli.image import ImageStim
 from featurex.google import GoogleVisionAPITransformer
 from featurex.extractors import ExtractorResult
-from featurex import Value, Event
 import numpy as np
 
 

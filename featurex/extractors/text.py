@@ -8,7 +8,6 @@ from featurex.support.exceptions import FeatureXError
 from featurex.support.decorators import requires_nltk_corpus
 from featurex.datasets.text import fetch_dictionary, datasets
 import numpy as np
-from featurex.core import Value, Event
 import pandas as pd
 from six import string_types
 from collections import defaultdict

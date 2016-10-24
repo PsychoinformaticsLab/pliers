@@ -7,7 +7,6 @@ from featurex.extractors.audio import AudioExtractor
 from featurex.extractors.text import ComplexTextExtractor
 from featurex.extractors import ExtractorResult
 from scipy.misc import imsave
-from featurex.core import Value, Event
 import os
 import tempfile
 

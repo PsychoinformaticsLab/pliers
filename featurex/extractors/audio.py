@@ -1,9 +1,7 @@
 from featurex.stimuli import audio
-from featurex.extractors import Extractor
+from featurex.extractors import Extractor, ExtractorResult
 import numpy as np
 from scipy import fft
-from featurex.core import Value, Event
-from featurex.extractors import ExtractorResult
 
 
 class AudioExtractor(Extractor):
