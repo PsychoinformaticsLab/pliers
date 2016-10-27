@@ -64,7 +64,6 @@ def test_unique_words_extractor():
     stim = TextStim(text='hello hello world')
     ext = NumUniqueWordsExtractor()
     result = ext.extract(stim).to_df()
-    print result
     assert 'num_unique_words' in result.columns
     assert result['num_unique_words'][0] == 2
 
