@@ -23,10 +23,13 @@ class VideoExtractor(Extractor):
 class DenseOpticalFlowExtractor(VideoExtractor):
     ''' Extracts total amount of optical flow between every pair of video
     frames.
-
     '''
 
-    def _extract(self, stim, show=False):
+    def __init__(self, show=False):
+        super(self.__class__, self).__init__()
+        self.show=show
+
+    def _extract(self, stim):
 
         flows = []
         onsets = []
@@ -44,7 +47,7 @@ class DenseOpticalFlowExtractor(VideoExtractor):
                 last_frame, img, 0.5, 3, 15, 3, 5, 1.2, 0)
             flow = np.sqrt((flow ** 2).sum(2))
 
-            if show:
+            if self.show:
                 cv2.imshow('frame', flow.astype('int8'))
                 cv2.waitKey(1)
 

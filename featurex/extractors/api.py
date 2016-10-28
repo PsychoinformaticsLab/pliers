@@ -54,13 +54,13 @@ class IndicoAPIExtractor(ComplexTextExtractor):
                                 "political, keywords, people, places, organizations, "
                                 "twitter_engagement, personality, personas, text_features")
 
-    def _extract(self, text):
-        tokens = [token.text for token in text]
+    def _extract(self, stim):
+        tokens = [token.text for token in stim]
         scores = self.model(tokens)
         data = []
         onsets = []
         durations = []
-        for i, w in enumerate(text):
+        for i, w in enumerate(stim):
             if type(scores[i]) == float:
                 features = [self.name]
                 values = [scores[i]]
@@ -75,7 +75,7 @@ class IndicoAPIExtractor(ComplexTextExtractor):
             onsets.append(w.onset)
             durations.append(w.duration)
 
-        return ExtractorResult(data, text, self, features=features, 
+        return ExtractorResult(data, stim, self, features=features, 
                                 onsets=onsets, durations=durations)
 
 class ClarifaiAPIExtractor(ImageExtractor):
@@ -107,13 +107,13 @@ class ClarifaiAPIExtractor(ImageExtractor):
 
         self.select_classes = select_classes
 
-    def _extract(self, img):
-        data = img.data
+    def _extract(self, stim):
+        data = stim.data
         temp_file = tempfile.mktemp() + '.png'
         imsave(temp_file, data)
         tags = self.tagger.tag_images(open(temp_file, 'rb'), select_classes=self.select_classes)
         os.remove(temp_file)
 
         tagged = tags['results'][0]['result']['tag']
-        return ExtractorResult([tagged['probs']], img, self, 
+        return ExtractorResult([tagged['probs']], stim, self, 
                                 features=tagged['classes'])
