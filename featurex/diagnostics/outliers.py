@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 
 from scipy.spatial.distance import mahalanobis
+from numpy.linalg import LinAlgError
 
 def mahalanobis_distances(df, axis=0):
     '''
