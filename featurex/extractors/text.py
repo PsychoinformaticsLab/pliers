@@ -66,8 +66,8 @@ class DictionaryExtractor(TextExtractor):
         else:
             vals = self.data.loc[stim.text].fillna(self.missing)
         vals = vals.to_dict()
-        return ExtractorResult(np.array([vals.values()]), stim, self,
-                                features=vals.keys())
+        return ExtractorResult(np.array([list(vals.values())]), stim, self,
+                                features=list(vals.keys()))
 
 
 class PredefinedDictionaryExtractor(DictionaryExtractor):
@@ -158,8 +158,8 @@ class PartOfSpeechExtractor(ComplexTextExtractor):
             onsets.append(w.onset)
             durations.append(w.duration)
 
-        return ExtractorResult(np.array(data.values()).transpose(), stim, self,
-                                features=data.keys(),
+        return ExtractorResult(np.array(list(data.values())).transpose(), stim, self,
+                                features=list(data.keys()),
                                 onsets=onsets, 
                                 durations=durations)
 

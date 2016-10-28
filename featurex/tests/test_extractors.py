@@ -92,7 +92,7 @@ def test_predefined_dictionary_extractor():
     result = td.extract(stim).to_df()
     assert result.shape == (1, 3)
     assert 'aoa_Freq_pm' in result.columns
-    assert np.isclose(result['aoa_Freq_pm'][0], 10.313725)
+    assert np.isclose(result['aoa_Freq_pm'][0], 10.313725, 1e-5)
 
 
 def test_stft_extractor():
@@ -130,7 +130,7 @@ def test_brightness_extractor():
     stim = ImageStim(join(image_dir, 'apple.jpg'))
     result = BrightnessExtractor().extract(stim).to_df()
     brightness = result['brightness'][0]
-    assert np.isclose(brightness, 0.88784294)
+    assert np.isclose(brightness, 0.88784294, 1e-5)
 
 
 def test_sharpness_extractor():
@@ -139,7 +139,7 @@ def test_sharpness_extractor():
     stim = ImageStim(join(image_dir, 'apple.jpg'))
     result = SharpnessExtractor().extract(stim).to_df()
     sharpness = result['sharpness'][0]
-    assert np.isclose(sharpness, 1.0)
+    assert np.isclose(sharpness, 1.0, 1e-5)
 
 
 def test_vibrance_extractor():
@@ -147,7 +147,7 @@ def test_vibrance_extractor():
     stim = ImageStim(join(image_dir, 'apple.jpg'))
     result = VibranceExtractor().extract(stim).to_df()
     color = result['vibrance'][0]
-    assert np.isclose(color, 1370.65482988)
+    assert np.isclose(color, 1370.65482988, 1e-5)
 
 
 def test_saliency_extractor():
@@ -156,9 +156,9 @@ def test_saliency_extractor():
     stim = ImageStim(join(image_dir, 'apple.jpg'))
     result = SaliencyExtractor().extract(stim).to_df()
     ms = result['max_saliency'][0]
-    assert np.isclose(ms, 0.99669953)
+    assert np.isclose(ms, 0.99669953, 1e-5)
     sf = result['frac_high_saliency'][0]
-    assert np.isclose(sf, 0.27461971)
+    assert np.isclose(sf, 0.27461971, 1e-5)
 
 
 def test_optical_flow_extractor():
@@ -167,7 +167,7 @@ def test_optical_flow_extractor():
     stim = VideoStim(join(video_dir, 'small.mp4'))
     result = DenseOpticalFlowExtractor().extract(stim).to_df()
     target = result.query('onset==3.0')['total_flow']
-    assert np.isclose(target, 86248.05)
+    assert np.isclose(target, 86248.05, 1e-5)
 
 
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")

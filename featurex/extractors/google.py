@@ -64,8 +64,9 @@ class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
                         data_dict.update(lm_pos)
                 else:
                     data_dict[field] = val
-            features += data_dict.keys()
-            values += data_dict.values()
+            features += list(data_dict.keys())
+            values += list(data_dict.values())
+
 
         return features, values
 
