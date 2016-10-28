@@ -1,6 +1,6 @@
-from os.path import join
+from os.path import join, splitext
 from .utils import get_test_data_path
-from featurex.converters.video import FrameSamplingConverter
+from featurex.converters.video import FrameSamplingConverter, VideoToAudioConverter
 from featurex.converters.api import (WitTranscriptionConverter, 
                                         GoogleSpeechAPIConverter,
                                         TesseractAPIConverter)
@@ -13,9 +13,19 @@ from featurex.stimuli.image import ImageStim
 import numpy as np
 import math
 import pytest
+import os
 
 
-def test_derived_video_stim():
+def test_video_to_audio_converter():
+    filename = join(get_test_data_path(), 'video', 'small.mp4')
+    video = VideoStim(filename)
+    conv = VideoToAudioConverter()
+    audio = conv.transform(video)
+    assert splitext(video.filename)[0] == splitext(audio.filename)[0]
+    assert np.isclose(video.duration, audio.duration, 1e-2)
+
+
+def test_derived_video_converter():
     filename = join(get_test_data_path(), 'video', 'small.mp4')
     video = VideoStim(filename)
     assert video.fps == 30
@@ -41,7 +51,7 @@ def test_derived_video_stim():
     assert np.array_equal(derived.history['filter'], ['every', 'hertz'])
 
 
-def test_derived_video_stim_cv2():
+def test_derived_video_converter_cv2():
     pytest.importorskip('cv2')
     filename = join(get_test_data_path(), 'video', 'small.mp4')
     video = VideoStim(filename)
