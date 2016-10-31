@@ -1,0 +1,4 @@
+[run]
+omit =
+    featurex/tests/*
+    featurex/external/*

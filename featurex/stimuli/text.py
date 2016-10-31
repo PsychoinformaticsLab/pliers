@@ -65,9 +65,9 @@ class ComplexTextStim(object):
             in the input file.
     '''
 
-    def __init__(self, filename=None, columns='tod', default_duration=None):
-
-        self.elements = []
+    def __init__(self, filename=None, columns='tod', default_duration=None,
+                elements=[]):
+        self.elements = list(elements)
 
         if filename is not None:
             if filename.endswith("srt"):
@@ -184,8 +184,8 @@ class ComplexTextStim(object):
 
             tokens = tokenize_text(text)
 
-        cts = ComplexTextStim()
+        elements = []
         for i, t in enumerate(tokens):
-            cts.elements.append(DynamicTextStim(text=t, order=i, onset=i,
+            elements.append(DynamicTextStim(text=t, order=i, onset=i,
                                                 duration=1))
-        return cts
+        return cls(elements=elements)
