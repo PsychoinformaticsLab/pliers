@@ -8,7 +8,6 @@ from featurex.converters import Converter
 from featurex.stimuli.image import ImageStim
 from featurex.stimuli.text import TextStim
 from featurex.google import GoogleVisionAPITransformer
-from featurex import Value, Event
 import tempfile
 from scipy.misc import imsave
 import numpy as np

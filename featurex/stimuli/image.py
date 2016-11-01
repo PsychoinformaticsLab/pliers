@@ -1,5 +1,5 @@
 from featurex.stimuli import Stim
-from featurex.core import Value
+from featurex.extractors import ExtractorResult
 from scipy.misc import imread
 import six
 
@@ -16,7 +16,8 @@ class ImageStim(Stim):
         self.duration = duration
 
     def extract(self, extractors):
-        vals = {}
+        vals = []
         for e in extractors:
-            vals[e.name] = e.transform(self)
-        return Value(self, e, vals)
+            vals.append(e.transform(self))
+            print e.transform(self)
+        return ExtractorResult.merge_features(vals)

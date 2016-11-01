@@ -1,5 +1,4 @@
 from featurex.stimuli import Stim
-from featurex.core import Timeline
 from featurex.support.decorators import requires_nltk_corpus
 from featurex.extractors import ExtractorResult, merge_results
 import pandas as pd

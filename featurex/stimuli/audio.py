@@ -1,6 +1,6 @@
 from featurex.stimuli import DynamicStim
-from featurex.core import Timeline
 from featurex.stimuli.text import ComplexTextStim
+from featurex.extractors import ExtractorResult
 from scipy.io import wavfile
 import six
 
@@ -18,13 +18,11 @@ class AudioStim(DynamicStim):
     def _extract_duration(self):
         self.duration = len(self.data)*1./self.sampling_rate
 
-    def extract(self, extractors, merge_events=True):
-        timeline = Timeline()
-        for ext in extractors:
-            events = ext.transform(self)
-            for ev in events:
-                timeline.add_event(ev, merge=merge_events)
-        return timeline
+    def extract(self, extractors):
+        vals = []
+        for e in extractors:
+            vals.append(e.transform(self))
+        return ExtractorResult.merge_features(vals)
 
 
 class TranscribedAudioStim(AudioStim):
@@ -47,7 +45,6 @@ class TranscribedAudioStim(AudioStim):
         super(TranscribedAudioStim, self).__init__(filename)
 
     def extract(self, extractors):
-        timeline = Timeline()
         audio_exts, text_exts = [], []
         for ext in extractors:
             if ext.target.__name__ in ['AudioStim', 'TranscribedAudioStim']:
@@ -55,8 +52,6 @@ class TranscribedAudioStim(AudioStim):
             elif ext.target.__name__ == 'ComplexTextStim':
                 text_exts.append(ext)
 
-        audio_tl = super(TranscribedAudioStim, self).extract(audio_exts)
-        timeline.merge(audio_tl)
-        text_tl = self.transcription.extract(text_exts)
-        timeline.merge(text_tl)
-        return timeline
+        audio_result = super(TranscribedAudioStim, self).extract(audio_exts)
+        text_result = self.transcription.extract(text_exts)
+        return audio_result, text_result
