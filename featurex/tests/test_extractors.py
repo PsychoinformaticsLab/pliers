@@ -17,7 +17,6 @@ from featurex.extractors.api import (IndicoAPIExtractor,
 from featurex.stimuli.text import TextStim, ComplexTextStim
 from featurex.stimuli.video import ImageStim, VideoStim
 from featurex.stimuli.audio import AudioStim, TranscribedAudioStim
-from featurex.export import TimelineExporter
 from featurex.support.download import download_nltk_data
 from featurex.extractors import Extractor, ExtractorResult, merge_results
 import numpy as np

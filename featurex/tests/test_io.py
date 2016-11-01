@@ -2,7 +2,6 @@ from .utils import get_test_data_path
 from featurex.stimuli import load_stims
 from featurex.stimuli.audio import AudioStim
 from featurex.extractors.audio import STFTExtractor
-from featurex import Value, Event, Timeline
 from os.path import join
 from six import string_types
 
