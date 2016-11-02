@@ -19,5 +19,4 @@ class ImageStim(Stim):
         vals = []
         for e in extractors:
             vals.append(e.transform(self))
-            print e.transform(self)
         return ExtractorResult.merge_features(vals)
