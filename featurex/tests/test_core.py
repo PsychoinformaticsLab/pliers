@@ -1,5 +1,6 @@
 from .utils import get_test_data_path
 from featurex.stimuli.video import VideoStim
+from featurex.stimuli.image import ImageStim
 from featurex.extractors.image import VibranceExtractor
 from featurex.export import FSLExporter
 from featurex.lazy import extract
@@ -15,19 +16,19 @@ import pandas as pd
 def test_full_pipeline():
     ''' Smoke test of entire pipeline, from stimulus loading to
     event file export. '''
-    stim = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
-    extractors = [VibranceExtractor()]
-    timeline = stim.extract(extractors, show=False)
+    # stim = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
+    # extractors = [VibranceExtractor()]
+    # timeline = stim.extract(extractors, show=False)
+    stim = ImageStim(join(get_test_data_path(), 'image', 'obama.jpg'))
+    timeline = VibranceExtractor().extract(stim).to_df(stim_name=True)
     exp = FSLExporter()
     tmpdir = tempfile.mkdtemp()
 
-    #Commented out before test is no longer relevant
-    #Needs to be replaced with new exporting mechanism
-    # exp.export(timeline, tmpdir)
-    # from glob import glob
-    # files = glob(join(tmpdir, '*.txt'))
-    # assert len(files) == 1
-    # shutil.rmtree(tmpdir)
+    exp.export(timeline, tmpdir)
+    from glob import glob
+    files = glob(join(tmpdir, '*.txt'))
+    assert len(files) == 1
+    shutil.rmtree(tmpdir)
 
 
 def test_lazy_extraction():
