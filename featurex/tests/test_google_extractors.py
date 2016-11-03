@@ -63,6 +63,6 @@ def test_google_vision_api_properties_extractor():
     filename = join(get_test_data_path(), 'image', 'apple.jpg')
     stim = ImageStim(filename)
     result = ext.extract(stim).to_df()
-    assert (158, 13, 28) in result.columns
-    assert np.isfinite(result[(158, 13, 28)][0])
+    assert (158, 13, 29) in result.columns
+    assert np.isfinite(result[(158, 13, 29)][0])
 

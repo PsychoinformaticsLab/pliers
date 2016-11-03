@@ -3,7 +3,6 @@ Extractors that interact with external (e.g., deep learning) services.
 '''
 
 from featurex.extractors.image import ImageExtractor
-from featurex.extractors.audio import AudioExtractor
 from featurex.extractors.text import ComplexTextExtractor
 from featurex.extractors import ExtractorResult
 from scipy.misc import imsave
@@ -109,11 +108,17 @@ class ClarifaiAPIExtractor(ImageExtractor):
         self.select_classes = select_classes
 
     def _extract(self, stim):
-        data = stim.data
-        temp_file = tempfile.mktemp() + '.png'
-        imsave(temp_file, data)
-        tags = self.tagger.tag_images(open(temp_file, 'rb'), select_classes=self.select_classes)
-        os.remove(temp_file)
+        if stim.filename is None:
+            file = tempfile.mktemp() + '.png'
+            imsave(file, stim.data)
+        else:
+            file = stim.filename
+        
+        tags = self.tagger.tag_images(open(file, 'rb'), 
+                                    select_classes=self.select_classes)
+        
+        if stim.filename is None:
+            os.remove(temp_file)
 
         tagged = tags['results'][0]['result']['tag']
         return ExtractorResult([tagged['probs']], stim, self, 
