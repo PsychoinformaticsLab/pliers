@@ -106,8 +106,11 @@ class ClarifaiAPIExtractor(ImageExtractor):
         self.tagger = ClarifaiApi(app_id=app_id, app_secret=app_secret)
         if not (model is None):
             self.tagger.set_model(model)
-
-        self.select_classes = ','.join(select_classes)
+        
+        if select_classes is None:
+            self.select_classes = None
+        else:
+            self.select_classes = ','.join(select_classes)
 
     def _extract(self, stim):
         if stim.filename is None:
