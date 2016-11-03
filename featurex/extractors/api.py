@@ -88,6 +88,8 @@ class ClarifaiAPIExtractor(ImageExtractor):
             Only needs to be passed the first time the extractor is initialized.
         model (str): The name of the Clarifai model to use. 
             If None, defaults to the general image tagger. 
+        select_classes (list): List of classes (strings) to query from the API.
+            For example, ['food', 'animal'].
     '''
 
     def __init__(self, app_id=None, app_secret=None, model=None, select_classes=None):
@@ -105,7 +107,7 @@ class ClarifaiAPIExtractor(ImageExtractor):
         if not (model is None):
             self.tagger.set_model(model)
 
-        self.select_classes = select_classes
+        self.select_classes = ','.join(select_classes)
 
     def _extract(self, stim):
         if stim.filename is None:
