@@ -17,11 +17,13 @@ class GoogleVisionAPIExtractor(GoogleVisionAPITransformer, ImageExtractor):
         features = []
         data = []
         for i, response in enumerate(responses):
-            if response:
+            if response and self.response_object in response:
                 annotations = response[self.response_object]
                 feat, values = self._parse_annotations(annotations)
                 features += feat
                 data += values
+            elif 'error' in response:
+                raise Exception(response['error']['message'])
 
         data = [data]
         onsets = [stim[i].onset if hasattr(stim[i], 'onset') else i for i in range(len(responses))]
