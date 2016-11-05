@@ -43,6 +43,15 @@ class Transformer(with_metaclass(ABCMeta)):
     #     pass
 
 
+class BatchTransformerMixin():
+    ''' A mixin that overrides the default implicit iteration behavior. Use
+    whenever batch processing of multiple stimuli should be handled within the
+    _transform method rather than applying a naive loop--e.g., for API
+    Extractors that can handle list inputs. '''
+    def transform(self, stims, *args, **kwargs):
+        return self._transform(self._validate(stims), *args, **kwargs)
+
+
 def get_transformer(name, base=None, *args, **kwargs):
     ''' Scans list of currently available Transformer classes and returns an
     instantiation of the first one whose name perfectly matches
