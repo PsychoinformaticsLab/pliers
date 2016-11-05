@@ -12,14 +12,14 @@ class Extractor(with_metaclass(ABCMeta, Transformer)):
     ''' Base class for Converters.'''
 
     def extract(self, stim, *args, **kwargs):
-        return self._extract(stim, *args, **kwargs)
+        return self.transform(stim, *args, **kwargs)
 
     @abstractmethod
     def _extract(self, stim):
         pass
 
     def _transform(self, stim, *args, **kwargs):
-        return self.extract(stim, *args, **kwargs)
+        return self._extract(stim, *args, **kwargs)
 
 
 class ExtractorResult(object):

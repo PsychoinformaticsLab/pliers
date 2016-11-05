@@ -50,6 +50,17 @@ def test_check_target_type():
         stim.extract([td])
 
 
+def test_implicit_stim_iteration():
+    np.random.seed(100)
+    image_dir = join(get_test_data_path(), 'image')
+    stim1 = ImageStim(join(image_dir, 'apple.jpg'))
+    stim2 = ImageStim(join(image_dir, 'obama.jpg'))
+    de = DummyExtractor()
+    results = de.extract([stim1, stim2])
+    assert len(results) == 2
+    assert isinstance(results[0], ExtractorResult)
+
+
 def test_text_extractor():
     stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
                            columns='to', default_duration=1)
@@ -240,3 +251,4 @@ def test_merge_extractor_results():
     assert df.columns.levels[0].unique().tolist() == de_names + ['onset', 'stim']
     assert df.columns.levels[1].unique().tolist() == ['duration', 0, 1, 2, '']
     assert set(df.index.levels[1].unique()) == set(['obama.jpg', 'apple.jpg'])
+

@@ -11,14 +11,23 @@ class Transformer(with_metaclass(ABCMeta)):
             name = self.__class__.__name__
         self.name = name
 
-    def transform(self, stim, *args, **kwargs):
+    def transform(self, stims, *args, **kwargs):
+        if isinstance(stims, (list, tuple)):
+            return self._iterate(stims, *args, **kwargs)
+        else:
+            return self._transform(self._validate(stims), *args, **kwargs)
+
+    def _validate(self, stim):
         if not isinstance(stim, self.target):
             msg = "Transformers of type %s can only be applied to stimuli of "\
                   "type(s) %s, not type %s."
             msg = msg % (self.__class__.__name__, self.target.__name__,
                          stim.__class__.__name__)   
-            raise TypeError(msg)      
-        return self._transform(stim, *args, **kwargs)
+            raise TypeError(msg)
+        return stim
+
+    def _iterate(self, stims, *args, **kwargs):
+        return [self._transform(self._validate(s), *args, **kwargs) for s in stims]
 
     @abstractmethod
     def _transform(self, stim):
