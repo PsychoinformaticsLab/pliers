@@ -1,6 +1,6 @@
 from os.path import join
 import os
-from .utils import get_test_data_path
+from .utils import get_test_data_path, DummyExtractor
 from featurex.extractors.text import (DictionaryExtractor,
                                       PartOfSpeechExtractor,
                                       PredefinedDictionaryExtractor)
@@ -23,17 +23,6 @@ import pytest
 from copy import deepcopy
 
 TEXT_DIR = join(get_test_data_path(), 'text')
-
-
-class DummyExtractor(Extractor):
-    target = ImageStim
-
-    def _extract(self, stim, name=None, n_rows=100, n_cols=3, max_time=1000):
-        data = np.random.randint(0, 1000, (n_rows, n_cols))
-        onsets = np.random.choice(n_rows*2, n_rows, False)
-        if name is not None:
-            self.name = name
-        return ExtractorResult(data, stim, deepcopy(self), onsets=onsets)
 
 
 @pytest.fixture(scope='module')
