@@ -39,11 +39,12 @@ class Node(object):
 
 class Graph(Node):
 
-    def __init__(self, nodes, batch=True, merge=True):
+    def __init__(self, nodes=None, merge=True):
 
         self.nodes = OrderedDict()
         self.children = []
-        self.add_children(nodes)
+        if nodes is not None:
+            self.add_children(nodes)
         self.merge = merge
 
     def add_branch(self, nodes, parent=None):
@@ -85,13 +86,11 @@ class Graph(Node):
         node = Node(name, transformer)
         self.nodes[name] = node
 
-        parent = self if parent is None else self.nodes[parent]
+        parent = self if parent is None else self.nodes[parent.name]
         parent.add_child(node)
 
         if children is not None:
-            for c in children:
-                c_kwargs = self._parse_node_args(c)
-                self.add_node(parent=node, **c)
+            self.add_children(children, parent=node)
 
         if return_node:
             return node

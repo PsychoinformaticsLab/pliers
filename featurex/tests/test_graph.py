@@ -2,8 +2,9 @@ import pytest
 from featurex.graph import Graph, Node
 from featurex.extractors.image import BrightnessExtractor
 from featurex.stimuli.image import ImageStim
-from .utils import get_test_data_path
+from .utils import get_test_data_path, DummyExtractor
 from os.path import join
+import numpy as np
 from numpy.testing import assert_almost_equal
 
 
@@ -36,7 +37,6 @@ def test_node_arg_parsing():
 
 
 def test_graph_smoke_test():
-    
     filename = join(get_test_data_path(), 'image', 'obama.jpg')
     stim = ImageStim(filename)
     nodes = [(BrightnessExtractor(), 'brightness')]
@@ -44,3 +44,20 @@ def test_graph_smoke_test():
     result = graph.extract([stim])
     brightness = result[('BrightnessExtractor', 'avg_brightness')].values[0]
     assert_almost_equal(brightness, 0.556134, 5)
+
+
+def test_add_children():
+    graph = Graph()
+    de1, de2, de3 = DummyExtractor(), DummyExtractor(), DummyExtractor()
+    graph.add_children([de1, de2, de3])
+    assert len(graph.children) == 3
+    assert all([isinstance(c, Node) for c in graph.children])
+
+
+def test_add_nested_children():
+    graph = Graph()
+    de1, de2, de3 = DummyExtractor(), DummyExtractor(), DummyExtractor()
+    graph.add_children([de1, (de2, 'child', [(de3, "child's child")])])
+    assert len(graph.children) == 2
+    assert isinstance(graph.children[1].children[0], Node)
+    assert graph.children[1].children[0].name == "child's child"
