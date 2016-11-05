@@ -1,4 +1,4 @@
-from featurex.extractors import Extractor
+from featurex.extractors import Extractor, merge_results
 from featurex.transformers import get_transformer
 from itertools import chain
 from featurex.utils import listify
@@ -39,11 +39,12 @@ class Node(object):
 
 class Graph(Node):
 
-    def __init__(self, nodes):
+    def __init__(self, nodes, batch=True, merge=True):
 
         self.nodes = OrderedDict()
         self.children = []
         self.add_children(nodes)
+        self.merge = merge
 
     def add_branch(self, nodes, parent=None):
         for n in nodes:
@@ -97,7 +98,8 @@ class Graph(Node):
 
     def extract(self, stims):
         stims = listify(stims)
-        return [self.collect(s) for s in stims][0]
+        results = self.collect(stims)[0]
+        return merge_results(results) if self.merge else results
 
     def _validate(self):
         # Make sure all connected node inputs and outputs match

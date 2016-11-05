@@ -4,6 +4,7 @@ from featurex.extractors.image import BrightnessExtractor
 from featurex.stimuli.image import ImageStim
 from .utils import get_test_data_path
 from os.path import join
+from numpy.testing import assert_almost_equal
 
 
 def test_node_init():
@@ -41,4 +42,5 @@ def test_graph_smoke_test():
     nodes = [(BrightnessExtractor(), 'brightness')]
     graph = Graph(nodes)
     result = graph.extract([stim])
-    assert 'avg_brightness' in result[0].data
+    brightness = result[('BrightnessExtractor', 'avg_brightness')].values[0]
+    assert_almost_equal(brightness, 0.556134, 5)
