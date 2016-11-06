@@ -49,7 +49,7 @@ class Graph(Node):
         for n in nodes:
             node_args = self._parse_node_args(n)
             node = self.add_node(parent=parent, return_node=True, **node_args)
-            parent = node
+            parent = node.name
 
     def add_children(self, nodes, parent=None):
         for n in nodes:
@@ -90,7 +90,7 @@ class Graph(Node):
         if children is not None:
             for c in children:
                 c_kwargs = self._parse_node_args(c)
-                self.add_node(parent=node, **c)
+                self.add_node(parent=name, **c_kwargs)
 
         if return_node:
             return node

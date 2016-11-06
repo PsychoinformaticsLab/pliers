@@ -22,6 +22,10 @@ class VideoFrameStim(ImageStim):
             self.duration = duration
         self.onset = frame_num * spf
 
+    @property
+    def name(self):
+        return self.frame_num
+
 
 class VideoStim(DynamicStim):
 
