@@ -3,8 +3,8 @@ Extractors that operate primarily or exclusively on Video stimuli.
 '''
 
 from featurex.stimuli.video import VideoStim
-from featurex.extractors import Extractor
-from featurex.core import Value, Event
+from featurex.extractors import Extractor, ExtractorResult
+
 import numpy as np
 
 # Optional dependencies
@@ -23,12 +23,17 @@ class VideoExtractor(Extractor):
 class DenseOpticalFlowExtractor(VideoExtractor):
     ''' Extracts total amount of optical flow between every pair of video
     frames.
-
     '''
 
-    def _extract(self, stim, show=False):
+    def __init__(self, show=False):
+        super(self.__class__, self).__init__()
+        self.show=show
 
-        events = []
+    def _extract(self, stim):
+
+        flows = []
+        onsets = []
+        durations = []
         for i, f in enumerate(stim):
 
             img = f.data
@@ -42,15 +47,14 @@ class DenseOpticalFlowExtractor(VideoExtractor):
                 last_frame, img, None, 0.5, 3, 15, 3, 5, 1.2, 0)
             flow = np.sqrt((flow ** 2).sum(2))
 
-            if show:
+            if self.show:
                 cv2.imshow('frame', flow.astype('int8'))
                 cv2.waitKey(1)
 
             last_frame = img
-            total_flow = flow.sum()
+            flows.append(flow.sum())
+            onsets.append(f.onset)
+            durations.append(f.duration)
 
-            value = Value(stim, self, {'total_flow': total_flow})
-            event = Event(onset=f.onset, duration=f.duration, values=[value])
-            events.append(event)
-
-        return events
+        return ExtractorResult(flows, stim, self, features=['total_flow'], 
+                                onsets=onsets, durations=durations)

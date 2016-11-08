@@ -35,10 +35,9 @@ def test_node_arg_parsing():
 
 
 def test_graph_smoke_test():
-    
     filename = join(get_test_data_path(), 'image', 'obama.jpg')
     stim = ImageStim(filename)
     nodes = [(BrightnessExtractor(), 'brightness')]
     graph = Graph(nodes)
     result = graph.extract([stim])
-    assert 'avg_brightness' in result[0].data
+    assert 'brightness' in result[0].features

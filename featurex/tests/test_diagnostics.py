@@ -31,21 +31,21 @@ def test_flagging():
     rows, cols = diagnostics.flag_all({'VIFs' : (lambda x: x > 0), 
                                 'RowMahalanobisDistances' : (lambda x: x > 0)})
     # Everything should be flagged
-    assert rows == range(df.shape[0])
-    assert cols == range(df.shape[1])
+    assert np.array_equal(rows, range(df.shape[0]))
+    assert np.array_equal(cols, range(df.shape[1]))
 
     vif = variance_inflation_factors(df).max()
     rows, cols = diagnostics.flag_all({'VIFs' : (lambda x: x >= vif)}, 
                                         include=['VIFs'])
-    assert rows == []
-    assert cols == [2]
+    assert np.array_equal(rows, [])
+    assert np.array_equal(cols, [2])
 
     rows, cols = diagnostics.flag_all(exclude=['VIFs', 'ConditionIndices', 
                                         'Eigenvalues', 'CorrelationMatrix',
                                         'RowMahalanobisDistances', 'ColumnMahalanobisDistances',
                                         'Variances'])
-    assert rows == []
-    assert cols == []
+    assert np.array_equal(rows, [])
+    assert np.array_equal(cols, [])
 
 
 def test_correlation_matrix():

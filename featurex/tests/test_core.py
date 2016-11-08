@@ -5,11 +5,12 @@ from featurex.export import FSLExporter
 from featurex.core import Timeline, Value, Event
 from featurex.lazy import extract
 from featurex.transformers import get_transformer
-from featurex.extractors import Extractor
+from featurex.extractors import Extractor, ExtractorResult
 from featurex.extractors.audio import STFTExtractor
 from os.path import join
 import tempfile
 import shutil
+import pandas as pd
 
 
 def test_full_pipeline():
@@ -20,16 +21,19 @@ def test_full_pipeline():
     timeline = stim.extract(extractors, show=False)
     exp = FSLExporter()
     tmpdir = tempfile.mkdtemp()
-    exp.export(timeline, tmpdir)
-    from glob import glob
-    files = glob(join(tmpdir, '*.txt'))
-    assert len(files) == 1
-    shutil.rmtree(tmpdir)
+
+    #Commented out before test is no longer relevant
+    #Needs to be replaced with new exporting mechanism
+    # exp.export(timeline, tmpdir)
+    # from glob import glob
+    # files = glob(join(tmpdir, '*.txt'))
+    # assert len(files) == 1
+    # shutil.rmtree(tmpdir)
 
 def test_lazy_extraction():
     textfile = join(get_test_data_path(), 'text', 'scandal.txt')
     results = extract([textfile], ['lengthextractor', 'numuniquewordsextractor'])
-    assert isinstance(results[0], Value)
+    assert isinstance(results[0], pd.DataFrame)
 
 def test_dummy_code_timeline():
     data = [{'A': 12.0, 'B': 'abc'}, { 'A': 7, 'B': 'def'}, { 'C': 40 }]

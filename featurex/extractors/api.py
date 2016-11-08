@@ -5,8 +5,8 @@ Extractors that interact with external (e.g., deep learning) services.
 from featurex.extractors.image import ImageExtractor
 from featurex.extractors.audio import AudioExtractor
 from featurex.extractors.text import ComplexTextExtractor
+from featurex.extractors import ExtractorResult
 from scipy.misc import imsave
-from featurex.core import Value, Event
 import os
 import tempfile
 
@@ -54,21 +54,29 @@ class IndicoAPIExtractor(ComplexTextExtractor):
                                 "political, keywords, people, places, organizations, "
                                 "twitter_engagement, personality, personas, text_features")
 
-    def _extract(self, text):
-        tokens = [token.text for token in text]
+    def _extract(self, stim):
+        tokens = [token.text for token in stim]
         scores = self.model(tokens)
-        events = []
-        for i, w in enumerate(text):
+        data = []
+        onsets = []
+        durations = []
+        for i, w in enumerate(stim):
             if type(scores[i]) == float:
-                values = [Value(text, self, {self.name: scores[i]})]
+                features = [self.name]
+                values = [scores[i]]
             elif type(scores[i]) == dict:
+                features = []
                 values = []
                 for k in scores[i].keys():
-                    values.append(Value(text, self, {self.name + '_' + k: scores[i][k]}))
-            # parse dictionary into list if getting dict back
-            event = Event(onset= w.onset, duration=w.duration, values=values)
-            events.append(event)
-        return events
+                    features.append(self.name + '_' + k)
+                    values.append(scores[i][k])
+
+            data.append(values)
+            onsets.append(w.onset)
+            durations.append(w.duration)
+
+        return ExtractorResult(data, stim, self, features=features, 
+                                onsets=onsets, durations=durations)
 
 class ClarifaiAPIExtractor(ImageExtractor):
 
@@ -99,11 +107,13 @@ class ClarifaiAPIExtractor(ImageExtractor):
 
         self.select_classes = select_classes
 
-    def _extract(self, img):
-        data = img.data
+    def _extract(self, stim):
+        data = stim.data
         temp_file = tempfile.mktemp() + '.png'
         imsave(temp_file, data)
         tags = self.tagger.tag_images(open(temp_file, 'rb'), select_classes=self.select_classes)
         os.remove(temp_file)
 
-        return Value(img, self, {'tags': tags})
+        tagged = tags['results'][0]['result']['tag']
+        return ExtractorResult([tagged['probs']], stim, self, 
+                                features=tagged['classes'])

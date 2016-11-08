@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 
 from scipy.spatial.distance import mahalanobis
+from numpy.linalg import LinAlgError
 
 def mahalanobis_distances(df, axis=0):
     '''
@@ -21,7 +22,10 @@ def mahalanobis_distances(df, axis=0):
     '''
     df = df.transpose() if axis == 1 else df
     means = df.mean()
-    inv_cov = np.linalg.inv(df.cov())
+    try:
+        inv_cov = np.linalg.inv(df.cov())
+    except LinAlgError:
+        return pd.Series([np.NAN]*len(df.index), df.index, name='Mahalanobis')
     dists = []
     for i, sample in df.iterrows():
         dists.append(mahalanobis(sample, means, inv_cov))
