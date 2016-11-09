@@ -36,12 +36,6 @@ class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
 
     request_type = 'FACE_DETECTION'
     response_object = 'faceAnnotations'
-    likelihood_dict = {'UNKNOWN': 0.0, 
-                        'VERY_UNLIKELY': 0.1, 
-                        'UNLIKELY': 0.3, 
-                        'POSSIBLE': 0.5, 
-                        'LIKELY': 0.7, 
-                        'VERY_LIKELY': 0.9}
 
     def _parse_annotations(self, annotations):
         features = []
@@ -49,9 +43,7 @@ class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
         for annotation in annotations:
             data_dict = {}
             for field, val in annotation.items():
-                if 'Likelihood' in field:
-                    data_dict[field] = self.likelihood_dict[val]
-                elif 'Confidence' in field:
+                if 'Confidence' in field:
                     data_dict['face_' + field] = val
                 elif 'oundingPoly' in field:
                     for i, vertex in enumerate(val['vertices']):

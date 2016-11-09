@@ -31,7 +31,7 @@ def test_google_vision_api_face_extractor_inits():
     response = json.load(open(filename, 'r'))
     features, data = ext._parse_annotations(response['faceAnnotations'])
     assert len(features) == len(data)
-    assert data[features.index('angerLikelihood')] == 0.1
+    assert data[features.index('angerLikelihood')] == 'VERY_UNLIKELY'
     assert data[features.index('landmark_LEFT_EYE_BOTTOM_BOUNDARY_y')] == 257.023
     assert np.isnan(data[features.index('boundingPoly_vertex2_y')])
 
@@ -43,7 +43,7 @@ def test_google_vision_api_face_extractor():
     stim = ImageStim(filename)
     result = ext.extract(stim).to_df()
     assert 'joyLikelihood' in result.columns
-    assert result['joyLikelihood'][0] >= 0.5
+    assert result['joyLikelihood'][0] == 'VERY_LIKELY'
     assert result['face_detectionConfidence'][0] > 0.7
 
 
