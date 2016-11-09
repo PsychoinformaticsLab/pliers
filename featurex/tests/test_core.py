@@ -1,11 +1,9 @@
 from .utils import get_test_data_path
-from featurex.stimuli.video import VideoStim
 from featurex.stimuli.image import ImageStim
-from featurex.extractors.image import VibranceExtractor
 from featurex.export import FSLExporter
 from featurex.lazy import extract
 from featurex.transformers import get_transformer
-from featurex.extractors import Extractor, ExtractorResult
+from featurex.extractors import Extractor
 from featurex.extractors.audio import STFTExtractor
 from os.path import join
 import tempfile
@@ -16,9 +14,6 @@ import pandas as pd
 def test_full_pipeline():
     ''' Smoke test of entire pipeline, from stimulus loading to
     event file export. '''
-    # stim = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
-    # extractors = [VibranceExtractor()]
-    # timeline = stim.extract(extractors, show=False)
     stim = ImageStim(join(get_test_data_path(), 'image', 'obama.jpg'))
     timeline = VibranceExtractor().extract(stim).to_df(stim_name=True)
     exp = FSLExporter()
