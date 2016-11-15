@@ -1,9 +1,9 @@
 from os.path import join, splitext
 from .utils import get_test_data_path
 from featurex.converters.video import FrameSamplingConverter, VideoToAudioConverter
+from featurex.converters.image import TesseractConverter
 from featurex.converters.api import (WitTranscriptionConverter, 
                                         GoogleSpeechAPIConverter,
-                                        TesseractAPIConverter,
                                         IBMSpeechAPIConverter)
 from featurex.converters.google import GoogleVisionAPITextConverter
 from featurex.stimuli.video import VideoStim, VideoFrameStim, DerivedVideoStim
@@ -106,7 +106,7 @@ def test_tesseract_converter():
     pytest.importorskip('pytesseract')
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'button.jpg'))
-    conv = TesseractAPIConverter()
+    conv = TesseractConverter()
     text = conv.transform(stim).text
     assert text == 'Exit'
 

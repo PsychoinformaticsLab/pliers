@@ -1,6 +1,6 @@
 import pytest
 from featurex.graph import Graph, Node
-from featurex.converters.api import TesseractAPIConverter
+from featurex.converters.image import TesseractConverter
 from featurex.extractors.image import BrightnessExtractor
 from featurex.extractors.text import LengthExtractor
 from featurex.stimuli.image import ImageStim
@@ -48,7 +48,7 @@ def test_graph_smoke_test():
 def test_small_pipeline():
     filename = join(get_test_data_path(), 'image', 'button.jpg')
     stim = ImageStim(filename)
-    nodes = [(TesseractAPIConverter(), 'tesseract', 
+    nodes = [(TesseractConverter(), 'tesseract', 
                 [(LengthExtractor(), 'length')])]
     graph = Graph(nodes)
     result = graph.extract([stim])[0].to_df()
