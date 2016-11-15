@@ -4,6 +4,7 @@ from featurex.export import FSLExporter
 from featurex.lazy import extract
 from featurex.transformers import get_transformer
 from featurex.extractors import Extractor
+from featurex.extractors.image import VibranceExtractor
 from featurex.extractors.audio import STFTExtractor
 from os.path import join
 import tempfile

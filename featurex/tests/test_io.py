@@ -2,7 +2,8 @@ from .utils import get_test_data_path
 from featurex.stimuli import load_stims
 from featurex.stimuli.audio import AudioStim
 from featurex.extractors.audio import STFTExtractor
-from featurex.export import convert_to_long_format
+from featurex.extractors import ExtractorResult
+from featurex.export import to_long_format
 from os.path import join
 from six import string_types
 
@@ -24,11 +25,14 @@ def test_convert_to_long():
     stim = AudioStim(join(audio_dir, 'barber.wav'))
     ext = STFTExtractor(frame_size=1., spectrogram=False,
                         bins=[(100, 300), (300, 3000), (3000, 20000)])
-    # This probably doesn't work if doing stim.extract() due to multi-level
-    timeline = ext.extract(stim).to_df(stim_name=True)
-    assert '100_300' in timeline.columns
-    long_timeline = convert_to_long_format(timeline)
-    assert long_timeline.shape == (timeline.shape[0] * 3, 5)
+    timeline = ext.extract(stim)
+    long_timeline = to_long_format(timeline)
+    assert long_timeline.shape == (timeline.to_df().shape[0] * 3, 4)
     assert 'feature' in long_timeline.columns
     assert 'value' in long_timeline.columns
+    assert '100_300' not in long_timeline.columns
+    timeline = ExtractorResult.merge_features([timeline])
+    long_timeline = to_long_format(timeline)
+    assert 'feature' in long_timeline.columns
+    assert 'extractor' in long_timeline.columns
     assert '100_300' not in long_timeline.columns

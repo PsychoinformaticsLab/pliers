@@ -2,6 +2,8 @@ from os.path import exists, isdir, join
 from abc import ABCMeta, abstractmethod
 import pandas as pd
 from six import with_metaclass
+from featurex.extractors import ExtractorResult
+
 
 
 class Exporter(with_metaclass(ABCMeta)):
@@ -13,20 +15,29 @@ class Exporter(with_metaclass(ABCMeta)):
         pass
 
 
-def convert_to_long_format(df):
+def to_long_format(df):
     ''' Convert from wide to long format, making each row a single 
     feature/value pair.
-
-    Need to figure out how to work with MultiIndex
 
     Args:
         df (DataFrame): a timeline that is currently in wide format
     '''
-    ids = ['stim', 'onset', 'duration']
+    if isinstance(df, ExtractorResult):
+        df = df.to_df()
+
+    if isinstance(df.columns, pd.core.index.MultiIndex):
+        ids = list(set(df.columns) & set([('stim', ''), 
+                                        ('onset', ''), 
+                                        ('duration', '')]))
+        variables = ['extractor', 'feature']   
+    else:
+        df = df.reset_index() if not isinstance(df.index, pd.Int64Index) else df
+        ids = list(set(df.columns) & set(['stim', 'onset', 'duration']))
+        variables = 'feature'
+        
     values = list(set(df.columns) - set(ids))
-    converted = df.reset_index()
-    converted = pd.melt(converted, id_vars=ids, value_vars=values,
-                        var_name='feature')
+    converted = pd.melt(df, id_vars=ids, value_vars=values, var_name=variables)
+    converted.columns = [c[0] if isinstance(c, tuple) else c for c in converted.columns]
     return converted
 
 
@@ -43,7 +54,7 @@ class FSLExporter(Exporter):
         Returns: if path is None, returns a dictionary, where keys are variable
             names and values are pandas DataFrames. Otherwise, None.
         '''
-        data = convert_to_long_format(timeline)
+        data = to_long_format(timeline)
         results = {}
         for var in data['stim'].unique():
             results[var] = data[data['stim'] == var][['onset', 'duration',
