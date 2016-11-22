@@ -28,7 +28,7 @@ class Diagnostics(object):
     def __init__(self, data, columns=None):
         self.data = data
 
-        cols = self.data.columns if columns == None else columns
+        cols = self.data.columns if columns is None else columns
         self.results = {}
         self.results['Eigenvalues'] = eigenvalues(self.data[cols])
         self.results['ConditionIndices'] = condition_indices(self.data[cols])

@@ -28,4 +28,5 @@ def extract(stims, transformers, format='df'):
     transformers = [a if isinstance(a, Transformer) else get_transformer(a)
                   for a in transformers]
 
-    return [s.extract(transformers) for s in _stims]
+    # return [s.extract(transformers) for s in _stims]
+    return [t.extract(_stims) for t in transformers]

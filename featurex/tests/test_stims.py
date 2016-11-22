@@ -3,9 +3,8 @@ from featurex.stimuli.video import VideoStim, VideoFrameStim
 from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.audio import AudioStim
 from featurex.stimuli.image import ImageStim
-from featurex.extractors import Extractor
+from featurex.extractors import Extractor, ExtractorResult
 from featurex.stimuli import Stim
-from featurex.core import Value, Event, Timeline
 from featurex.support.download import download_nltk_data
 import numpy as np
 from os.path import join
@@ -18,7 +17,8 @@ class DummyExtractor(Extractor):
     target = Stim
 
     def _extract(self, stim):
-        return Value(stim, self, {'constant': 1})
+        return ExtractorResult(np.array([[1]]), stim, self, 
+                                features=['constant'])
 
 
 class DummyIterableExtractor(Extractor):
@@ -26,13 +26,10 @@ class DummyIterableExtractor(Extractor):
     target = Stim
 
     def _extract(self, stim):
-
-        events = []
         time_bins = np.arange(0., stim.duration, 1.)
-        for i, tb in enumerate(time_bins):
-            ev = Event(onset=tb, duration=1000)
-            ev.add_value(Value(stim, self, {'second': i}))
-        return events
+        return ExtractorResult(np.array([1] * len(time_bins)), stim, self,
+                                features=['constant'], onsets=time_bins,
+                                durations=[1.] * len (time_bins))
 
 
 @pytest.fixture(scope='module')
@@ -54,8 +51,8 @@ def test_image_stim(dummy_iter_extractor):
     filename = join(get_test_data_path(), 'image', 'apple.jpg')
     stim = ImageStim(filename)
     assert stim.data.shape == (288, 420, 3)
-    values = stim.extract([dummy_iter_extractor])
-    assert isinstance(values, Value)
+    # values = stim.extract([dummy_iter_extractor])
+    # assert isinstance(values, pd.DataFrame)
 
 
 def test_video_stim():
@@ -79,8 +76,8 @@ def test_audio_stim(dummy_iter_extractor):
     stim = AudioStim(join(audio_dir, 'barber.wav'))
     assert round(stim.duration) == 57
     assert stim.sampling_rate == 11025
-    tl = stim.extract([dummy_iter_extractor])
-    assert isinstance(tl, Timeline)
+    # tl = stim.extract([dummy_iter_extractor])
+    # assert isinstance(tl, pd.DataFrame)
 
 def test_complex_text_stim():
     text_dir = join(get_test_data_path(), 'text')

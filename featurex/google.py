@@ -50,9 +50,13 @@ class GoogleVisionAPITransformer(GoogleAPITransformer):
     def _build_request(self, stims):
         request = []
         for image in stims:
-            temp_file = tempfile.mktemp() + '.png'
-            imsave(temp_file, image.data)
-            img_data = open(temp_file, 'rb').read()
+            if image.filename is None:
+                file = tempfile.mktemp() + '.png'
+                imsave(file, image.data)
+            else:
+                file = image.filename
+            
+            img_data = open(file, 'rb').read()
             content = base64.b64encode(img_data).decode()
             request.append(
                 {
@@ -62,4 +66,7 @@ class GoogleVisionAPITransformer(GoogleAPITransformer):
                     'maxResults': self.max_results,
                 }]
             })
+
+            if image.filename is None:
+                os.remove(file)
         return request

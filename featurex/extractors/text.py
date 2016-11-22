@@ -3,12 +3,11 @@ Extractors that operate primarily or exclusively on Text stimuli.
 '''
 
 from featurex.stimuli.text import TextStim, ComplexTextStim
-from featurex.extractors import Extractor
+from featurex.extractors import Extractor, ExtractorResult
 from featurex.support.exceptions import FeatureXError
 from featurex.support.decorators import requires_nltk_corpus
 from featurex.datasets.text import fetch_dictionary, datasets
 import numpy as np
-from featurex.core import Value, Event
 import pandas as pd
 from six import string_types
 from collections import defaultdict
@@ -66,7 +65,9 @@ class DictionaryExtractor(TextExtractor):
             vals = pd.Series(self.missing, self.variables)
         else:
             vals = self.data.loc[stim.text].fillna(self.missing)
-        return Value(stim, self, vals.to_dict())
+        vals = vals.to_dict()
+        return ExtractorResult(np.array([list(vals.values())]), stim, self,
+                                features=list(vals.keys()))
 
 
 class PredefinedDictionaryExtractor(DictionaryExtractor):
@@ -102,25 +103,34 @@ class LengthExtractor(TextExtractor):
     ''' Extracts the length of the text in characters. '''
 
     def _extract(self, stim):
-        return Value(stim, self, {'text_length': len(stim.text)})
+        return ExtractorResult(np.array([[len(stim.text)]]), stim, self,
+                                features=['text_length'])
 
 
 class NumUniqueWordsExtractor(TextExtractor):
 
     ''' Extracts the number of unique words used in the text. '''
 
+    def __init__(self, tokenizer=None):
+        TextExtractor.__init__(self)
+        self.tokenizer = tokenizer
+
+
     @requires_nltk_corpus
-    def _extract(self, stim, tokenizer=None):
+    def _extract(self, stim):
         text = stim.text
-        if tokenizer is None:
+        if self.tokenizer is None:
             try:
                 import nltk
-                return len(nltk.word_tokenize(text))
+                num_words = len(set(nltk.word_tokenize(text)))
             except:
-                return len(text.split())
+                num_words = len(set(text.split()))
         else:
-            return Value(stim, self,
-                         {'num_unique_words': tokenizer.tokenize(text)})
+            num_words = len(set(self.tokenizer.tokenize(text)))
+
+        return ExtractorResult(np.array([[num_words]]), stim, self,
+                                features=['num_unique_words'])
+
 
 
 class PartOfSpeechExtractor(ComplexTextExtractor):
@@ -136,12 +146,22 @@ class PartOfSpeechExtractor(ComplexTextExtractor):
                 "The number of words in the ComplexTextStim does not match "
                 "the number of tagged words returned by nltk's part-of-speech"
                 " tagger.")
-        events = []
+
+        data = {}
+        onsets = []
+        durations = []
         for i, w in enumerate(stim):
-            value = Value(stim, self, {'part_of_speech': pos[i][1]})
-            event = Event(onset=w.onset, duration=w.duration, values=[value])
-            events.append(event)
-        return events
+            p = pos[i][1]
+            if p not in data:
+                data[p] = [0] * len(words)
+            data[p][i] += 1
+            onsets.append(w.onset)
+            durations.append(w.duration)
+
+        return ExtractorResult(np.array(list(data.values())).transpose(), stim, self,
+                                features=list(data.keys()),
+                                onsets=onsets, 
+                                durations=durations)
 
 
 # class BasicStatsExtractorCollection(TransformerCollection):

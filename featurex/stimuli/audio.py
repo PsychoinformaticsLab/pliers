@@ -1,6 +1,6 @@
 from featurex.stimuli import Stim
-from featurex.core import Timeline
 from featurex.stimuli.text import ComplexTextStim
+from featurex.extractors import ExtractorResult
 from scipy.io import wavfile
 import six
 
@@ -15,13 +15,6 @@ class AudioStim(Stim):
         duration = len(self.data)*1./self.sampling_rate
         super(AudioStim, self).__init__(filename, onset=onset, duration=duration)
 
-    def extract(self, extractors, merge_events=True):
-        timeline = Timeline()
-        for ext in extractors:
-            events = ext.transform(self)
-            for ev in events:
-                timeline.add_event(ev, merge=merge_events)
-        return timeline
 
 
 class TranscribedAudioStim(AudioStim):
@@ -43,17 +36,4 @@ class TranscribedAudioStim(AudioStim):
         self.transcription = transcription
         super(TranscribedAudioStim, self).__init__(filename, onset=onset)
 
-    # def extract(self, extractors):
-    #     timeline = Timeline()
-    #     audio_exts, text_exts = [], []
-    #     for ext in extractors:
-    #         if ext.target.__name__ in ['AudioStim', 'TranscribedAudioStim']:
-    #             audio_exts.append(ext)
-    #         elif ext.target.__name__ == 'ComplexTextStim':
-    #             text_exts.append(ext)
 
-    #     audio_tl = super(TranscribedAudioStim, self).extract(audio_exts)
-    #     timeline.merge(audio_tl)
-    #     text_tl = self.transcription.extract(text_exts)
-    #     timeline.merge(text_tl)
-    #     return timeline

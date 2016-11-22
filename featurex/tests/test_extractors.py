@@ -3,6 +3,8 @@ import os
 from .utils import get_test_data_path, DummyExtractor
 from featurex.extractors.text import (DictionaryExtractor,
                                       PartOfSpeechExtractor,
+                                      LengthExtractor,
+                                      NumUniqueWordsExtractor,
                                       PredefinedDictionaryExtractor)
 from featurex.extractors.audio import STFTExtractor, MeanAmplitudeExtractor
 from featurex.extractors.image import (BrightnessExtractor,
@@ -12,10 +14,9 @@ from featurex.extractors.image import (BrightnessExtractor,
 from featurex.extractors.video import DenseOpticalFlowExtractor
 from featurex.extractors.api import (IndicoAPIExtractor,
                                         ClarifaiAPIExtractor)
-from featurex.stimuli.text import ComplexTextStim
+from featurex.stimuli.text import TextStim, ComplexTextStim
 from featurex.stimuli.video import ImageStim, VideoStim
 from featurex.stimuli.audio import AudioStim, TranscribedAudioStim
-from featurex.export import TimelineExporter
 from featurex.support.download import download_nltk_data
 from featurex.extractors import Extractor, ExtractorResult, merge_results
 import numpy as np
@@ -36,7 +37,7 @@ def test_check_target_type():
     td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
                              variables=['length', 'frequency'])
     with pytest.raises(TypeError):
-        stim.extract([td])
+        td.transform(stim)
 
 
 def test_implicit_stim_iteration():
@@ -53,25 +54,47 @@ def test_implicit_stim_iteration():
 def test_text_extractor():
     stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
                            columns='to', default_duration=1)
+def test_text_length_extractor():
+    stim = TextStim(text='hello world')
+    ext = LengthExtractor()
+    result = ext.extract(stim).to_df()
+    assert 'text_length' in result.columns
+    assert result['text_length'][0] == 11
+
+
+def test_unique_words_extractor():
+    stim = TextStim(text='hello hello world')
+    ext = NumUniqueWordsExtractor()
+    result = ext.extract(stim).to_df()
+    assert 'num_unique_words' in result.columns
+    assert result['num_unique_words'][0] == 2
+
+
+def test_dictionary_extractor():
     td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
                              variables=['length', 'frequency'])
     assert td.data.shape == (7, 2)
-    timeline = stim.extract([td])
-    df = timeline.to_df()
-    assert np.isnan(df.iloc[0, 3])
-    assert df.shape == (12, 4)
-    target = df.query('name=="frequency" & onset==5')['value'].values
-    assert target == 10.6
+
+    stim = TextStim(text='annotation')
+    result = td.extract(stim).to_df()
+    assert np.isnan(result['onset'][0])
+    assert 'length' in result.columns
+    assert result['length'][0] == 10
+
+    stim2 = TextStim(text='some')
+    result = td.extract(stim2).to_df()
+    assert np.isnan(result['onset'][0])
+    assert 'frequency' in result.columns
+    assert np.isnan(result['frequency'][0])
 
 
 def test_predefined_dictionary_extractor():
-    text = """enormous chunks of ice that have been frozen for thousands of
-              years are breaking apart and melting away"""
-    stim = ComplexTextStim.from_text(text)
+    stim = TextStim(text='enormous')
     td = PredefinedDictionaryExtractor(['aoa/Freq_pm'])
-    timeline = stim.extract([td])
-    df = TimelineExporter.timeline_to_df(timeline)
-    assert df.shape == (18, 4)
+    result = td.extract(stim).to_df()
+    assert result.shape == (1, 3)
+    assert 'aoa_Freq_pm' in result.columns
+    assert np.isclose(result['aoa_Freq_pm'][0], 10.313725, 1e-5)
 
 
 def test_stft_extractor():
@@ -90,28 +113,26 @@ def test_mean_amplitude_extractor():
     stim = TranscribedAudioStim(join(audio_dir, "barber_edited.wav"),
                                 join(text_dir, "wonderful_edited.srt"))
     ext = MeanAmplitudeExtractor()
-    timeline = stim.extract([ext])
+    result = ext.extract(stim).to_df()
     targets = [100., 150.]
-    events = timeline.events
-    values = [events[event].values[0].data["mean_amplitude"]
-              for event in events.keys()]
-    assert values == targets
+    assert np.array_equal(result['mean_amplitude'], targets)
 
 
 def test_part_of_speech_extractor():
     stim = ComplexTextStim(join(TEXT_DIR, 'complex_stim_with_header.txt'))
-    tl = stim.extract([PartOfSpeechExtractor()])
-    df = tl.to_df()
-    assert df.iloc[1, 3] == 'NN'
-    assert df.shape == (4, 4)
+    result = PartOfSpeechExtractor().extract(stim).to_df()
+    assert result.shape == (4, 6)
+    assert 'NN' in result.columns
+    assert result['NN'].sum() == 1
+    assert result['VBD'][3] == 1
 
 
 def test_brightness_extractor():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
     result = BrightnessExtractor().extract(stim).to_df()
-    brightness = result['avg_brightness'][0]
-    assert np.isclose(brightness, 0.88784294)
+    brightness = result['brightness'][0]
+    assert np.isclose(brightness, 0.88784294, 1e-5)
 
 
 def test_sharpness_extractor():
@@ -120,15 +141,15 @@ def test_sharpness_extractor():
     stim = ImageStim(join(image_dir, 'apple.jpg'))
     result = SharpnessExtractor().extract(stim).to_df()
     sharpness = result['sharpness'][0]
-    assert np.isclose(sharpness, 1.0)
+    assert np.isclose(sharpness, 1.0, 1e-5)
 
 
 def test_vibrance_extractor():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
     result = VibranceExtractor().extract(stim).to_df()
-    color = result['avg_color'][0]
-    assert np.isclose(color, 1370.65482988)
+    color = result['vibrance'][0]
+    assert np.isclose(color, 1370.65482988, 1e-5)
 
 
 def test_saliency_extractor():
@@ -137,21 +158,18 @@ def test_saliency_extractor():
     stim = ImageStim(join(image_dir, 'apple.jpg'))
     result = SaliencyExtractor().extract(stim).to_df()
     ms = result['max_saliency'][0]
-    assert np.isclose(ms, 0.99669953)
+    assert np.isclose(ms, 0.99669953, 1e-5)
     sf = result['frac_high_saliency'][0]
-    assert np.isclose(sf, 0.27461971)
+    assert np.isclose(sf, 0.27461971, 1e-5)
 
 
 def test_optical_flow_extractor():
     pytest.importorskip('cv2')
     video_dir = join(get_test_data_path(), 'video')
     stim = VideoStim(join(video_dir, 'small.mp4'))
-    ext = DenseOpticalFlowExtractor()
-    timeline = stim.extract([ext])
-    df = timeline.to_df()
-    assert df.shape == (168, 4)
-    target = df.query('name=="total_flow" & onset==3.0')['value'].values
-    assert np.isclose(target, 86248.05)
+    result = DenseOpticalFlowExtractor().extract(stim).to_df()
+    target = result.query('onset==3.0')['total_flow']
+    assert np.isclose(target, 86248.05, 1e-5)
 
 
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
@@ -159,39 +177,30 @@ def test_indicoAPI_extractor():
     srtfile = join(get_test_data_path(), 'text', 'wonderful.srt')
     srt_stim = ComplexTextStim(srtfile)
     ext = IndicoAPIExtractor(
-        api_key=os.environ['INDICO_APP_KEY'], model='emotion')
-    output = srt_stim.extract([ext])
-    outdfKeys = set(output.to_df()['name'])
+        api_key=os.environ['INDICO_APP_KEY'], models=['emotion', 'personality'])
+    result = ext.extract(srt_stim).to_df()
     outdfKeysCheck = set([
+        'onset',
+        'duration',
         'emotion_anger',
         'emotion_fear',
         'emotion_joy',
         'emotion_sadness',
-        'emotion_surprise'])
-    assert outdfKeys == outdfKeysCheck
+        'emotion_surprise',
+        'personality_openness',
+        'personality_extraversion',
+        'personality_agreeableness',
+        'personality_conscientiousness'])
+    assert set(result.columns) == outdfKeysCheck
 
 
 @pytest.mark.skipif("'CLARIFAI_APP_ID' not in os.environ")
 def test_clarifaiAPI_extractor():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    ext = ClarifaiAPIExtractor()
-    output = ext.transform(stim).data['tags']
-    # Check success of request
-    assert output['status_code'] == 'OK'
-    # Check success of each image tagged
-    for result in output['results']:
-        assert result['status_code'] == 'OK'
-        assert result['result']['tag']['classes']
-
-
-@pytest.mark.skipif("'WIT_AI_APP_KEY' not in os.environ")
-def test_witaiAPI_extractor():
-    audio_dir = join(get_test_data_path(), 'audio')
-    stim = AudioStim(join(audio_dir, 'homer.wav'))
-    ext = WitTranscriptionExtractor()
-    text = ext.transform(stim).data['text']
-    assert 'laws of thermodynamics' in text
+    result = ClarifaiAPIExtractor().extract(stim).to_df()
+    assert result['apple'][0] > 0.5
+    assert result.ix[:,5][0] > 0.0
 
 
 def test_merge_extractor_results_by_features():
@@ -200,8 +209,7 @@ def test_merge_extractor_results_by_features():
     stim = ImageStim(join(image_dir, 'apple.jpg'))
 
     # Merge results for static Stims (no onsets)
-    extractors = [BrightnessExtractor(), SharpnessExtractor(),
-                  VibranceExtractor()]
+    extractors = [BrightnessExtractor(), VibranceExtractor()]
     results = [e.extract(stim) for e in extractors]
     df = ExtractorResult.merge_features(results)
 

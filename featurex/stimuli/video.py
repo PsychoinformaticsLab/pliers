@@ -1,7 +1,7 @@
 from __future__ import division
 from featurex.stimuli import Stim, CollectionStimMixin
 from featurex.stimuli.image import ImageStim
-from featurex.core import Timeline, Event
+from featurex.extractors import ExtractorResult, merge_results
 from moviepy.video.io.VideoFileClip import VideoFileClip
 import pandas as pd
 
@@ -12,6 +12,7 @@ class VideoFrameStim(ImageStim):
 
     def __init__(self, video, frame_num, duration=None, filename=None, data=None):
         self.video = video
+        self.data = self.video.frames[frame_num]
         self.frame_num = frame_num
         spf = 1. / video.fps
         duration = spf if duration is None else duration
@@ -41,25 +42,6 @@ class VideoStim(Stim, CollectionStimMixin):
         for i, f in enumerate(self.frames):
             yield VideoFrameStim(self, i, data=f)
 
-    # def extract(self, extractors, merge_events=True, **kwargs):
-    #     period = 1. / self.fps
-    #     timeline = Timeline(period=period)
-    #     for ext in extractors:
-    #         # For VideoExtractors, pass the entire stim
-    #         if ext.target.__name__ == self.__class__.__name__:
-    #             events = ext.transform(self, **kwargs)
-    #             for ev in events:
-    #                 timeline.add_event(ev, merge=merge_events)
-    #         # Otherwise, for images, loop over frames
-    #         else:
-    #             c = 0
-    #             for frame in self:
-    #                 if frame.data is not None:
-    #                     event = Event(onset=c * period)
-    #                     event.add_value(ext.transform(frame))
-    #                     timeline.add_event(event, merge=merge_events)
-    #                     c += 1
-    #     return timeline
 
 
 class DerivedVideoStim(VideoStim):

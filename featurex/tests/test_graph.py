@@ -1,6 +1,8 @@
 import pytest
 from featurex.graph import Graph, Node
+from featurex.converters.image import TesseractConverter
 from featurex.extractors.image import BrightnessExtractor
+from featurex.extractors.text import LengthExtractor
 from featurex.stimuli.image import ImageStim
 from .utils import get_test_data_path, DummyExtractor
 from os.path import join
@@ -42,7 +44,8 @@ def test_graph_smoke_test():
     nodes = [(BrightnessExtractor(), 'brightness')]
     graph = Graph(nodes)
     result = graph.extract([stim])
-    brightness = result[('BrightnessExtractor', 'avg_brightness')].values[0]
+    print(result)
+    brightness = result[('BrightnessExtractor', 'brightness')].values[0]
     assert_almost_equal(brightness, 0.556134, 5)
 
 
@@ -61,3 +64,15 @@ def test_add_nested_children():
     assert len(graph.children) == 2
     assert isinstance(graph.children[1].children[0], Node)
     assert graph.children[1].children[0].name == "child's child"
+
+
+def test_small_pipeline():
+    pytest.importorskip('pytesseract')
+    filename = join(get_test_data_path(), 'image', 'button.jpg')
+    stim = ImageStim(filename)
+    nodes = [(TesseractConverter(), 'tesseract', 
+                [(LengthExtractor(), 'length')])]
+    graph = Graph(nodes)
+    result = graph.extract([stim])[0].to_df()
+    assert 'text_length' in result.columns
+    assert result['text_length'][0] == 4

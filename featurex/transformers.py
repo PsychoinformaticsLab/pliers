@@ -18,7 +18,7 @@ class Transformer(with_metaclass(ABCMeta)):
             return self._iterate(stims, *args, **kwargs)
         # Iterate over the collection of stims contained in the input stim
         elif isinstance(stims, CollectionStimMixin) and \
-           not isinstance(self.target, CollectionStimMixin):
+           not issubclass(self.target, CollectionStimMixin):
             return self._iterate(list(s for s in stims))
         # Pass the stim directly to the Transformer
         else:
