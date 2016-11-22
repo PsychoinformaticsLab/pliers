@@ -1,7 +1,6 @@
 from featurex.converters.image import ImageToTextConverter
 from featurex.stimuli.text import TextStim
 from featurex.google import GoogleVisionAPITransformer
-from featurex import Value, Event
 
 
 class GoogleVisionAPITextConverter(GoogleVisionAPITransformer, ImageToTextConverter):

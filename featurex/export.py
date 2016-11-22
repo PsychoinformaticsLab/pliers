@@ -2,6 +2,8 @@ from os.path import exists, isdir, join
 from abc import ABCMeta, abstractmethod
 import pandas as pd
 from six import with_metaclass
+from featurex.extractors import ExtractorResult
+
 
 
 class Exporter(with_metaclass(ABCMeta)):
@@ -13,59 +15,33 @@ class Exporter(with_metaclass(ABCMeta)):
         pass
 
 
-class TimelineExporter(Exporter):
+def to_long_format(df):
+    ''' Convert from wide to long format, making each row a single 
+    feature/value pair.
 
-    ''' Exporter that handles Timelines. '''
+    Args:
+        df (DataFrame): a timeline that is currently in wide format
+    '''
+    if isinstance(df, ExtractorResult):
+        df = df.to_df()
 
-    @staticmethod
-    def timeline_to_df(timeline, format='long', extractor=False):
-        ''' Extracts all values from a timeline and converts it to a
-        pandas DataFrame.
-        Args:
-            timeline: the Timeline instance to convert
-            format (str): The format of the returned DF. Either 'long'
-                (default) or 'wide'. In long format, each row is a single
-                key/value pair in a single Value). In wide format, each row is
-                a single event, and all Values are represented in columns.
-            extractor (bool): If True, includes the name of the Extractor in
-                the output (a separate column in the case of long format, and
-                prepended to the column name in the case of wide).
-
-        Returns: a pandas DataFrame.
-        '''
-
-        data = []
-        for onset, event in timeline.events.items():
-            for value in event.values:
-                ext_name = value.extractor.name if value.extractor is not None else None
-                duration = event.duration or value.stim.duration
-                if duration is None:
-                    raise AttributeError(
-                        'Duration information is missing for at least one '
-                        'Event. A valid duration attribute must be set in '
-                        'either the Event instance, or in the Stim '
-                        'instance associated with every Value in the '
-                        'Event.')
-                for var, val in value.data.items():
-                    row = [onset, var, duration, val, ext_name]
-                    data.append(row)
-
-        columns=['onset', 'name', 'duration', 'value', 'extractor']
-        data = pd.DataFrame(data, columns=columns)
-
-        if format == 'wide':
-            pivot_cols = ['extractor', 'name']
-            data = pd.pivot_table(data, index='onset', columns=pivot_cols)
-            data = data.reorder_levels([-2, -1, -3], 1)
-            data = data.sortlevel(0, axis=1)
-            if not extractor:
-                data.columns = data.columns.droplevel()
-        elif not extractor:
-            data = data.drop('extractor', 1)
-        return data
+    if isinstance(df.columns, pd.core.index.MultiIndex):
+        ids = list(set(df.columns) & set([('stim', ''), 
+                                        ('onset', ''), 
+                                        ('duration', '')]))
+        variables = ['extractor', 'feature']   
+    else:
+        df = df.reset_index() if not isinstance(df.index, pd.Int64Index) else df
+        ids = list(set(df.columns) & set(['stim', 'onset', 'duration']))
+        variables = 'feature'
+        
+    values = list(set(df.columns) - set(ids))
+    converted = pd.melt(df, id_vars=ids, value_vars=values, var_name=variables)
+    converted.columns = [c[0] if isinstance(c, tuple) else c for c in converted.columns]
+    return converted
 
 
-class FSLExporter(TimelineExporter):
+class FSLExporter(Exporter):
 
     ''' Exports a Timeline as tsv files with onset, duration, and value
     columns. A separate file is created for each variable or 'condition'. '''
@@ -78,10 +54,10 @@ class FSLExporter(TimelineExporter):
         Returns: if path is None, returns a dictionary, where keys are variable
             names and values are pandas DataFrames. Otherwise, None.
         '''
-        data = self.timeline_to_df(timeline)
+        data = to_long_format(timeline)
         results = {}
-        for var in data['name'].unique():
-            results[var] = data[data['name'] == var][['onset', 'duration',
+        for var in data['stim'].unique():
+            results[var] = data[data['stim'] == var][['onset', 'duration',
                                                       'value']]
 
         if path is not None:
