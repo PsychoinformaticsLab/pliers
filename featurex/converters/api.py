@@ -4,7 +4,6 @@ import json
 from featurex.stimuli.text import TextStim, DynamicTextStim, ComplexTextStim
 from featurex.converters.audio import AudioToTextConverter
 from featurex.converters.image import ImageToTextConverter
-from PIL import Image
 
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.request import Request, urlopen
@@ -126,16 +125,3 @@ class IBMSpeechAPIConverter(AudioToTextConverter):
         response_text = response.read().decode("utf-8")
         result = json.loads(response_text)
         return result
-
-
-class TesseractAPIConverter(ImageToTextConverter):
-    ''' Uses the Tesseract library to extract text from images '''
-
-    def __init__(self):
-        super(self.__class__, self).__init__()
-
-    def _convert(self, image):
-        import pytesseract
-        text = pytesseract.image_to_string(Image.fromarray(image.data))
-        return TextStim(text=text)
-

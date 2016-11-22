@@ -175,7 +175,7 @@ def test_indicoAPI_extractor():
     srtfile = join(get_test_data_path(), 'text', 'wonderful.srt')
     srt_stim = ComplexTextStim(srtfile)
     ext = IndicoAPIExtractor(
-        api_key=os.environ['INDICO_APP_KEY'], model='emotion')
+        api_key=os.environ['INDICO_APP_KEY'], models=['emotion', 'personality'])
     result = ext.extract(srt_stim).to_df()
     outdfKeysCheck = set([
         'onset',
@@ -184,7 +184,11 @@ def test_indicoAPI_extractor():
         'emotion_fear',
         'emotion_joy',
         'emotion_sadness',
-        'emotion_surprise'])
+        'emotion_surprise',
+        'personality_openness',
+        'personality_extraversion',
+        'personality_agreeableness',
+        'personality_conscientiousness'])
     assert set(result.columns) == outdfKeysCheck
 
 

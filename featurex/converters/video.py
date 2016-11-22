@@ -1,7 +1,34 @@
 from featurex.stimuli.video import VideoStim, DerivedVideoStim, VideoFrameStim
+from featurex.stimuli.audio import AudioStim
 from featurex.converters import Converter
 
 import pandas as pd
+import os
+
+
+class VideoToAudioConverter(Converter):
+
+    ''' Base VideoToDerivedVideo Converter class; all subclasses can only be
+    applied to video and convert to derived (sampled) video. '''
+    target = VideoStim
+    _output_type = AudioStim
+
+    def __init__(self, fps=44100, nbytes=2,
+                    buffersize=2000, bitrate=None,
+                    ffmpeg_params=None):
+        super(self.__class__, self).__init__()
+        self.fps = fps
+        self.nbytes = nbytes
+        self.buffersize = buffersize
+        self.bitrate = bitrate
+        self.ffmpeg_params = ffmpeg_params
+
+    def _convert(self, video):
+        filename = os.path.splitext(video.filename)[0] + '.wav'
+        video.clip.audio.write_audiofile(filename, self.fps, self.nbytes,
+                                        self.buffersize, self.bitrate,
+                                        self.ffmpeg_params)
+        return AudioStim(filename)
 
 
 class VideoToDerivedVideoConverter(Converter):
@@ -68,7 +95,7 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
             else:
                 dur = (len(video.frames) / video.fps) - onsets[i]
 
-            elem = VideoFrameStim(video=video.clip, frame_num=f,
+            elem = VideoFrameStim(video=video, frame_num=f,
                                   duration=dur)
             elements.append(elem)
 
