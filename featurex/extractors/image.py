@@ -4,11 +4,7 @@ Extractors that operate primarily or exclusively on Image stimuli.
 
 from featurex.stimuli.image import ImageStim
 from featurex.extractors import Extractor, ExtractorResult
-import time
 import numpy as np
-import tempfile
-import os
-from warnings import warn
 
 class ImageExtractor(Extractor):
 

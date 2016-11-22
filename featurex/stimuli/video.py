@@ -13,6 +13,7 @@ class VideoFrameStim(ImageStim):
     def __init__(self, video, frame_num, duration=None, filename=None, data=None):
         super(VideoFrameStim, self).__init__(filename, data)
         self.video = video
+        self.data = self.video.frames[frame_num]
         self.frame_num = frame_num
         spf = 1. / video.fps
         if duration is None:

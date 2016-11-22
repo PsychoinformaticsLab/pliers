@@ -3,7 +3,6 @@ Extractors that interact with external (e.g., deep learning) services.
 '''
 
 from featurex.extractors.image import ImageExtractor
-from featurex.extractors.audio import AudioExtractor
 from featurex.extractors.text import ComplexTextExtractor
 from featurex.extractors import ExtractorResult
 from scipy.misc import imsave
@@ -26,10 +25,10 @@ class IndicoAPIExtractor(ComplexTextExtractor):
     Args:
         app_key (str): A valid API key for the Indico API. Only needs to be
             passed the first time the extractor is initialized.
-        model (str): The name of the Indico model to use.  
+        models (list): The names of the Indico models to use.  
     '''
 
-    def __init__(self, api_key=None, model=None):
+    def __init__(self, api_key=None, models=None):
         ComplexTextExtractor.__init__(self)
         if api_key is None:
             try:
@@ -41,13 +40,13 @@ class IndicoAPIExtractor(ComplexTextExtractor):
         else:
             self.api_key = api_key
         ico.config.api_key = self.api_key
-        if model is None:
-            raise ValueError("Must enter a valid model to use of possible type: "
-                             "sentiment, sentiment_hq, emotion.")
+        if models is None:
+            raise ValueError("Must enter a valid list of models to use of "
+                            "possible types: sentiment, sentiment_hq, emotion.")
         else:
             try:
-                self.model = getattr(ico, model)
-                self.name = model
+                self.models = [getattr(ico, model) for model in models]
+                self.names = models
             except AttributeError:
                 raise ValueError("Unsupported model specified. Muse use of of the following:\n"
                                 "sentiment, sentiment_hq, emotion, text_tags, language, "
@@ -56,20 +55,21 @@ class IndicoAPIExtractor(ComplexTextExtractor):
 
     def _extract(self, stim):
         tokens = [token.text for token in stim]
-        scores = self.model(tokens)
+        scores = [model(tokens) for model in self.models]
         data = []
         onsets = []
         durations = []
         for i, w in enumerate(stim):
-            if type(scores[i]) == float:
-                features = [self.name]
-                values = [scores[i]]
-            elif type(scores[i]) == dict:
-                features = []
-                values = []
-                for k in scores[i].keys():
-                    features.append(self.name + '_' + k)
-                    values.append(scores[i][k])
+            features = []
+            values = []
+            for j, score in enumerate(scores):
+                if type(score[i]) == float:
+                    features.append(self.names[j])
+                    values.append(score[i])
+                elif type(score[i]) == dict:
+                    for k in score[i].keys():
+                        features.append(self.names[j] + '_' + k)
+                        values.append(score[i][k])
 
             data.append(values)
             onsets.append(w.onset)
@@ -88,6 +88,8 @@ class ClarifaiAPIExtractor(ImageExtractor):
             Only needs to be passed the first time the extractor is initialized.
         model (str): The name of the Clarifai model to use. 
             If None, defaults to the general image tagger. 
+        select_classes (list): List of classes (strings) to query from the API.
+            For example, ['food', 'animal'].
     '''
 
     def __init__(self, app_id=None, app_secret=None, model=None, select_classes=None):
@@ -104,15 +106,24 @@ class ClarifaiAPIExtractor(ImageExtractor):
         self.tagger = ClarifaiApi(app_id=app_id, app_secret=app_secret)
         if not (model is None):
             self.tagger.set_model(model)
-
-        self.select_classes = select_classes
+        
+        if select_classes is None:
+            self.select_classes = None
+        else:
+            self.select_classes = ','.join(select_classes)
 
     def _extract(self, stim):
-        data = stim.data
-        temp_file = tempfile.mktemp() + '.png'
-        imsave(temp_file, data)
-        tags = self.tagger.tag_images(open(temp_file, 'rb'), select_classes=self.select_classes)
-        os.remove(temp_file)
+        if stim.filename is None:
+            file = tempfile.mktemp() + '.png'
+            imsave(file, stim.data)
+        else:
+            file = stim.filename
+        
+        tags = self.tagger.tag_images(open(file, 'rb'), 
+                                    select_classes=self.select_classes)
+        
+        if stim.filename is None:
+            os.remove(temp_file)
 
         tagged = tags['results'][0]['result']['tag']
         return ExtractorResult([tagged['probs']], stim, self, 
