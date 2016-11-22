@@ -1,7 +1,7 @@
 import os
 import base64
 import json
-from featurex.stimuli.text import TextStim, DynamicTextStim, ComplexTextStim
+from featurex.stimuli.text import TextStim, ComplexTextStim
 from featurex.converters.audio import AudioToTextConverter
 from featurex.converters.image import ImageToTextConverter
 from PIL import Image
@@ -86,7 +86,7 @@ class IBMSpeechAPIConverter(AudioToTextConverter):
         timestamps = result['results'][0]['alternatives'][0]['timestamps']
         elements = []
         for i, entry in enumerate(timestamps):
-            elements.append(DynamicTextStim(text=entry[0], order=i, onset=entry[1],
+            elements.append(DynamicTextStim(text=entry[0], onset=entry[1],
                                                 duration=entry[2]-entry[1]))
         
         return ComplexTextStim(elements=elements)

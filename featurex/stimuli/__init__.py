@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractproperty
 from six import string_types
 from os.path import exists, isdir, join, basename
 from glob import glob
@@ -8,10 +8,12 @@ from six import with_metaclass
 class Stim(with_metaclass(ABCMeta)):
 
     ''' Base Stim class. '''
-    def __init__(self, filename=None):
+    def __init__(self, filename=None, onset=None, duration=None):
 
         self.filename = filename
         self.features = []
+        self.onset = onset
+        self.duration = duration
 
     @property
     def name(self):
@@ -19,15 +21,10 @@ class Stim(with_metaclass(ABCMeta)):
         return basename(filename)if filename is not None else self.id
 
 
-class DynamicStim(with_metaclass(ABCMeta, Stim)):
-
-    ''' Any Stim that has a temporal dimension. '''
-    def __init__(self, filename=None):
-        super(DynamicStim, self).__init__(filename)
-        self._extract_duration()
+class CollectionStimMixin(with_metaclass(ABCMeta)):
 
     @abstractmethod
-    def _extract_duration(self):
+    def __iter__(self):
         pass
 
 

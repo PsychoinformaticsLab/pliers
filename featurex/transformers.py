@@ -1,5 +1,6 @@
 from six import with_metaclass
 from abc import ABCMeta, abstractmethod, abstractproperty
+from featurex.stimuli import CollectionStimMixin
 from featurex.utils import listify
 import importlib
 
@@ -12,8 +13,14 @@ class Transformer(with_metaclass(ABCMeta)):
         self.name = name
 
     def transform(self, stims, *args, **kwargs):
+        # Iterate over all the stims in the list
         if isinstance(stims, (list, tuple)):
             return self._iterate(stims, *args, **kwargs)
+        # Iterate over the collection of stims contained in the input stim
+        elif isinstance(stims, CollectionStimMixin) and \
+           not isinstance(self.target, CollectionStimMixin):
+            return self._iterate(list(s for s in stims))
+        # Pass the stim directly to the Transformer
         else:
             return self._transform(self._validate(stims), *args, **kwargs)
 
@@ -36,11 +43,6 @@ class Transformer(with_metaclass(ABCMeta)):
     @abstractproperty
     def target(self):
         pass
-
-    # TODO: implement versioning on all subclasses
-    # @abstractproperty
-    # def __version__(self):
-    #     pass
 
 
 class BatchTransformerMixin():

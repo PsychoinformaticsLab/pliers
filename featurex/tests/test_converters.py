@@ -7,7 +7,7 @@ from featurex.converters.api import (WitTranscriptionConverter,
                                         IBMSpeechAPIConverter)
 from featurex.converters.google import GoogleVisionAPITextConverter
 from featurex.stimuli.video import VideoStim, VideoFrameStim, DerivedVideoStim
-from featurex.stimuli.text import DynamicTextStim, ComplexTextStim
+from featurex.stimuli.text import ComplexTextStim
 from featurex.stimuli.audio import AudioStim
 from featurex.stimuli.image import ImageStim
 
@@ -84,7 +84,7 @@ def test_ibmAPI_converter():
     out_stim = conv.transform(stim)
     assert type(out_stim) == ComplexTextStim
     first_word = next(w for w in out_stim)
-    assert type(first_word) == DynamicTextStim
+    assert type(first_word) == TextStim
     assert first_word.duration > 0
     assert first_word.onset != None
 

@@ -1,5 +1,5 @@
 from __future__ import division
-from featurex.stimuli import DynamicStim
+from featurex.stimuli import Stim, CollectionStimMixin
 from featurex.stimuli.image import ImageStim
 from featurex.core import Timeline, Event
 from moviepy.video.io.VideoFileClip import VideoFileClip
@@ -11,22 +11,19 @@ class VideoFrameStim(ImageStim):
     ''' A single frame of video. '''
 
     def __init__(self, video, frame_num, duration=None, filename=None, data=None):
-        super(VideoFrameStim, self).__init__(filename, data)
         self.video = video
         self.frame_num = frame_num
         spf = 1. / video.fps
-        if duration is None:
-            self.duration = spf
-        else:
-            self.duration = duration
-        self.onset = frame_num * spf
+        duration = spf if duration is None else duration
+        onset = frame_num * spf
+        super(VideoFrameStim, self).__init__(filename, onset, duration, data)
 
 
-class VideoStim(DynamicStim):
+class VideoStim(Stim, CollectionStimMixin):
 
     ''' A video. '''
 
-    def __init__(self, filename):
+    def __init__(self, filename, onset=None):
 
         self.clip = VideoFileClip(filename)
         self.fps = self.clip.fps
@@ -35,36 +32,34 @@ class VideoStim(DynamicStim):
 
         self.frames = [f for f in self.clip.iter_frames()]
         self.n_frames = len(self.frames)
+        duration = self.n_frames * 1. / self.fps
 
-        super(VideoStim, self).__init__(filename)
-
-    def _extract_duration(self):
-        self.duration = self.n_frames * 1. / self.fps
+        super(VideoStim, self).__init__(filename, onset, duration)
 
     def __iter__(self):
         """ Frame iteration. """
         for i, f in enumerate(self.frames):
             yield VideoFrameStim(self, i, data=f)
 
-    def extract(self, extractors, merge_events=True, **kwargs):
-        period = 1. / self.fps
-        timeline = Timeline(period=period)
-        for ext in extractors:
-            # For VideoExtractors, pass the entire stim
-            if ext.target.__name__ == self.__class__.__name__:
-                events = ext.transform(self, **kwargs)
-                for ev in events:
-                    timeline.add_event(ev, merge=merge_events)
-            # Otherwise, for images, loop over frames
-            else:
-                c = 0
-                for frame in self:
-                    if frame.data is not None:
-                        event = Event(onset=c * period)
-                        event.add_value(ext.transform(frame))
-                        timeline.add_event(event, merge=merge_events)
-                        c += 1
-        return timeline
+    # def extract(self, extractors, merge_events=True, **kwargs):
+    #     period = 1. / self.fps
+    #     timeline = Timeline(period=period)
+    #     for ext in extractors:
+    #         # For VideoExtractors, pass the entire stim
+    #         if ext.target.__name__ == self.__class__.__name__:
+    #             events = ext.transform(self, **kwargs)
+    #             for ev in events:
+    #                 timeline.add_event(ev, merge=merge_events)
+    #         # Otherwise, for images, loop over frames
+    #         else:
+    #             c = 0
+    #             for frame in self:
+    #                 if frame.data is not None:
+    #                     event = Event(onset=c * period)
+    #                     event.add_value(ext.transform(frame))
+    #                     timeline.add_event(event, merge=merge_events)
+    #                     c += 1
+    #     return timeline
 
 
 class DerivedVideoStim(VideoStim):

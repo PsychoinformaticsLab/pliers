@@ -8,15 +8,15 @@ class ImageStim(Stim):
 
     ''' A static image. '''
 
-    def __init__(self, filename=None, data=None, duration=None):
+    def __init__(self, filename=None, onset=None, duration=None, data=None):
         if data is None and isinstance(filename, six.string_types):
             data = imread(filename)
-        super(ImageStim, self).__init__(filename)
         self.data = data
-        self.duration = duration
+        super(ImageStim, self).__init__(filename, onset=onset, duration=duration)
 
-    def extract(self, extractors):
-        vals = {}
-        for e in extractors:
-            vals[e.name] = e.transform(self)
-        return Value(self, e, vals)
+
+    # def extract(self, extractors):
+    #     vals = {}
+    #     for e in extractors:
+    #         vals[e.name] = e.transform(self)
+    #     return Value(self, e, vals)

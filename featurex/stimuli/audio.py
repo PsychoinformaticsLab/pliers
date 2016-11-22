@@ -1,22 +1,19 @@
-from featurex.stimuli import DynamicStim
+from featurex.stimuli import Stim
 from featurex.core import Timeline
 from featurex.stimuli.text import ComplexTextStim
 from scipy.io import wavfile
 import six
 
 
-class AudioStim(DynamicStim):
+class AudioStim(Stim):
 
     ''' An audio clip. For now, only handles wav files. '''
 
-    def __init__(self, filename):
+    def __init__(self, filename, onset=None):
         self.filename = filename
         self.sampling_rate, self.data = wavfile.read(filename)
-        self._extract_duration()
-        super(AudioStim, self).__init__(filename)
-
-    def _extract_duration(self):
-        self.duration = len(self.data)*1./self.sampling_rate
+        duration = len(self.data)*1./self.sampling_rate
+        super(AudioStim, self).__init__(filename, onset=onset, duration=duration)
 
     def extract(self, extractors, merge_events=True):
         timeline = Timeline()
@@ -40,23 +37,23 @@ class TranscribedAudioStim(AudioStim):
             initializer if transcription argument is a string.
     '''
 
-    def __init__(self, filename, transcription, **kwargs):
+    def __init__(self, filename, transcription, onset=None, **kwargs):
         if isinstance(transcription, six.string_types):
             transcription = ComplexTextStim(transcription, **kwargs)
         self.transcription = transcription
-        super(TranscribedAudioStim, self).__init__(filename)
+        super(TranscribedAudioStim, self).__init__(filename, onset=onset)
 
-    def extract(self, extractors):
-        timeline = Timeline()
-        audio_exts, text_exts = [], []
-        for ext in extractors:
-            if ext.target.__name__ in ['AudioStim', 'TranscribedAudioStim']:
-                audio_exts.append(ext)
-            elif ext.target.__name__ == 'ComplexTextStim':
-                text_exts.append(ext)
+    # def extract(self, extractors):
+    #     timeline = Timeline()
+    #     audio_exts, text_exts = [], []
+    #     for ext in extractors:
+    #         if ext.target.__name__ in ['AudioStim', 'TranscribedAudioStim']:
+    #             audio_exts.append(ext)
+    #         elif ext.target.__name__ == 'ComplexTextStim':
+    #             text_exts.append(ext)
 
-        audio_tl = super(TranscribedAudioStim, self).extract(audio_exts)
-        timeline.merge(audio_tl)
-        text_tl = self.transcription.extract(text_exts)
-        timeline.merge(text_tl)
-        return timeline
+    #     audio_tl = super(TranscribedAudioStim, self).extract(audio_exts)
+    #     timeline.merge(audio_tl)
+    #     text_tl = self.transcription.extract(text_exts)
+    #     timeline.merge(text_tl)
+    #     return timeline

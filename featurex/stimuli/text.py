@@ -1,4 +1,4 @@
-from featurex.stimuli import Stim
+from featurex.stimuli import Stim, CollectionStimMixin
 from featurex.core import Timeline, Event, Value
 from featurex.support.decorators import requires_nltk_corpus
 import pandas as pd
@@ -11,34 +11,24 @@ class TextStim(Stim):
 
     ''' Any simple text stimulus--most commonly a single word. '''
 
-    def __init__(self, filename=None, text=None):
+    def __init__(self, filename=None, text=None, onset=None, duration=None):
         if filename is not None:
             text = open(filename).read()
         self.text = text
+        super(TextStim, self).__init__(filename, onset, duration)
 
-    def extract(self, extractors):
-        vals = {}
-        for e in extractors:
-            vals[e.name] = e.transform(self)
-        return Value(self, e, vals)
+    # def extract(self, extractors):
+    #     vals = {}
+    #     for e in extractors:
+    #         vals[e.name] = e.transform(self)
+    #     return Value(self, e, vals)
 
     @property
     def name(self):
         return self.text
 
 
-class DynamicTextStim(TextStim):
-
-    ''' A text stimulus with timing/onset information. '''
-
-    def __init__(self, text, order, onset=None, duration=None):
-        self.order = order
-        self.onset = onset
-        self.duration = duration
-        super(DynamicTextStim, self).__init__(text=text)
-
-
-class ComplexTextStim(object):
+class ComplexTextStim(Stim, CollectionStimMixin):
 
     ''' A collection of text stims (e.g., a story), typically ordered and with
     onsets and/or durations associated with each element.
@@ -64,9 +54,10 @@ class ComplexTextStim(object):
             in the input file.
     '''
 
-    def __init__(self, filename=None, columns='tod', default_duration=None,
-                elements=[]):
-        self.elements = list(elements)
+    def __init__(self, filename=None, onset=None, duration=None, columns='tod',
+                 default_duration=None, elements=None):
+
+        self.elements = [] if elements is None else elements
 
         if filename is not None:
             if filename.endswith("srt"):
@@ -92,7 +83,7 @@ class ComplexTextStim(object):
                 duration = r.get('duration', None)
                 if duration is None:
                     duration = default_duration
-                elem = DynamicTextStim(r['text'], i, r['onset'], duration)
+                elem = TextStim(None, r['text'], r['onset'], duration)
             self.elements.append(elem)
 
     def _from_srt(self, filename):
@@ -115,7 +106,7 @@ class ComplexTextStim(object):
         df = pd.DataFrame(columns=["text", "onset", "duration"], data=list_)
 
         for i, r in df.iterrows():
-            elem = DynamicTextStim(r['text'], i, r['onset'], r["duration"])
+            elem = TextStim(None, r['text'], r['onset'], r["duration"])
             self.elements.append(elem)
 
     def __iter__(self):
@@ -132,23 +123,23 @@ class ComplexTextStim(object):
         total_secs = total_msecs / 1000.
         return total_secs
 
-    def extract(self, extractors, merge_events=True):
-        timeline = Timeline()
-        # Extractors can either take ComplexTextStim input, in which case we
-        # pass the current instance, or TextStim input, in which case we loop
-        # over all elements.
-        for ext in extractors:
-            if ext.target.__name__ == self.__class__.__name__:
-                events = ext.transform(self)
-                for ev in events:
-                    timeline.add_event(ev, merge=merge_events)
-            else:
-                for elem in self.elements:
-                    # If no onset is available, index with order
-                    onset = elem.onset or elem.order
-                    event = Event(onset=onset, values=[ext.transform(elem)])
-                    timeline.add_event(event, merge=merge_events)
-        return timeline
+    # def extract(self, extractors, merge_events=True):
+    #     timeline = Timeline()
+    #     # Extractors can either take ComplexTextStim input, in which case we
+    #     # pass the current instance, or TextStim input, in which case we loop
+    #     # over all elements.
+    #     for ext in extractors:
+    #         if ext.target.__name__ == self.__class__.__name__:
+    #             events = ext.transform(self)
+    #             for ev in events:
+    #                 timeline.add_event(ev, merge=merge_events)
+    #         else:
+    #             for elem in self.elements:
+    #                 # If no onset is available, index with order
+    #                 onset = elem.onset or elem.order
+    #                 event = Event(onset=onset, values=[ext.transform(elem)])
+    #                 timeline.add_event(event, merge=merge_events)
+    #     return timeline
 
     @classmethod
     def from_text(cls, text, unit='word', tokenizer=None, language='english'):
@@ -189,6 +180,5 @@ class ComplexTextStim(object):
 
         elements = []
         for i, t in enumerate(tokens):
-            elements.append(DynamicTextStim(text=t, order=i, onset=i,
-                                                duration=1))
+            elements.append(TextStim(text=t, onset=i, duration=1))
         return cls(elements=elements)

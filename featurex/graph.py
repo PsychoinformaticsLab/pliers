@@ -103,3 +103,9 @@ class Graph(Node):
     def _validate(self):
         # Make sure all connected node inputs and outputs match
         pass
+
+
+class Pipeline(Graph):
+
+    def __init__(self, steps):
+        pass

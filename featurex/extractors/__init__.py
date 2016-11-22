@@ -30,6 +30,8 @@ class ExtractorResult(object):
         self.stim = stim
         self.extractor = extractor
         self.features = features
+        if onsets is None:
+            onsets = stim.onset
         self.onsets = onsets if onsets is not None else np.nan
         self.durations = durations if durations is not None else np.nan
 

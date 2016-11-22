@@ -1,6 +1,8 @@
 from os.path import dirname, join
 from featurex.extractors import Extractor, ExtractorResult
 from featurex.stimuli.image import ImageStim
+import numpy as np
+from copy import deepcopy
 
 
 def get_test_data_path():

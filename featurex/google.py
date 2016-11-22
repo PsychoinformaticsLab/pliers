@@ -2,7 +2,7 @@ import base64
 import os
 import tempfile
 from scipy.misc import imsave
-from featurex.transformers import Transformer
+from featurex.transformers import Transformer, BatchTransformerMixin
 
 try:
     from googleapiclient import discovery, errors
@@ -15,7 +15,7 @@ DISCOVERY_URL = 'https://{api}.googleapis.com/$discovery/rest?version={apiVersio
 BATCH_SIZE = 10
 
 
-class GoogleAPITransformer(Transformer):
+class GoogleAPITransformer(Transformer, BatchTransformerMixin):
 
     def __init__(self, discovery_file=None, api_version='v1', max_results=100,
                  num_retries=3):
