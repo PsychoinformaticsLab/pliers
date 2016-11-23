@@ -10,7 +10,7 @@ class VideoToAudioConverter(Converter):
 
     ''' Base VideoToDerivedVideo Converter class; all subclasses can only be
     applied to video and convert to derived (sampled) video. '''
-    target = VideoStim
+    _input_type = VideoStim
     _output_type = AudioStim
 
     def __init__(self, fps=44100, nbytes=2,
@@ -35,7 +35,7 @@ class VideoToDerivedVideoConverter(Converter):
 
     ''' Base VideoToDerivedVideo Converter class; all subclasses can only be
     applied to video and convert to derived (sampled) video. '''
-    target = VideoStim
+    _input_type = VideoStim
     _output_type = DerivedVideoStim
 
 

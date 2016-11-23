@@ -22,7 +22,7 @@ class TextExtractor(Extractor):
 
     ''' Base Text Extractor class; all subclasses can only be applied to text.
     '''
-    target = TextStim
+    _input_type = TextStim
 
 
 class ComplexTextExtractor(Extractor):
@@ -30,7 +30,7 @@ class ComplexTextExtractor(Extractor):
     ''' Base ComplexTextStim Extractor class; all subclasses can only be
     applied to ComplexTextStim instance.
     '''
-    target = ComplexTextStim
+    _input_type = ComplexTextStim
 
 
 class DictionaryExtractor(TextExtractor):
@@ -162,21 +162,3 @@ class PartOfSpeechExtractor(ComplexTextExtractor):
                                 features=list(data.keys()),
                                 onsets=onsets, 
                                 durations=durations)
-
-
-# class BasicStatsExtractorCollection(TransformerCollection):
-
-#     ''' A collection of basic text statistics. Just a prototype; needs work.
-#     '''
-
-#     target = TextStim
-
-#     def __init__(self, statistics=None):
-
-#         all_stats = {'lengthextractor', 'numuniquewordsextractor'}
-#         if statistics is not None:
-#             statistics = set([s.lower() for s in statistics]) & all_stats
-#         else:
-#             statistics = all_stats
-
-#         super(BasicStatsExtractorCollection, self).__init__(statistics)

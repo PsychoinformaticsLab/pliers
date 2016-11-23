@@ -8,7 +8,7 @@ class ImageToTextConverter(Converter):
 
     ''' Base ImageToText Converter class; all subclasses can only be applied to
     image and convert to text. '''
-    target = ImageStim
+    _input_type = ImageStim
     _output_type = TextStim
 
 

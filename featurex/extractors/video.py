@@ -17,7 +17,7 @@ except ImportError:
 class VideoExtractor(Extractor):
     ''' Base Video Extractor class; all subclasses can only be applied to
     video. '''
-    target = VideoStim
+    _input_type = VideoStim
 
 
 class DenseOpticalFlowExtractor(VideoExtractor):
