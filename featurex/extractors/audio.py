@@ -8,14 +8,14 @@ class AudioExtractor(Extractor):
 
     ''' Base Audio Extractor class; all subclasses can only be applied to
     audio. '''
-    target = audio.AudioStim
+    _input_type = audio.AudioStim
 
 
 class TranscribedAudioExtractor(AudioExtractor):
     
     ''' Base Transcribed Audio Extractor class; all subclasses can only be
     applied to transcribed audio. '''
-    target = audio.TranscribedAudioStim
+    _input_type = audio.TranscribedAudioStim
 
 
 class STFTExtractor(AudioExtractor):

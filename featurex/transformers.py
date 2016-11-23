@@ -18,17 +18,17 @@ class Transformer(with_metaclass(ABCMeta)):
             return self._iterate(stims, *args, **kwargs)
         # Iterate over the collection of stims contained in the input stim
         elif isinstance(stims, CollectionStimMixin) and \
-           not issubclass(self.target, CollectionStimMixin):
+           not issubclass(self._input_type, CollectionStimMixin):
             return self._iterate(list(s for s in stims))
         # Pass the stim directly to the Transformer
         else:
             return self._transform(self._validate(stims), *args, **kwargs)
 
     def _validate(self, stim):
-        if not isinstance(stim, self.target):
+        if not isinstance(stim, self._input_type):
             msg = "Transformers of type %s can only be applied to stimuli of "\
                   "type(s) %s, not type %s."
-            msg = msg % (self.__class__.__name__, self.target.__name__,
+            msg = msg % (self.__class__.__name__, self._input_type.__name__,
                          stim.__class__.__name__)   
             raise TypeError(msg)
         return stim
@@ -41,7 +41,7 @@ class Transformer(with_metaclass(ABCMeta)):
         pass
 
     @abstractproperty
-    def target(self):
+    def _input_type(self):
         pass
 
 

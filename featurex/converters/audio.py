@@ -6,5 +6,5 @@ class AudioToTextConverter(Converter):
 
     ''' Base AudioToText Converter class; all subclasses can only be applied to
     audio and convert to text. '''
-    target = AudioStim
+    _input_type = AudioStim
     _output_type = TextStim

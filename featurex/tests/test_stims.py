@@ -14,7 +14,7 @@ import pytest
 
 class DummyExtractor(Extractor):
 
-    target = Stim
+    _input_type = Stim
 
     def _extract(self, stim):
         return ExtractorResult(np.array([[1]]), stim, self, 
@@ -23,7 +23,7 @@ class DummyExtractor(Extractor):
 
 class DummyIterableExtractor(Extractor):
 
-    target = Stim
+    _input_type = Stim
 
     def _extract(self, stim):
         time_bins = np.arange(0., stim.duration, 1.)

@@ -14,7 +14,7 @@ class DummyExtractor(Extractor):
     ''' A dummy Extractor class that always returns random values when
     extract() is called. Can set the extractor name inside _extract() to
     facilitate testing of results merging etc. '''
-    target = ImageStim
+    _input_type = ImageStim
 
     def _extract(self, stim, name=None, n_rows=100, n_cols=3, max_time=1000):
         data = np.random.randint(0, 1000, (n_rows, n_cols))

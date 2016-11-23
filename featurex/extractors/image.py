@@ -10,7 +10,7 @@ class ImageExtractor(Extractor):
 
     ''' Base Image Extractor class; all subclasses can only be applied to
     images. '''
-    target = ImageStim
+    _input_type = ImageStim
 
 
 class BrightnessExtractor(ImageExtractor):
