@@ -19,7 +19,7 @@ class TextStim(Stim):
 
 
     @property
-    def name(self):
+    def id(self):
         return self.text
 
 

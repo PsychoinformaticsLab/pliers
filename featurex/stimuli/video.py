@@ -20,6 +20,11 @@ class VideoFrameStim(ImageStim):
         super(VideoFrameStim, self).__init__(filename, onset, duration, data)
 
 
+    @property
+    def id(self):
+        return self.frame_num
+
+
 class VideoStim(Stim, CollectionStimMixin):
 
     ''' A video. '''
