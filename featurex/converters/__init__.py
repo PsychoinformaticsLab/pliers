@@ -10,10 +10,10 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
 
     def convert(self, stim, *args, **kwargs):
         new_stim = self._convert(stim, *args, **kwargs)
-        if new_stim.id is None:
+        if new_stim.name is None:
             new_stim.name = stim.name
         else:
-            new_stim.name = stim.name + '_' + new_stim.id
+            new_stim.name = stim.name + '_' + new_stim.name
         return new_stim
 
     @abstractmethod

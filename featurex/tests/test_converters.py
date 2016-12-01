@@ -7,7 +7,7 @@ from featurex.converters.api import (WitTranscriptionConverter,
                                         IBMSpeechAPIConverter)
 from featurex.converters.google import GoogleVisionAPITextConverter
 from featurex.stimuli.video import VideoStim, VideoFrameStim, DerivedVideoStim
-from featurex.stimuli.text import ComplexTextStim
+from featurex.stimuli.text import TextStim, ComplexTextStim
 from featurex.stimuli.audio import AudioStim
 from featurex.stimuli.image import ImageStim
 
@@ -22,6 +22,7 @@ def test_video_to_audio_converter():
     video = VideoStim(filename)
     conv = VideoToAudioConverter()
     audio = conv.transform(video)
+    assert audio.name == 'small.mp4_small.wav'
     assert splitext(video.filename)[0] == splitext(audio.filename)[0]
     assert np.isclose(video.duration, audio.duration, 1e-2)
 
@@ -37,15 +38,18 @@ def test_derived_video_converter():
     conv = FrameSamplingConverter(every=3)
     derived = conv.transform(video)
     assert len(derived.elements) == math.ceil(video.n_frames / 3.0)
-    assert type(next(f for f in derived)) == VideoFrameStim
-    assert next(f for f in derived).duration == 3 * (1 / 30.0)
+    first = next(f for f in derived)
+    assert type(first) == VideoFrameStim
+    assert first.name == 'small.mp4_0'
+    assert first.duration == 3 * (1 / 30.0)
 
     # Should refilter from original frames
     conv = FrameSamplingConverter(hertz=15)
     derived = conv.transform(derived)
     assert len(derived.elements) == math.ceil(video.n_frames / 6.0)
-    assert type(next(f for f in derived)) == VideoFrameStim
-    assert next(f for f in derived).duration == 3 * (1 / 15.0)
+    first = next(f for f in derived)
+    assert type(first) == VideoFrameStim
+    assert first.duration == 3 * (1 / 15.0)
 
     # Test filter history
     assert derived.history.shape == (2, 3)
@@ -70,6 +74,9 @@ def test_witaiAPI_converter():
     conv = WitTranscriptionConverter()
     out_stim = conv.transform(stim)
     assert type(out_stim) == ComplexTextStim
+    first_word = next(w for w in out_stim)
+    assert type(first_word) == TextStim
+    #assert '_' in first_word.name
     text = [elem.text for elem in out_stim]
     assert 'thermodynamics' in text or 'obey' in text
 
@@ -107,8 +114,9 @@ def test_tesseract_converter():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'button.jpg'))
     conv = TesseractConverter()
-    text = conv.transform(stim).text
-    assert text == 'Exit'
+    out_stim = conv.transform(stim)
+    assert out_stim.name == 'button.jpg_Exit'
+    assert out_stim.text == 'Exit'
 
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")

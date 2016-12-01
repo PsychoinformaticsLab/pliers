@@ -22,7 +22,7 @@ class VideoFrameStim(ImageStim):
 
     @property
     def id(self):
-        return self.frame_num
+        return self.video.name + '_' + str(self.frame_num)
 
 
 class VideoStim(Stim, CollectionStimMixin):

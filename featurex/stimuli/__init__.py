@@ -19,8 +19,7 @@ class Stim(with_metaclass(ABCMeta)):
 
     @property
     def id(self):
-        filename = self.filename
-        return basename(filename) if filename is not None else None
+        return ''
 
 
 class CollectionStimMixin(with_metaclass(ABCMeta)):
