@@ -62,7 +62,15 @@ def test_implicit_stim_conversion():
 def test_text_extractor():
     stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
                            columns='to', default_duration=1)
-    #what happened here?
+    td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
+                             variables=['length', 'frequency'])
+    assert td.data.shape == (7, 2)
+    timeline = td.extract(stim)
+    result = timeline[2].to_df()
+    assert np.isnan(result.iloc[0, 1])
+    assert result.shape == (1, 4)
+    assert np.isclose(result['frequency'][0], 11.729, 1e-5)
+
 
 def test_text_length_extractor():
     stim = TextStim(text='hello world')
