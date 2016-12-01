@@ -58,6 +58,11 @@ def test_implicit_stim_conversion():
     assert 'text_length' in result.columns
     assert result['text_length'][0] == 4
 
+    audio_dir = join(get_test_data_path(), 'audio')
+    stim = AudioStim(join(audio_dir, 'barber.wav'))
+    with pytest.raises(TypeError):
+        result = ext.extract(stim)
+
 
 def test_text_extractor():
     stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),

@@ -26,14 +26,20 @@ class Transformer(with_metaclass(ABCMeta)):
 
     def _validate(self, stim):
         if not isinstance(stim, self._input_type):
-            converter = get_converter(type(stim), self._input_type)
+            msg = "Transformers of type %s can only be applied to stimuli of "\
+                      "type(s) %s, not type %s."
+            msg = msg % (self.__class__.__name__, self._input_type.__name__,
+                        stim.__class__.__name__)
+
+            try:
+                converter = get_converter(type(stim), self._input_type)
+            except ValueError:
+                # Important for API converters
+                raise TypeError(msg)
+            
             if converter:
                 stim = converter.transform(stim)
             else:
-                msg = "Transformers of type %s can only be applied to stimuli of "\
-                      "type(s) %s, not type %s."
-                msg = msg % (self.__class__.__name__, self._input_type.__name__,
-                             stim.__class__.__name__)   
                 raise TypeError(msg)
         return stim
 
