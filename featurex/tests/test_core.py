@@ -1,11 +1,13 @@
 from .utils import get_test_data_path
 from featurex.stimuli.image import ImageStim
+from featurex.stimuli.text import TextStim
 from featurex.export import FSLExporter
 from featurex.lazy import extract
-from featurex.transformers import get_transformer
+from featurex.transformers import get_transformer, get_converter
 from featurex.extractors import Extractor, ExtractorResult
 from featurex.extractors.image import VibranceExtractor
 from featurex.extractors.audio import STFTExtractor
+from featurex.converters.image import TesseractConverter
 from os.path import join
 import tempfile
 import shutil
@@ -36,3 +38,11 @@ def test_lazy_extraction():
 def test_get_transformer_by_name():
     tda = get_transformer('stFteXtrActOr', base=Extractor)
     assert isinstance(tda, STFTExtractor)
+
+
+def test_get_converter():
+    conv = get_converter(ImageStim, TextStim)
+    assert isinstance(conv, TesseractConverter)
+    conv = get_converter(TextStim, ImageStim)
+    assert conv is None
+

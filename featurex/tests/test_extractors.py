@@ -32,10 +32,9 @@ def get_nltk():
 
 
 def test_check_target_type():
-    audio_dir = join(get_test_data_path(), 'audio')
-    stim = AudioStim(join(audio_dir, 'barber.wav'))
-    td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
-                             variables=['length', 'frequency'])
+    stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
+                           columns='to', default_duration=1)
+    td = SharpnessExtractor()
     with pytest.raises(TypeError):
         td.transform(stim)
 
@@ -51,9 +50,20 @@ def test_implicit_stim_iteration():
     assert isinstance(results[0], ExtractorResult)
 
 
+def test_implicit_stim_conversion():
+    image_dir = join(get_test_data_path(), 'image')
+    stim = ImageStim(join(image_dir, 'button.jpg'))
+    ext = LengthExtractor()
+    result = ext.extract(stim).to_df()
+    assert 'text_length' in result.columns
+    assert result['text_length'][0] == 4
+
+
 def test_text_extractor():
     stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
                            columns='to', default_duration=1)
+    #what happened here?
+
 def test_text_length_extractor():
     stim = TextStim(text='hello world')
     ext = LengthExtractor()

@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 from featurex.transformers import Transformer
 from six import with_metaclass
 
-__all__ = []
+__all__ = ['api', 'audio', 'google', 'image', 'video']
 
 
 class Converter(with_metaclass(ABCMeta, Transformer)):
