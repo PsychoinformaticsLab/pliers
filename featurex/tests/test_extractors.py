@@ -58,10 +58,16 @@ def test_implicit_stim_conversion():
     assert 'text_length' in result.columns
     assert result['text_length'][0] == 4
 
+
+@pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
+def test_implicit_stim_conversion2():
     audio_dir = join(get_test_data_path(), 'audio')
-    stim = AudioStim(join(audio_dir, 'barber.wav'))
-    with pytest.raises(TypeError):
-        result = ext.extract(stim)
+    stim = AudioStim(join(audio_dir, 'homer.wav'))
+    ext = LengthExtractor()
+    result = ext.extract(stim)
+    first_word = result[0].to_df()
+    assert 'text_length' in first_word.columns
+    assert first_word['text_length'][0] > 0
 
 
 def test_text_extractor():

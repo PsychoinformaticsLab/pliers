@@ -1,6 +1,7 @@
 import os
 import base64
 import json
+from abc import abstractmethod
 from featurex.stimuli.text import TextStim, ComplexTextStim
 from featurex.converters.audio import AudioToTextConverter
 from featurex.converters.image import ImageToTextConverter
@@ -19,9 +20,6 @@ class SpeechRecognitionConverter(AudioToTextConverter):
             the environment variable specified in the environ_key field.
     '''
 
-    environ_key = 'WIT_AI_API_KEY'
-    recognize_method = 'recognize_wit'
-
     def __init__(self, api_key=None):
         import speech_recognition as sr
         if api_key is None:
@@ -33,6 +31,7 @@ class SpeechRecognitionConverter(AudioToTextConverter):
         self.recognizer = sr.Recognizer()
         self.api_key = api_key
 
+    @abstractmethod
     def _convert(self, audio):
         import speech_recognition as sr
         with sr.AudioFile(audio.filename) as source:
@@ -46,11 +45,17 @@ class WitTranscriptionConverter(SpeechRecognitionConverter):
     environ_key = 'WIT_AI_API_KEY'
     recognize_method = 'recognize_wit'
 
+    def _convert(self, audio):
+        return super(WitTranscriptionConverter, self)._convert(audio)
+
 
 class GoogleSpeechAPIConverter(SpeechRecognitionConverter):
 
     environ_key = 'GOOGLE_API_KEY'
     recognize_method = 'recognize_google'
+
+    def _convert(self, audio):
+        return super(WitTranscriptionConverter, self)._convert(audio)
 
 
 class IBMSpeechAPIConverter(AudioToTextConverter):

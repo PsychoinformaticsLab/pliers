@@ -22,7 +22,12 @@ class Transformer(with_metaclass(ABCMeta)):
             return self._iterate(list(s for s in stims))
         # Pass the stim directly to the Transformer
         else:
-            return self._transform(self._validate(stims), *args, **kwargs)
+            validated_stim = self._validate(stims)
+            # If a conversion occurred during validation, recurse
+            if stims is not validated_stim:
+                return self.transform(validated_stim, *args, **kwargs)
+            else:
+                return self._transform(self._validate(stims), *args, **kwargs)
 
     def _validate(self, stim):
         if not isinstance(stim, self._input_type):
