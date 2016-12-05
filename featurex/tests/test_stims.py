@@ -60,16 +60,23 @@ def test_video_stim():
     filename = join(get_test_data_path(), 'video', 'small.mp4')
     video = VideoStim(filename)
     assert video.fps == 30
-    assert video.n_frames == 168
+    assert video.n_frames in (167, 168)
     assert video.width == 560
 
     # Test frame iterator
     frames = [f for f in video]
     assert len(frames) == 168
-    f = frames[100]
-    assert isinstance(f, VideoFrameStim)
-    assert isinstance(f.onset, float)
-    f.data.shape == (320, 560, 3)
+    f1 = frames[100]
+    assert isinstance(f1, VideoFrameStim)
+    assert isinstance(f1.onset, float)
+    f1.data.shape == (320, 560, 3)
+
+    # Test getting of specific frame
+    f2 = video.get_frame(index=100)
+    assert isinstance(f2, VideoFrameStim)
+    assert isinstance(f2.onset, float)
+    f2.data.shape == (320, 560, 3)
+
 
 def test_audio_stim(dummy_iter_extractor):
     audio_dir = join(get_test_data_path(), 'audio')
