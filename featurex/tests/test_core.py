@@ -7,7 +7,7 @@ from featurex.transformers import get_transformer, get_converter
 from featurex.extractors import Extractor, ExtractorResult
 from featurex.extractors.image import VibranceExtractor
 from featurex.extractors.audio import STFTExtractor
-from featurex.converters.image import TesseractConverter
+from featurex.converters.image import ImageToTextConverter
 from os.path import join
 import tempfile
 import shutil
@@ -42,7 +42,7 @@ def test_get_transformer_by_name():
 
 def test_get_converter():
     conv = get_converter(ImageStim, TextStim)
-    assert isinstance(conv, TesseractConverter)
+    assert isinstance(conv, ImageToTextConverter)
     conv = get_converter(TextStim, ImageStim)
     assert conv is None
 

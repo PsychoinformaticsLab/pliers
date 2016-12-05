@@ -14,7 +14,6 @@ from six.moves.urllib.error import URLError, HTTPError
 class SpeechRecognitionConverter(AudioToTextConverter):
     ''' Uses the SpeechRecognition API, which interacts with several APIs, 
     like Google and Wit, to run speech-to-text transcription on an audio file.
-    Defaults to using Wit.ai.
     Args:
         api_key (str): API key. Must be passed explicitly or stored in
             the environment variable specified in the environ_key field.
