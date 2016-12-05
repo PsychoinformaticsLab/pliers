@@ -31,12 +31,7 @@ class Transformer(with_metaclass(ABCMeta)):
             msg = msg % (self.__class__.__name__, self._input_type.__name__,
                         stim.__class__.__name__)
 
-            try:
-                converter = get_converter(type(stim), self._input_type)
-            except ValueError:
-                # Important for API converters
-                raise TypeError(msg)
-            
+            converter = get_converter(type(stim), self._input_type)
             if converter:
                 stim = converter.transform(stim)
             else:
@@ -92,7 +87,12 @@ def get_converter(in_type, out_type):
     for a in transformers:
         concrete = len(a.__abstractmethods__) == 0
         if a._input_type == in_type and a._output_type == out_type and concrete:
-            return a()
+            try:
+                conv = a()
+                return conv
+            except ValueError:
+                # Important for API converters
+                pass
     return None
 
 def get_transformer(name, base=None, *args, **kwargs):
