@@ -12,7 +12,8 @@ class VideoFrameStim(ImageStim):
 
     def __init__(self, video, frame_num, duration=None, filename=None, data=None):
         self.video = video
-        self.data = self.video.frames[frame_num]
+        if data is None:
+            self.data = self.video.get_frame(index=frame_num)
         self.frame_num = frame_num
         spf = 1. / video.fps
         duration = spf if duration is None else duration
@@ -31,17 +32,26 @@ class VideoStim(Stim, CollectionStimMixin):
         self.width = self.clip.w
         self.height = self.clip.h
 
-        self.frames = [f for f in self.clip.iter_frames()]
-        self.n_frames = len(self.frames)
-        duration = self.n_frames * 1. / self.fps
+        self.n_frames = int(self.fps * self.clip.duration)
+        duration = self.clip.duration
 
         super(VideoStim, self).__init__(filename, onset, duration)
 
     def __iter__(self):
         """ Frame iteration. """
-        for i, f in enumerate(self.frames):
+        for i, f in enumerate(self.clip.iter_frames()):
             yield VideoFrameStim(self, i, data=f)
 
+    @property
+    def frames(self):
+        return [f for f in self.clip.iter_frames()]
+
+    def get_frame(self, index=None, onset=None):
+        if index is not None:
+            onset = float(index) / self.fps
+        else:
+            index = int(onset * self.fps)
+        return VideoFrameStim(self, index, data=self.clip.get_frame(onset))
 
 
 class DerivedVideoStim(VideoStim):
