@@ -12,7 +12,7 @@ class TextStim(Stim):
     ''' Any simple text stimulus--most commonly a single word. '''
 
     def __init__(self, filename=None, text=None, onset=None, duration=None):
-        if filename is not None:
+        if filename is not None and text is None:
             text = open(filename).read()
         self.text = text
         super(TextStim, self).__init__(filename, onset, duration)
