@@ -104,7 +104,7 @@ class IBMSpeechAPIConverter(AudioToTextConverter):
         timestamps = result['results'][0]['alternatives'][0]['timestamps']
         elements = []
         for i, entry in enumerate(timestamps):
-            elements.append(DynamicTextStim(text=entry[0], onset=entry[1],
+            elements.append(TextStim(text=entry[0], onset=entry[1],
                                                 duration=entry[2]-entry[1]))
         
         return ComplexTextStim(elements=elements)
