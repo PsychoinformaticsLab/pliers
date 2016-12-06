@@ -8,8 +8,8 @@ import os
 
 class VideoToAudioConverter(Converter):
 
-    ''' Base VideoToDerivedVideo Converter class; all subclasses can only be
-    applied to video and convert to derived (sampled) video. '''
+    ''' Convert a VideoStim to an AudioStim by extracting the audio track
+    using moviepy. '''
     _input_type = VideoStim
     _output_type = AudioStim
 

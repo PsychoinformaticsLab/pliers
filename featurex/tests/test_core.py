@@ -6,7 +6,7 @@ from featurex.lazy import extract
 from featurex.transformers import get_transformer, get_converter
 from featurex.extractors import Extractor, ExtractorResult
 from featurex.extractors.image import VibranceExtractor
-from featurex.extractors.audio import STFTExtractor
+from featurex.extractors.audio import STFTAudioExtractor
 from featurex.converters.image import ImageToTextConverter
 from os.path import join
 import tempfile
@@ -36,8 +36,8 @@ def test_lazy_extraction():
 
 
 def test_get_transformer_by_name():
-    tda = get_transformer('stFteXtrActOr', base=Extractor)
-    assert isinstance(tda, STFTExtractor)
+    tda = get_transformer('stFtAudioeXtrActOr', base=Extractor)
+    assert isinstance(tda, STFTAudioExtractor)
 
 
 def test_get_converter():

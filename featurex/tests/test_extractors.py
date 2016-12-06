@@ -6,7 +6,7 @@ from featurex.extractors.text import (DictionaryExtractor,
                                       LengthExtractor,
                                       NumUniqueWordsExtractor,
                                       PredefinedDictionaryExtractor)
-from featurex.extractors.audio import STFTExtractor, MeanAmplitudeExtractor
+from featurex.extractors.audio import STFTAudioExtractor, MeanAmplitudeExtractor
 from featurex.extractors.image import (BrightnessExtractor,
                                         SharpnessExtractor,
                                         VibranceExtractor,
@@ -129,7 +129,7 @@ def test_predefined_dictionary_extractor():
 def test_stft_extractor():
     audio_dir = join(get_test_data_path(), 'audio')
     stim = AudioStim(join(audio_dir, 'barber.wav'))
-    ext = STFTExtractor(frame_size=1., spectrogram=False,
+    ext = STFTAudioExtractor(frame_size=1., spectrogram=False,
                         bins=[(100, 300), (300, 3000), (3000, 20000)])
     result = ext.extract(stim)
     df = result.to_df()
