@@ -12,15 +12,18 @@ class TextStim(Stim):
     ''' Any simple text stimulus--most commonly a single word. '''
 
     def __init__(self, filename=None, text=None, onset=None, duration=None):
-        if filename is not None:
+        if filename is not None and text is None:
             text = open(filename).read()
         self.text = text
         super(TextStim, self).__init__(filename, onset, duration)
 
 
     @property
-    def name(self):
-        return self.text
+    def id(self):
+        if self.filename is not None:
+            return self.filename + '_' + self.text
+        else:
+            return self.text
 
 
 class ComplexTextStim(Stim, CollectionStimMixin):
@@ -60,6 +63,8 @@ class ComplexTextStim(Stim, CollectionStimMixin):
             else:
                 self._from_file(filename, columns, default_duration)
 
+        super(ComplexTextStim, self).__init__(filename, onset, duration)
+
     def _from_file(self, filename, columns, default_duration):
         tod_names = {'t': 'text', 'o': 'onset', 'd': 'duration'}
 
@@ -78,7 +83,7 @@ class ComplexTextStim(Stim, CollectionStimMixin):
                 duration = r.get('duration', None)
                 if duration is None:
                     duration = default_duration
-                elem = TextStim(None, r['text'], r['onset'], duration)
+                elem = TextStim(filename, r['text'], r['onset'], duration)
             self.elements.append(elem)
 
     def _from_srt(self, filename):
@@ -101,7 +106,7 @@ class ComplexTextStim(Stim, CollectionStimMixin):
         df = pd.DataFrame(columns=["text", "onset", "duration"], data=list_)
 
         for i, r in df.iterrows():
-            elem = TextStim(None, r['text'], r['onset'], r["duration"])
+            elem = TextStim(filename, r['text'], r['onset'], r["duration"])
             self.elements.append(elem)
 
     def __iter__(self):

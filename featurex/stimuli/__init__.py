@@ -11,14 +11,15 @@ class Stim(with_metaclass(ABCMeta)):
     def __init__(self, filename=None, onset=None, duration=None):
 
         self.filename = filename
+        self.name = basename(filename) if filename is not None else self.id
         self.features = []
         self.onset = onset
         self.duration = duration
 
+
     @property
-    def name(self):
-        filename = self.filename
-        return basename(filename)if filename is not None else self.id
+    def id(self):
+        return ''
 
 
 class CollectionStimMixin(with_metaclass(ABCMeta)):

@@ -105,7 +105,7 @@ class IBMSpeechAPIConverter(AudioToTextConverter):
         elements = []
         for i, entry in enumerate(timestamps):
             elements.append(TextStim(text=entry[0], onset=entry[1],
-                                                duration=entry[2]-entry[1]))
+                                    duration=entry[2]-entry[1]))
         
         return ComplexTextStim(elements=elements)
 
@@ -137,9 +137,9 @@ class IBMSpeechAPIConverter(AudioToTextConverter):
         try:
             response = urlopen(request, timeout=None)
         except HTTPError as e:
-            raise RequestError("recognition request failed: {0}".format(getattr(e, "reason", "status {0}".format(e.code))))
+            raise Exception("recognition request failed: {0}".format(getattr(e, "reason", "status {0}".format(e.code))))
         except URLError as e:
-            raise RequestError("recognition connection failed: {0}".format(e.reason))
+            raise Exception("recognition connection failed: {0}".format(e.reason))
         
         response_text = response.read().decode("utf-8")
         result = json.loads(response_text)
