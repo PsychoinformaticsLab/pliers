@@ -18,7 +18,7 @@ class TranscribedAudioExtractor(AudioExtractor):
     _input_type = audio.TranscribedAudioStim
 
 
-class STFTExtractor(AudioExtractor):
+class STFTAudioExtractor(AudioExtractor):
 
     ''' Short-time Fourier Transform extractor.
     Args:
@@ -45,7 +45,7 @@ class STFTExtractor(AudioExtractor):
         self.hop_size = hop_size
         self.spectrogram = spectrogram
         self.freq_bins = bins
-        super(STFTExtractor, self).__init__()
+        super(STFTAudioExtractor, self).__init__()
 
     def _stft(self, stim):
         x = stim.data

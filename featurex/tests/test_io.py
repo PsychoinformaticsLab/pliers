@@ -1,7 +1,7 @@
 from .utils import get_test_data_path
 from featurex.stimuli import load_stims
 from featurex.stimuli.audio import AudioStim
-from featurex.extractors.audio import STFTExtractor
+from featurex.extractors.audio import STFTAudioExtractor
 from featurex.extractors import ExtractorResult
 from featurex.export import to_long_format
 from os.path import join
@@ -23,7 +23,7 @@ def test_magic_loader():
 def test_convert_to_long():
     audio_dir = join(get_test_data_path(), 'audio')
     stim = AudioStim(join(audio_dir, 'barber.wav'))
-    ext = STFTExtractor(frame_size=1., spectrogram=False,
+    ext = STFTAudioExtractor(frame_size=1., spectrogram=False,
                         bins=[(100, 300), (300, 3000), (3000, 20000)])
     timeline = ext.extract(stim)
     long_timeline = to_long_format(timeline)
