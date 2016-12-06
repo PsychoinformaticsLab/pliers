@@ -72,6 +72,6 @@ def test_small_pipeline():
     nodes = [(TesseractConverter(), 'tesseract', 
                 [(LengthExtractor(), 'length')])]
     graph = Graph(nodes)
-    result = graph.extract([stim])[0].to_df()
-    assert 'text_length' in result.columns
-    assert result['text_length'][0] == 4
+    result = graph.extract([stim])
+    assert ('LengthExtractor', 'text_length') in result.columns
+    assert result[('LengthExtractor', 'text_length')].values[0] == 4
