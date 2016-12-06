@@ -14,11 +14,10 @@ try:
 except ImportError:
     pass
 
-# try:
-#     import indicoio as ico
-# except ImportError:
-#     pass
-import indicoio as ico
+try:
+    import indicoio as ico
+except ImportError:
+    pass
 
 class IndicoAPIExtractor(ComplexTextExtractor):
 
