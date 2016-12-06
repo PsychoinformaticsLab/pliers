@@ -32,10 +32,9 @@ def get_nltk():
 
 
 def test_check_target_type():
-    audio_dir = join(get_test_data_path(), 'audio')
-    stim = AudioStim(join(audio_dir, 'barber.wav'))
-    td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
-                             variables=['length', 'frequency'])
+    stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
+                           columns='to', default_duration=1)
+    td = SharpnessExtractor()
     with pytest.raises(TypeError):
         td.transform(stim)
 
@@ -51,9 +50,39 @@ def test_implicit_stim_iteration():
     assert isinstance(results[0], ExtractorResult)
 
 
+def test_implicit_stim_conversion():
+    image_dir = join(get_test_data_path(), 'image')
+    stim = ImageStim(join(image_dir, 'button.jpg'))
+    ext = LengthExtractor()
+    result = ext.extract(stim).to_df()
+    assert 'text_length' in result.columns
+    assert result['text_length'][0] == 4
+
+
+@pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
+def test_implicit_stim_conversion2():
+    audio_dir = join(get_test_data_path(), 'audio')
+    stim = AudioStim(join(audio_dir, 'homer.wav'))
+    ext = LengthExtractor()
+    result = ext.extract(stim)
+    first_word = result[0].to_df()
+    assert 'text_length' in first_word.columns
+    assert first_word['text_length'][0] > 0
+
+
 def test_text_extractor():
     stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
                            columns='to', default_duration=1)
+    td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
+                             variables=['length', 'frequency'])
+    assert td.data.shape == (7, 2)
+    timeline = td.extract(stim)
+    result = timeline[2].to_df()
+    assert np.isnan(result.iloc[0, 1])
+    assert result.shape == (1, 4)
+    assert np.isclose(result['frequency'][0], 11.729, 1e-5)
+
+
 def test_text_length_extractor():
     stim = TextStim(text='hello world')
     ext = LengthExtractor()
