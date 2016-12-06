@@ -1,5 +1,6 @@
 clarifai
 cv2
+google-api-python-client
 matplotlib
 pysrt
 SpeechRecognition

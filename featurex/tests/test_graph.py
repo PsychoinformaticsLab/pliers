@@ -44,7 +44,6 @@ def test_graph_smoke_test():
     nodes = [(BrightnessExtractor(), 'brightness')]
     graph = Graph(nodes)
     result = graph.extract([stim])
-    print(result)
     brightness = result[('BrightnessExtractor', 'brightness')].values[0]
     assert_almost_equal(brightness, 0.556134, 5)
 

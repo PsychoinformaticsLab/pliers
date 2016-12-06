@@ -30,7 +30,7 @@ def test_derived_video_converter():
     filename = join(get_test_data_path(), 'video', 'small.mp4')
     video = VideoStim(filename)
     assert video.fps == 30
-    assert video.n_frames == 168
+    assert video.n_frames in (167, 168)
     assert video.width == 560
 
     # Test frame filters
