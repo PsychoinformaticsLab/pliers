@@ -1,7 +1,7 @@
 import os
 import base64
 import json
-from abc import abstractmethod
+from abc import abstractproperty
 from featurex.stimuli.text import TextStim, ComplexTextStim
 from featurex.converters.audio import AudioToTextConverter
 from featurex.converters.image import ImageToTextConverter
@@ -11,13 +11,21 @@ from six.moves.urllib.request import Request, urlopen
 from six.moves.urllib.error import URLError, HTTPError
 
 
-class SpeechRecognitionConverter(AudioToTextConverter):
+class SpeechRecognitionAPIConverter(AudioToTextConverter):
     ''' Uses the SpeechRecognition API, which interacts with several APIs, 
     like Google and Wit, to run speech-to-text transcription on an audio file.
     Args:
         api_key (str): API key. Must be passed explicitly or stored in
             the environment variable specified in the environ_key field.
     '''
+
+    @abstractproperty
+    def environ_key(self):
+        pass
+
+    @abstractproperty
+    def recognize_method(self):
+        pass
 
     def __init__(self, api_key=None):
         import speech_recognition as sr
@@ -26,11 +34,10 @@ class SpeechRecognitionConverter(AudioToTextConverter):
                 api_key = os.environ[self.environ_key]
             except KeyError:
                 raise ValueError("A valid API key must be passed when "
-                                 "a SpeechRecognitionConverter is initialized.")
+                                 "a SpeechRecognitionAPIConverter is initialized.")
         self.recognizer = sr.Recognizer()
         self.api_key = api_key
 
-    @abstractmethod
     def _convert(self, audio):
         import speech_recognition as sr
         with sr.AudioFile(audio.filename) as source:
@@ -39,22 +46,26 @@ class SpeechRecognitionConverter(AudioToTextConverter):
         return ComplexTextStim.from_text(text=text)
 
 
-class WitTranscriptionConverter(SpeechRecognitionConverter):
+class WitTranscriptionConverter(SpeechRecognitionAPIConverter):
     
-    environ_key = 'WIT_AI_API_KEY'
-    recognize_method = 'recognize_wit'
+    @property
+    def environ_key(self):
+        return 'WIT_AI_API_KEY'
 
-    def _convert(self, audio):
-        return super(WitTranscriptionConverter, self)._convert(audio)
+    @property
+    def recognize_method(self):
+        return 'recognize_wit'
 
 
-class GoogleSpeechAPIConverter(SpeechRecognitionConverter):
+class GoogleSpeechAPIConverter(SpeechRecognitionAPIConverter):
 
-    environ_key = 'GOOGLE_API_KEY'
-    recognize_method = 'recognize_google'
+    @property
+    def environ_key(self):
+        return 'GOOGLE_API_KEY'
 
-    def _convert(self, audio):
-        return super(WitTranscriptionConverter, self)._convert(audio)
+    @property
+    def recognize_method(self):
+        return 'recognize_google'
 
 
 class IBMSpeechAPIConverter(AudioToTextConverter):
