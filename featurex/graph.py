@@ -25,7 +25,7 @@ class Node(object):
     def collect(self, stim):
         if hasattr(self, 'transformer') and self.transformer is not None:
             if isinstance(self.transformer, Extractor):
-                return [self.transformer.transform(stim)]
+                return listify(self.transformer.transform(stim))
             stim = self.transformer.transform(stim)
         return list(chain(*[c.collect(stim) for c in self.children]))
    
@@ -97,7 +97,8 @@ class Graph(Node):
 
     def extract(self, stims):
         stims = listify(stims)
-        results = self.collect(stims)[0]
+        results = self.collect(stims)
+        results = [r for result in results for r in result]
         return merge_results(results) if self.merge else results
 
     def _validate(self):
