@@ -1,4 +1,5 @@
 import collections
+from six import string_types
 
 def listify(obj):
     ''' Wraps all non-list or tuple objects in a list; provides a simple way
@@ -7,7 +8,7 @@ def listify(obj):
 
 def flatten(l):
     for el in l:
-        if isinstance(el, collections.Iterable) and not isinstance(el, basestring):
+        if isinstance(el, collections.Iterable) and not isinstance(el, string_types):
             for sub in flatten(el):
                 yield sub
         else:
