@@ -1,9 +1,12 @@
 import pytest
 from featurex.graph import Graph, Node
 from featurex.converters.image import TesseractConverter
-from featurex.extractors.image import BrightnessExtractor
+from featurex.converters.video import FrameSamplingConverter, VideoToAudioConverter
+from featurex.converters.api import WitTranscriptionConverter
+from featurex.extractors.image import BrightnessExtractor, VibranceExtractor
 from featurex.extractors.text import LengthExtractor
 from featurex.stimuli.image import ImageStim
+from featurex.stimuli.video import VideoStim
 from .utils import get_test_data_path, DummyExtractor
 from os.path import join
 import numpy as np
@@ -76,3 +79,24 @@ def test_small_pipeline():
     assert (0, 'button.jpg_Exit') in result.index
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
+
+
+@pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
+def test_big_pipeline():
+    filename = join(get_test_data_path(), 'video', 'obama_speech.mp4')
+    video = VideoStim(filename)
+    visual_nodes = [(FrameSamplingConverter(every=15), 'framesampling', 
+                    [(TesseractConverter(), 'visual_text', 
+                    [(LengthExtractor(), 'text_length')]), 
+                    (VibranceExtractor(), 'visual_vibrance')])]
+    audio_nodes = [(VideoToAudioConverter(), 'audio', 
+                    [(WitTranscriptionConverter(), 'audio_text', 
+                    [(LengthExtractor(), 'text_length')])])]
+
+    graph = Graph()
+    graph.add_children(visual_nodes)
+    graph.add_children(audio_nodes)
+    result = graph.extract(video)
+    assert ('LengthExtractor', 'text_length') in result.columns
+    assert ('VibranceExtractor', 'vibrance') in result.columns
+    #TODO: make this have better checks

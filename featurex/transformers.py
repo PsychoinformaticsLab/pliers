@@ -43,7 +43,7 @@ class Transformer(with_metaclass(ABCMeta)):
         return stim
 
     def _iterate(self, stims, *args, **kwargs):
-        return [self.transform(s) for s in stims]
+        return [self.transform(s, *args, **kwargs) for s in stims]
 
     @abstractmethod
     def _transform(self, stim):

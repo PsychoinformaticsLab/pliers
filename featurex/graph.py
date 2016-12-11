@@ -1,7 +1,7 @@
 from featurex.extractors import Extractor, merge_results
 from featurex.transformers import get_transformer
 from itertools import chain
-from featurex.utils import listify
+from featurex.utils import listify, flatten
 from six import string_types
 from collections import OrderedDict
 
@@ -97,8 +97,7 @@ class Graph(Node):
 
     def extract(self, stims):
         stims = listify(stims)
-        results = self.collect(stims)
-        results = [r for result in results for r in result]
+        results = flatten(self.collect(stims))
         return merge_results(results) if self.merge else results
 
     def _validate(self):
