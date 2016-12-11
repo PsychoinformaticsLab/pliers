@@ -24,16 +24,20 @@ class GoogleVisionAPITextConverter(GoogleVisionAPITransformer, ImageToTextConver
             # Combine the annotations
             if self.handle_annotations == 'first':
                 text = annotations[0]['description']
-                return TextStim(text=text)
+                return TextStim(text=text, onset=stim.onset, 
+                                duration=stim.duration)
             elif self.handle_annotations == 'concatenate':
                 text = ''
                 for annotation in annotations:
                     text += annotation['description']
-                return TextStim(text=text)
+                return TextStim(text=text, onset=stim.onset, 
+                                duration=stim.duration)
             elif self.handle_annotations == 'list':
                 texts = []
                 for annotation in annotations:
-                    texts.append(TextStim(text=annotation['description']))
+                    texts.append(TextStim(text=annotation['description'], 
+                                            onset=stim.onset, 
+                                            duration=stim.duration))
                 return texts
             
         else:

@@ -11,7 +11,7 @@ class Stim(with_metaclass(ABCMeta)):
     def __init__(self, filename=None, onset=None, duration=None):
 
         self.filename = filename
-        self.name = basename(filename) if filename is not None else self.id
+        self.name = basename(filename) if filename is not None else str(self.id)
         self.features = []
         self.onset = onset
         self.duration = duration

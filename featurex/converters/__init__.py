@@ -14,7 +14,7 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
             new_stim.name = stim.name
         else:
             new_stim.name = stim.name + '_' + new_stim.name
-        if new_stim is CollectionStimMixin:
+        if isinstance(new_stim, CollectionStimMixin):
             for s in new_stim:
                 if s.name is None:
                     s.name = stim.name

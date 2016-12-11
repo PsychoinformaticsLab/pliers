@@ -92,11 +92,12 @@ def test_big_pipeline():
     audio_nodes = [(VideoToAudioConverter(), 'audio', 
                     [(WitTranscriptionConverter(), 'audio_text', 
                     [(LengthExtractor(), 'text_length')])])]
-
     graph = Graph()
     graph.add_children(visual_nodes)
     graph.add_children(audio_nodes)
     result = graph.extract(video)
     assert ('LengthExtractor', 'text_length') in result.columns
     assert ('VibranceExtractor', 'vibrance') in result.columns
-    #TODO: make this have better checks
+    assert not result[('onset', '')].isnull().any()
+    assert 'obama_speech.mp4_obama_speech.wav_today' in result.index.get_level_values(1)
+    assert 'obama_speech.mp4_90' in result.index.get_level_values(1)
