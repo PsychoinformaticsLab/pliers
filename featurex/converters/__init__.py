@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
-from featurex.transformers import Transformer
+from featurex.transformers import Transformer, CollectionStimMixin
 from six import with_metaclass
 
 __all__ = ['api', 'audio', 'google', 'image', 'video']
@@ -14,6 +14,12 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
             new_stim.name = stim.name
         else:
             new_stim.name = stim.name + '_' + new_stim.name
+        if isinstance(new_stim, CollectionStimMixin):
+            for s in new_stim:
+                if s.name is None:
+                    s.name = stim.name
+                else:
+                    s.name = stim.name + '_' + s.name
         return new_stim
 
     @abstractmethod

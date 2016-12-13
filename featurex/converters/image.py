@@ -15,7 +15,7 @@ class ImageToTextConverter(Converter):
 class TesseractConverter(ImageToTextConverter):
     ''' Uses the Tesseract library to extract text from images '''
 
-    def _convert(self, image):
+    def _convert(self, stim):
         import pytesseract
-        text = pytesseract.image_to_string(Image.fromarray(image.data))
-        return TextStim(text=text)
+        text = pytesseract.image_to_string(Image.fromarray(stim.data))
+        return TextStim(text=text, onset=stim.onset, duration=stim.duration)

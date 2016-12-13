@@ -1,7 +1,7 @@
 from featurex.extractors import Extractor, merge_results
 from featurex.transformers import get_transformer
 from itertools import chain
-from featurex.utils import listify
+from featurex.utils import listify, flatten
 from six import string_types
 from collections import OrderedDict
 
@@ -25,7 +25,7 @@ class Node(object):
     def collect(self, stim):
         if hasattr(self, 'transformer') and self.transformer is not None:
             if isinstance(self.transformer, Extractor):
-                return [self.transformer.transform(stim)]
+                return listify(self.transformer.transform(stim))
             stim = self.transformer.transform(stim)
         return list(chain(*[c.collect(stim) for c in self.children]))
    
@@ -97,7 +97,7 @@ class Graph(Node):
 
     def extract(self, stims):
         stims = listify(stims)
-        results = self.collect(stims)[0]
+        results = flatten(self.collect(stims))
         return merge_results(results) if self.merge else results
 
     def _validate(self):
