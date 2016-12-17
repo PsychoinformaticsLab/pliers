@@ -16,7 +16,7 @@ class VideoToAudioConverter(Converter):
     def __init__(self, fps=44100, nbytes=2,
                     buffersize=2000, bitrate=None,
                     ffmpeg_params=None):
-        super(self.__class__, self).__init__()
+        super(VideoToAudioConverter, self).__init__()
         self.fps = fps
         self.nbytes = nbytes
         self.buffersize = buffersize
@@ -50,6 +50,7 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
          with the next frame
     '''
     def __init__(self, every=None, hertz=None, top_n=None):
+        super(FrameSamplingConverter, self).__init__()
         self.every = every
         self.hertz = hertz
         self.top_n = top_n
