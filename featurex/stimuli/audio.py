@@ -1,7 +1,7 @@
 from featurex.stimuli import Stim
 from featurex.stimuli.text import ComplexTextStim
 from featurex.extractors import ExtractorResult
-from scipy.io import wavfile
+from moviepy.audio.io.AudioFileClip import AudioFileClip
 import six
 
 
@@ -9,10 +9,15 @@ class AudioStim(Stim):
 
     ''' An audio clip. For now, only handles wav files. '''
 
-    def __init__(self, filename, onset=None):
+    def __init__(self, filename, onset=None, sampling_rate=44100):
         self.filename = filename
-        self.sampling_rate, self.data = wavfile.read(filename)
-        duration = len(self.data)*1./self.sampling_rate
+        self.clip = AudioFileClip(filename, fps=sampling_rate)
+        self.sampling_rate = sampling_rate
+        self.data = self.clip.to_soundarray()
+        if self.data.ndim > 1:
+            # Average channels to make data mono
+            self.data = self.data.mean(axis=1)
+        duration = self.clip.duration
         super(AudioStim, self).__init__(filename, onset=onset, duration=duration)
 
 

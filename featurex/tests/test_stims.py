@@ -80,11 +80,19 @@ def test_video_stim():
 
 def test_audio_stim(dummy_iter_extractor):
     audio_dir = join(get_test_data_path(), 'audio')
-    stim = AudioStim(join(audio_dir, 'barber.wav'))
+    stim = AudioStim(join(audio_dir, 'barber.wav'), sampling_rate=11025)
     assert round(stim.duration) == 57
     assert stim.sampling_rate == 11025
     # tl = stim.extract([dummy_iter_extractor])
     # assert isinstance(tl, pd.DataFrame)
+
+
+def test_audio_formats():
+    audio_dir = join(get_test_data_path(), 'audio')
+    stim = AudioStim(join(audio_dir, 'crowd.mp3'))
+    assert round(stim.duration) == 28
+    assert stim.sampling_rate == 44100
+
 
 def test_complex_text_stim():
     text_dir = join(get_test_data_path(), 'text')
@@ -97,6 +105,7 @@ def test_complex_text_stim():
     assert len(stim.elements) == 4
     assert stim.elements[2].duration == 0.1
 
+
 def test_complex_stim_from_text():
     textfile = join(get_test_data_path(), 'text', 'scandal.txt')
     text = open(textfile).read().strip()
@@ -108,7 +117,8 @@ def test_complex_stim_from_text():
     # Custom tokenizer
     stim = ComplexTextStim.from_text(text, tokenizer='(\w+)')
     assert len(stim.elements) == 209
-    
+
+
 def test_complex_stim_from_srt():
     srtfile = join(get_test_data_path(), 'text', 'wonderful.srt')
     textfile = join(get_test_data_path(), 'text', 'wonderful.txt')
