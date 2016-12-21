@@ -1,9 +1,16 @@
 from featurex.stimuli.video import VideoStim, DerivedVideoStim, VideoFrameStim
 from featurex.stimuli.audio import AudioStim
-from featurex.converters import Converter
+from featurex.stimuli.text import TextStim
+from featurex.converters import Converter, MultistepConverter
 
 import pandas as pd
 import os
+
+
+class VideoToTextConverter(MultistepConverter):
+    _input_type = VideoStim
+    _output_type = TextStim
+    _via = [AudioStim, TextStim]
 
 
 class VideoToAudioConverter(Converter):

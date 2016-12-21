@@ -1,6 +1,8 @@
 from os.path import join, splitext
 from .utils import get_test_data_path
-from featurex.converters.video import FrameSamplingConverter, VideoToAudioConverter
+from featurex.converters.video import (FrameSamplingConverter, 
+                                        VideoToAudioConverter, 
+                                        VideoToTextConverter)
 from featurex.converters.image import TesseractConverter
 from featurex.converters.api import (WitTranscriptionConverter, 
                                         GoogleSpeechAPIConverter,
@@ -131,3 +133,13 @@ def test_google_vision_api_text_converter():
     text = conv.transform(stim).text
     assert 'Exit' in text
 
+
+@pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
+def test_multistep_converter():
+    conv = VideoToTextConverter()
+    filename = join(get_test_data_path(), 'video', 'obama_speech.mp4')
+    stim = VideoStim(filename)
+    text = conv.transform(stim)
+    assert isinstance(text, ComplexTextStim)
+    first_word = next(w for w in text)
+    assert type(first_word) == TextStim

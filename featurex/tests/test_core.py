@@ -3,7 +3,8 @@ from featurex.stimuli.image import ImageStim
 from featurex.stimuli.text import TextStim
 from featurex.export import FSLExporter
 from featurex.lazy import extract
-from featurex.transformers import get_transformer, get_converter
+from featurex.transformers import get_transformer
+from featurex.converters import get_converter
 from featurex.extractors import Extractor, ExtractorResult
 from featurex.extractors.image import VibranceExtractor
 from featurex.extractors.audio import STFTAudioExtractor
