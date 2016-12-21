@@ -70,6 +70,17 @@ def test_implicit_stim_conversion2():
     assert first_word['text_length'][0] > 0
 
 
+@pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
+def test_implicit_stim_conversion3():
+    audio_dir = join(get_test_data_path(), 'video')
+    stim = VideoStim(join(audio_dir, 'obama_speech.mp4'))
+    ext = LengthExtractor()
+    result = ext.extract(stim)
+    first_word = result[0].to_df()
+    assert 'text_length' in first_word.columns
+    # Right now it's using via visual Text, need to add tests for via Audio
+
+
 def test_text_extractor():
     stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
                            columns='to', default_duration=1)

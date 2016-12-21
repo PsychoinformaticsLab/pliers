@@ -82,7 +82,7 @@ def get_converter(in_type, out_type):
     transformers = get_subclasses(base)
     for a in transformers:
         concrete = len(a.__abstractmethods__) == 0
-        if a._input_type == in_type and a._output_type == out_type and concrete:
+        if concrete and issubclass(in_type, a._input_type) and issubclass(out_type, a._output_type):
             try:
                 conv = a()
                 return conv
