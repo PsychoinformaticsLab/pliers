@@ -1,8 +1,8 @@
 from os.path import join, splitext
 from .utils import get_test_data_path
-from pliers.converters import memory
+from pliers.converters import memory, get_converter
 from pliers.converters.video import FrameSamplingConverter, VideoToAudioConverter
-from pliers.converters.image import TesseractConverter
+from pliers.converters.image import TesseractConverter, ImageToTextConverter
 from pliers.converters.api import (WitTranscriptionConverter, 
                                         GoogleSpeechAPIConverter,
                                         IBMSpeechAPIConverter)
@@ -132,6 +132,13 @@ def test_google_vision_api_text_converter():
     conv = GoogleVisionAPITextConverter(handle_annotations='concatenate')
     text = conv.transform(stim).text
     assert 'Exit' in text
+
+
+def test_get_converter():
+    conv = get_converter(ImageStim, TextStim)
+    assert isinstance(conv, ImageToTextConverter)
+    conv = get_converter(TextStim, ImageStim)
+    assert conv is None
 
 
 def test_converter_memoization():
