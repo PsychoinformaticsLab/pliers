@@ -77,8 +77,9 @@ def test_implicit_stim_conversion3():
     ext = LengthExtractor()
     result = ext.extract(stim)
     first_word = result[0].to_df()
+    # The word should be "today"
     assert 'text_length' in first_word.columns
-    # Right now it's using via visual Text, need to add tests for via Audio
+    assert first_word['text_length'][0] == 5
 
 
 def test_text_extractor():
