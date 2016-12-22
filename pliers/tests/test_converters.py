@@ -1,7 +1,9 @@
 from os.path import join, splitext
 from .utils import get_test_data_path
 from pliers.converters import memory, get_converter
-from pliers.converters.video import FrameSamplingConverter, VideoToAudioConverter
+from pliers.converters.video import (FrameSamplingConverter, 
+                                        VideoToAudioConverter, 
+                                        VideoToTextConverter)
 from pliers.converters.image import TesseractConverter, ImageToTextConverter
 from pliers.converters.api import (WitTranscriptionConverter, 
                                         GoogleSpeechAPIConverter,
@@ -172,3 +174,14 @@ def test_converter_memoization():
 
     # After clearing the cache, checks should fail
     assert convert_time <= cache_time * 2
+
+
+@pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
+def test_multistep_converter():
+    conv = VideoToTextConverter()
+    filename = join(get_test_data_path(), 'video', 'obama_speech.mp4')
+    stim = VideoStim(filename)
+    text = conv.transform(stim)
+    assert isinstance(text, ComplexTextStim)
+    first_word = next(w for w in text)
+    assert type(first_word) == TextStim
