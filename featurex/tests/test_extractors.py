@@ -143,8 +143,8 @@ def test_mean_amplitude_extractor():
                                 join(text_dir, "wonderful_edited.srt"))
     ext = MeanAmplitudeExtractor()
     result = ext.extract(stim).to_df()
-    targets = [100., 150.]
-    assert np.array_equal(result['mean_amplitude'], targets)
+    targets = [-0.154661, 0.121521]
+    assert np.allclose(result['mean_amplitude'], targets)
 
 
 def test_part_of_speech_extractor():
