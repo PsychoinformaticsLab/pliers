@@ -1,5 +1,6 @@
 from os.path import join, splitext
 from .utils import get_test_data_path
+from featurex.converters import memory
 from featurex.converters.video import FrameSamplingConverter, VideoToAudioConverter
 from featurex.converters.image import TesseractConverter
 from featurex.converters.api import (WitTranscriptionConverter, 
@@ -15,6 +16,7 @@ import numpy as np
 import math
 import pytest
 import os
+import time
 
 
 def test_video_to_audio_converter():
@@ -131,3 +133,35 @@ def test_google_vision_api_text_converter():
     text = conv.transform(stim).text
     assert 'Exit' in text
 
+
+def test_converter_memoization():
+    filename = join(get_test_data_path(), 'video', 'small.mp4')
+    video = VideoStim(filename)
+    conv = VideoToAudioConverter()
+
+    from featurex.converters import cachedir
+    memory.clear()
+
+    # Time taken first time through
+    start_time = time.time()
+    audio1 = conv.convert(video)
+    convert_time = time.time() - start_time
+    cache_ts1 = conv.convert.timestamp
+
+    start_time = time.time()
+    audio2 = conv.convert(video)
+    cache_time = time.time() - start_time
+    cache_ts2 = conv.convert.timestamp
+
+    # TODO: implement saner checking than this
+    # Converting should be at least twice as slow as retrieving from cache
+    assert convert_time >= cache_time * 2
+
+    memory.clear()
+    start_time = time.time()
+    audio2 = conv.convert(video)
+    cache_time = time.time() - start_time
+    cache_ts2 = conv.convert.timestamp
+
+    # After clearing the cache, checks should fail
+    assert convert_time <= cache_time * 2

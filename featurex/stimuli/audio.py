@@ -35,7 +35,7 @@ class AudioStim(Stim):
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self._load_clip(self.filename)
+        self._load_clip()
 
 
 class TranscribedAudioStim(AudioStim):
