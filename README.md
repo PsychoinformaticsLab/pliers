@@ -1,14 +1,14 @@
-# featurex
+# pliers
 
 A Python package for automated extraction of features from multimodal stimuli.
 
 ## Status
-* [![Build Status](https://travis-ci.org/tyarkoni/featureX.svg?branch=master)](https://travis-ci.org/tyarkoni/featureX)
-* [![Coverage Status](https://coveralls.io/repos/github/tyarkoni/featureX/badge.svg?branch=master)](https://coveralls.io/github/tyarkoni/featureX?branch=master)
+* [![Build Status](https://travis-ci.org/tyarkoni/Pliers.svg?branch=master)](https://travis-ci.org/tyarkoni/Pliers)
+* [![Coverage Status](https://coveralls.io/repos/github/tyarkoni/Pliers/badge.svg?branch=master)](https://coveralls.io/github/tyarkoni/Pliers?branch=master)
 
 ## Installation
 
-> pip install featurex
+> pip install pliers
 
 ## Dependencies
 
@@ -20,8 +20,8 @@ A Python package for automated extraction of features from multimodal stimuli.
 In this example, we extract total optical flow in each frame from a short video clip. The DenseOpticalFlowExtractor we'll use relies on the Farneback algorithm implemented in OpenCV. In practice, we might want to experiment a bit with the algorithm's parameters, but for demo purposes, we'll run it with default settings.
 
 ```python
-from featurex.stims import VideoStim
-from featurex.extractors.video import DenseOpticalFlowExtractor
+from pliers.stims import VideoStim
+from pliers.extractors.video import DenseOpticalFlowExtractor
 
 # Load video
 video = VideoStim('small.mp4')

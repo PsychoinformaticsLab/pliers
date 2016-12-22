@@ -1,4 +1,4 @@
 [run]
 omit =
-    featurex/tests/*
-    featurex/external/*
+    pliers/tests/*
+    pliers/external/*
