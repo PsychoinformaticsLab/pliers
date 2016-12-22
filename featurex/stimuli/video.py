@@ -1,5 +1,6 @@
 from __future__ import division
 from featurex.stimuli import Stim, CollectionStimMixin
+from featurex.stimuli.audio import AudioStim
 from featurex.stimuli.image import ImageStim
 from featurex.extractors import ExtractorResult, merge_results
 from moviepy.video.io.VideoFileClip import VideoFileClip
@@ -35,20 +36,35 @@ class VideoStim(Stim, CollectionStimMixin):
 
     def __init__(self, filename, onset=None):
 
-        self.clip = VideoFileClip(filename)
+        self.filename = filename
+        self._load_clip()
         self.fps = self.clip.fps
         self.width = self.clip.w
         self.height = self.clip.h
-
         self.n_frames = int(self.fps * self.clip.duration)
         duration = self.clip.duration
 
         super(VideoStim, self).__init__(filename, onset, duration)
 
+    def _load_clip(self):
+        self.clip = VideoFileClip(self.filename)
+
     def __iter__(self):
         """ Frame iteration. """
         for i, f in enumerate(self.clip.iter_frames()):
             yield VideoFrameStim(self, i, data=f)
+
+    def _read_frame(self, clip, t):
+        return clip.reader.get_frame(t)
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d['clip'] = None
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self._load_clip()
 
     @property
     def frames(self):
