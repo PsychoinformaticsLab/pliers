@@ -41,4 +41,3 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
 
     def _transform(self, stim, *args, **kwargs):
         return self.convert(stim, *args, **kwargs)
-
