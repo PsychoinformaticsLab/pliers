@@ -82,6 +82,7 @@ class IBMSpeechAPIConverter(AudioToTextConverter):
     '''
 
     def __init__(self, username=None, password=None):
+        super(IBMSpeechAPIConverter, self).__init__()
         import speech_recognition as sr
         if username is None or password is None:
             try:
