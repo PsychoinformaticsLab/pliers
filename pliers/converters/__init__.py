@@ -9,7 +9,7 @@ import importlib
 cachedir = mkdtemp()
 memory = Memory(cachedir=cachedir, verbose=0)
 
-__all__ = ['api', 'audio', 'google', 'image', 'video']
+__all__ = ['api', 'audio', 'google', 'image', 'video', 'multistep']
 
 
 class Converter(with_metaclass(ABCMeta, Transformer)):
@@ -43,27 +43,6 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
 
     def _transform(self, stim, *args, **kwargs):
         return self.convert(stim, *args, **kwargs)
-
-
-class MultistepConverter(Converter):
-    ''' Base class for Converters doing more than one step.
-    Args:
-        via (list): Ordered sequence of types to convert through
-    '''
-
-    def __init__(self, via=None):
-        super(MultistepConverter, self).__init__()
-        self.via = self._via if via is None else via
-
-    def _convert(self, stim):
-        for i, step in enumerate(self.via):
-            converter = get_converter(type(stim), step)
-            if converter:
-                stim = converter.transform(stim)
-            else:
-                msg = "Conversion failed during step %d" % i
-                raise ValueError(msg)
-        return stim
 
 
 def get_converter(in_type, out_type):

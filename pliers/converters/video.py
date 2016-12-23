@@ -2,7 +2,7 @@ from pliers.stimuli.video import VideoStim, DerivedVideoStim, VideoFrameStim
 from pliers.stimuli.audio import AudioStim
 from pliers.converters import Converter
 from pliers.stimuli.text import TextStim
-from pliers.converters import Converter, MultistepConverter
+from pliers.converters import Converter
 
 import pandas as pd
 import os
@@ -31,12 +31,6 @@ class VideoToAudioConverter(Converter):
                                         self.buffersize, self.bitrate,
                                         self.ffmpeg_params)
         return AudioStim(filename)
-
-
-class VideoToTextConverter(MultistepConverter):
-    _input_type = VideoStim
-    _output_type = TextStim
-    _via = [AudioStim, TextStim]
 
 
 class VideoToDerivedVideoConverter(Converter):

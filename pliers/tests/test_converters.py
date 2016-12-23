@@ -2,8 +2,8 @@ from os.path import join, splitext
 from .utils import get_test_data_path
 from pliers.converters import memory, get_converter
 from pliers.converters.video import (FrameSamplingConverter, 
-                                        VideoToAudioConverter, 
-                                        VideoToTextConverter)
+                                        VideoToAudioConverter)
+from pliers.converters.multistep import VideoToTextConverter
 from pliers.converters.image import TesseractConverter, ImageToTextConverter
 from pliers.converters.api import (WitTranscriptionConverter, 
                                         GoogleSpeechAPIConverter,
