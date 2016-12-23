@@ -3,8 +3,8 @@
 A Python package for automated extraction of features from multimodal stimuli.
 
 ## Status
-* [![Build Status](https://travis-ci.org/tyarkoni/Pliers.svg?branch=master)](https://travis-ci.org/tyarkoni/pliers)
-* [![Coverage Status](https://coveralls.io/repos/github/tyarkoni/Pliers/badge.svg?branch=master)](https://coveralls.io/github/tyarkoni/pliers?branch=master)
+* [![Build Status](https://travis-ci.org/tyarkoni/pliers.svg?branch=master)](https://travis-ci.org/tyarkoni/pliers)
+* [![Coverage Status](https://coveralls.io/repos/github/tyarkoni/pliers/badge.svg?branch=master)](https://coveralls.io/github/tyarkoni/pliers?branch=master)
 
 ## Installation
 
