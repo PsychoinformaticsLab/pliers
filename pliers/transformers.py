@@ -19,7 +19,12 @@ class Transformer(with_metaclass(ABCMeta)):
         # Iterate over the collection of stims contained in the input stim
         elif isinstance(stims, CollectionStimMixin) and \
            not issubclass(self._input_type, CollectionStimMixin):
-            return self._iterate(list(s for s in stims))
+            from pliers.converters import get_converter
+            converter = get_converter(type(stims), self._input_type)
+            if converter:
+                return self.transform(converter.transform(stims))
+            else:
+                return self._iterate(list(s for s in stims))
         # Pass the stim directly to the Transformer
         else:
             validated_stim = self._validate(stims)

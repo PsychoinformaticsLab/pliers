@@ -9,7 +9,7 @@ import importlib
 cachedir = mkdtemp()
 memory = Memory(cachedir=cachedir, verbose=0)
 
-__all__ = ['api', 'audio', 'google', 'image', 'video']
+__all__ = ['api', 'audio', 'google', 'image', 'video', 'multistep']
 
 
 class Converter(with_metaclass(ABCMeta, Transformer)):
