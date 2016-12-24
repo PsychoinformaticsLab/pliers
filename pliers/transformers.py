@@ -1,6 +1,6 @@
 from six import with_metaclass
 from abc import ABCMeta, abstractmethod, abstractproperty
-from pliers.stimuli import CollectionStimMixin
+from pliers.stimuli import CollectionStimMixin, CompoundStim
 from pliers.utils import listify
 import importlib
 
@@ -13,6 +13,9 @@ class Transformer(with_metaclass(ABCMeta)):
         self.name = name
 
     def transform(self, stims, *args, **kwargs):
+        # If stims is a CompoundStim, extract all matching stims.
+        if isinstance(stims, CompoundStim):
+            stims = stims.get_stim(self._input_type, return_all=True)
         # Iterate over all the stims in the list
         if isinstance(stims, (list, tuple)):
             return self._iterate(stims, *args, **kwargs)

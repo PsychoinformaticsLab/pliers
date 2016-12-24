@@ -5,6 +5,7 @@ from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.image import ImageStim
 from pliers.stimuli import CompoundStim
 from pliers.extractors import Extractor, ExtractorResult
+from pliers.extractors.image import BrightnessExtractor
 from pliers.stimuli import Stim, _get_stim_class
 from pliers.support.download import download_nltk_data
 import numpy as np
@@ -144,7 +145,6 @@ def test_compound_stim():
     filename = join(get_test_data_path(), 'video', 'small.mp4')
     video = VideoStim(filename)
     text = ComplexTextStim.from_text("The quick brown fox jumped...")
-
     stim = CompoundStim([audio, image1, image2, video, text])
     assert len(stim.stims) == 5
     assert isinstance(stim.video, VideoStim)
@@ -159,3 +159,15 @@ def test_compound_stim():
     assert all([isinstance(im, ImageStim) for im in imgs])
     also_imgs = stim.get_stim('image', return_all=True)
     assert imgs == also_imgs
+
+
+def test_transformations_on_compound_stim():
+    image1 = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
+    image2 = ImageStim(join(get_test_data_path(), 'image', 'obama.jpg'))
+    text = ComplexTextStim.from_text("The quick brown fox jumped...")
+    stim = CompoundStim([image1, image2, text])
+
+    ext = BrightnessExtractor()
+    results = ext.extract(stim)
+    assert len(results) == 2
+    assert np.allclose(results[0].data[0], 0.88784294)
