@@ -18,7 +18,7 @@ BATCH_SIZE = 10
 class GoogleAPITransformer(Transformer, BatchTransformerMixin):
 
     def __init__(self, discovery_file=None, api_version='v1', max_results=100,
-                 num_retries=3):
+                 num_retries=3, handle_annotations='prefix'):
 
         if discovery_file is None:
             if 'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ:
@@ -34,6 +34,7 @@ class GoogleAPITransformer(Transformer, BatchTransformerMixin):
         self.service = discovery.build(self.api_name, api_version,
                                        credentials=self.credentials,
                                        discoveryServiceUrl=DISCOVERY_URL)
+        self.handle_annotations = handle_annotations
         super(GoogleAPITransformer, self).__init__()
 
     def _query_api(self, request):

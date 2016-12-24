@@ -48,6 +48,21 @@ def test_google_vision_api_face_extractor():
 
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
+def test_google_vision_multiple_face_extraction():
+    filename = join(get_test_data_path(), 'image', 'thai_people.jpg')
+    stim = ImageStim(filename)
+    # Only first record
+    ext = GoogleVisionAPIFaceExtractor(handle_annotations='first')
+    result1 = ext.extract(stim).to_df()
+    assert 'joyLikelihood' in result1.columns
+    # All records
+    ext = GoogleVisionAPIFaceExtractor(handle_annotations='prefix')
+    result2 = ext.extract(stim).to_df()
+    assert 'face2_joyLikelihood' in result2.columns
+    assert result2.shape[1] > result1.shape[1]
+
+
+@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_label_extractor():
     ext = GoogleVisionAPILabelExtractor(num_retries=5)
     filename = join(get_test_data_path(), 'image', 'apple.jpg')
