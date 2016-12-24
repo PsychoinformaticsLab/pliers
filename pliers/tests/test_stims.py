@@ -111,13 +111,13 @@ def test_complex_text_stim():
 def test_complex_stim_from_text():
     textfile = join(get_test_data_path(), 'text', 'scandal.txt')
     text = open(textfile).read().strip()
-    stim = ComplexTextStim.from_text(text)
+    stim = ComplexTextStim(text=text)
     target = ['To', 'Sherlock', 'Holmes']
     assert [w.text for w in stim.elements[:3]] == target
     assert len(stim.elements) == 231
-    stim = ComplexTextStim.from_text(text, unit='sent')
+    stim = ComplexTextStim(text=text, unit='sent')
     # Custom tokenizer
-    stim = ComplexTextStim.from_text(text, tokenizer='(\w+)')
+    stim = ComplexTextStim(text=text, tokenizer='(\w+)')
     assert len(stim.elements) == 209
 
 
@@ -144,7 +144,7 @@ def test_compound_stim():
     image2 = ImageStim(join(get_test_data_path(), 'image', 'obama.jpg'))
     filename = join(get_test_data_path(), 'video', 'small.mp4')
     video = VideoStim(filename)
-    text = ComplexTextStim.from_text("The quick brown fox jumped...")
+    text = ComplexTextStim(text="The quick brown fox jumped...")
     stim = CompoundStim([audio, image1, image2, video, text])
     assert len(stim.stims) == 5
     assert isinstance(stim.video, VideoStim)
@@ -164,7 +164,7 @@ def test_compound_stim():
 def test_transformations_on_compound_stim():
     image1 = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
     image2 = ImageStim(join(get_test_data_path(), 'image', 'obama.jpg'))
-    text = ComplexTextStim.from_text("The quick brown fox jumped...")
+    text = ComplexTextStim(text="The quick brown fox jumped...")
     stim = CompoundStim([image1, image2, text])
 
     ext = BrightnessExtractor()

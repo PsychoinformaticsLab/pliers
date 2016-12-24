@@ -43,7 +43,7 @@ class SpeechRecognitionAPIConverter(AudioToTextConverter):
         with sr.AudioFile(audio.filename) as source:
             clip = self.recognizer.record(source)
         text = getattr(self.recognizer, self.recognize_method)(clip, self.api_key)
-        return ComplexTextStim.from_text(text=text)
+        return ComplexTextStim(text=text)
 
 
 class WitTranscriptionConverter(SpeechRecognitionAPIConverter):

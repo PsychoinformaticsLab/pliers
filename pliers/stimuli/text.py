@@ -39,29 +39,59 @@ class ComplexTextStim(Stim, CollectionStimMixin):
             'text', 'onset', and 'duration' where available (though only text
             is mandatory). If no header is present in the file, the columns
             argument will be used to infer the indices of the key columns.
+        onset (float): Optional onset of the ComplexTextStim relative to some
+            more general context.
+        duration (float): Optional duration of the ComplexTextStim withing some
+            more general context.
         columns (str): Optional specification of column order. An abbreviated
             string denoting the column position of text, onset, and duration
             in the file. Use t for text, o for onset, d for duration. For
             example, passing 'ot' indicates that the first column contains
-            the onsets and the second contains the text. Passing 'tod'
+            the onsets and the second contains the text. E.g., passing 'tod'
             indicates that the first three columns contain text, onset, and
             duration information, respectively. Note that if the input file
             contains a header row, the columns argument will be ignored.
         default_duration (float): the duration to assign to any text elements
             in the collection that do not have an explicit value provided
             in the input file.
+        elements (list): An optional list of TextStims that comprise the
+            ComplexTextStim. If both the filename and elements arguments are
+            passed, the TextStims in elements will be appended to the ones
+            extracted from the file.
+        text (str): Optional multi-token string to convert to a ComplexTextStim.
+        unit (str): The unit of segmentation. Either 'word' or 'sentence'.
+            Ignored if text is None.
+        tokenizer: Optional tokenizer to use if initializing from text. If
+            passed, will override the default nltk tokenizers. If a string is
+            passed, it is interpreted as a capturing regex and passed to
+            re.findall(). Otherwise, must be an object that implements a
+            tokenize() method and returns a list of tokens. Ignored if text is
+            None.
+        language (str): The language to use; passed to nltk. Only used if
+            tokenizer is None. Defaults to English. Ignored if text is None.
     '''
 
-    def __init__(self, filename=None, onset=None, duration=None, columns='tod',
-                 default_duration=None, elements=None):
+    def __init__(self, filename=None, onset=None, duration=None, columns=None,
+                 default_duration=None, elements=None, text=None, unit='word',
+                 tokenizer=None, language='english'):
 
-        self.elements = [] if elements is None else elements
+        if filename is None and elements is None and text is None:
+            raise ValueError("At least one of the 'filename', 'elements', or "
+                             "text arguments must be specified.")
+
+        self.elements = []
 
         if filename is not None:
             if filename.endswith("srt"):
                 self._from_srt(filename)
             else:
                 self._from_file(filename, columns, default_duration)
+
+        if elements is not None:
+            self.elements.extend(elements)
+
+        if text is not None:
+            self._from_text(text, unit, tokenizer, language)
 
         super(ComplexTextStim, self).__init__(filename, onset, duration)
 
@@ -93,10 +123,10 @@ class ComplexTextStim(Stim, CollectionStimMixin):
         list_ = [[] for _ in data]
         for i, row in enumerate(data):
             start = tuple(row.start)
-            start_time = self.__to_sec__(start)
+            start_time = self._to_sec(start)
             
             end_ = tuple(row.end)
-            duration = self.__to_sec__(end_) - start_time
+            duration = self._to_sec(end_) - start_time
             
             line = row.text
             line = line.replace("\r\n", " ").replace("\n", " ").replace("\r", " ").replace("\t", " ")
@@ -114,32 +144,13 @@ class ComplexTextStim(Stim, CollectionStimMixin):
         for elem in self.elements:
             yield elem
 
-    def __to_sec__(self, tup):
-        hours = tup[0]
-        mins = tup[1]
-        secs = tup[2]
-        msecs = tup[3]
+    def _to_sec(self, tup):
+        hours, mins, secs, msecs = tup
         total_msecs = (hours * 60 * 60 * 1000) + (mins * 60 * 1000) + (secs * 1000) + msecs
         total_secs = total_msecs / 1000.
         return total_secs
 
-
-    @classmethod
-    def from_text(cls, text, unit='word', tokenizer=None, language='english'):
-        """ Initialize from a single string, by automatically segmenting into
-        individual strings. Requires nltk unless tokenizer argument is passed.
-            text (str): The text to convert to a ComplexTextStim.
-            unit (str): The unit of segmentation. Either 'word' or 'sentence'.
-            tokenizer: Optional tokenizer to use. If passed, will override
-                the default nltk tokenizers. If a string is passed, it is
-                interpreted as a capturing regex and passed to re.findall().
-                Otherwise, must be an object that implements a tokenize()
-                method and returns a list of tokens.
-            language (str): The language to use; passed to nltk. Only used if
-                tokenizer is None. Defaults to English.
-        Returns:
-            A ComplexTextStim instance.
-        """
+    def _from_text(self, text, unit, tokenizer, language):
 
         if tokenizer is not None:
             if isinstance(tokenizer, string_types):
@@ -156,12 +167,9 @@ class ComplexTextStim(Stim, CollectionStimMixin):
                 elif unit.startswith('sent'):
                     return nltk.sent_tokenize(text, language)
                 else:
-                    raise ValueError(
-                        "unit must be either 'word' or 'sentence'")
+                    raise ValueError("unit must be either 'word' or 'sentence'")
 
             tokens = tokenize_text(text)
 
-        elements = []
         for i, t in enumerate(tokens):
-            elements.append(TextStim(text=t, onset=i, duration=1))
-        return cls(elements=elements)
+            self.elements.append(TextStim(text=t, onset=i, duration=1))
