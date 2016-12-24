@@ -3,8 +3,9 @@ from pliers.stimuli.video import VideoStim, VideoFrameStim
 from pliers.stimuli.text import ComplexTextStim
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.image import ImageStim
+from pliers.stimuli import CompoundStim
 from pliers.extractors import Extractor, ExtractorResult
-from pliers.stimuli import Stim
+from pliers.stimuli import Stim, _get_stim_class
 from pliers.support.download import download_nltk_data
 import numpy as np
 from os.path import join
@@ -127,3 +128,34 @@ def test_complex_stim_from_srt():
     srt_stim = ComplexTextStim(srtfile)
     texts = [sent.text for sent in srt_stim.elements]
     assert texts == target
+
+
+def test_get_stim():
+    assert issubclass(_get_stim_class('video'), VideoStim)
+    assert issubclass(_get_stim_class('ComplexTextStim'), ComplexTextStim)
+    assert issubclass(_get_stim_class('video_frame'), VideoFrameStim)
+
+
+def test_compound_stim():
+    audio_dir = join(get_test_data_path(), 'audio')
+    audio = AudioStim(join(audio_dir, 'crowd.mp3'))
+    image1 = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
+    image2 = ImageStim(join(get_test_data_path(), 'image', 'obama.jpg'))
+    filename = join(get_test_data_path(), 'video', 'small.mp4')
+    video = VideoStim(filename)
+    text = ComplexTextStim.from_text("The quick brown fox jumped...")
+
+    stim = CompoundStim([audio, image1, image2, video, text])
+    assert len(stim.stims) == 5
+    assert isinstance(stim.video, VideoStim)
+    assert isinstance(stim.complex_text, ComplexTextStim)
+    assert isinstance(stim.image, ImageStim)
+    with pytest.raises(AttributeError):
+        stim.nonexistent_type
+    assert stim.video_frame is None
+
+    imgs = stim.get_stim(ImageStim, return_all=True)
+    assert len(imgs) == 2
+    assert all([isinstance(im, ImageStim) for im in imgs])
+    also_imgs = stim.get_stim('image', return_all=True)
+    assert imgs == also_imgs
