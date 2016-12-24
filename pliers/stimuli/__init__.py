@@ -2,7 +2,12 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 from six import string_types
 from os.path import exists, isdir, join, basename
 from glob import glob
-from six import with_metaclass
+from six import with_metaclass, string_types
+from pliers.utils import listify
+import importlib
+
+
+__all__ = ['audio', 'image', 'text', 'video']
 
 
 class Stim(with_metaclass(ABCMeta)):
@@ -27,6 +32,79 @@ class CollectionStimMixin(with_metaclass(ABCMeta)):
     @abstractmethod
     def __iter__(self):
         pass
+
+
+class CompoundStim(object):
+
+    ''' A container for an arbitrary set of Stims.
+    Args:
+        stims (Stim or list): a single Stim (of any type) or a list of Stims.
+
+    '''
+    def __init__(self, stims):
+
+        self.stims = listify(stims)
+
+    def get_stim(self, type_, return_all=False):
+        ''' Returns component Stims of the specified type.
+        Args:
+            type_ (str or Stim class): the desired Stim subclass to return.
+            return_all (bool): when True, returns all stims that matched the
+                specified type as a list. When False (default), returns only
+                the first matching Stim.
+        Returns:
+            If return_all is True, a list of matching Stims (or an empty list
+            if no Stims match). If return_all is False, returns the first
+            matching Stim, or None if no Stims match.
+        '''
+        if isinstance(type_, string_types):
+            type_ = _get_stim_class(type_)
+        matches = []
+        for s in self.stims:
+            if isinstance(s, type_):
+                if not return_all:
+                    return s
+                matches.append(s)
+        if not matches:
+            return [] if return_all else None
+        return matches
+
+    def __getattr__(self, attr):
+        try:
+            stim = _get_stim_class(attr)
+        except:
+            raise AttributeError()
+        return self.get_stim(stim)
+
+
+def _get_stim_class(name):
+
+    name = name.lower().replace('_', '')
+
+    if not name.endswith('stim'):
+        name += 'stim'
+
+    # Recursively get all classes that inherit from the passed base class
+    def get_subclasses(cls):
+        subclasses = []
+        for sc in cls.__subclasses__():
+            subclasses.append(sc)
+            subclasses.extend(get_subclasses(sc))
+        return subclasses
+
+    # Import all submodules so we have a comprehensive list of Stims
+    base = Stim
+    bm = base.__module__
+    submods = importlib.import_module(bm).__all__
+    sources = ['%s.%s' % (bm, sm) for sm in submods]
+    [importlib.import_module(s) for s in sources]
+
+    stims = get_subclasses(base)
+    for a in stims:
+        if a.__name__.lower().split('.')[-1] == name.lower():
+            return a
+
+    raise KeyError("No Stim class matches '%s' (case-insensitive)." % name)
 
 
 def load_stims(source, dtype=None):
