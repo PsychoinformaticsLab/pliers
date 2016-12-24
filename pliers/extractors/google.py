@@ -40,15 +40,19 @@ class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
     def _parse_annotations(self, annotations):
         features = []
         values = []
-        for annotation in annotations:
+
+        if self.handle_annotations == 'first':
+            annotations = [annotations[0]]
+
+        for i, annotation in enumerate(annotations):
             data_dict = {}
             for field, val in annotation.items():
                 if 'Confidence' in field:
                     data_dict['face_' + field] = val
                 elif 'oundingPoly' in field:
-                    for i, vertex in enumerate(val['vertices']):
+                    for j, vertex in enumerate(val['vertices']):
                         for dim in ['x', 'y']:
-                            name = '%s_vertex%d_%s' % (field, i+1, dim)
+                            name = '%s_vertex%d_%s' % (field, j+1, dim)
                             val = vertex[dim] if dim in vertex else np.nan
                             data_dict[name] = val
                 elif field == 'landmarks':
@@ -58,9 +62,12 @@ class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
                         data_dict.update(lm_pos)
                 else:
                     data_dict[field] = val
-            features += list(data_dict.keys())
-            values += list(data_dict.values())
 
+            names = list(data_dict.keys())
+            if self.handle_annotations == 'prefix' and len(annotations) > 1:
+                names = ['face%d_%s' % (i+1, n) for n in names]
+            features += names
+            values += list(data_dict.values())
 
         return features, values
 
