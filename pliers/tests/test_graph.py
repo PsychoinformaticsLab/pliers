@@ -76,7 +76,7 @@ def test_small_pipeline():
                 [(LengthExtractor(), 'length')])]
     graph = Graph(nodes)
     result = graph.extract([stim])
-    assert (0, 'button.jpg_Exit') in result.index
+    assert (0, 'Exit') in result.index
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
 

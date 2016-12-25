@@ -26,7 +26,9 @@ def test_video_to_audio_converter():
     video = VideoStim(filename)
     conv = VideoToAudioConverter()
     audio = conv.transform(video)
-    assert audio.name == 'small.mp4_small.wav'
+    assert audio.name == 'small.wav'
+    assert isinstance(audio.source_stim, VideoStim)
+    assert audio.source_stim.name == 'small.mp4'
     assert splitext(video.filename)[0] == splitext(audio.filename)[0]
     assert np.isclose(video.duration, audio.duration, 1e-2)
 
@@ -119,8 +121,9 @@ def test_tesseract_converter():
     stim = ImageStim(join(image_dir, 'button.jpg'))
     conv = TesseractConverter()
     out_stim = conv.transform(stim)
-    assert out_stim.name == 'button.jpg_Exit'
-    assert out_stim.text == 'Exit'
+    assert out_stim.name == 'Exit'
+    assert isinstance(out_stim.source_stim, ImageStim)
+    assert out_stim.source_stim.name == 'button.jpg'
 
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")

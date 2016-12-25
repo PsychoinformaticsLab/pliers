@@ -19,6 +19,7 @@ class Stim(with_metaclass(ABCMeta)):
         self.features = []
         self.onset = onset
         self.duration = duration
+        self.source_stim = None
 
         if name is None:
             name = '' if self.filename is None else basename(self.filename)
