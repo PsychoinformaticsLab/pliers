@@ -61,7 +61,7 @@ class ExtractorResult(object):
         '''
 
         # Make sure all ExtractorResults are associated with same Stim.
-        stims = set([r.stim for r in results])
+        stims = set([r.stim.name for r in results])
         dfs = [r.to_df() for r in results]
         if len(stims) > 1:
             raise ValueError("merge_features() can only be called on a set of "
@@ -95,15 +95,16 @@ class ExtractorResult(object):
             result = result.drop('duration', axis=1, level=1)
 
         if stim_names:
-            result['stim'] = list(stims)[0].name
+            result['stim'] = list(stims)[0]
             result.set_index('stim', append=True, inplace=True)
+            result = result.sort_index()
 
-        return result
+        return result.sort(['onset'])
 
     @classmethod
     def merge_stims(cls, results, stim_names=True):
         results = [r.to_df(True) if isinstance(r, ExtractorResult) else r for r in results]
-        return pd.concat(results, axis=0)
+        return pd.concat(results, axis=0).sort('onset')
 
 
 def merge_results(results, extractor_names=True, stim_names=True):
