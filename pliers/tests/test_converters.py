@@ -188,3 +188,13 @@ def test_multistep_converter():
     assert isinstance(text, ComplexTextStim)
     first_word = next(w for w in text)
     assert type(first_word) == TextStim
+
+@pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
+def test_stim_history_tracking():
+    video = VideoStim(join(get_test_data_path(), 'video', 'obama_speech.mp4'))
+    assert video.history == 'VideoStim'
+    conv = VideoToAudioConverter()
+    stim = conv.convert(video)
+    conv = WitTranscriptionConverter()
+    stim = conv.convert(stim)
+    assert stim.history == 'VideoStim->VideoToAudioConverter->WitTranscriptionConverter->ComplexTextStim'

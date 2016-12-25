@@ -23,11 +23,14 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
         new_stim = self._convert(stim, *args, **kwargs)
         if new_stim.name is None:
             new_stim.name = stim.name
+        else:
+            new_stim.name = stim.name + '->' + new_stim.name
         if isinstance(new_stim, CollectionStimMixin):
             for s in new_stim:
                 if s.name is None:
                     s.name = stim.name
         new_stim.source_stim = stim
+        new_stim.converter = self
         return new_stim
 
     @abstractmethod
