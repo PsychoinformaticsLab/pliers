@@ -99,12 +99,12 @@ class ExtractorResult(object):
             result.set_index('stim', append=True, inplace=True)
             result = result.sort_index()
 
-        return result.sort(['onset'])
+        return result.sort_values(['onset'])
 
     @classmethod
     def merge_stims(cls, results, stim_names=True):
         results = [r.to_df(True) if isinstance(r, ExtractorResult) else r for r in results]
-        return pd.concat(results, axis=0).sort('onset')
+        return pd.concat(results, axis=0).sort_values('onset')
 
 
 def merge_results(results, extractor_names=True, stim_names=True):
