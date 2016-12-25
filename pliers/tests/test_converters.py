@@ -197,4 +197,4 @@ def test_stim_history_tracking():
     stim = conv.convert(video)
     conv = WitTranscriptionConverter()
     stim = conv.convert(stim)
-    assert stim.history == 'VideoStim->VideoToAudioConverter->WitTranscriptionConverter->ComplexTextStim'
+    assert stim.history == 'VideoStim->VideoToAudioConverter/AudioStim->WitTranscriptionConverter/ComplexTextStim'

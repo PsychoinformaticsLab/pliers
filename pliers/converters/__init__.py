@@ -29,8 +29,7 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
             for s in new_stim:
                 if s.name is None:
                     s.name = stim.name
-        new_stim.source_stim = stim
-        new_stim.converter = self
+        new_stim.set_history(stim, self)
         return new_stim
 
     @abstractmethod

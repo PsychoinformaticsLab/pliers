@@ -16,7 +16,6 @@ class Stim(with_metaclass(ABCMeta)):
     def __init__(self, filename=None, onset=None, duration=None, name=None):
 
         self.filename = filename
-        self.features = []
         self.onset = onset
         self.duration = duration
         self.source_stim = None
@@ -26,19 +25,15 @@ class Stim(with_metaclass(ABCMeta)):
             name = '' if self.filename is None else basename(self.filename)
         self.name = name
 
-    def _conversion_history(self):
-        if self.source_stim is None:
-            return self.__class__.__name__
-        return self.source_stim._conversion_history() + '->' + \
-               self.converter.__class__.__name__
+        self.set_history(None, None)
 
-    @property
-    def history(self):
-        result = self._conversion_history()
-        if result != self.__class__.__name__:
-            result += '->' + self.__class__.__name__
-        return result
-
+    def set_history(self, stim=None, converter=None):
+        self.source_stim = stim
+        self.converter = converter
+        self.history = ''
+        if stim is not None:
+            self.history = stim.history + '->' + converter.__class__.__name__ + '/'
+        self.history += self.__class__.__name__
 
 class CollectionStimMixin(with_metaclass(ABCMeta)):
 
