@@ -56,5 +56,4 @@ class TranscribedAudioStim(AudioStim):
             transcription = ComplexTextStim(transcription, **kwargs)
         self.transcription = transcription
         super(TranscribedAudioStim, self).__init__(filename, onset=onset)
-
-
+        self.name += '_transcribed'

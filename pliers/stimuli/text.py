@@ -15,15 +15,8 @@ class TextStim(Stim):
         if filename is not None and text is None:
             text = open(filename).read()
         self.text = text
-        super(TextStim, self).__init__(filename, onset, duration)
-
-
-    @property
-    def id(self):
-        if self.filename is not None:
-            return self.filename + '_' + self.text
-        else:
-            return self.text
+        name = text if filename is None else filename + '_' + text
+        super(TextStim, self).__init__(filename, onset, duration, name)
 
 
 class ComplexTextStim(Stim, CollectionStimMixin):

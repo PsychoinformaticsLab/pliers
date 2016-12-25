@@ -20,14 +20,9 @@ class VideoFrameStim(ImageStim):
         super(VideoFrameStim, self).__init__(filename, onset, duration, data)
         if data is None:
             self.data = self.video.get_frame(index=frame_num).data
-
-
-    @property
-    def id(self):
-        if self.filename is not None:
-            return self.filename + '_' + self.frame_num
-        else:
-            return self.frame_num
+        if video.filename:
+            self.name = video.name + '_'
+        self.name += str(frame_num)
 
 
 class VideoStim(Stim, CollectionStimMixin):
@@ -88,8 +83,8 @@ class DerivedVideoStim(VideoStim):
         self.elements = elements
         self.frame_index = frame_index
         self.history = history
+        self.name += '_derived'
         
     def __iter__(self):
         for elem in self.elements:
             yield elem
-

@@ -13,18 +13,16 @@ __all__ = ['audio', 'image', 'text', 'video']
 class Stim(with_metaclass(ABCMeta)):
 
     ''' Base Stim class. '''
-    def __init__(self, filename=None, onset=None, duration=None):
+    def __init__(self, filename=None, onset=None, duration=None, name=None):
 
         self.filename = filename
-        self.name = basename(filename) if filename is not None else str(self.id)
         self.features = []
         self.onset = onset
         self.duration = duration
 
-
-    @property
-    def id(self):
-        return ''
+        if name is None:
+            name = '' if self.filename is None else basename(self.filename)
+        self.name = name
 
 
 class CollectionStimMixin(with_metaclass(ABCMeta)):
@@ -75,6 +73,10 @@ class CompoundStim(object):
         except:
             raise AttributeError()
         return self.get_stim(stim)
+
+    @property
+    def name(self):
+        return '_'.join([s.name for s in self.stims])
 
 
 def _get_stim_class(name):
