@@ -48,24 +48,14 @@ class SpeechRecognitionAPIConverter(AudioToTextConverter):
 
 class WitTranscriptionConverter(SpeechRecognitionAPIConverter):
     
-    @property
-    def environ_key(self):
-        return 'WIT_AI_API_KEY'
-
-    @property
-    def recognize_method(self):
-        return 'recognize_wit'
+    environ_key = 'WIT_AI_API_KEY'
+    recognize_method ='recognize_wit'
 
 
 class GoogleSpeechAPIConverter(SpeechRecognitionAPIConverter):
 
-    @property
-    def environ_key(self):
-        return 'GOOGLE_APPLICATION_CREDENTIALS'
-
-    @property
-    def recognize_method(self):
-        return 'recognize_google_cloud'
+    environ_key = 'GOOGLE_APPLICATION_CREDENTIALS'
+    recognize_method = 'recognize_google_cloud'
 
 
 class IBMSpeechAPIConverter(AudioToTextConverter):
