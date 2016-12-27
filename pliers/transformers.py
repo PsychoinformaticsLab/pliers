@@ -1,11 +1,16 @@
 from six import with_metaclass
 from abc import ABCMeta, abstractmethod, abstractproperty
-from pliers.stimuli import CollectionStimMixin
+from pliers.stimuli import Stim, CollectionStimMixin
 from pliers.utils import listify
 import importlib
+from copy import deepcopy
+from pliers import config
+import pandas as pd
 
 
 class Transformer(with_metaclass(ABCMeta)):
+
+    _log_attributes = ()
 
     def __init__(self, name=None):
         if name is None:
@@ -13,15 +18,18 @@ class Transformer(with_metaclass(ABCMeta)):
         self.name = name
 
     def transform(self, stims, *args, **kwargs):
+
         # If stims is a CompoundStim and not itself the target type,
         # extract all matching stims.
         from pliers.stimuli.compound import CompoundStim
         if isinstance(stims, CompoundStim) and not \
            isinstance(stims, self._input_type):
             stims = stims.get_stim(self._input_type, return_all=True)
+
         # Iterate over all the stims in the list
         if isinstance(stims, (list, tuple)):
             return self._iterate(stims, *args, **kwargs)
+
         # Iterate over the collection of stims contained in the input stim
         elif isinstance(stims, CollectionStimMixin) and \
            not issubclass(self._input_type, CollectionStimMixin):
@@ -31,6 +39,7 @@ class Transformer(with_metaclass(ABCMeta)):
                 return self.transform(converter.transform(stims))
             else:
                 return self._iterate(list(s for s in stims))
+
         # Pass the stim directly to the Transformer
         else:
             validated_stim = self._validate(stims)
@@ -38,7 +47,10 @@ class Transformer(with_metaclass(ABCMeta)):
             if stims is not validated_stim:
                 return self.transform(validated_stim, *args, **kwargs)
             else:
-                return self._transform(self._validate(stims), *args, **kwargs)
+                result = self._transform(self._validate(stims), *args, **kwargs)
+                if config.transformation_history:
+                    self._update_history(stims, result)
+                return result
 
     def _validate(self, stim):
         if not isinstance(stim, self._input_type):
@@ -48,7 +60,8 @@ class Transformer(with_metaclass(ABCMeta)):
                 stim = converter.transform(stim)
             else:
                 msg = "Transformers of type %s can only be applied to stimuli " \
-                      " of type(s) %s, not type %s."
+                      " of type(s) %s (not type %s), and no applicable " \
+                      "Converter was found."
                 msg = msg % (self.__class__.__name__, self._input_type.__name__,
                         stim.__class__.__name__)
                 raise TypeError(msg)
@@ -64,6 +77,44 @@ class Transformer(with_metaclass(ABCMeta)):
     @abstractproperty
     def _input_type(self):
         pass
+
+    def _update_history(self, stim, result):
+        history = stim.history if stim.history else deepcopy(TransformationHistory())
+        history.log(stim, result, self)
+        result.history = history
+
+
+class TransformationHistory(object):
+
+    def __init__(self):
+        self.transformations = []
+
+    def log(self, source, result, trans):
+        # source name, source filename, source class, result name, result filename,
+        # result class, transformer class, transformer params
+        row = [source.name, source.filename, source.__class__.__name__]
+        if isinstance(result, Stim):
+            row.extend([result.name, result.filename])
+        else:
+            row.extend(['', ''])
+        row.extend([result.__class__.__name__, trans.__class__.__name__])
+        tr_attrs = [getattr(trans, attr) for attr in trans._log_attributes]
+        row.append(str(dict(zip(trans._log_attributes, tr_attrs))))
+        self.transformations.append(row)
+
+    def to_df(self):
+        columns = ['source_name', 'source_file', 'source_class', 'result_name',
+                   'result_file', 'result_class', 'transformer_class',
+                   'transformer_params']
+        return pd.DataFrame(self.transformations, columns=columns)
+
+    def __str__(self):
+        result = ''
+        for i, t in enumerate(self.transformations):
+            if i == 0:
+                result += t[2]
+            result += '->' + '%s/%s' % (t[6], t[5])
+        return result
 
 
 class BatchTransformerMixin():

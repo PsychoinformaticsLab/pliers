@@ -31,6 +31,7 @@ class ExtractorResult(object):
         self.stim = stim
         self.extractor = extractor
         self.features = features
+        self._history = None
         if onsets is None:
             onsets = stim.onset
         self.onsets = onsets if onsets is not None else np.nan
@@ -46,6 +47,14 @@ class ExtractorResult(object):
             df['stim'] = self.stim.name
             df.set_index('stim', append=True, inplace=True)
         return df
+
+    @property
+    def history(self):
+        return self._history
+
+    @history.setter
+    def history(self, history):
+        self._history = history
 
     @classmethod
     def merge_features(cls, results, extractor_names=True, stim_names=True):
@@ -93,6 +102,10 @@ class ExtractorResult(object):
         durations = result.xs('duration', level=1, axis=1)
         if durations.apply(lambda x: x.nunique()<=1, axis=1).all():
             result = result.drop('duration', axis=1, level=1)
+
+        result.insert(0, 'class', results[0].stim.__class__.__name__)
+        result.insert(0, 'filename', results[0].stim.filename)
+        result.insert(0, 'history', str(results[0].stim.history))
 
         if stim_names:
             result['stim'] = list(stims)[0]
