@@ -1,13 +1,9 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 from pliers.transformers import Transformer, CollectionStimMixin
 from six import with_metaclass
-from tempfile import mkdtemp
-from joblib import Memory
+from pliers.utils import memory
 import importlib
 
-
-cachedir = mkdtemp()
-memory = Memory(cachedir=cachedir, verbose=0)
 
 __all__ = ['api', 'audio', 'google', 'image', 'video', 'multistep']
 
@@ -29,7 +25,6 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
             for s in new_stim:
                 if s.name is None:
                     s.name = stim.name
-        new_stim.set_history(stim, self)
         return new_stim
 
     @abstractmethod
