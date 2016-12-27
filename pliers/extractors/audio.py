@@ -1,4 +1,5 @@
-from pliers.stimuli import audio
+from pliers.stimuli.audio import AudioStim
+from pliers.stimuli.compound import TranscribedAudioCompoundStim
 from pliers.extractors import Extractor, ExtractorResult
 import numpy as np
 from scipy import fft
@@ -8,14 +9,14 @@ class AudioExtractor(Extractor):
 
     ''' Base Audio Extractor class; all subclasses can only be applied to
     audio. '''
-    _input_type = audio.AudioStim
+    _input_type = AudioStim
 
 
 class TranscribedAudioExtractor(AudioExtractor):
     
     ''' Base Transcribed Audio Extractor class; all subclasses can only be
     applied to transcribed audio. '''
-    _input_type = audio.TranscribedAudioStim
+    _input_type = TranscribedAudioCompoundStim
 
 
 class STFTAudioExtractor(AudioExtractor):
@@ -102,9 +103,9 @@ class MeanAmplitudeExtractor(TranscribedAudioExtractor):
         pass
     
     def _extract(self, stim):
-        amps = stim.data
-        sampling_rate = stim.sampling_rate
-        elements = stim.transcription.elements
+        amps = stim.audio.data
+        sampling_rate = stim.audio.sampling_rate
+        elements = stim.complex_text.elements
         values = []
         onsets = []
         durations = []

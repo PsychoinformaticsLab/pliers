@@ -36,24 +36,3 @@ class AudioStim(Stim):
     def __setstate__(self, d):
         self.__dict__ = d
         self._load_clip()
-
-
-class TranscribedAudioStim(AudioStim):
-
-    ''' An AudioStim with an associated text transcription.
-    Args:
-        filename (str): The path to the audio clip.
-        transcription (str or ComplexTextStim): the associated transcription.
-            If a string, this is interpreted as the name of a file containing
-            data needed to initialize a new ComplexTextStim. Otherwise, must
-            pass an existing ComplexTextStim instance.
-        kwargs (dict): optional keywords passed to the ComplexTextStim
-            initializer if transcription argument is a string.
-    '''
-
-    def __init__(self, filename, transcription, onset=None, **kwargs):
-        if isinstance(transcription, six.string_types):
-            transcription = ComplexTextStim(transcription, **kwargs)
-        self.transcription = transcription
-        super(TranscribedAudioStim, self).__init__(filename, onset=onset)
-        self.name += '_transcribed'
