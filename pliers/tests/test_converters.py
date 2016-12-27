@@ -26,7 +26,7 @@ def test_video_to_audio_converter():
     video = VideoStim(filename)
     conv = VideoToAudioConverter()
     audio = conv.transform(video)
-    assert audio.name == 'small.wav'
+    assert audio.name == 'small.mp4->small.wav'
     assert isinstance(audio.source_stim, VideoStim)
     assert audio.source_stim.name == 'small.mp4'
     assert splitext(video.filename)[0] == splitext(audio.filename)[0]
@@ -57,10 +57,6 @@ def test_derived_video_converter():
     assert type(first) == VideoFrameStim
     assert first.duration == 3 * (1 / 15.0)
 
-    # Test filter history
-    assert derived.history.shape == (2, 3)
-    assert np.array_equal(derived.history['filter'], ['every', 'hertz'])
-
 
 def test_derived_video_converter_cv2():
     pytest.importorskip('cv2')
@@ -87,7 +83,7 @@ def test_witaiAPI_converter():
     assert 'thermodynamics' in text or 'obey' in text
 
 
-@pytest.mark.skipif("'GOOGLE_API_KEY' not in os.environ")
+@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_googleAPI_converter():
     audio_dir = join(get_test_data_path(), 'audio')
     stim = AudioStim(join(audio_dir, 'homer.wav'))
@@ -121,7 +117,7 @@ def test_tesseract_converter():
     stim = ImageStim(join(image_dir, 'button.jpg'))
     conv = TesseractConverter()
     out_stim = conv.transform(stim)
-    assert out_stim.name == 'Exit'
+    assert out_stim.name == 'button.jpg->Exit'
     assert isinstance(out_stim.source_stim, ImageStim)
     assert out_stim.source_stim.name == 'button.jpg'
 
@@ -133,7 +129,7 @@ def test_google_vision_api_text_converter():
     stim = ImageStim(filename)
     text = conv.transform(stim).text
     assert 'Exit' in text
-    
+
     conv = GoogleVisionAPITextConverter(handle_annotations='concatenate')
     text = conv.transform(stim).text
     assert 'Exit' in text
@@ -151,19 +147,16 @@ def test_converter_memoization():
     video = VideoStim(filename)
     conv = VideoToAudioConverter()
 
-    from pliers.converters import cachedir
     memory.clear()
 
     # Time taken first time through
     start_time = time.time()
     audio1 = conv.convert(video)
     convert_time = time.time() - start_time
-    cache_ts1 = conv.convert.timestamp
 
     start_time = time.time()
     audio2 = conv.convert(video)
     cache_time = time.time() - start_time
-    cache_ts2 = conv.convert.timestamp
 
     # TODO: implement saner checking than this
     # Converting should be at least twice as slow as retrieving from cache
@@ -173,7 +166,6 @@ def test_converter_memoization():
     start_time = time.time()
     audio2 = conv.convert(video)
     cache_time = time.time() - start_time
-    cache_ts2 = conv.convert.timestamp
 
     # After clearing the cache, checks should fail
     assert convert_time <= cache_time * 2
@@ -192,9 +184,9 @@ def test_multistep_converter():
 @pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
 def test_stim_history_tracking():
     video = VideoStim(join(get_test_data_path(), 'video', 'obama_speech.mp4'))
-    assert video.history == 'VideoStim'
+    assert str(video.history) == 'VideoStim'
     conv = VideoToAudioConverter()
     stim = conv.convert(video)
     conv = WitTranscriptionConverter()
     stim = conv.convert(stim)
-    assert stim.history == 'VideoStim->VideoToAudioConverter/AudioStim->WitTranscriptionConverter/ComplexTextStim'
+    assert str(stim.history) == 'VideoStim->VideoToAudioConverter/AudioStim->WitTranscriptionConverter/ComplexTextStim'

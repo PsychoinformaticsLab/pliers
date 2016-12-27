@@ -16,7 +16,8 @@ from pliers.extractors.api import (IndicoAPIExtractor,
                                         ClarifaiAPIExtractor)
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.stimuli.video import ImageStim, VideoStim
-from pliers.stimuli.audio import AudioStim, TranscribedAudioStim
+from pliers.stimuli.audio import AudioStim
+from pliers.stimuli.compound import TranscribedAudioCompoundStim
 from pliers.support.download import download_nltk_data
 from pliers.extractors import Extractor, ExtractorResult, merge_results
 import numpy as np
@@ -149,10 +150,10 @@ def test_stft_extractor():
 
 
 def test_mean_amplitude_extractor():
-    audio_dir = join(get_test_data_path(), 'audio')
-    text_dir = join(get_test_data_path(), 'text')
-    stim = TranscribedAudioStim(join(audio_dir, "barber_edited.wav"),
-                                join(text_dir, "wonderful_edited.srt"))
+    audio = AudioStim(join(get_test_data_path(), 'audio', "barber_edited.wav"))
+    text_file = join(get_test_data_path(), 'text', "wonderful_edited.srt")
+    text = ComplexTextStim(text_file)
+    stim = TranscribedAudioCompoundStim(audio=audio, text=text)
     ext = MeanAmplitudeExtractor()
     result = ext.extract(stim).to_df()
     targets = [-0.154661, 0.121521]
@@ -289,4 +290,3 @@ def test_merge_extractor_results():
     assert df.columns.levels[0].unique().tolist() == de_names + ['onset', 'stim']
     assert df.columns.levels[1].unique().tolist() == ['duration', 0, 1, 2, '']
     assert set(df.index.levels[1].unique()) == set(['obama.jpg', 'apple.jpg'])
-
