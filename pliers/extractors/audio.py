@@ -40,6 +40,8 @@ class STFTAudioExtractor(AudioExtractor):
     Notes: code adapted from http://stackoverflow.com/questions/2459295/invertible-stft-and-istft-in-python
     '''
 
+    _log_attributes = ('frame_size', 'hop_size', 'bins')
+
     def __init__(self, frame_size=0.5, hop_size=0.1, bins=5,
                  spectrogram=False):
         self.frame_size = frame_size

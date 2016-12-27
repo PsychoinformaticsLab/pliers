@@ -8,7 +8,6 @@ class GoogleVisionAPITextConverter(GoogleVisionAPITransformer, ImageToTextConver
     request_type = 'TEXT_DETECTION'
     response_object = 'textAnnotations'
 
-
     def __init__(self, handle_annotations='first', **kwargs):
         super(GoogleVisionAPITextConverter, self).__init__(**kwargs)
         self.handle_annotations = handle_annotations

@@ -51,6 +51,9 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
         top_n (int): takes top n frames sorted by the absolute difference
          with the next frame
     '''
+
+    _log_attributes = ('every', 'hertz', 'top_n')
+
     def __init__(self, every=None, hertz=None, top_n=None):
         super(FrameSamplingConverter, self).__init__()
         self.every = every
