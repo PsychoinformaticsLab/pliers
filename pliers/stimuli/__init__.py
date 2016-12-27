@@ -1,9 +1,7 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
-from six import string_types
 from os.path import exists, isdir, join, basename
 from glob import glob
 from six import with_metaclass, string_types
-from pliers.utils import listify
 import importlib
 
 
@@ -35,58 +33,12 @@ class Stim(with_metaclass(ABCMeta)):
             self.history = stim.history + '->' + converter.__class__.__name__ + '/'
         self.history += self.__class__.__name__
 
+
 class CollectionStimMixin(with_metaclass(ABCMeta)):
 
     @abstractmethod
     def __iter__(self):
         pass
-
-
-class CompoundStim(object):
-
-    ''' A container for an arbitrary set of Stims.
-    Args:
-        stims (Stim or list): a single Stim (of any type) or a list of Stims.
-
-    '''
-    def __init__(self, stims):
-
-        self.stims = listify(stims)
-
-    def get_stim(self, type_, return_all=False):
-        ''' Returns component Stims of the specified type.
-        Args:
-            type_ (str or Stim class): the desired Stim subclass to return.
-            return_all (bool): when True, returns all stims that matched the
-                specified type as a list. When False (default), returns only
-                the first matching Stim.
-        Returns:
-            If return_all is True, a list of matching Stims (or an empty list
-            if no Stims match). If return_all is False, returns the first
-            matching Stim, or None if no Stims match.
-        '''
-        if isinstance(type_, string_types):
-            type_ = _get_stim_class(type_)
-        matches = []
-        for s in self.stims:
-            if isinstance(s, type_):
-                if not return_all:
-                    return s
-                matches.append(s)
-        if not matches:
-            return [] if return_all else None
-        return matches
-
-    def __getattr__(self, attr):
-        try:
-            stim = _get_stim_class(attr)
-        except:
-            raise AttributeError()
-        return self.get_stim(stim)
-
-    @property
-    def name(self):
-        return '_'.join([s.name for s in self.stims])
 
 
 def _get_stim_class(name):
