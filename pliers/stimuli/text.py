@@ -15,7 +15,8 @@ class TextStim(Stim):
         if filename is not None and text is None:
             text = open(filename).read()
         self.text = text
-        name = text if filename is None else filename + '_' + text
+        label = 'text[%s]' % text[:20]  # Truncate at 20 chars
+        name = label if filename is None else filename + '->' + label
         super(TextStim, self).__init__(filename, onset, duration, name)
 
 
@@ -121,8 +122,7 @@ class ComplexTextStim(Stim, CollectionStimMixin):
             end_ = tuple(row.end)
             duration = self._to_sec(end_) - start_time
             
-            line = row.text
-            line = line.replace("\r\n", " ").replace("\n", " ").replace("\r", " ").replace("\t", " ")
+            line = re.sub('\s+', ' ', row.text)
             list_[i] = [line, start_time, duration]
         
         # Convert to pandas DataFrame

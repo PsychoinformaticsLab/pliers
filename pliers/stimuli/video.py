@@ -21,8 +21,8 @@ class VideoFrameStim(ImageStim):
         if data is None:
             self.data = self.video.get_frame(index=frame_num).data
         if video.filename:
-            self.name = video.name + '_'
-        self.name += str(frame_num)
+            self.name = video.name + '->'
+        self.name += 'frame[%s]' % frame_num
 
 
 class VideoStim(Stim, CollectionStimMixin):
