@@ -61,11 +61,11 @@ class GoogleSpeechAPIConverter(SpeechRecognitionAPIConverter):
 
     @property
     def environ_key(self):
-        return 'GOOGLE_API_KEY'
+        return 'GOOGLE_APPLICATION_CREDENTIALS'
 
     @property
     def recognize_method(self):
-        return 'recognize_google'
+        return 'recognize_google_cloud'
 
 
 class IBMSpeechAPIConverter(AudioToTextConverter):
