@@ -45,6 +45,7 @@ class Transformer(with_metaclass(ABCMeta)):
             validated_stim = self._validate(stims)
             # If a conversion occurred during validation, recurse
             if stims is not validated_stim:
+                self._update_history(stims, validated_stim)
                 return self.transform(validated_stim, *args, **kwargs)
             else:
                 result = self._transform(self._validate(stims), *args, **kwargs)
@@ -86,6 +87,10 @@ class Transformer(with_metaclass(ABCMeta)):
 
 class TransformationHistory(object):
 
+    _columns = ['source_name', 'source_file', 'source_class', 'result_name',
+               'result_file', 'result_class', 'transformer_class',
+               'transformer_params']
+
     def __init__(self):
         self.transformations = []
 
@@ -103,10 +108,8 @@ class TransformationHistory(object):
         self.transformations.append(row)
 
     def to_df(self):
-        columns = ['source_name', 'source_file', 'source_class', 'result_name',
-                   'result_file', 'result_class', 'transformer_class',
-                   'transformer_params']
-        return pd.DataFrame(self.transformations, columns=columns)
+
+        return pd.DataFrame(self.transformations, columns=_columns)
 
     def __str__(self):
         result = ''
@@ -115,6 +118,12 @@ class TransformationHistory(object):
                 result += t[2]
             result += '->' + '%s/%s' % (t[6], t[5])
         return result
+
+    def get_value(self, name):
+        if name not in self._columns:
+            raise ValueError("Invalid column name: '%s'." % name)
+        ind = self._columns.index(name)
+        return self.transformations[-1][ind]
 
 
 class BatchTransformerMixin():
