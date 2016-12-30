@@ -16,16 +16,7 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
         self.convert = memory.cache(self.convert)
 
     def convert(self, stim, *args, **kwargs):
-        new_stim = self._convert(stim, *args, **kwargs)
-        if new_stim.name is None:
-            new_stim.name = stim.name
-        else:
-            new_stim.name = stim.name + '->' + new_stim.name
-        if isinstance(new_stim, CollectionStimMixin):
-            for s in new_stim:
-                if s.name is None:
-                    s.name = stim.name
-        return new_stim
+        return self.transform(stim, *args, **kwargs)
 
     @abstractmethod
     def _convert(self, stim):
@@ -36,7 +27,16 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
         pass
 
     def _transform(self, stim, *args, **kwargs):
-        return self.convert(stim, *args, **kwargs)
+        new_stim = self._convert(stim, *args, **kwargs)
+        if new_stim.name is None:
+            new_stim.name = stim.name
+        else:
+            new_stim.name = stim.name + '->' + new_stim.name
+        if isinstance(new_stim, CollectionStimMixin):
+            for s in new_stim:
+                if s.name is None:
+                    s.name = stim.name
+        return new_stim
 
 
 def get_converter(in_type, out_type):
