@@ -49,9 +49,6 @@ class VideoStim(Stim, CollectionStimMixin):
         for i, f in enumerate(self.clip.iter_frames()):
             yield VideoFrameStim(self, i, data=f)
 
-    def _read_frame(self, clip, t):
-        return clip.reader.get_frame(t)
-
     def __getstate__(self):
         d = self.__dict__.copy()
         d['clip'] = None

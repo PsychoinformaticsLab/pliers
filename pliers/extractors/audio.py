@@ -1,4 +1,5 @@
 from pliers.stimuli.audio import AudioStim
+from pliers.stimuli.text import ComplexTextStim
 from pliers.stimuli.compound import TranscribedAudioCompoundStim
 from pliers.extractors import Extractor, ExtractorResult
 import numpy as np
@@ -10,13 +11,6 @@ class AudioExtractor(Extractor):
     ''' Base Audio Extractor class; all subclasses can only be applied to
     audio. '''
     _input_type = AudioStim
-
-
-class TranscribedAudioExtractor(AudioExtractor):
-    
-    ''' Base Transcribed Audio Extractor class; all subclasses can only be
-    applied to transcribed audio. '''
-    _input_type = TranscribedAudioCompoundStim
 
 
 class STFTAudioExtractor(AudioExtractor):
@@ -40,14 +34,14 @@ class STFTAudioExtractor(AudioExtractor):
     Notes: code adapted from http://stackoverflow.com/questions/2459295/invertible-stft-and-istft-in-python
     '''
 
-    _log_attributes = ('frame_size', 'hop_size', 'bins')
+    _log_attributes = ('frame_size', 'hop_size', 'freq_bins')
 
-    def __init__(self, frame_size=0.5, hop_size=0.1, bins=5,
+    def __init__(self, frame_size=0.5, hop_size=0.1, freq_bins=5,
                  spectrogram=False):
         self.frame_size = frame_size
         self.hop_size = hop_size
         self.spectrogram = spectrogram
-        self.freq_bins = bins
+        self.freq_bins = freq_bins
         super(STFTAudioExtractor, self).__init__()
 
     def _stft(self, stim):
@@ -96,21 +90,18 @@ class STFTAudioExtractor(AudioExtractor):
                                onsets=index, durations=self.hop_size)
 
 
-class MeanAmplitudeExtractor(TranscribedAudioExtractor):
-    
-    ''' Mean amplitude extractor for blocks of audio with transcription.
-    '''
-    
-    def __init__(self):
-        pass
-    
+class MeanAmplitudeExtractor(Extractor):
+    ''' Mean amplitude extractor for blocks of audio with transcription. '''
+
+    _input_type = (AudioStim, ComplexTextStim)
+
     def _extract(self, stim):
+
         amps = stim.audio.data
         sampling_rate = stim.audio.sampling_rate
         elements = stim.complex_text.elements
-        values = []
-        onsets = []
-        durations = []
+        values, onsets, durations = [], [], []
+
         for i, el in enumerate(elements):
             onset = sampling_rate * el.onset
             onsets.append(onset)

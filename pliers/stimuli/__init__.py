@@ -3,6 +3,9 @@ from os.path import exists, isdir, join, basename
 from glob import glob
 from six import with_metaclass, string_types
 import importlib
+from collections import namedtuple
+from pliers import config
+import pandas as pd
 
 
 __all__ = ['audio', 'image', 'text', 'video']
@@ -114,3 +117,47 @@ def load_stims(source, dtype=None):
             load_file(s)
 
     return stims
+
+
+def _log_transformation(source, result, trans=None):
+
+    if not config.transformation_history:
+        return
+
+    values = [source.name, source.filename, source.__class__.__name__]
+    if isinstance(result, Stim):
+        values.extend([result.name, result.filename])
+    else:
+        values.extend(['', ''])
+    values.append(result.__class__.__name__)
+    if trans is not None:
+        values.append(trans.__class__.__name__)
+        tr_attrs = [getattr(trans, attr) for attr in trans._log_attributes]
+        values.append(str(dict(zip(trans._log_attributes, tr_attrs))))
+    else:
+        values.append(['', ''])
+    parent = source.history
+    string = str(parent) if parent else values[2]
+    string += '->%s/%s' % (values[6], values[5])
+    values.extend([string, parent])
+    result.history = TransformationLog(*values)
+
+
+class TransformationLog(namedtuple('TransformationLog', "source_name source_file " +
+                             "source_class result_name result_file result_class " +
+                             " transformer_class transformer_params string parent")):
+    '''A namedtuple that stores information about a single transformation. '''
+
+    __slots__ = ()
+
+    def __str__(self):
+        return self.string
+
+    def to_df(self):
+        def _append_row(rows, history):
+            rows.append(history[:-2])
+            if history[-1]:
+                _append_row(rows, history[-1])
+            return rows
+        rows = _append_row([], self)[::-1]
+        return pd.DataFrame(rows, columns=self._fields[:-2])

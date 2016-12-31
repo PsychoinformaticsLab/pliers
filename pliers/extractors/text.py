@@ -64,9 +64,11 @@ class DictionaryExtractor(TextExtractor):
         else:
             self.dictionary = None
         self.data = dictionary
-        self.variables = variables
-        if variables is not None:
+        if variables is None:
+            variables = list(self.data.columns)
+        else:
             self.data = self.data[variables]
+        self.variables = variables
         # Set up response when key is missing
         self.missing = missing
         super(DictionaryExtractor, self).__init__()
@@ -86,6 +88,8 @@ class PredefinedDictionaryExtractor(DictionaryExtractor):
     _log_attributes = ('variables', 'missing', 'case_sensitive')
 
     def __init__(self, variables, missing=np.nan, case_sensitive=True):
+
+        self.case_sensitive = case_sensitive
 
         if isinstance(variables, (list, tuple)):
             _vars = {}
@@ -124,7 +128,7 @@ class NumUniqueWordsExtractor(TextExtractor):
 
     ''' Extracts the number of unique words used in the text. '''
 
-    _log_attributes = ('tokenizer')
+    _log_attributes = ('tokenizer',)
 
     def __init__(self, tokenizer=None):
         TextExtractor.__init__(self)

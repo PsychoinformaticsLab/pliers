@@ -96,7 +96,7 @@ class Graph(Node):
 
     def extract(self, stims, merge=True):
         stims = listify(stims)
-        results = flatten(self.collect(stims))
+        results = list(flatten(self.collect(stims)))
         return merge_results(results) if merge else results
 
     def _validate(self):

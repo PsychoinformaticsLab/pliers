@@ -73,7 +73,7 @@ class ComplexTextStim(Stim, CollectionStimMixin):
             raise ValueError("At least one of the 'filename', 'elements', or "
                              "text arguments must be specified.")
 
-        self.elements = []
+        self._elements = []
 
         if filename is not None:
             if filename.endswith("srt"):
@@ -82,12 +82,16 @@ class ComplexTextStim(Stim, CollectionStimMixin):
                 self._from_file(filename, columns, default_duration)
 
         if elements is not None:
-            self.elements.extend(elements)
+            self._elements.extend(elements)
 
         if text is not None:
             self._from_text(text, unit, tokenizer, language)
 
         super(ComplexTextStim, self).__init__(filename, onset, duration)
+
+    @property
+    def elements(self):
+        return self._elements
 
     def _from_file(self, filename, columns, default_duration):
         tod_names = {'t': 'text', 'o': 'onset', 'd': 'duration'}
@@ -108,7 +112,7 @@ class ComplexTextStim(Stim, CollectionStimMixin):
                 if duration is None:
                     duration = default_duration
                 elem = TextStim(filename, r['text'], r['onset'], duration)
-            self.elements.append(elem)
+            self._elements.append(elem)
 
     def _from_srt(self, filename):
         import pysrt
@@ -130,11 +134,11 @@ class ComplexTextStim(Stim, CollectionStimMixin):
 
         for i, r in df.iterrows():
             elem = TextStim(filename, r['text'], r['onset'], r["duration"])
-            self.elements.append(elem)
+            self._elements.append(elem)
 
     def __iter__(self):
         """ Iterate text elements. """
-        for elem in self.elements:
+        for elem in self._elements:
             yield elem
 
     def _to_sec(self, tup):
@@ -165,4 +169,4 @@ class ComplexTextStim(Stim, CollectionStimMixin):
             tokens = tokenize_text(text)
 
         for i, t in enumerate(tokens):
-            self.elements.append(TextStim(text=t, onset=i, duration=1))
+            self._elements.append(TextStim(text=t, onset=i, duration=1))
