@@ -9,7 +9,7 @@ import pandas as pd
 from types import GeneratorType
 
 
-__all__ = ['audio', 'image', 'text', 'video']
+__all__ = ['audio', 'compound', 'image', 'text', 'video']
 
 
 class Stim(with_metaclass(ABCMeta)):

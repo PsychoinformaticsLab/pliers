@@ -7,7 +7,7 @@ from types import GeneratorType
 from pliers import config
 
 
-__all__ = ['api', 'audio', 'google', 'image', 'iterators', 'video', 'multistep']
+__all__ = ['api', 'audio', 'google', 'image', 'iterators', 'multistep', 'video']
 
 
 class Converter(with_metaclass(ABCMeta, Transformer)):
