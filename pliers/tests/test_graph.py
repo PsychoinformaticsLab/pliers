@@ -47,7 +47,7 @@ def test_graph_smoke_test():
     stim = ImageStim(filename)
     nodes = [(BrightnessExtractor(), 'brightness')]
     graph = Graph(nodes)
-    result = graph.extract([stim])
+    result = graph.extract(stim)
     brightness = result[('BrightnessExtractor', 'brightness')].values[0]
     assert_almost_equal(brightness, 0.556134, 5)
 
@@ -81,7 +81,7 @@ def test_small_pipeline():
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
     result = merge_results(result)
-    assert (0, 'button.jpg->Exit') in result.index
+    assert (0, 'button.jpg->text[Exit]') in result.index
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
 
@@ -94,16 +94,16 @@ def test_big_pipeline():
                     [(TesseractConverter(), 'visual_text',
                     [(LengthExtractor(), 'visual_text_length')]),
                     (VibranceExtractor(), 'visual_vibrance')])]
-    audio_nodes = [(VideoToAudioConverter(), 'audio', 
+    audio_nodes = [(VideoToAudioConverter(), 'audio',
                     [(WitTranscriptionConverter(), 'audio_text',
                     [(LengthExtractor(), 'audio_text_length')])])]
     graph = Graph()
     graph.add_children(visual_nodes)
     graph.add_children(audio_nodes)
     result = graph.extract(video)
-    print(result)
     assert ('LengthExtractor', 'text_length') in result.columns
     assert ('VibranceExtractor', 'vibrance') in result.columns
     assert not result[('onset', '')].isnull().any()
-    assert 'obama_speech.mp4_obama_speech.wav_today' in result.index.get_level_values(1)
-    assert 'obama_speech.mp4_90' in result.index.get_level_values(1)
+    print(result)
+    assert 'text[together]' in result.index.get_level_values(1)
+    assert 'obama_speech.mp4->frame[90]' in result.index.get_level_values(1)

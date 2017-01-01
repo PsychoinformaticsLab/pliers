@@ -142,7 +142,7 @@ def test_compound_stim():
     video = VideoStim(filename)
     text = ComplexTextStim(text="The quick brown fox jumped...")
     stim = CompoundStim([audio, image1, image2, video, text])
-    assert len(stim.stims) == 5
+    assert len(stim.elements) == 5
     assert isinstance(stim.video, VideoStim)
     assert isinstance(stim.complex_text, ComplexTextStim)
     assert isinstance(stim.image, ImageStim)
