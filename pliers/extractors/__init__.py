@@ -4,7 +4,9 @@ from pliers.transformers import Transformer
 import pandas as pd
 import numpy as np
 from collections import defaultdict
-
+from pliers import config
+from pliers.utils import memory
+from types import GeneratorType
 
 __all__ = ['api', 'audio', 'google', 'image', 'text', 'video']
 
@@ -12,8 +14,17 @@ __all__ = ['api', 'audio', 'google', 'image', 'text', 'video']
 class Extractor(with_metaclass(ABCMeta, Transformer)):
     ''' Base class for Converters.'''
 
+    def __init__(self):
+        super(Extractor, self).__init__()
+        if config.cache_extractors:
+            self.transform = memory.cache(self.transform)
+
     def extract(self, stim, *args, **kwargs):
         return self.transform(stim, *args, **kwargs)
+
+    def transform(self, stim, *args, **kwargs):
+        result = super(Extractor, self).transform(stim, *args, **kwargs)
+        return list(result) if isinstance(result, GeneratorType) else result
 
     @abstractmethod
     def _extract(self, stim):
@@ -21,6 +32,7 @@ class Extractor(with_metaclass(ABCMeta, Transformer)):
 
     def _transform(self, stim, *args, **kwargs):
         return self._extract(stim, *args, **kwargs)
+
 
 
 class ExtractorResult(object):

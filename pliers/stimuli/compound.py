@@ -20,6 +20,7 @@ class CompoundStim(object):
     def __init__(self, elements):
 
         self.elements = []
+        self.history = None
         _type_dict = {}
         for s in elements:
             stim_cl, self_cl = s.__class__.__name__, self.__class__.__name__

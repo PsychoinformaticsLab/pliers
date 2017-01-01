@@ -95,16 +95,5 @@ class Graph(Node):
             return node
 
     def extract(self, stims, merge=True):
-        stims = listify(stims)
         results = list(flatten(self.collect(stims)))
         return merge_results(results) if merge else results
-
-    def _validate(self):
-        # Make sure all connected node inputs and outputs match
-        pass
-
-
-class Pipeline(Graph):
-
-    def __init__(self, steps):
-        pass

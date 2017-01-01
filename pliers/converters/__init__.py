@@ -3,9 +3,11 @@ from pliers.transformers import Transformer, CollectionStimMixin
 from six import with_metaclass
 from pliers.utils import memory
 import importlib
+from types import GeneratorType
+from pliers import config
 
 
-__all__ = ['api', 'audio', 'google', 'image', 'video', 'multistep']
+__all__ = ['api', 'audio', 'google', 'image', 'iterators', 'video', 'multistep']
 
 
 class Converter(with_metaclass(ABCMeta, Transformer)):
@@ -13,7 +15,8 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
 
     def __init__(self):
         super(Converter, self).__init__()
-        self.convert = memory.cache(self.convert)
+        if config.cache_converters:
+            self.transform = memory.cache(self.transform)
 
     def convert(self, stim, *args, **kwargs):
         return self.transform(stim, *args, **kwargs)
@@ -28,6 +31,8 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
 
     def _transform(self, stim, *args, **kwargs):
         new_stim = self._convert(stim, *args, **kwargs)
+        if isinstance(new_stim, (list, tuple, GeneratorType)):
+            return new_stim
         if new_stim.name is None:
             new_stim.name = stim.name
         else:

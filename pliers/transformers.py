@@ -6,6 +6,7 @@ import importlib
 from copy import deepcopy
 from pliers import config
 import pandas as pd
+from types import GeneratorType
 
 
 class Transformer(with_metaclass(ABCMeta)):
@@ -19,10 +20,6 @@ class Transformer(with_metaclass(ABCMeta)):
 
     def transform(self, stims, *args, **kwargs):
 
-        # If stims is a plain list or tuple, just naively loop over elements.
-        if isinstance(stims, (list, tuple)):
-            return self._iterate(stims, *args, **kwargs)
-
         # If stims is a CompoundStim and the Transformer is expecting a single
         # input type, extract all matching stims
         from pliers.stimuli.compound import CompoundStim
@@ -32,30 +29,22 @@ class Transformer(with_metaclass(ABCMeta)):
                 raise ValueError("No stims of class %s found in the provided"
                                  "CompoundStim instance." % self._input_type)
 
-        # If Stims can be iterated, and the Transformer is NOT expecting to be
-        # handed an iterable Stim, then first try to convert the Stim to
-        # something the Transformer can handle, and then fall back on naive
-        # looping.
-        elif isinstance(stims, CollectionStimMixin) and \
-           not issubclass(self._input_type, CollectionStimMixin):
-            from pliers.converters import get_converter
-            converter = get_converter(type(stims), self._input_type)
-            if converter:
-                return self.transform(converter.transform(stims))
-            else:
-                return self._iterate(list(s for s in stims))
+        # If stims is an iterable, naively loop over elements.
+        if isinstance(stims, (list, tuple, GeneratorType)):
+            return self._iterate(list(stims), *args, **kwargs)
 
-        # Otherwise pass the stim directly to the Transformer
+        # Validate stim, and then either pass it directly to the Transformer
+        # or, if a conversion occurred, recurse.
         else:
             validated_stim = self._validate(stims)
-            # If a conversion occurred during validation, we recurse--after
-            # updating the history to reflect the conversion.
+            # If a conversion occurred during validation, we recurse
             if stims is not validated_stim:
-                _log_transformation(stims, self, validated_stim)
                 return self.transform(validated_stim, *args, **kwargs)
             else:
                 result = self._transform(self._validate(stims), *args, **kwargs)
-                _log_transformation(stims, self, result)
+                result = _log_transformation(stims, result, self)
+                if isinstance(result, GeneratorType):
+                    result = list(result)
                 return result
 
     def _validate(self, stim):
@@ -65,7 +54,9 @@ class Transformer(with_metaclass(ABCMeta)):
             from pliers.converters import get_converter
             converter = get_converter(type(stim), self._input_type)
             if converter:
+                _old_stim = stim
                 stim = converter.transform(stim)
+                stim = _log_transformation(_old_stim, stim, converter)
             else:
                 msg = "Transformers of type %s can only be applied to stimuli " \
                       " of type(s) %s (not type %s), and no applicable " \
@@ -76,7 +67,7 @@ class Transformer(with_metaclass(ABCMeta)):
         return stim
 
     def _iterate(self, stims, *args, **kwargs):
-        return [self.transform(s, *args, **kwargs) for s in stims]
+        return (self.transform(s, *args, **kwargs) for s in stims)
 
     @abstractmethod
     def _transform(self, stim):

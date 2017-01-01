@@ -6,6 +6,7 @@ import importlib
 from collections import namedtuple
 from pliers import config
 import pandas as pd
+from types import GeneratorType
 
 
 __all__ = ['audio', 'image', 'text', 'video']
@@ -121,8 +122,11 @@ def load_stims(source, dtype=None):
 
 def _log_transformation(source, result, trans=None):
 
-    if not config.transformation_history:
+    if not config.log_transformations:
         return
+
+    if isinstance(result, (list, tuple, GeneratorType)):
+        return (_log_transformation(source, r, trans) for r in result)
 
     values = [source.name, source.filename, source.__class__.__name__]
     if isinstance(result, Stim):
@@ -141,7 +145,7 @@ def _log_transformation(source, result, trans=None):
     string += '->%s/%s' % (values[6], values[5])
     values.extend([string, parent])
     result.history = TransformationLog(*values)
-
+    return result
 
 class TransformationLog(namedtuple('TransformationLog', "source_name source_file " +
                              "source_class result_name result_file result_class " +

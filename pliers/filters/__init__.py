@@ -2,17 +2,17 @@ from abc import ABCMeta, abstractmethod
 from pliers.transformers import Transformer
 from six import with_metaclass
 from pliers.utils import memory
-
+from pliers import config
 
 __all__ = []
-
 
 class Filter(with_metaclass(ABCMeta, Transformer)):
     ''' Base class for Filters.'''
 
     def __init__(self):
         super(Filter, self).__init__()
-        self.filter = memory.cache(self.filter)
+        if config.cache_filters:
+            self.transform = memory.cache(self.transform)
 
     def filter(self, stim, *args, **kwargs):
         new_stim = self._filter(stim, *args, **kwargs)
