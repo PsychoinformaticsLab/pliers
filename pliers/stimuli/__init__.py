@@ -1,10 +1,12 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
-from six import string_types
 from os.path import exists, isdir, join, basename
 from glob import glob
 from six import with_metaclass, string_types
-from pliers.utils import listify
 import importlib
+from collections import namedtuple
+from pliers import config
+import pandas as pd
+from types import GeneratorType
 
 
 __all__ = ['audio', 'image', 'text', 'video']
@@ -13,18 +15,24 @@ __all__ = ['audio', 'image', 'text', 'video']
 class Stim(with_metaclass(ABCMeta)):
 
     ''' Base Stim class. '''
-    def __init__(self, filename=None, onset=None, duration=None):
+    def __init__(self, filename=None, onset=None, duration=None, name=None):
 
         self.filename = filename
-        self.name = basename(filename) if filename is not None else str(self.id)
-        self.features = []
         self.onset = onset
         self.duration = duration
+        self._history = None
 
+        if name is None:
+            name = '' if self.filename is None else basename(self.filename)
+        self.name = name
 
     @property
-    def id(self):
-        return ''
+    def history(self):
+        return self._history
+
+    @history.setter
+    def history(self, history):
+        self._history = history
 
 
 class CollectionStimMixin(with_metaclass(ABCMeta)):
@@ -32,49 +40,6 @@ class CollectionStimMixin(with_metaclass(ABCMeta)):
     @abstractmethod
     def __iter__(self):
         pass
-
-
-class CompoundStim(object):
-
-    ''' A container for an arbitrary set of Stims.
-    Args:
-        stims (Stim or list): a single Stim (of any type) or a list of Stims.
-
-    '''
-    def __init__(self, stims):
-
-        self.stims = listify(stims)
-
-    def get_stim(self, type_, return_all=False):
-        ''' Returns component Stims of the specified type.
-        Args:
-            type_ (str or Stim class): the desired Stim subclass to return.
-            return_all (bool): when True, returns all stims that matched the
-                specified type as a list. When False (default), returns only
-                the first matching Stim.
-        Returns:
-            If return_all is True, a list of matching Stims (or an empty list
-            if no Stims match). If return_all is False, returns the first
-            matching Stim, or None if no Stims match.
-        '''
-        if isinstance(type_, string_types):
-            type_ = _get_stim_class(type_)
-        matches = []
-        for s in self.stims:
-            if isinstance(s, type_):
-                if not return_all:
-                    return s
-                matches.append(s)
-        if not matches:
-            return [] if return_all else None
-        return matches
-
-    def __getattr__(self, attr):
-        try:
-            stim = _get_stim_class(attr)
-        except:
-            raise AttributeError()
-        return self.get_stim(stim)
 
 
 def _get_stim_class(name):
@@ -153,3 +118,50 @@ def load_stims(source, dtype=None):
             load_file(s)
 
     return stims
+
+
+def _log_transformation(source, result, trans=None):
+
+    if not config.log_transformations:
+        return
+
+    if isinstance(result, (list, tuple, GeneratorType)):
+        return (_log_transformation(source, r, trans) for r in result)
+
+    values = [source.name, source.filename, source.__class__.__name__]
+    if isinstance(result, Stim):
+        values.extend([result.name, result.filename])
+    else:
+        values.extend(['', ''])
+    values.append(result.__class__.__name__)
+    if trans is not None:
+        values.append(trans.__class__.__name__)
+        tr_attrs = [getattr(trans, attr) for attr in trans._log_attributes]
+        values.append(str(dict(zip(trans._log_attributes, tr_attrs))))
+    else:
+        values.append(['', ''])
+    parent = source.history
+    string = str(parent) if parent else values[2]
+    string += '->%s/%s' % (values[6], values[5])
+    values.extend([string, parent])
+    result.history = TransformationLog(*values)
+    return result
+
+class TransformationLog(namedtuple('TransformationLog', "source_name source_file " +
+                             "source_class result_name result_file result_class " +
+                             " transformer_class transformer_params string parent")):
+    '''A namedtuple that stores information about a single transformation. '''
+
+    __slots__ = ()
+
+    def __str__(self):
+        return self.string
+
+    def to_df(self):
+        def _append_row(rows, history):
+            rows.append(history[:-2])
+            if history[-1]:
+                _append_row(rows, history[-1])
+            return rows
+        rows = _append_row([], self)[::-1]
+        return pd.DataFrame(rows, columns=self._fields[:-2])

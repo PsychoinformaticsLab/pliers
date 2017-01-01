@@ -24,7 +24,7 @@ def test_convert_to_long():
     audio_dir = join(get_test_data_path(), 'audio')
     stim = AudioStim(join(audio_dir, 'barber.wav'))
     ext = STFTAudioExtractor(frame_size=1., spectrogram=False,
-                        bins=[(100, 300), (300, 3000), (3000, 20000)])
+                        freq_bins=[(100, 300), (300, 3000), (3000, 20000)])
     timeline = ext.extract(stim)
     long_timeline = to_long_format(timeline)
     assert long_timeline.shape == (timeline.to_df().shape[0] * 3, 4)

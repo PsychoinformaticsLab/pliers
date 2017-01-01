@@ -1,10 +1,17 @@
 import collections
 from six import string_types
+from joblib import Memory
+from tempfile import mkdtemp
+
+cachedir = mkdtemp()
+memory = Memory(cachedir=cachedir, verbose=0)
+
 
 def listify(obj):
     ''' Wraps all non-list or tuple objects in a list; provides a simple way
     to accept flexible arguments. '''
     return obj if isinstance(obj, (list, tuple, type(None))) else [obj]
+
 
 def flatten(l):
     for el in l:

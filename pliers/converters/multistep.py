@@ -31,7 +31,7 @@ class MultiStepConverter(Converter):
                     raise ValueError(msg)
             else:
                 converter = step
-            stim = converter.transform(stim)                    
+            stim = converter.transform(stim)
         return stim
 
 

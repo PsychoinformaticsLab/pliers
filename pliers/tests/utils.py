@@ -15,6 +15,11 @@ class DummyExtractor(Extractor):
     extract() is called. Can set the extractor name inside _extract() to
     facilitate testing of results merging etc. '''
     _input_type = ImageStim
+    _log_attributes = ('param_A', 'param_B')
+
+    def __init__(self, param_A=None, param_B='pie'):
+        self.param_A = param_A
+        self.param_B = param_B
 
     def _extract(self, stim, name=None, n_rows=100, n_cols=3, max_time=1000):
         data = np.random.randint(0, 1000, (n_rows, n_cols))

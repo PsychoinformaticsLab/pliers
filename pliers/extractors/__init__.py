@@ -4,7 +4,9 @@ from pliers.transformers import Transformer
 import pandas as pd
 import numpy as np
 from collections import defaultdict
-
+from pliers import config
+from pliers.utils import memory
+from types import GeneratorType
 
 __all__ = ['api', 'audio', 'google', 'image', 'text', 'video']
 
@@ -12,8 +14,17 @@ __all__ = ['api', 'audio', 'google', 'image', 'text', 'video']
 class Extractor(with_metaclass(ABCMeta, Transformer)):
     ''' Base class for Converters.'''
 
+    def __init__(self):
+        super(Extractor, self).__init__()
+        if config.cache_extractors:
+            self.transform = memory.cache(self.transform)
+
     def extract(self, stim, *args, **kwargs):
         return self.transform(stim, *args, **kwargs)
+
+    def transform(self, stim, *args, **kwargs):
+        result = super(Extractor, self).transform(stim, *args, **kwargs)
+        return list(result) if isinstance(result, GeneratorType) else result
 
     @abstractmethod
     def _extract(self, stim):
@@ -21,6 +32,7 @@ class Extractor(with_metaclass(ABCMeta, Transformer)):
 
     def _transform(self, stim, *args, **kwargs):
         return self._extract(stim, *args, **kwargs)
+
 
 
 class ExtractorResult(object):
@@ -31,6 +43,7 @@ class ExtractorResult(object):
         self.stim = stim
         self.extractor = extractor
         self.features = features
+        self._history = None
         if onsets is None:
             onsets = stim.onset
         self.onsets = onsets if onsets is not None else np.nan
@@ -47,6 +60,14 @@ class ExtractorResult(object):
             df.set_index('stim', append=True, inplace=True)
         return df
 
+    @property
+    def history(self):
+        return self._history
+
+    @history.setter
+    def history(self, history):
+        self._history = history
+
     @classmethod
     def merge_features(cls, results, extractor_names=True, stim_names=True):
         ''' Merge a list of ExtractorResults bound to the same Stim into a
@@ -61,7 +82,7 @@ class ExtractorResult(object):
         '''
 
         # Make sure all ExtractorResults are associated with same Stim.
-        stims = set([r.stim for r in results])
+        stims = set([r.stim.name for r in results])
         dfs = [r.to_df() for r in results]
         if len(stims) > 1:
             raise ValueError("merge_features() can only be called on a set of "
@@ -94,16 +115,21 @@ class ExtractorResult(object):
         if durations.apply(lambda x: x.nunique()<=1, axis=1).all():
             result = result.drop('duration', axis=1, level=1)
 
-        if stim_names:
-            result['stim'] = list(stims)[0].name
-            result.set_index('stim', append=True, inplace=True)
+        result.insert(0, 'class', results[0].stim.__class__.__name__)
+        result.insert(0, 'filename', results[0].stim.filename)
+        result.insert(0, 'history', str(results[0].history))
 
-        return result
+        if stim_names:
+            result['stim'] = list(stims)[0]
+            result.set_index('stim', append=True, inplace=True)
+            result = result.sort_index()
+
+        return result.sort_values(['onset'])
 
     @classmethod
     def merge_stims(cls, results, stim_names=True):
         results = [r.to_df(True) if isinstance(r, ExtractorResult) else r for r in results]
-        return pd.concat(results, axis=0)
+        return pd.concat(results, axis=0).sort_values('onset')
 
 
 def merge_results(results, extractor_names=True, stim_names=True):

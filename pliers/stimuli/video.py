@@ -20,14 +20,9 @@ class VideoFrameStim(ImageStim):
         super(VideoFrameStim, self).__init__(filename, onset, duration, data)
         if data is None:
             self.data = self.video.get_frame(index=frame_num).data
-
-
-    @property
-    def id(self):
-        if self.filename is not None:
-            return self.filename + '_' + self.frame_num
-        else:
-            return self.frame_num
+        if video.filename:
+            self.name = video.name + '->'
+        self.name += 'frame[%s]' % frame_num
 
 
 class VideoStim(Stim, CollectionStimMixin):
@@ -53,9 +48,6 @@ class VideoStim(Stim, CollectionStimMixin):
         """ Frame iteration. """
         for i, f in enumerate(self.clip.iter_frames()):
             yield VideoFrameStim(self, i, data=f)
-
-    def _read_frame(self, clip, t):
-        return clip.reader.get_frame(t)
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -83,13 +75,12 @@ class DerivedVideoStim(VideoStim):
     VideoStim containing keyframes (for API calls). Each keyframe is associated
     with a duration reflecting the length of its "scene."
     """
-    def __init__(self, filename, elements, frame_index=None, history=None):
+    def __init__(self, filename, elements, frame_index=None):
         super(DerivedVideoStim, self).__init__(filename)
         self.elements = elements
         self.frame_index = frame_index
-        self.history = history
+        self.name += '_derived'
         
     def __iter__(self):
         for elem in self.elements:
             yield elem
-

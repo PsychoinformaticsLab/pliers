@@ -55,13 +55,20 @@ class DictionaryExtractor(TextExtractor):
             Defaults to numpy's NaN.
     '''
 
+    _log_attributes = ('dictionary', 'variables', 'missing')
+
     def __init__(self, dictionary, variables=None, missing=np.nan):
         if isinstance(dictionary, string_types):
+            self.dictionary = dictionary  # for TranformationHistory logging
             dictionary = pd.read_csv(dictionary, sep='\t', index_col=0)
+        else:
+            self.dictionary = None
         self.data = dictionary
-        self.variables = variables
-        if variables is not None:
+        if variables is None:
+            variables = list(self.data.columns)
+        else:
             self.data = self.data[variables]
+        self.variables = variables
         # Set up response when key is missing
         self.missing = missing
         super(DictionaryExtractor, self).__init__()
@@ -78,7 +85,11 @@ class DictionaryExtractor(TextExtractor):
 
 class PredefinedDictionaryExtractor(DictionaryExtractor):
 
+    _log_attributes = ('variables', 'missing', 'case_sensitive')
+
     def __init__(self, variables, missing=np.nan, case_sensitive=True):
+
+        self.case_sensitive = case_sensitive
 
         if isinstance(variables, (list, tuple)):
             _vars = {}
@@ -116,6 +127,8 @@ class LengthExtractor(TextExtractor):
 class NumUniqueWordsExtractor(TextExtractor):
 
     ''' Extracts the number of unique words used in the text. '''
+
+    _log_attributes = ('tokenizer',)
 
     def __init__(self, tokenizer=None):
         TextExtractor.__init__(self)

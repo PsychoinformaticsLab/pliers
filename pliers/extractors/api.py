@@ -28,6 +28,8 @@ class IndicoAPIExtractor(ComplexTextExtractor):
         models (list): The names of the Indico models to use.  
     '''
 
+    _log_attributes = ('models',)
+
     def __init__(self, api_key=None, models=None):
         ComplexTextExtractor.__init__(self)
         if api_key is None:
@@ -92,6 +94,8 @@ class ClarifaiAPIExtractor(ImageExtractor):
             For example, ['food', 'animal'].
     '''
 
+    _log_attributes = ('model', 'select_classes')
+
     def __init__(self, app_id=None, app_secret=None, model=None, select_classes=None):
         ImageExtractor.__init__(self)
         if app_id is None or app_secret is None:
@@ -106,6 +110,8 @@ class ClarifaiAPIExtractor(ImageExtractor):
         self.tagger = ClarifaiApi(app_id=app_id, app_secret=app_secret)
         if not (model is None):
             self.tagger.set_model(model)
+
+        self.model = model
         
         if select_classes is None:
             self.select_classes = None

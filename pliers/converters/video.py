@@ -51,6 +51,9 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
         top_n (int): takes top n frames sorted by the absolute difference
          with the next frame
     '''
+
+    _log_attributes = ('every', 'hertz', 'top_n')
+
     def __init__(self, every=None, hertz=None, top_n=None):
         super(FrameSamplingConverter, self).__init__()
         self.every = every
@@ -62,19 +65,12 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
             frame_index = range(video.n_frames)
         else:
             frame_index = video.frame_index
-        
-        if not hasattr(video, "history"):
-            history = pd.DataFrame(columns=["filter", "value", "n_frames"])
-        else:
-            history = video.history.copy()
 
         if self.every is not None:
             new_idx = range(video.n_frames)[::self.every]
-            history.loc[history.shape[0]]= ["every", self.every, len(new_idx)]
         elif self.hertz is not None:
             interval = int(video.fps / self.hertz)
             new_idx = range(video.n_frames)[::interval]
-            history.loc[history.shape[0]] = ["hertz", self.hertz, len(new_idx)]
         elif self.top_n is not None:
             import cv2
             diffs = []
@@ -85,7 +81,6 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
                 diffs.append(sum(cv2.sumElems(cv2.absdiff(last, img))))
                 last = img
             new_idx = sorted(range(len(diffs)), key=lambda i: diffs[i], reverse=True)[:self.top_n]
-            history.loc[history.shape[0]] = ["top_n", self.top_n, len(new_idx)]
 
         frame_index = sorted(list(set(frame_index).intersection(new_idx)))
 
@@ -98,12 +93,9 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
             else:
                 dur = (len(video.frames) / video.fps) - onsets[i]
 
-            elem = VideoFrameStim(video=video, frame_num=f,
-                                  duration=dur)
+            elem = VideoFrameStim(video=video, frame_num=f, duration=dur)
             elements.append(elem)
 
-        return DerivedVideoStim(filename=video.filename,
-                                elements=elements,
-                                frame_index=frame_index,
-                                history=history)
+        return DerivedVideoStim(filename=video.filename, elements=elements,
+                                frame_index=frame_index)
         

@@ -1,6 +1,7 @@
 *.pyc
 *.DS_Store
 *~
+benchmarks/
 build/
 dist
 dist/*

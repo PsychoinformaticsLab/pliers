@@ -1,15 +1,13 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 from pliers.transformers import Transformer, CollectionStimMixin
 from six import with_metaclass
-from tempfile import mkdtemp
-from joblib import Memory
+from pliers.utils import memory
 import importlib
+from types import GeneratorType
+from pliers import config
 
 
-cachedir = mkdtemp()
-memory = Memory(cachedir=cachedir, verbose=0)
-
-__all__ = ['api', 'audio', 'google', 'image', 'video', 'multistep']
+__all__ = ['api', 'audio', 'google', 'image', 'iterators', 'video', 'multistep']
 
 
 class Converter(with_metaclass(ABCMeta, Transformer)):
@@ -17,21 +15,11 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
 
     def __init__(self):
         super(Converter, self).__init__()
-        self.convert = memory.cache(self.convert)
+        if config.cache_converters:
+            self.transform = memory.cache(self.transform)
 
     def convert(self, stim, *args, **kwargs):
-        new_stim = self._convert(stim, *args, **kwargs)
-        if new_stim.name is None:
-            new_stim.name = stim.name
-        else:
-            new_stim.name = stim.name + '_' + new_stim.name
-        if isinstance(new_stim, CollectionStimMixin):
-            for s in new_stim:
-                if s.name is None:
-                    s.name = stim.name
-                else:
-                    s.name = stim.name + '_' + s.name
-        return new_stim
+        return self.transform(stim, *args, **kwargs)
 
     @abstractmethod
     def _convert(self, stim):
@@ -42,7 +30,18 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
         pass
 
     def _transform(self, stim, *args, **kwargs):
-        return self.convert(stim, *args, **kwargs)
+        new_stim = self._convert(stim, *args, **kwargs)
+        if isinstance(new_stim, (list, tuple, GeneratorType)):
+            return new_stim
+        if new_stim.name is None:
+            new_stim.name = stim.name
+        else:
+            new_stim.name = stim.name + '->' + new_stim.name
+        if isinstance(new_stim, CollectionStimMixin):
+            for s in new_stim:
+                if s.name is None:
+                    s.name = stim.name
+        return new_stim
 
 
 def get_converter(in_type, out_type):

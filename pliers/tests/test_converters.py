@@ -9,11 +9,12 @@ from pliers.converters.api import (WitTranscriptionConverter,
                                         GoogleSpeechAPIConverter,
                                         IBMSpeechAPIConverter)
 from pliers.converters.google import GoogleVisionAPITextConverter
+from pliers.converters.iterators import ComplexTextIterator
 from pliers.stimuli.video import VideoStim, VideoFrameStim, DerivedVideoStim
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.image import ImageStim
-
+from pliers import config
 import numpy as np
 import math
 import pytest
@@ -25,8 +26,10 @@ def test_video_to_audio_converter():
     filename = join(get_test_data_path(), 'video', 'small.mp4')
     video = VideoStim(filename)
     conv = VideoToAudioConverter()
-    audio = conv.transform(video)
-    assert audio.name == 'small.mp4_small.wav'
+    audio = conv.convert(video)
+    assert audio.name == 'small.mp4->small.wav'
+    assert audio.history.source_class == 'VideoStim'
+    assert audio.history.source_file == filename
     assert splitext(video.filename)[0] == splitext(audio.filename)[0]
     assert np.isclose(video.duration, audio.duration, 1e-2)
 
@@ -44,7 +47,8 @@ def test_derived_video_converter():
     assert len(derived.elements) == math.ceil(video.n_frames / 3.0)
     first = next(f for f in derived)
     assert type(first) == VideoFrameStim
-    assert first.name == 'small.mp4_0'
+    print(first.name)
+    assert first.name == 'small.mp4->frame[0]'
     assert first.duration == 3 * (1 / 30.0)
 
     # Should refilter from original frames
@@ -54,10 +58,6 @@ def test_derived_video_converter():
     first = next(f for f in derived)
     assert type(first) == VideoFrameStim
     assert first.duration == 3 * (1 / 15.0)
-
-    # Test filter history
-    assert derived.history.shape == (2, 3)
-    assert np.array_equal(derived.history['filter'], ['every', 'hertz'])
 
 
 def test_derived_video_converter_cv2():
@@ -85,7 +85,7 @@ def test_witaiAPI_converter():
     assert 'thermodynamics' in text or 'obey' in text
 
 
-@pytest.mark.skipif("'GOOGLE_API_KEY' not in os.environ")
+@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_googleAPI_converter():
     audio_dir = join(get_test_data_path(), 'audio')
     stim = AudioStim(join(audio_dir, 'homer.wav'))
@@ -103,9 +103,9 @@ def test_ibmAPI_converter():
     stim = AudioStim(join(audio_dir, 'homer.wav'))
     conv = IBMSpeechAPIConverter()
     out_stim = conv.transform(stim)
-    assert type(out_stim) == ComplexTextStim
+    assert isinstance(out_stim, ComplexTextStim)
     first_word = next(w for w in out_stim)
-    assert type(first_word) == TextStim
+    assert isinstance(first_word, TextStim)
     assert first_word.duration > 0
     assert first_word.onset != None
 
@@ -119,8 +119,9 @@ def test_tesseract_converter():
     stim = ImageStim(join(image_dir, 'button.jpg'))
     conv = TesseractConverter()
     out_stim = conv.transform(stim)
-    assert out_stim.name == 'button.jpg_Exit'
-    assert out_stim.text == 'Exit'
+    assert out_stim.name == 'button.jpg->text[Exit]'
+    assert out_stim.history.source_class == 'ImageStim'
+    assert out_stim.history.source_name == 'button.jpg'
 
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
@@ -130,7 +131,7 @@ def test_google_vision_api_text_converter():
     stim = ImageStim(filename)
     text = conv.transform(stim).text
     assert 'Exit' in text
-    
+
     conv = GoogleVisionAPITextConverter(handle_annotations='concatenate')
     text = conv.transform(stim).text
     assert 'Exit' in text
@@ -144,36 +145,41 @@ def test_get_converter():
 
 
 def test_converter_memoization():
+
+    cache_value = config.cache_converters
+    config.cache_converters = True
+
     filename = join(get_test_data_path(), 'video', 'small.mp4')
     video = VideoStim(filename)
     conv = VideoToAudioConverter()
 
-    from pliers.converters import cachedir
-    memory.clear()
+    def convert(stim):
+        start_time = time.time()
+        stim = conv.convert(stim)
+        return time.time() - start_time
 
     # Time taken first time through
-    start_time = time.time()
-    audio1 = conv.convert(video)
-    convert_time = time.time() - start_time
-    cache_ts1 = conv.convert.timestamp
+    memory.clear()
 
-    start_time = time.time()
-    audio2 = conv.convert(video)
-    cache_time = time.time() - start_time
-    cache_ts2 = conv.convert.timestamp
+    convert_time = convert(video)
+    cache_time = convert(video)
 
     # TODO: implement saner checking than this
     # Converting should be at least twice as slow as retrieving from cache
     assert convert_time >= cache_time * 2
 
-    memory.clear()
-    start_time = time.time()
-    audio2 = conv.convert(video)
-    cache_time = time.time() - start_time
-    cache_ts2 = conv.convert.timestamp
-
     # After clearing the cache, checks should fail
+    memory.clear()
+    cache_time = convert(video)
     assert convert_time <= cache_time * 2
+
+    # When cach is disabled, check should also fail
+    config.cache_converters = False
+    conv = VideoToAudioConverter()
+    cache_time = convert(video)
+    assert convert_time <= cache_time * 2
+
+    config.cache_converters = cache_value
 
 
 @pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
@@ -185,3 +191,25 @@ def test_multistep_converter():
     assert isinstance(text, ComplexTextStim)
     first_word = next(w for w in text)
     assert type(first_word) == TextStim
+
+
+@pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
+def test_stim_history_tracking():
+    video = VideoStim(join(get_test_data_path(), 'video', 'obama_speech.mp4'))
+    assert video.history is None
+    conv = VideoToAudioConverter()
+    stim = conv.convert(video)
+    assert str(stim.history) == 'VideoStim->VideoToAudioConverter/AudioStim'
+    conv = WitTranscriptionConverter()
+    stim = conv.convert(stim)
+    assert str(stim.history) == 'VideoStim->VideoToAudioConverter/AudioStim->WitTranscriptionConverter/ComplexTextStim'
+
+
+def test_stim_iteration_converter():
+    textfile = join(get_test_data_path(), 'text', 'scandal.txt')
+    stim = ComplexTextStim(text=open(textfile).read().strip())
+    words = ComplexTextIterator().transform(stim)
+    assert len(words) == 231
+    assert isinstance(words[1], TextStim)
+    assert words[1].text == 'Sherlock'
+    assert str(words[1].history) == 'ComplexTextStim->ComplexTextIterator/TextStim'

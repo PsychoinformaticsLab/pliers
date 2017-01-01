@@ -3,7 +3,7 @@ from pliers.stimuli.video import VideoStim, VideoFrameStim
 from pliers.stimuli.text import ComplexTextStim
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.image import ImageStim
-from pliers.stimuli import CompoundStim
+from pliers.stimuli.compound import CompoundStim, TranscribedAudioCompoundStim
 from pliers.extractors import Extractor, ExtractorResult
 from pliers.extractors.image import BrightnessExtractor
 from pliers.stimuli import Stim, _get_stim_class
@@ -53,8 +53,6 @@ def test_image_stim(dummy_iter_extractor):
     filename = join(get_test_data_path(), 'image', 'apple.jpg')
     stim = ImageStim(filename)
     assert stim.data.shape == (288, 420, 3)
-    # values = stim.extract([dummy_iter_extractor])
-    # assert isinstance(values, pd.DataFrame)
 
 
 def test_video_stim():
@@ -85,8 +83,6 @@ def test_audio_stim(dummy_iter_extractor):
     stim = AudioStim(join(audio_dir, 'barber.wav'), sampling_rate=11025)
     assert round(stim.duration) == 57
     assert stim.sampling_rate == 11025
-    # tl = stim.extract([dummy_iter_extractor])
-    # assert isinstance(tl, pd.DataFrame)
 
 
 def test_audio_formats():
@@ -146,7 +142,7 @@ def test_compound_stim():
     video = VideoStim(filename)
     text = ComplexTextStim(text="The quick brown fox jumped...")
     stim = CompoundStim([audio, image1, image2, video, text])
-    assert len(stim.stims) == 5
+    assert len(stim.elements) == 5
     assert isinstance(stim.video, VideoStim)
     assert isinstance(stim.complex_text, ComplexTextStim)
     assert isinstance(stim.image, ImageStim)
@@ -171,3 +167,12 @@ def test_transformations_on_compound_stim():
     results = ext.extract(stim)
     assert len(results) == 2
     assert np.allclose(results[0].data[0], 0.88784294)
+
+
+def test_transcribed_audio_stim():
+    audio = AudioStim(join(get_test_data_path(), 'audio', "barber_edited.wav"))
+    text_file = join(get_test_data_path(), 'text', "wonderful_edited.srt")
+    text = ComplexTextStim(text_file)
+    stim = TranscribedAudioCompoundStim(audio=audio, text=text)
+    assert isinstance(stim.audio, AudioStim)
+    assert isinstance(stim.complex_text, ComplexTextStim)

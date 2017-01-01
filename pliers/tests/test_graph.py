@@ -5,6 +5,7 @@ from pliers.converters.video import FrameSamplingConverter, VideoToAudioConverte
 from pliers.converters.api import WitTranscriptionConverter
 from pliers.extractors.image import BrightnessExtractor, VibranceExtractor
 from pliers.extractors.text import LengthExtractor
+from pliers.extractors import merge_results
 from pliers.stimuli.image import ImageStim
 from pliers.stimuli.video import VideoStim
 from .utils import get_test_data_path, DummyExtractor
@@ -46,7 +47,7 @@ def test_graph_smoke_test():
     stim = ImageStim(filename)
     nodes = [(BrightnessExtractor(), 'brightness')]
     graph = Graph(nodes)
-    result = graph.extract([stim])
+    result = graph.extract(stim)
     brightness = result[('BrightnessExtractor', 'brightness')].values[0]
     assert_almost_equal(brightness, 0.556134, 5)
 
@@ -75,8 +76,12 @@ def test_small_pipeline():
     nodes = [(TesseractConverter(), 'tesseract', 
                 [(LengthExtractor(), 'length')])]
     graph = Graph(nodes)
-    result = graph.extract([stim])
-    assert (0, 'button.jpg_Exit') in result.index
+    result = list(graph.extract([stim], merge=False))
+    history = result[0].history.to_df()
+    assert history.shape == (2, 8)
+    assert history.iloc[0]['result_class'] == 'TextStim'
+    result = merge_results(result)
+    assert (0, 'button.jpg->text[Exit]') in result.index
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
 
@@ -85,13 +90,13 @@ def test_small_pipeline():
 def test_big_pipeline():
     filename = join(get_test_data_path(), 'video', 'obama_speech.mp4')
     video = VideoStim(filename)
-    visual_nodes = [(FrameSamplingConverter(every=15), 'framesampling', 
-                    [(TesseractConverter(), 'visual_text', 
-                    [(LengthExtractor(), 'text_length')]), 
+    visual_nodes = [(FrameSamplingConverter(every=15), 'framesampling',
+                    [(TesseractConverter(), 'visual_text',
+                    [(LengthExtractor(), 'visual_text_length')]),
                     (VibranceExtractor(), 'visual_vibrance')])]
-    audio_nodes = [(VideoToAudioConverter(), 'audio', 
-                    [(WitTranscriptionConverter(), 'audio_text', 
-                    [(LengthExtractor(), 'text_length')])])]
+    audio_nodes = [(VideoToAudioConverter(), 'audio',
+                    [(WitTranscriptionConverter(), 'audio_text',
+                    [(LengthExtractor(), 'audio_text_length')])])]
     graph = Graph()
     graph.add_children(visual_nodes)
     graph.add_children(audio_nodes)
@@ -99,5 +104,6 @@ def test_big_pipeline():
     assert ('LengthExtractor', 'text_length') in result.columns
     assert ('VibranceExtractor', 'vibrance') in result.columns
     assert not result[('onset', '')].isnull().any()
-    assert 'obama_speech.mp4_obama_speech.wav_today' in result.index.get_level_values(1)
-    assert 'obama_speech.mp4_90' in result.index.get_level_values(1)
+    print(result)
+    assert 'text[together]' in result.index.get_level_values(1)
+    assert 'obama_speech.mp4->frame[90]' in result.index.get_level_values(1)

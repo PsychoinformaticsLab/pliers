@@ -1,11 +1,17 @@
 from six import with_metaclass
 from abc import ABCMeta, abstractmethod, abstractproperty
-from pliers.stimuli import CollectionStimMixin, CompoundStim
+from pliers.stimuli import Stim, CollectionStimMixin, _log_transformation
 from pliers.utils import listify
 import importlib
+from copy import deepcopy
+from pliers import config
+import pandas as pd
+from types import GeneratorType
 
 
 class Transformer(with_metaclass(ABCMeta)):
+
+    _log_attributes = ()
 
     def __init__(self, name=None):
         if name is None:
@@ -13,46 +19,55 @@ class Transformer(with_metaclass(ABCMeta)):
         self.name = name
 
     def transform(self, stims, *args, **kwargs):
-        # If stims is a CompoundStim, extract all matching stims.
-        if isinstance(stims, CompoundStim):
+
+        # If stims is a CompoundStim and the Transformer is expecting a single
+        # input type, extract all matching stims
+        from pliers.stimuli.compound import CompoundStim
+        if isinstance(stims, CompoundStim) and not isinstance(self._input_type, tuple):
             stims = stims.get_stim(self._input_type, return_all=True)
-        # Iterate over all the stims in the list
-        if isinstance(stims, (list, tuple)):
-            return self._iterate(stims, *args, **kwargs)
-        # Iterate over the collection of stims contained in the input stim
-        elif isinstance(stims, CollectionStimMixin) and \
-           not issubclass(self._input_type, CollectionStimMixin):
-            from pliers.converters import get_converter
-            converter = get_converter(type(stims), self._input_type)
-            if converter:
-                return self.transform(converter.transform(stims))
-            else:
-                return self._iterate(list(s for s in stims))
-        # Pass the stim directly to the Transformer
+            if not stims:
+                raise ValueError("No stims of class %s found in the provided"
+                                 "CompoundStim instance." % self._input_type)
+
+        # If stims is an iterable, naively loop over elements.
+        if isinstance(stims, (list, tuple, GeneratorType)):
+            return self._iterate(list(stims), *args, **kwargs)
+
+        # Validate stim, and then either pass it directly to the Transformer
+        # or, if a conversion occurred, recurse.
         else:
             validated_stim = self._validate(stims)
-            # If a conversion occurred during validation, recurse
+            # If a conversion occurred during validation, we recurse
             if stims is not validated_stim:
                 return self.transform(validated_stim, *args, **kwargs)
             else:
-                return self._transform(self._validate(stims), *args, **kwargs)
+                result = self._transform(self._validate(stims), *args, **kwargs)
+                result = _log_transformation(stims, result, self)
+                if isinstance(result, GeneratorType):
+                    result = list(result)
+                return result
 
     def _validate(self, stim):
-        if not isinstance(stim, self._input_type):
+        from pliers.stimuli.compound import CompoundStim
+        if not isinstance(stim, self._input_type) and not \
+               (isinstance(stim, CompoundStim) and stim.has_types(self._input_type)):
             from pliers.converters import get_converter
             converter = get_converter(type(stim), self._input_type)
             if converter:
+                _old_stim = stim
                 stim = converter.transform(stim)
+                stim = _log_transformation(_old_stim, stim, converter)
             else:
                 msg = "Transformers of type %s can only be applied to stimuli " \
-                      " of type(s) %s, not type %s."
+                      " of type(s) %s (not type %s), and no applicable " \
+                      "Converter was found."
                 msg = msg % (self.__class__.__name__, self._input_type.__name__,
                         stim.__class__.__name__)
                 raise TypeError(msg)
         return stim
 
     def _iterate(self, stims, *args, **kwargs):
-        return [self.transform(s, *args, **kwargs) for s in stims]
+        return (self.transform(s, *args, **kwargs) for s in stims)
 
     @abstractmethod
     def _transform(self, stim):

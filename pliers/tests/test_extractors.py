@@ -16,7 +16,8 @@ from pliers.extractors.api import (IndicoAPIExtractor,
                                         ClarifaiAPIExtractor)
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.stimuli.video import ImageStim, VideoStim
-from pliers.stimuli.audio import AudioStim, TranscribedAudioStim
+from pliers.stimuli.audio import AudioStim
+from pliers.stimuli.compound import TranscribedAudioCompoundStim
 from pliers.support.download import download_nltk_data
 from pliers.extractors import Extractor, ExtractorResult, merge_results
 import numpy as np
@@ -72,8 +73,8 @@ def test_implicit_stim_conversion2():
 
 @pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
 def test_implicit_stim_conversion3():
-    audio_dir = join(get_test_data_path(), 'video')
-    stim = VideoStim(join(audio_dir, 'obama_speech.mp4'))
+    video_dir = join(get_test_data_path(), 'video')
+    stim = VideoStim(join(video_dir, 'obama_speech.mp4'))
     ext = LengthExtractor()
     result = ext.extract(stim)
     first_word = result[0].to_df()
@@ -88,8 +89,7 @@ def test_text_extractor():
     td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
                              variables=['length', 'frequency'])
     assert td.data.shape == (7, 2)
-    timeline = td.extract(stim)
-    result = timeline[2].to_df()
+    result = td.extract(stim)[2].to_df()
     assert np.isnan(result.iloc[0, 1])
     assert result.shape == (1, 4)
     assert np.isclose(result['frequency'][0], 11.729, 1e-5)
@@ -142,17 +142,17 @@ def test_stft_extractor():
     audio_dir = join(get_test_data_path(), 'audio')
     stim = AudioStim(join(audio_dir, 'barber.wav'))
     ext = STFTAudioExtractor(frame_size=1., spectrogram=False,
-                        bins=[(100, 300), (300, 3000), (3000, 20000)])
+                        freq_bins=[(100, 300), (300, 3000), (3000, 20000)])
     result = ext.extract(stim)
     df = result.to_df()
     assert df.shape == (557, 5)
 
 
 def test_mean_amplitude_extractor():
-    audio_dir = join(get_test_data_path(), 'audio')
-    text_dir = join(get_test_data_path(), 'text')
-    stim = TranscribedAudioStim(join(audio_dir, "barber_edited.wav"),
-                                join(text_dir, "wonderful_edited.srt"))
+    audio = AudioStim(join(get_test_data_path(), 'audio', "barber_edited.wav"))
+    text_file = join(get_test_data_path(), 'text', "wonderful_edited.srt")
+    text = ComplexTextStim(text_file)
+    stim = TranscribedAudioCompoundStim(audio=audio, text=text)
     ext = MeanAmplitudeExtractor()
     result = ext.extract(stim).to_df()
     targets = [-0.154661, 0.121521]
@@ -258,9 +258,10 @@ def test_merge_extractor_results_by_features():
     de_names = ['Extractor1', 'Extractor2', 'Extractor3']
     results = [de.extract(stim, name) for name in de_names]
     df = ExtractorResult.merge_features(results)
-    assert df.shape == (177, 10)
+    assert df.shape == (177, 13)
     assert df.columns.levels[1].unique().tolist() == ['duration', 0, 1, 2, '']
-    assert df.columns.levels[0].unique().tolist() == de_names + ['onset', 'stim']
+    cols = cols = ['onset', 'class', 'filename', 'history', 'stim']
+    assert df.columns.levels[0].unique().tolist() == de_names + cols
 
 
 def test_merge_extractor_results_by_stims():
@@ -285,8 +286,8 @@ def test_merge_extractor_results():
     results = [de.extract(stim1, name) for name in de_names]
     results += [de.extract(stim2, name) for name in de_names]
     df = merge_results(results)
-    assert df.shape == (355, 10)
-    assert df.columns.levels[0].unique().tolist() == de_names + ['onset', 'stim']
+    assert df.shape == (355, 13)
+    cols = ['onset', 'class', 'filename', 'history', 'stim']
+    assert df.columns.levels[0].unique().tolist() == de_names + cols
     assert df.columns.levels[1].unique().tolist() == ['duration', 0, 1, 2, '']
     assert set(df.index.levels[1].unique()) == set(['obama.jpg', 'apple.jpg'])
-

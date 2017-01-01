@@ -39,13 +39,12 @@ class Node(object):
 
 class Graph(Node):
 
-    def __init__(self, nodes=None, merge=True):
+    def __init__(self, nodes=None):
 
         self.nodes = OrderedDict()
         self.children = []
         if nodes is not None:
             self.add_children(nodes)
-        self.merge = merge
 
     def add_branch(self, nodes, parent=None):
         for n in nodes:
@@ -95,17 +94,6 @@ class Graph(Node):
         if return_node:
             return node
 
-    def extract(self, stims):
-        stims = listify(stims)
-        results = flatten(self.collect(stims))
-        return merge_results(results) if self.merge else results
-
-    def _validate(self):
-        # Make sure all connected node inputs and outputs match
-        pass
-
-
-class Pipeline(Graph):
-
-    def __init__(self, steps):
-        pass
+    def extract(self, stims, merge=True):
+        results = list(flatten(self.collect(stims)))
+        return merge_results(results) if merge else results
