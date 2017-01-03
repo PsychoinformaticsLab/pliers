@@ -120,8 +120,8 @@ class LengthExtractor(TextExtractor):
     ''' Extracts the length of the text in characters. '''
 
     def _extract(self, stim):
-        return ExtractorResult(np.array([[len(stim.text)]]), stim, self,
-                                features=['text_length'])
+        return ExtractorResult(np.array([[len(stim.text.strip())]]), stim,
+                               self, features=['text_length'])
 
 
 class NumUniqueWordsExtractor(TextExtractor):

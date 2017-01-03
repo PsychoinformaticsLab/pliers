@@ -1,4 +1,4 @@
-from .base import Extractor, ExtractorResult
+from .base import Extractor, ExtractorResult, merge_results
 from .api import IndicoAPIExtractor, ClarifaiAPIExtractor
 from .audio import STFTAudioExtractor, MeanAmplitudeExtractor
 from .google import (GoogleVisionAPIFaceExtractor,
@@ -31,6 +31,7 @@ __all__ = [
     'LengthExtractor',
     'NumUniqueWordsExtractor',
     'PartOfSpeechExtractor',
-    'DenseOpticalFlowExtractor'
+    'DenseOpticalFlowExtractor',
+    'merge_results'
 ]
 

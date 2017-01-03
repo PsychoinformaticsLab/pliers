@@ -1,10 +1,9 @@
 from pliers.transformers import get_transformer
-from pliers.extractors.base import Extractor
-from pliers.extractors.audio import STFTAudioExtractor
-from pliers.tests.utils import get_test_data_path, DummyExtractor
+from pliers.extractors import Extractor, STFTAudioExtractor
 from pliers.stimuli.base import TransformationLog
-from pliers.stimuli.image import ImageStim
+from pliers.stimuli import ImageStim
 from os.path import join
+from .utils import get_test_data_path, DummyExtractor
 
 
 def test_get_transformer_by_name():
