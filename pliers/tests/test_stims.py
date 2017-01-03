@@ -1,12 +1,12 @@
 from .utils import get_test_data_path
+from pliers.stimuli.base import Stim, _get_stim_class
 from pliers.stimuli.video import VideoStim, VideoFrameStim
 from pliers.stimuli.text import ComplexTextStim
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.image import ImageStim
 from pliers.stimuli.compound import CompoundStim, TranscribedAudioCompoundStim
-from pliers.extractors import Extractor, ExtractorResult
+from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.extractors.image import BrightnessExtractor
-from pliers.stimuli import Stim, _get_stim_class
 from pliers.support.download import download_nltk_data
 import numpy as np
 from os.path import join

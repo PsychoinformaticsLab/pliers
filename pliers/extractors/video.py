@@ -3,7 +3,7 @@ Extractors that operate primarily or exclusively on Video stimuli.
 '''
 
 from pliers.stimuli.video import VideoStim
-from pliers.extractors import Extractor, ExtractorResult
+from pliers.extractors.base import Extractor, ExtractorResult
 
 import numpy as np
 

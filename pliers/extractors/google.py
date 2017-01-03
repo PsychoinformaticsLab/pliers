@@ -1,7 +1,7 @@
 from pliers.extractors.image import ImageExtractor
 from pliers.stimuli.image import ImageStim
 from pliers.google import GoogleVisionAPITransformer
-from pliers.extractors import ExtractorResult
+from pliers.extractors.base import ExtractorResult
 import numpy as np
 
 

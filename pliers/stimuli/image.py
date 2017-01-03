@@ -1,5 +1,4 @@
-from pliers.stimuli import Stim
-from pliers.extractors import ExtractorResult
+from .base import Stim
 from scipy.misc import imread
 import six
 

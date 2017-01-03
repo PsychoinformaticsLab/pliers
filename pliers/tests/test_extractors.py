@@ -19,7 +19,7 @@ from pliers.stimuli.video import ImageStim, VideoStim
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.compound import TranscribedAudioCompoundStim
 from pliers.support.download import download_nltk_data
-from pliers.extractors import Extractor, ExtractorResult, merge_results
+from pliers.extractors.base import Extractor, ExtractorResult, merge_results
 import numpy as np
 import pytest
 from copy import deepcopy

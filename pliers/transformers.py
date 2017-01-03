@@ -1,6 +1,7 @@
 from six import with_metaclass
 from abc import ABCMeta, abstractmethod, abstractproperty
-from pliers.stimuli import Stim, CollectionStimMixin, _log_transformation
+from pliers.stimuli.base import Stim, CollectionStimMixin, _log_transformation
+from pliers.stimuli.compound import CompoundStim
 from pliers.utils import listify
 import importlib
 from copy import deepcopy
@@ -22,7 +23,6 @@ class Transformer(with_metaclass(ABCMeta)):
 
         # If stims is a CompoundStim and the Transformer is expecting a single
         # input type, extract all matching stims
-        from pliers.stimuli.compound import CompoundStim
         if isinstance(stims, CompoundStim) and not isinstance(self._input_type, tuple):
             stims = stims.get_stim(self._input_type, return_all=True)
             if not stims:
@@ -48,7 +48,6 @@ class Transformer(with_metaclass(ABCMeta)):
                 return result
 
     def _validate(self, stim):
-        from pliers.stimuli.compound import CompoundStim
         if not isinstance(stim, self._input_type) and not \
                (isinstance(stim, CompoundStim) and stim.has_types(self._input_type)):
             from pliers.converters import get_converter

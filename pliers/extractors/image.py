@@ -3,7 +3,7 @@ Extractors that operate primarily or exclusively on Image stimuli.
 '''
 
 from pliers.stimuli.image import ImageStim
-from pliers.extractors import Extractor, ExtractorResult
+from pliers.extractors.base import Extractor, ExtractorResult
 import numpy as np
 
 class ImageExtractor(Extractor):
