@@ -8,7 +8,7 @@ from os.path import join
 
 
 def test_get_transformer_by_name():
-    tda = get_transformer('stFtAudioeXtrActOr', base=Extractor)
+    tda = get_transformer('stFtAudioeXtrActOr', base='extractors')
     assert isinstance(tda, STFTAudioExtractor)
 
 

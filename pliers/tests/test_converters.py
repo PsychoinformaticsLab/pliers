@@ -1,6 +1,7 @@
 from os.path import join, splitext
 from .utils import get_test_data_path
-from pliers.converters import memory, get_converter
+from pliers.utils import memory
+from pliers.converters.base import get_converter
 from pliers.converters.video import (FrameSamplingConverter, 
                                         VideoToAudioConverter)
 from pliers.converters.multistep import VideoToTextConverter
@@ -47,7 +48,6 @@ def test_derived_video_converter():
     assert len(derived.elements) == math.ceil(video.n_frames / 3.0)
     first = next(f for f in derived)
     assert type(first) == VideoFrameStim
-    print(first.name)
     assert first.name == 'small.mp4->frame[0]'
     assert first.duration == 3 * (1 / 30.0)
 

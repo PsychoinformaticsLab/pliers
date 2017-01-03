@@ -5,7 +5,7 @@ from pliers.converters.video import FrameSamplingConverter, VideoToAudioConverte
 from pliers.converters.api import WitTranscriptionConverter
 from pliers.extractors.image import BrightnessExtractor, VibranceExtractor
 from pliers.extractors.text import LengthExtractor
-from pliers.extractors import merge_results
+from pliers.extractors.base import merge_results
 from pliers.stimuli.image import ImageStim
 from pliers.stimuli.video import VideoStim
 from .utils import get_test_data_path, DummyExtractor
@@ -104,6 +104,5 @@ def test_big_pipeline():
     assert ('LengthExtractor', 'text_length') in result.columns
     assert ('VibranceExtractor', 'vibrance') in result.columns
     assert not result[('onset', '')].isnull().any()
-    print(result)
     assert 'text[together]' in result.index.get_level_values(1)
     assert 'obama_speech.mp4->frame[90]' in result.index.get_level_values(1)

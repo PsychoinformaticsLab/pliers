@@ -19,7 +19,7 @@ __all__ = [
     'ComplexTextIterator',
     'VideoToTextConverter',
     'VideoToAudioConverter',
-    'FrameSamplingConverter'
+    'FrameSamplingConverter',
     'Converter',
     'get_converter'
 ]

@@ -55,6 +55,8 @@ def get_converter(in_type, out_type, *args, **kwargs):
 
     for name in convs:
         cls = getattr(pliers.converters, name)
+        if not issubclass(cls, Converter):
+            continue
         concrete = len(cls.__abstractmethods__) == 0
         if cls._input_type == in_type and cls._output_type == out_type and concrete:
             try:
