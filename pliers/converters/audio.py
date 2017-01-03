@@ -1,6 +1,6 @@
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.text import TextStim
-from pliers.converters import Converter
+from .base import Converter
 
 class AudioToTextConverter(Converter):
 

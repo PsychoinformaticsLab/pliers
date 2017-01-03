@@ -1,6 +1,6 @@
 from pliers.stimuli.image import ImageStim
 from pliers.stimuli.text import TextStim
-from pliers.converters import Converter
+from .base import Converter
 
 from PIL import Image
 

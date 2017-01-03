@@ -1,5 +1,4 @@
-from pliers.converters import Converter
-from pliers.converters import get_converter
+from .base import Converter, get_converter
 from pliers.stimuli.base import Stim
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.video import VideoStim

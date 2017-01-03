@@ -1,4 +1,4 @@
-from pliers.converters.image import ImageToTextConverter
+from .image import ImageToTextConverter
 from pliers.stimuli.text import TextStim
 from pliers.google import GoogleVisionAPITransformer
 

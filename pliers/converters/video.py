@@ -1,9 +1,7 @@
 from pliers.stimuli.video import VideoStim, DerivedVideoStim, VideoFrameStim
 from pliers.stimuli.audio import AudioStim
-from pliers.converters import Converter
 from pliers.stimuli.text import TextStim
-from pliers.converters import Converter
-
+from .base import Converter
 import pandas as pd
 import os
 

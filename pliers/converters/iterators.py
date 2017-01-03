@@ -1,7 +1,7 @@
 from pliers.stimuli.video import VideoStim, DerivedVideoStim
 from pliers.stimuli.image import ImageStim
 from pliers.stimuli.text import ComplexTextStim, TextStim
-from pliers.converters import Converter
+from .base import Converter
 
 
 class StimCollectionIterator(Converter):
