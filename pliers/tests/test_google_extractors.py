@@ -41,7 +41,7 @@ def test_google_vision_api_face_extractor():
     ext = GoogleVisionAPIFaceExtractor(num_retries=5)
     filename = join(get_test_data_path(), 'image', 'obama.jpg')
     stim = ImageStim(filename)
-    result = ext.extract(stim).to_df()
+    result = ext.transform(stim).to_df()
     assert 'joyLikelihood' in result.columns
     assert result['joyLikelihood'][0] == 'VERY_LIKELY'
     assert result['face_detectionConfidence'][0] > 0.7
@@ -53,11 +53,11 @@ def test_google_vision_multiple_face_extraction():
     stim = ImageStim(filename)
     # Only first record
     ext = GoogleVisionAPIFaceExtractor(handle_annotations='first')
-    result1 = ext.extract(stim).to_df()
+    result1 = ext.transform(stim).to_df()
     assert 'joyLikelihood' in result1.columns
     # All records
     ext = GoogleVisionAPIFaceExtractor(handle_annotations='prefix')
-    result2 = ext.extract(stim).to_df()
+    result2 = ext.transform(stim).to_df()
     assert 'face2_joyLikelihood' in result2.columns
     assert result2.shape[1] > result1.shape[1]
 
@@ -67,7 +67,7 @@ def test_google_vision_api_label_extractor():
     ext = GoogleVisionAPILabelExtractor(num_retries=5)
     filename = join(get_test_data_path(), 'image', 'apple.jpg')
     stim = ImageStim(filename)
-    result = ext.extract(stim).to_df()
+    result = ext.transform(stim).to_df()
     assert 'apple' in result.columns
     assert result['apple'][0] > 0.75
 
@@ -77,7 +77,7 @@ def test_google_vision_api_properties_extractor():
     ext = GoogleVisionAPIPropertyExtractor(num_retries=5)
     filename = join(get_test_data_path(), 'image', 'apple.jpg')
     stim = ImageStim(filename)
-    result = ext.extract(stim).to_df()
+    result = ext.transform(stim).to_df()
     assert (158, 13, 29) in result.columns
     assert np.isfinite(result[(158, 13, 29)][0])
 

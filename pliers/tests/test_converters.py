@@ -21,7 +21,7 @@ def test_video_to_audio_converter():
     filename = join(get_test_data_path(), 'video', 'small.mp4')
     video = VideoStim(filename)
     conv = VideoToAudioConverter()
-    audio = conv.convert(video)
+    audio = conv.transform(video)
     assert audio.name == 'small.mp4->small.wav'
     assert audio.history.source_class == 'VideoStim'
     assert audio.history.source_file == filename
@@ -149,7 +149,7 @@ def test_converter_memoization():
 
     def convert(stim):
         start_time = time.time()
-        stim = conv.convert(stim)
+        stim = conv.transform(stim)
         return time.time() - start_time
 
     # Time taken first time through
@@ -192,10 +192,10 @@ def test_stim_history_tracking():
     video = VideoStim(join(get_test_data_path(), 'video', 'obama_speech.mp4'))
     assert video.history is None
     conv = VideoToAudioConverter()
-    stim = conv.convert(video)
+    stim = conv.transform(video)
     assert str(stim.history) == 'VideoStim->VideoToAudioConverter/AudioStim'
     conv = WitTranscriptionConverter()
-    stim = conv.convert(stim)
+    stim = conv.transform(stim)
     assert str(stim.history) == 'VideoStim->VideoToAudioConverter/AudioStim->WitTranscriptionConverter/ComplexTextStim'
 
 

@@ -17,9 +17,6 @@ class Extractor(with_metaclass(ABCMeta, Transformer)):
         if config.cache_extractors:
             self.transform = memory.cache(self.transform)
 
-    def extract(self, stim, *args, **kwargs):
-        return self.transform(stim, *args, **kwargs)
-
     def transform(self, stim, *args, **kwargs):
         result = super(Extractor, self).transform(stim, *args, **kwargs)
         return list(result) if isinstance(result, GeneratorType) else result

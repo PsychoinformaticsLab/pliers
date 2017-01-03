@@ -16,9 +16,6 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
         if config.cache_converters:
             self.transform = memory.cache(self.transform)
 
-    def convert(self, stim, *args, **kwargs):
-        return self.transform(stim, *args, **kwargs)
-
     @abstractmethod
     def _convert(self, stim):
         pass

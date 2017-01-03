@@ -38,7 +38,7 @@ def test_implicit_stim_iteration():
     stim1 = ImageStim(join(image_dir, 'apple.jpg'))
     stim2 = ImageStim(join(image_dir, 'obama.jpg'))
     de = DummyExtractor()
-    results = de.extract([stim1, stim2])
+    results = de.transform([stim1, stim2])
     assert len(results) == 2
     assert isinstance(results[0], ExtractorResult)
 
@@ -47,7 +47,7 @@ def test_implicit_stim_conversion():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'button.jpg'))
     ext = LengthExtractor()
-    result = ext.extract(stim).to_df()
+    result = ext.transform(stim).to_df()
     assert 'text_length' in result.columns
     assert result['text_length'][0] == 4
 
@@ -57,7 +57,7 @@ def test_implicit_stim_conversion2():
     audio_dir = join(get_test_data_path(), 'audio')
     stim = AudioStim(join(audio_dir, 'homer.wav'))
     ext = LengthExtractor()
-    result = ext.extract(stim)
+    result = ext.transform(stim)
     first_word = result[0].to_df()
     assert 'text_length' in first_word.columns
     assert first_word['text_length'][0] > 0
@@ -68,7 +68,7 @@ def test_implicit_stim_conversion3():
     video_dir = join(get_test_data_path(), 'video')
     stim = VideoStim(join(video_dir, 'obama_speech.mp4'))
     ext = LengthExtractor()
-    result = ext.extract(stim)
+    result = ext.transform(stim)
     first_word = result[0].to_df()
     # The word should be "today"
     assert 'text_length' in first_word.columns
@@ -81,7 +81,7 @@ def test_text_extractor():
     td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
                              variables=['length', 'frequency'])
     assert td.data.shape == (7, 2)
-    result = td.extract(stim)[2].to_df()
+    result = td.transform(stim)[2].to_df()
     assert np.isnan(result.iloc[0, 1])
     assert result.shape == (1, 4)
     assert np.isclose(result['frequency'][0], 11.729, 1e-5)
@@ -90,7 +90,7 @@ def test_text_extractor():
 def test_text_length_extractor():
     stim = TextStim(text='hello world')
     ext = LengthExtractor()
-    result = ext.extract(stim).to_df()
+    result = ext.transform(stim).to_df()
     assert 'text_length' in result.columns
     assert result['text_length'][0] == 11
 
@@ -98,7 +98,7 @@ def test_text_length_extractor():
 def test_unique_words_extractor():
     stim = TextStim(text='hello hello world')
     ext = NumUniqueWordsExtractor()
-    result = ext.extract(stim).to_df()
+    result = ext.transform(stim).to_df()
     assert 'num_unique_words' in result.columns
     assert result['num_unique_words'][0] == 2
 
@@ -109,13 +109,13 @@ def test_dictionary_extractor():
     assert td.data.shape == (7, 2)
 
     stim = TextStim(text='annotation')
-    result = td.extract(stim).to_df()
+    result = td.transform(stim).to_df()
     assert np.isnan(result['onset'][0])
     assert 'length' in result.columns
     assert result['length'][0] == 10
 
     stim2 = TextStim(text='some')
-    result = td.extract(stim2).to_df()
+    result = td.transform(stim2).to_df()
     assert np.isnan(result['onset'][0])
     assert 'frequency' in result.columns
     assert np.isnan(result['frequency'][0])
@@ -124,7 +124,7 @@ def test_dictionary_extractor():
 def test_predefined_dictionary_extractor():
     stim = TextStim(text='enormous')
     td = PredefinedDictionaryExtractor(['aoa/Freq_pm'])
-    result = td.extract(stim).to_df()
+    result = td.transform(stim).to_df()
     assert result.shape == (1, 3)
     assert 'aoa_Freq_pm' in result.columns
     assert np.isclose(result['aoa_Freq_pm'][0], 10.313725, 1e-5)
@@ -135,7 +135,7 @@ def test_stft_extractor():
     stim = AudioStim(join(audio_dir, 'barber.wav'))
     ext = STFTAudioExtractor(frame_size=1., spectrogram=False,
                         freq_bins=[(100, 300), (300, 3000), (3000, 20000)])
-    result = ext.extract(stim)
+    result = ext.transform(stim)
     df = result.to_df()
     assert df.shape == (557, 5)
 
@@ -146,14 +146,14 @@ def test_mean_amplitude_extractor():
     text = ComplexTextStim(text_file)
     stim = TranscribedAudioCompoundStim(audio=audio, text=text)
     ext = MeanAmplitudeExtractor()
-    result = ext.extract(stim).to_df()
+    result = ext.transform(stim).to_df()
     targets = [-0.154661, 0.121521]
     assert np.allclose(result['mean_amplitude'], targets)
 
 
 def test_part_of_speech_extractor():
     stim = ComplexTextStim(join(TEXT_DIR, 'complex_stim_with_header.txt'))
-    result = PartOfSpeechExtractor().extract(stim).to_df()
+    result = PartOfSpeechExtractor().transform(stim).to_df()
     assert result.shape == (4, 6)
     assert 'NN' in result.columns
     assert result['NN'].sum() == 1
@@ -163,7 +163,7 @@ def test_part_of_speech_extractor():
 def test_brightness_extractor():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    result = BrightnessExtractor().extract(stim).to_df()
+    result = BrightnessExtractor().transform(stim).to_df()
     brightness = result['brightness'][0]
     assert np.isclose(brightness, 0.88784294, 1e-5)
 
@@ -172,7 +172,7 @@ def test_sharpness_extractor():
     pytest.importorskip('cv2')
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    result = SharpnessExtractor().extract(stim).to_df()
+    result = SharpnessExtractor().transform(stim).to_df()
     sharpness = result['sharpness'][0]
     assert np.isclose(sharpness, 1.0, 1e-5)
 
@@ -180,7 +180,7 @@ def test_sharpness_extractor():
 def test_vibrance_extractor():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    result = VibranceExtractor().extract(stim).to_df()
+    result = VibranceExtractor().transform(stim).to_df()
     color = result['vibrance'][0]
     assert np.isclose(color, 1370.65482988, 1e-5)
 
@@ -189,7 +189,7 @@ def test_saliency_extractor():
     pytest.importorskip('cv2')
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    result = SaliencyExtractor().extract(stim).to_df()
+    result = SaliencyExtractor().transform(stim).to_df()
     ms = result['max_saliency'][0]
     assert np.isclose(ms, 0.99669953, 1e-5)
     sf = result['frac_high_saliency'][0]
@@ -200,7 +200,7 @@ def test_optical_flow_extractor():
     pytest.importorskip('cv2')
     video_dir = join(get_test_data_path(), 'video')
     stim = VideoStim(join(video_dir, 'small.mp4'))
-    result = DenseOpticalFlowExtractor().extract(stim).to_df()
+    result = DenseOpticalFlowExtractor().transform(stim).to_df()
     target = result.query('onset==3.0')['total_flow']
     assert np.isclose(target, 86248.05, 1e-5)
 
@@ -211,7 +211,7 @@ def test_indicoAPI_extractor():
     srt_stim = ComplexTextStim(srtfile)
     ext = IndicoAPIExtractor(
         api_key=os.environ['INDICO_APP_KEY'], models=['emotion', 'personality'])
-    result = ext.extract(srt_stim).to_df()
+    result = ext.transform(srt_stim).to_df()
     outdfKeysCheck = set([
         'onset',
         'duration',
@@ -231,7 +231,7 @@ def test_indicoAPI_extractor():
 def test_clarifaiAPI_extractor():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    result = ClarifaiAPIExtractor().extract(stim).to_df()
+    result = ClarifaiAPIExtractor().transform(stim).to_df()
     assert result['apple'][0] > 0.5
     assert result.ix[:,5][0] > 0.0
 
@@ -243,12 +243,12 @@ def test_merge_extractor_results_by_features():
 
     # Merge results for static Stims (no onsets)
     extractors = [BrightnessExtractor(), VibranceExtractor()]
-    results = [e.extract(stim) for e in extractors]
+    results = [e.transform(stim) for e in extractors]
     df = ExtractorResult.merge_features(results)
 
     de = DummyExtractor()
     de_names = ['Extractor1', 'Extractor2', 'Extractor3']
-    results = [de.extract(stim, name) for name in de_names]
+    results = [de.transform(stim, name) for name in de_names]
     df = ExtractorResult.merge_features(results)
     assert df.shape == (177, 13)
     assert df.columns.levels[1].unique().tolist() == ['duration', 0, 1, 2, '']
@@ -261,7 +261,7 @@ def test_merge_extractor_results_by_stims():
     stim1 = ImageStim(join(image_dir, 'apple.jpg'))
     stim2 = ImageStim(join(image_dir, 'obama.jpg'))
     de = DummyExtractor()
-    results = [de.extract(stim1), de.extract(stim2)]
+    results = [de.transform(stim1), de.transform(stim2)]
     df = ExtractorResult.merge_stims(results)
     assert df.shape == (200, 5)
     assert df.columns.tolist() == ['onset', 'duration', 0, 1, 2]
@@ -275,8 +275,8 @@ def test_merge_extractor_results():
     stim2 = ImageStim(join(image_dir, 'obama.jpg'))
     de = DummyExtractor()
     de_names = ['Extractor1', 'Extractor2', 'Extractor3']
-    results = [de.extract(stim1, name) for name in de_names]
-    results += [de.extract(stim2, name) for name in de_names]
+    results = [de.transform(stim1, name) for name in de_names]
+    results += [de.transform(stim2, name) for name in de_names]
     df = merge_results(results)
     assert df.shape == (355, 13)
     cols = ['onset', 'class', 'filename', 'history', 'stim']
