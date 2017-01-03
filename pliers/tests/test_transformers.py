@@ -15,7 +15,7 @@ def test_transformation_history():
 
     img = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
     ext = DummyExtractor('giraffe')
-    res = ext.extract(img).history
+    res = ext.transform(img).history
     assert isinstance(res, TransformationLog)
     df = res.to_df()
     assert df.shape == (1, 8)

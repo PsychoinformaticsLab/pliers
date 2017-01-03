@@ -13,7 +13,7 @@ class Filter(with_metaclass(ABCMeta, Transformer)):
         if config.cache_filters:
             self.transform = memory.cache(self.transform)
 
-    def filter(self, stim, *args, **kwargs):
+    def transform(self, stim, *args, **kwargs):
         new_stim = self._filter(stim, *args, **kwargs)
         if not isinstance(new_stim, stim.__class__):
             raise ValueError("Filter must return a Stim of the same type as "

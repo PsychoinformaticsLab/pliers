@@ -161,7 +161,7 @@ def test_transformations_on_compound_stim():
     stim = CompoundStim([image1, image2, text])
 
     ext = BrightnessExtractor()
-    results = ext.extract(stim)
+    results = ext.transform(stim)
     assert len(results) == 2
     assert np.allclose(results[0].data[0], 0.88784294)
 
