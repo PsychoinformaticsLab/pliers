@@ -1,9 +1,10 @@
 from pliers.transformers import get_transformer
-from pliers.extractors import Extractor, STFTAudioExtractor
+from pliers.extractors import Extractor, STFTAudioExtractor, BrightnessExtractor
 from pliers.stimuli.base import TransformationLog
 from pliers.stimuli import ImageStim
 from os.path import join
 from .utils import get_test_data_path, DummyExtractor
+import numpy as np
 
 
 def test_get_transformer_by_name():
@@ -25,3 +26,9 @@ def test_transformation_history():
     assert df.iloc[0]['transformer_class'] == 'DummyExtractor'
     assert eval(df.iloc[0]['transformer_params'])['param_A'] == 'giraffe'
     assert str(res) == 'ImageStim->DummyExtractor/ExtractorResult'
+
+def test_transform_with_string_input():
+
+    ext = BrightnessExtractor()
+    res = ext.extract(join(get_test_data_path(), 'image', 'apple.jpg'))
+    np.testing.assert_almost_equal(res[0].to_df()['brightness'].values[0], 0.887842942)
