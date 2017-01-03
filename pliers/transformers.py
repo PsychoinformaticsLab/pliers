@@ -1,10 +1,11 @@
-from pliers.stimuli.base import Stim, CollectionStimMixin, _log_transformation
+from pliers.stimuli.base import (Stim, CollectionStimMixin,
+                                 _log_transformation, load_stims)
 from pliers.stimuli.compound import CompoundStim
 from pliers.utils import listify
 from pliers import config
 import pliers
 
-from six import with_metaclass
+from six import with_metaclass, string_types
 from abc import ABCMeta, abstractmethod, abstractproperty
 import importlib
 from copy import deepcopy
@@ -23,6 +24,9 @@ class Transformer(with_metaclass(ABCMeta)):
 
     def transform(self, stims, *args, **kwargs):
 
+        if isinstance(stims, string_types):
+            stims = load_stims(stims)
+
         # If stims is a CompoundStim and the Transformer is expecting a single
         # input type, extract all matching stims
         if isinstance(stims, CompoundStim) and not isinstance(self._input_type, tuple):
@@ -33,7 +37,7 @@ class Transformer(with_metaclass(ABCMeta)):
 
         # If stims is an iterable, naively loop over elements.
         if isinstance(stims, (list, tuple, GeneratorType)):
-            return self._iterate(list(stims), *args, **kwargs)
+            return self._iterate(stims, *args, **kwargs)
 
         # Validate stim, and then either pass it directly to the Transformer
         # or, if a conversion occurred, recurse.

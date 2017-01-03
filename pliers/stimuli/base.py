@@ -7,6 +7,7 @@ from collections import namedtuple
 from pliers import config
 import pandas as pd
 from types import GeneratorType
+import magic
 
 
 class Stim(with_metaclass(ABCMeta)):
@@ -67,7 +68,6 @@ def load_stims(source, dtype=None):
             one of 'video', 'image', 'audio', or 'text'.
     Returns: A list of Stims.
     """
-    import magic
     from .video import VideoStim, ImageStim
     from .audio import AudioStim
     from .text import TextStim
