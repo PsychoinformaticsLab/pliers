@@ -1,8 +1,6 @@
 from .utils import get_test_data_path
-from pliers.stimuli import load_stims
-from pliers.stimuli.audio import AudioStim
-from pliers.extractors.audio import STFTAudioExtractor
-from pliers.extractors import ExtractorResult
+from pliers.stimuli import (load_stims, AudioStim)
+from pliers.extractors import (STFTAudioExtractor, ExtractorResult)
 from pliers.export import to_long_format
 from os.path import join
 from six import string_types

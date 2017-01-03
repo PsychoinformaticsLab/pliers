@@ -1,9 +1,9 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 from six import with_metaclass, string_types
 from pliers.utils import listify
-from pliers.stimuli import _get_stim_class
-from pliers.stimuli.audio import AudioStim
-from pliers.stimuli.text import ComplexTextStim
+from .base import _get_stim_class
+from .audio import AudioStim
+from .text import ComplexTextStim
 
 
 class CompoundStim(object):

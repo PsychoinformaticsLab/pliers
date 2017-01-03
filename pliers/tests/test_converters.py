@@ -1,19 +1,14 @@
 from os.path import join, splitext
 from .utils import get_test_data_path
-from pliers.converters import memory, get_converter
-from pliers.converters.video import (FrameSamplingConverter, 
-                                        VideoToAudioConverter)
-from pliers.converters.multistep import VideoToTextConverter
-from pliers.converters.image import TesseractConverter, ImageToTextConverter
-from pliers.converters.api import (WitTranscriptionConverter, 
-                                        GoogleSpeechAPIConverter,
-                                        IBMSpeechAPIConverter)
-from pliers.converters.google import GoogleVisionAPITextConverter
-from pliers.converters.iterators import ComplexTextIterator
-from pliers.stimuli.video import VideoStim, VideoFrameStim, DerivedVideoStim
-from pliers.stimuli.text import TextStim, ComplexTextStim
-from pliers.stimuli.audio import AudioStim
-from pliers.stimuli.image import ImageStim
+from pliers.utils import memory
+from pliers.converters import (get_converter, FrameSamplingConverter,
+                             VideoToAudioConverter, VideoToTextConverter,
+                             TesseractConverter, WitTranscriptionConverter,
+                             GoogleSpeechAPIConverter, IBMSpeechAPIConverter,
+                             GoogleVisionAPITextConverter, ComplexTextIterator)
+from pliers.converters.image import ImageToTextConverter
+from pliers.stimuli import (VideoStim, VideoFrameStim, DerivedVideoStim,
+                            TextStim, ComplexTextStim, AudioStim, ImageStim)
 from pliers import config
 import numpy as np
 import math
@@ -47,7 +42,6 @@ def test_derived_video_converter():
     assert len(derived.elements) == math.ceil(video.n_frames / 3.0)
     first = next(f for f in derived)
     assert type(first) == VideoFrameStim
-    print(first.name)
     assert first.name == 'small.mp4->frame[0]'
     assert first.duration == 3 * (1 / 30.0)
 

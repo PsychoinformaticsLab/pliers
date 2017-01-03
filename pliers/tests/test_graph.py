@@ -1,13 +1,10 @@
 import pytest
 from pliers.graph import Graph, Node
-from pliers.converters.image import TesseractConverter
-from pliers.converters.video import FrameSamplingConverter, VideoToAudioConverter
-from pliers.converters.api import WitTranscriptionConverter
-from pliers.extractors.image import BrightnessExtractor, VibranceExtractor
-from pliers.extractors.text import LengthExtractor
-from pliers.extractors import merge_results
-from pliers.stimuli.image import ImageStim
-from pliers.stimuli.video import VideoStim
+from pliers.converters import (TesseractConverter, FrameSamplingConverter,
+                               VideoToAudioConverter, WitTranscriptionConverter)
+from pliers.extractors import (BrightnessExtractor, VibranceExtractor,
+                               LengthExtractor, merge_results)
+from pliers.stimuli import (ImageStim, VideoStim)
 from .utils import get_test_data_path, DummyExtractor
 from os.path import join
 import numpy as np
@@ -104,6 +101,5 @@ def test_big_pipeline():
     assert ('LengthExtractor', 'text_length') in result.columns
     assert ('VibranceExtractor', 'vibrance') in result.columns
     assert not result[('onset', '')].isnull().any()
-    print(result)
     assert 'text[together]' in result.index.get_level_values(1)
     assert 'obama_speech.mp4->frame[90]' in result.index.get_level_values(1)

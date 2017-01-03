@@ -1,10 +1,13 @@
+from pliers.stimuli.base import Stim, CollectionStimMixin, _log_transformation
+from pliers.stimuli.compound import CompoundStim
+from pliers.utils import listify
+from pliers import config
+import pliers
+
 from six import with_metaclass
 from abc import ABCMeta, abstractmethod, abstractproperty
-from pliers.stimuli import Stim, CollectionStimMixin, _log_transformation
-from pliers.utils import listify
 import importlib
 from copy import deepcopy
-from pliers import config
 import pandas as pd
 from types import GeneratorType
 
@@ -22,7 +25,6 @@ class Transformer(with_metaclass(ABCMeta)):
 
         # If stims is a CompoundStim and the Transformer is expecting a single
         # input type, extract all matching stims
-        from pliers.stimuli.compound import CompoundStim
         if isinstance(stims, CompoundStim) and not isinstance(self._input_type, tuple):
             stims = stims.get_stim(self._input_type, return_all=True)
             if not stims:
@@ -48,10 +50,9 @@ class Transformer(with_metaclass(ABCMeta)):
                 return result
 
     def _validate(self, stim):
-        from pliers.stimuli.compound import CompoundStim
         if not isinstance(stim, self._input_type) and not \
                (isinstance(stim, CompoundStim) and stim.has_types(self._input_type)):
-            from pliers.converters import get_converter
+            from pliers.converters.base import get_converter
             converter = get_converter(type(stim), self._input_type)
             if converter:
                 _old_stim = stim
@@ -94,38 +95,27 @@ def get_transformer(name, base=None, *args, **kwargs):
     Args:
         name (str): The name of the transformer to retrieve. Case-insensitive;
             e.g., 'stftextractor' or 'CornerDetectionExtractor'.
+        base (str, list): Optional name of transformer modules to search.
+            Valid values are 'converters', 'extractors', and 'filters'.
         args, kwargs: Optional positional or keyword arguments to pass onto
             the Transformer.
     '''
 
     name = name.lower()
 
-    # Recursively get all classes that inherit from the passed base class
-    def get_subclasses(cls):
-        subclasses = []
-        for sc in cls.__subclasses__():
-            subclasses.append(sc)
-            subclasses.extend(get_subclasses(sc))
-        return subclasses
-
     # Default to searching all kinds of Transformers
     if base is None:
-        from pliers.extractors import Extractor
-        from pliers.converters import Converter
-        from pliers.filters import Filter
-        base = [Converter, Extractor, Filter]
+        base = ['extractors', 'converters', 'filters']
 
-    # Import all submodules so we have a comprehensive list of transformers
     base = listify(base)
-    for b in base:
-        bm = b.__module__
-        submods = importlib.import_module(bm).__all__
-        sources = ['%s.%s' % (bm, sm) for sm in submods]
-        [importlib.import_module(s) for s in sources]
 
-        transformers = get_subclasses(b)
-        for a in transformers:
-            if a.__name__.lower().split('.')[-1] == name.lower():
-                return a(*args, **kwargs)
+    for b in base:
+        importlib.import_module('pliers.%s' % b)
+        mod = getattr(pliers, b)
+        classes = getattr(mod, '__all__')
+        for cls_name in classes:
+            if cls_name.lower() == name.lower():
+                cls = getattr(mod, cls_name)
+                return cls(*args, **kwargs)
 
     raise KeyError("No transformer named '%s' found." % name)

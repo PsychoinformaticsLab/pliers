@@ -3,7 +3,7 @@ Extractors that operate primarily or exclusively on Text stimuli.
 '''
 
 from pliers.stimuli.text import TextStim, ComplexTextStim
-from pliers.extractors import Extractor, ExtractorResult
+from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.exceptions import PliersError
 from pliers.support.decorators import requires_nltk_corpus
 from pliers.datasets.text import fetch_dictionary, datasets
@@ -120,8 +120,8 @@ class LengthExtractor(TextExtractor):
     ''' Extracts the length of the text in characters. '''
 
     def _extract(self, stim):
-        return ExtractorResult(np.array([[len(stim.text)]]), stim, self,
-                                features=['text_length'])
+        return ExtractorResult(np.array([[len(stim.text.strip())]]), stim,
+                               self, features=['text_length'])
 
 
 class NumUniqueWordsExtractor(TextExtractor):

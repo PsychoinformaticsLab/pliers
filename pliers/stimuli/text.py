@@ -1,6 +1,5 @@
-from pliers.stimuli import Stim, CollectionStimMixin
+from .base import Stim, CollectionStimMixin
 from pliers.support.decorators import requires_nltk_corpus
-from pliers.extractors import ExtractorResult, merge_results
 import pandas as pd
 from six import string_types
 import re

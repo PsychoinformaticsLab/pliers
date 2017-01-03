@@ -2,7 +2,7 @@ from os.path import exists, isdir, join
 from abc import ABCMeta, abstractmethod
 import pandas as pd
 from six import with_metaclass
-from pliers.extractors import ExtractorResult
+from pliers.extractors.base import ExtractorResult
 
 
 

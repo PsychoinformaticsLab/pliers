@@ -1,7 +1,7 @@
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.text import ComplexTextStim
 from pliers.stimuli.compound import TranscribedAudioCompoundStim
-from pliers.extractors import Extractor, ExtractorResult
+from pliers.extractors.base import Extractor, ExtractorResult
 import numpy as np
 from scipy import fft
 

@@ -1,4 +1,4 @@
-from pliers.extractors import Extractor, merge_results
+from pliers.extractors.base import Extractor, merge_results
 from pliers.transformers import get_transformer
 from itertools import chain
 from pliers.utils import listify, flatten

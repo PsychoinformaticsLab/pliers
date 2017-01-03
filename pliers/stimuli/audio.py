@@ -1,6 +1,4 @@
-from pliers.stimuli import Stim
-from pliers.stimuli.text import ComplexTextStim
-from pliers.extractors import ExtractorResult
+from .base import Stim
 from moviepy.audio.io.AudioFileClip import AudioFileClip
 import six
 

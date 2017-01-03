@@ -3,8 +3,8 @@ import base64
 import json
 from abc import abstractproperty
 from pliers.stimuli.text import TextStim, ComplexTextStim
-from pliers.converters.audio import AudioToTextConverter
-from pliers.converters.image import ImageToTextConverter
+from .audio import AudioToTextConverter
+from .image import ImageToTextConverter
 
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.request import Request, urlopen

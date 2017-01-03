@@ -1,25 +1,17 @@
 from os.path import join
 import os
 from .utils import get_test_data_path, DummyExtractor
-from pliers.extractors.text import (DictionaryExtractor,
-                                      PartOfSpeechExtractor,
-                                      LengthExtractor,
-                                      NumUniqueWordsExtractor,
-                                      PredefinedDictionaryExtractor)
-from pliers.extractors.audio import STFTAudioExtractor, MeanAmplitudeExtractor
-from pliers.extractors.image import (BrightnessExtractor,
-                                        SharpnessExtractor,
-                                        VibranceExtractor,
-                                        SaliencyExtractor)
-from pliers.extractors.video import DenseOpticalFlowExtractor
-from pliers.extractors.api import (IndicoAPIExtractor,
-                                        ClarifaiAPIExtractor)
-from pliers.stimuli.text import TextStim, ComplexTextStim
-from pliers.stimuli.video import ImageStim, VideoStim
-from pliers.stimuli.audio import AudioStim
-from pliers.stimuli.compound import TranscribedAudioCompoundStim
+from pliers.extractors import (DictionaryExtractor, PartOfSpeechExtractor,
+                               LengthExtractor, NumUniqueWordsExtractor,
+                               PredefinedDictionaryExtractor, STFTAudioExtractor,
+                               MeanAmplitudeExtractor, BrightnessExtractor,
+                               SharpnessExtractor,VibranceExtractor,
+                               SaliencyExtractor, DenseOpticalFlowExtractor,
+                               IndicoAPIExtractor, ClarifaiAPIExtractor)
+from pliers.stimuli import (TextStim, ComplexTextStim, ImageStim, VideoStim,
+                            AudioStim, TranscribedAudioCompoundStim)
 from pliers.support.download import download_nltk_data
-from pliers.extractors import Extractor, ExtractorResult, merge_results
+from pliers.extractors.base import Extractor, ExtractorResult, merge_results
 import numpy as np
 import pytest
 from copy import deepcopy

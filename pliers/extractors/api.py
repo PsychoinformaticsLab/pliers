@@ -4,7 +4,7 @@ Extractors that interact with external (e.g., deep learning) services.
 
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.text import ComplexTextExtractor
-from pliers.extractors import ExtractorResult
+from pliers.extractors.base import ExtractorResult
 from scipy.misc import imsave
 import os
 import tempfile

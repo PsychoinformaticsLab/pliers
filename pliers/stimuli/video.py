@@ -1,8 +1,7 @@
 from __future__ import division
-from pliers.stimuli import Stim, CollectionStimMixin
-from pliers.stimuli.audio import AudioStim
-from pliers.stimuli.image import ImageStim
-from pliers.extractors import ExtractorResult, merge_results
+from .base import Stim, CollectionStimMixin
+from .audio import AudioStim
+from .image import ImageStim
 from moviepy.video.io.VideoFileClip import VideoFileClip
 import pandas as pd
 

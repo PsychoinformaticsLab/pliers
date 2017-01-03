@@ -1,8 +1,8 @@
-from pliers.extractors.google import (GoogleVisionAPIExtractor,
-                                        GoogleVisionAPIFaceExtractor,
-                                        GoogleVisionAPILabelExtractor,
-                                        GoogleVisionAPIPropertyExtractor)
-from pliers.stimuli.image import ImageStim
+from pliers.extractors import (GoogleVisionAPIFaceExtractor,
+                               GoogleVisionAPILabelExtractor,
+                               GoogleVisionAPIPropertyExtractor)
+from pliers.extractors.google import GoogleVisionAPIExtractor
+from pliers.stimuli import ImageStim
 import pytest
 import os
 import json
