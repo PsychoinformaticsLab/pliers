@@ -7,10 +7,12 @@ import pliers
 
 from six import with_metaclass, string_types
 from abc import ABCMeta, abstractmethod, abstractproperty
+from pliers.utils import classproperty
 import importlib
 from copy import deepcopy
 import pandas as pd
 from types import GeneratorType
+import os
 
 
 class Transformer(with_metaclass(ABCMeta)):
@@ -21,6 +23,10 @@ class Transformer(with_metaclass(ABCMeta)):
         if name is None:
             name = self.__class__.__name__
         self.name = name
+
+    @classproperty
+    def available(cls):
+        return True
 
     def transform(self, stims, *args, **kwargs):
 
@@ -83,13 +89,27 @@ class Transformer(with_metaclass(ABCMeta)):
         pass
 
 
-class BatchTransformerMixin():
+class BatchTransformerMixin(object):
     ''' A mixin that overrides the default implicit iteration behavior. Use
     whenever batch processing of multiple stimuli should be handled within the
     _transform method rather than applying a naive loop--e.g., for API
     Extractors that can handle list inputs. '''
     def transform(self, stims, *args, **kwargs):
         return self._transform(self._validate(stims), *args, **kwargs)
+
+
+class EnvironmentKeyMixin(object):
+
+    @abstractproperty
+    def _env_keys(self):
+        pass
+
+    @property
+    def env_keys(self):
+        return listify(self._env_keys)
+
+    def available(cls):
+        return True if all([k in os.environ for k in self.env_keys]) else False
 
 
 def get_transformer(name, base=None, *args, **kwargs):
