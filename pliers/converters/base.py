@@ -55,7 +55,8 @@ def get_converter(in_type, out_type, *args, **kwargs):
         if not issubclass(cls, Converter):
             continue
         concrete = len(cls.__abstractmethods__) == 0
-        if cls._input_type == in_type and cls._output_type == out_type and concrete:
+        if cls._input_type == in_type and cls._output_type == out_type and \
+            concrete and cls.available:
             try:
                 conv = cls(*args, **kwargs)
                 return conv
