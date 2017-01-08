@@ -3,6 +3,7 @@ import base64
 import json
 from abc import abstractproperty
 from pliers.stimuli.text import TextStim, ComplexTextStim
+from pliers.transformers import EnvironmentKeyMixin
 from .audio import AudioToTextConverter
 from .image import ImageToTextConverter
 
@@ -11,17 +12,13 @@ from six.moves.urllib.request import Request, urlopen
 from six.moves.urllib.error import URLError, HTTPError
 
 
-class SpeechRecognitionAPIConverter(AudioToTextConverter):
+class SpeechRecognitionAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
     ''' Uses the SpeechRecognition API, which interacts with several APIs, 
     like Google and Wit, to run speech-to-text transcription on an audio file.
     Args:
         api_key (str): API key. Must be passed explicitly or stored in
-            the environment variable specified in the environ_key field.
+            the environment variable specified in the _env_keys field.
     '''
-
-    @abstractproperty
-    def environ_key(self):
-        pass
 
     @abstractproperty
     def recognize_method(self):
@@ -31,7 +28,7 @@ class SpeechRecognitionAPIConverter(AudioToTextConverter):
         import speech_recognition as sr
         if api_key is None:
             try:
-                api_key = os.environ[self.environ_key]
+                api_key = os.environ[self.env_keys[0]]
             except KeyError:
                 raise ValueError("A valid API key must be passed when "
                                  "a SpeechRecognitionAPIConverter is initialized.")
@@ -48,28 +45,30 @@ class SpeechRecognitionAPIConverter(AudioToTextConverter):
 
 class WitTranscriptionConverter(SpeechRecognitionAPIConverter):
     
-    environ_key = 'WIT_AI_API_KEY'
+    _env_keys = 'WIT_AI_API_KEY'
     recognize_method ='recognize_wit'
 
 
 class GoogleSpeechAPIConverter(SpeechRecognitionAPIConverter):
 
-    environ_key = 'GOOGLE_APPLICATION_CREDENTIALS'
+    _env_keys = 'GOOGLE_APPLICATION_CREDENTIALS'
     recognize_method = 'recognize_google_cloud'
 
 
-class IBMSpeechAPIConverter(AudioToTextConverter):
+class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
     ''' Uses the IBM Watson Text to Speech API to run speech-to-text 
     transcription on an audio file.
 
     Args:
         username (str): API credential username. Must be passed explicitly
-            or stored in the environment variable specified in the environ_key
+            or stored in the environment variable specified in the _env_keys
             field.
         password (str): API credential password. Must be passed explicitly
-            or stored in the environment variable specified in the environ_key
+            or stored in the environment variable specified in the _env_keys
             field.
     '''
+
+    _env_keys = ('IBM_USERNAME', 'IBM_PASSWORD')
 
     def __init__(self, username=None, password=None):
         super(IBMSpeechAPIConverter, self).__init__()
@@ -97,9 +96,7 @@ class IBMSpeechAPIConverter(AudioToTextConverter):
         for i, entry in enumerate(timestamps):
             elements.append(TextStim(text=entry[0], onset=entry[1],
                                     duration=entry[2]-entry[1]))
-        
         return ComplexTextStim(elements=elements)
-
 
     def _query_api(self, clip):
         # Adapted from SpeechRecognition source code, modified to get text onsets
