@@ -11,7 +11,6 @@ from .text import (ComplexTextExtractor, DictionaryExtractor,
                    NumUniqueWordsExtractor, PartOfSpeechExtractor)
 from .video import (DenseOpticalFlowExtractor)
 
-# __all__ = ['api', 'audio', 'google', 'image', 'text', 'video']
 __all__ = [
     'ExtractorResult',
     'IndicoAPIExtractor',
@@ -24,7 +23,7 @@ __all__ = [
     'BrightnessExtractor',
     'SaliencyExtractor',
     'SharpnessExtractor',
-    'VibranceExtractor'
+    'VibranceExtractor',
     'ComplexTextExtractor',
     'DictionaryExtractor',
     'PredefinedDictionaryExtractor',
