@@ -2,6 +2,7 @@ from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.text import TextStim
 from .base import Converter
 
+
 class AudioToTextConverter(Converter):
 
     ''' Base AudioToText Converter class; all subclasses can only be applied to

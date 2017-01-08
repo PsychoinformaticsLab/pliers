@@ -108,6 +108,7 @@ class EnvironmentKeyMixin(object):
     def env_keys(self):
         return listify(self._env_keys)
 
+    @classproperty
     def available(cls):
         return True if all([k in os.environ for k in self.env_keys]) else False
 

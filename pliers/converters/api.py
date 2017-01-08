@@ -25,6 +25,7 @@ class SpeechRecognitionAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
         pass
 
     def __init__(self, api_key=None):
+        super(SpeechRecognitionAPIConverter, self).__init__()
         import speech_recognition as sr
         if api_key is None:
             try:
