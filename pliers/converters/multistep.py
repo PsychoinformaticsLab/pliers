@@ -15,6 +15,8 @@ class MultiStepConverter(Converter):
             the first matching Converter class will be used.
     '''
 
+    _loggable = False
+
     def __init__(self, steps=None):
         super(MultiStepConverter, self).__init__()
         self.steps = self._steps if steps is None else steps

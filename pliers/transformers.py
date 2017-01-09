@@ -18,6 +18,7 @@ import os
 class Transformer(with_metaclass(ABCMeta)):
 
     _log_attributes = ()
+    _loggable = True
 
     def __init__(self, name=None):
         if name is None:
@@ -53,8 +54,8 @@ class Transformer(with_metaclass(ABCMeta)):
             if stims is not validated_stim:
                 return self.transform(validated_stim, *args, **kwargs)
             else:
-                result = self._transform(self._validate(stims), *args, **kwargs)
-                result = _log_transformation(stims, result, self)
+                result = self._transform(validated_stim, *args, **kwargs)
+                result = _log_transformation(validated_stim, result, self)
                 if isinstance(result, GeneratorType):
                     result = list(result)
                 return result
