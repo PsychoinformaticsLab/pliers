@@ -114,16 +114,14 @@ class ExtractorResult(object):
         result.insert(0, 'history', str(results[0].history))
 
         if stim_names:
-            result['stim'] = list(stims)[0]
-            result.set_index('stim', append=True, inplace=True)
-            result = result.sort_index()
+            result.insert(0, 'stim', list(stims)[0])
 
-        return result.sort_values(['onset'])
+        return result.sort_values(['onset']).reset_index(drop=True)
 
     @classmethod
     def merge_stims(cls, results, stim_names=True):
         results = [r.to_df(True) if isinstance(r, ExtractorResult) else r for r in results]
-        return pd.concat(results, axis=0).sort_values('onset')
+        return pd.concat(results, axis=0).sort_values('onset').reset_index(drop=True)
 
 
 def merge_results(results, extractor_names=True, stim_names=True):
@@ -142,7 +140,7 @@ def merge_results(results, extractor_names=True, stim_names=True):
     stims = defaultdict(list)
 
     for r in results:
-        stims[r.stim.name].append(r)
+        stims[id(r.stim)].append(r)
 
     # First concatenate all features separately for each Stim
     for k, v in stims.items():
