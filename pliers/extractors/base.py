@@ -52,7 +52,6 @@ class ExtractorResult(object):
         df.insert(0, 'onset', self.onsets)
         if stim_name:
             df['stim'] = self.stim.name
-            df.set_index('stim', append=True, inplace=True)
         return df
 
     @property
