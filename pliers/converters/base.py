@@ -25,18 +25,7 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
         pass
 
     def _transform(self, stim, *args, **kwargs):
-        new_stim = self._convert(stim, *args, **kwargs)
-        if isinstance(new_stim, (list, tuple, GeneratorType)):
-            return new_stim
-        if new_stim.name is None:
-            new_stim.name = stim.name
-        else:
-            new_stim.name = stim.name + '->' + new_stim.name
-        if isinstance(new_stim, CollectionStimMixin):
-            for s in new_stim:
-                if s.name is None:
-                    s.name = stim.name
-        return new_stim
+        return self._convert(stim, *args, **kwargs)
 
 
 def get_converter(in_type, out_type, *args, **kwargs):
