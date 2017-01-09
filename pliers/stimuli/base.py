@@ -106,8 +106,8 @@ def load_stims(source, dtype=None):
 
 def _log_transformation(source, result, trans=None):
 
-    if not config.log_transformations:
-        return
+    if not config.log_transformations or (trans is not None and not trans._loggable):
+        return result
 
     if isinstance(result, (list, tuple, GeneratorType)):
         return (_log_transformation(source, r, trans) for r in result)
