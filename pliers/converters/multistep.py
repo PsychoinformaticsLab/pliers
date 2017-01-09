@@ -2,7 +2,7 @@ from .base import Converter, get_converter
 from pliers.stimuli.base import Stim
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.video import VideoStim
-from pliers.stimuli.text import TextStim
+from pliers.stimuli.text import TextStim, ComplexTextStim
 
 
 class MultiStepConverter(Converter):
@@ -38,4 +38,11 @@ class VideoToTextConverter(MultiStepConverter):
 
     _input_type = VideoStim
     _output_type = TextStim
+    _steps = [AudioStim, TextStim]
+
+
+class VideoToComplexTextConverter(MultiStepConverter):
+
+    _input_type = VideoStim
+    _output_type = ComplexTextStim
     _steps = [AudioStim, TextStim]
