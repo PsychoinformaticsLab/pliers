@@ -19,8 +19,6 @@ class VideoFrameStim(ImageStim):
         super(VideoFrameStim, self).__init__(filename, onset, duration, data)
         if data is None:
             self.data = self.video.get_frame(index=frame_num).data
-        if video.filename:
-            self.name = video.name + '->'
         self.name += 'frame[%s]' % frame_num
 
 
