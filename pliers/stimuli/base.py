@@ -7,7 +7,6 @@ from collections import namedtuple
 from pliers import config
 import pandas as pd
 from types import GeneratorType
-import magic
 
 
 class Stim(with_metaclass(ABCMeta)):
@@ -80,6 +79,7 @@ def load_stims(source, dtype=None):
     stims = []
 
     def load_file(source):
+        import magic  # requires libmagic, so import here
         mime = magic.from_file(source, mime=True)
         if not isinstance(mime, string_types):
             mime = mime.decode('utf-8')
@@ -106,8 +106,8 @@ def load_stims(source, dtype=None):
 
 def _log_transformation(source, result, trans=None):
 
-    if not config.log_transformations:
-        return
+    if not config.log_transformations or (trans is not None and not trans._loggable):
+        return result
 
     if isinstance(result, (list, tuple, GeneratorType)):
         return (_log_transformation(source, r, trans) for r in result)

@@ -78,7 +78,7 @@ def test_small_pipeline():
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
     result = merge_results(result)
-    assert (0, 'button.jpg->text[Exit]') in result.index
+    assert (0, 'text[Exit]') in result['stim'].values
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
 
@@ -90,7 +90,8 @@ def test_big_pipeline():
     visual_nodes = [(FrameSamplingConverter(every=15), 'framesampling',
                     [(TesseractConverter(), 'visual_text',
                     [(LengthExtractor(), 'visual_text_length')]),
-                    (VibranceExtractor(), 'visual_vibrance')])]
+                    (VibranceExtractor(), 'visual_vibrance'),
+                    (BrightnessExtractor(), 'brightness')])]
     audio_nodes = [(VideoToAudioConverter(), 'audio',
                     [(WitTranscriptionConverter(), 'audio_text',
                     [(LengthExtractor(), 'audio_text_length')])])]
@@ -101,5 +102,5 @@ def test_big_pipeline():
     assert ('LengthExtractor', 'text_length') in result.columns
     assert ('VibranceExtractor', 'vibrance') in result.columns
     assert not result[('onset', '')].isnull().any()
-    assert 'text[together]' in result.index.get_level_values(1)
-    assert 'obama_speech.mp4->frame[90]' in result.index.get_level_values(1)
+    assert 'text[together]' in result['stim'].values
+    assert 'frame[90]' in result['stim'].values

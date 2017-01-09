@@ -5,7 +5,7 @@ from .google import GoogleVisionAPITextConverter
 from .image import TesseractConverter
 from .iterators import (VideoFrameIterator, DerivedVideoFrameIterator,
                         ComplexTextIterator)
-from .multistep import VideoToTextConverter
+from .multistep import VideoToTextConverter, VideoToComplexTextConverter
 from .video import VideoToAudioConverter, FrameSamplingConverter
 
 __all__ = [
@@ -18,6 +18,7 @@ __all__ = [
     'DerivedVideoFrameIterator',
     'ComplexTextIterator',
     'VideoToTextConverter',
+    'VideoToComplexTextConverter',
     'VideoToAudioConverter',
     'FrameSamplingConverter',
     'Converter',

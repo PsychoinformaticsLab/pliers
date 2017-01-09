@@ -34,8 +34,8 @@ class ComplexTextExtractor(Extractor):
 
     def _extract(self, stim):
         ''' Returns all words. '''
-        props = [(e.text, e.onset, e.duration) for e in self.elements]
-        vals, onsets, durations = zip(*props)
+        props = [(e.text, e.onset, e.duration) for e in stim.elements]
+        vals, onsets, durations = map(list, zip(*props))
         return ExtractorResult(vals, stim, self, ['word'], onsets, durations)
 
 

@@ -25,18 +25,7 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
         pass
 
     def _transform(self, stim, *args, **kwargs):
-        new_stim = self._convert(stim, *args, **kwargs)
-        if isinstance(new_stim, (list, tuple, GeneratorType)):
-            return new_stim
-        if new_stim.name is None:
-            new_stim.name = stim.name
-        else:
-            new_stim.name = stim.name + '->' + new_stim.name
-        if isinstance(new_stim, CollectionStimMixin):
-            for s in new_stim:
-                if s.name is None:
-                    s.name = stim.name
-        return new_stim
+        return self._convert(stim, *args, **kwargs)
 
 
 def get_converter(in_type, out_type, *args, **kwargs):
@@ -50,16 +39,22 @@ def get_converter(in_type, out_type, *args, **kwargs):
     '''
     convs = pliers.converters.__all__
 
+    # If config includes default converters for this combination, try them first
+    conv_str = '%s->%s' % (in_type.__name__, out_type.__name__)
+    if conv_str in config.default_converters:
+        convs = list(config.default_converters[conv_str]) + convs
+
     for name in convs:
         cls = getattr(pliers.converters, name)
         if not issubclass(cls, Converter):
             continue
-        concrete = len(cls.__abstractmethods__) == 0
-        if cls._input_type == in_type and cls._output_type == out_type and concrete:
+
+        if cls._input_type == in_type and cls._output_type == out_type and cls.available:
             try:
                 conv = cls(*args, **kwargs)
                 return conv
             except ValueError:
                 # Important for API converters
                 pass
+
     return None

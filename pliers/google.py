@@ -2,7 +2,8 @@ import base64
 import os
 import tempfile
 from scipy.misc import imsave
-from pliers.transformers import Transformer, BatchTransformerMixin
+from pliers.transformers import (Transformer, BatchTransformerMixin,
+                                 EnvironmentKeyMixin)
 
 try:
     from googleapiclient import discovery, errors
@@ -15,7 +16,9 @@ DISCOVERY_URL = 'https://{api}.googleapis.com/$discovery/rest?version={apiVersio
 BATCH_SIZE = 10
 
 
-class GoogleAPITransformer(Transformer, BatchTransformerMixin):
+class GoogleAPITransformer(Transformer, BatchTransformerMixin, EnvironmentKeyMixin):
+
+    _env_keys = 'GOOGLE_APPLICATION_CREDENTIALS'
 
     def __init__(self, discovery_file=None, api_version='v1', max_results=100,
                  num_retries=3, handle_annotations='prefix'):

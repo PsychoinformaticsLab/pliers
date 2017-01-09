@@ -22,7 +22,7 @@ def test_video_to_audio_converter():
     video = VideoStim(filename)
     conv = VideoToAudioConverter()
     audio = conv.transform(video)
-    assert audio.name == 'small.mp4->small.wav'
+    assert audio.name == 'small.wav'
     assert audio.history.source_class == 'VideoStim'
     assert audio.history.source_file == filename
     assert splitext(video.filename)[0] == splitext(audio.filename)[0]
@@ -42,7 +42,7 @@ def test_derived_video_converter():
     assert len(derived.elements) == math.ceil(video.n_frames / 3.0)
     first = next(f for f in derived)
     assert type(first) == VideoFrameStim
-    assert first.name == 'small.mp4->frame[0]'
+    assert first.name == 'frame[0]'
     assert first.duration == 3 * (1 / 30.0)
 
     # Should refilter from original frames
@@ -113,7 +113,7 @@ def test_tesseract_converter():
     stim = ImageStim(join(image_dir, 'button.jpg'))
     conv = TesseractConverter()
     out_stim = conv.transform(stim)
-    assert out_stim.name == 'button.jpg->text[Exit]'
+    assert out_stim.name == 'text[Exit]'
     assert out_stim.history.source_class == 'ImageStim'
     assert out_stim.history.source_name == 'button.jpg'
 
