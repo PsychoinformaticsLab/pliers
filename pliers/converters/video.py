@@ -53,6 +53,10 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
     _log_attributes = ('every', 'hertz', 'top_n')
 
     def __init__(self, every=None, hertz=None, top_n=None):
+        if every is None and hertz is None and top_n is None:
+            raise ValueError("When initializing the FrameSamplingConverter, "
+                             "one of the 'every', 'hertz', or 'top_n' must "
+                             "be specified.")
         super(FrameSamplingConverter, self).__init__()
         self.every = every
         self.hertz = hertz
