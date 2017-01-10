@@ -3,6 +3,7 @@ cv2
 google-api-python-client
 matplotlib
 pysrt
+seaborn
 SpeechRecognition
 pytesseract
 IndicoIo

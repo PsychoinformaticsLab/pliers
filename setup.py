@@ -13,7 +13,7 @@ setup(
     maintainer_email='tyarkoni@gmail.com',
     url='http://github.com/tyarkoni/pliers',
     install_requires=['numpy', 'scipy', 'moviepy', 'pandas', 'six', 'pillow',
-                      'python-magic', 'requests', 'nltk'],
+                      'python-magic', 'requests', 'nltk', 'joblib'],
     packages=find_packages(exclude=['pliers/tests']),
     license='MIT',
     package_data={'pliers': ['data/*'],
