@@ -57,7 +57,7 @@ class VideoStim(Stim, CollectionStimMixin):
 
     @property
     def frames(self):
-        return [f for f in self.clip.iter_frames()]
+        return (f for f in self.clip.iter_frames())
 
     def get_frame(self, index=None, onset=None):
         if index is not None:

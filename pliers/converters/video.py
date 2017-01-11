@@ -93,7 +93,7 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
             if f != frame_index[-1]:
                 dur = onsets[i+1] - onsets[i]
             else:
-                dur = (len(video.frames) / video.fps) - onsets[i]
+                dur = (video.n_frames / video.fps) - onsets[i]
 
             elem = VideoFrameStim(video=video, frame_num=f, duration=dur)
             elements.append(elem)
