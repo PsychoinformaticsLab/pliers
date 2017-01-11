@@ -4,7 +4,7 @@ import numpy as np
 import os
 import tempfile
 import sys
-import urllib
+import requests
 import tarfile
 from scipy.misc import imsave
 import subprocess
@@ -42,15 +42,12 @@ class TensorFlowInceptionV3Extractor(Extractor):
             os.makedirs(self.model_dir)
         filename = os.path.basename(self.model_file)
         if not os.path.exists(self.model_file):
-            def _progress(count, block_size, total_size):
-                sys.stdout.write('\r>> Downloading %s %.1f%%' % (filename,
-                    float(count * block_size) / float(total_size) * 100.0))
-            sys.stdout.flush()
-            self.model_file, _ = urllib.request.urlretrieve(self.data_url,
-                                                self.model_file, _progress)
-            statinfo = os.stat(self.model_file)
-            print('\tSuccesfully downloaded', filename, statinfo.st_size, 'bytes.')
-        tarfile.open(self.model_file, 'r:gz').extractall(self.model_dir)
+            r = requests.get(self.data_url)
+            with open(self.model_file, 'wb') as f:
+                f.write(r.content)
+            size = os.stat(self.model_file).st_size
+            print('\tSuccesfully downloaded', filename, size, 'bytes.')
+            tarfile.open(self.model_file, 'r:gz').extractall(self.model_dir)
 
     def _extract(self, stim):
         import tensorflow as tf
