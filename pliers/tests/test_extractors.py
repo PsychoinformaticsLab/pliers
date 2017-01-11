@@ -8,7 +8,7 @@ from pliers.extractors import (DictionaryExtractor, PartOfSpeechExtractor,
                                SharpnessExtractor,VibranceExtractor,
                                SaliencyExtractor, DenseOpticalFlowExtractor,
                                IndicoAPIExtractor, ClarifaiAPIExtractor,
-                               ComplexTextExtractor)
+                               ComplexTextExtractor, TensorFlowInceptionV3Extractor)
 from pliers.stimuli import (TextStim, ComplexTextStim, ImageStim, VideoStim,
                             AudioStim, TranscribedAudioCompoundStim)
 from pliers.support.download import download_nltk_data
@@ -284,3 +284,15 @@ def test_merge_extractor_results():
     assert df.columns.levels[0].unique().tolist() == de_names + cols
     assert df.columns.levels[1].unique().tolist() == ['duration', 0, 1, 2, '']
     assert set(df['stim'].unique()) == set(['obama.jpg', 'apple.jpg'])
+
+
+def test_tensor_flow_inception_v3_extractor():
+    image_dir = join(get_test_data_path(), 'image')
+    imgs = [join(image_dir, f) for f in ['apple.jpg', 'obama.jpg']]
+    imgs = [ImageStim(im) for im in imgs]
+    ext = TensorFlowInceptionV3Extractor()
+    results = ext.transform(imgs)
+    df = merge_results(results)
+    assert len(df) == 2
+    assert df.iloc[0][('TensorFlowInceptionV3Extractor', 'label_1')] == 'Granny Smith'
+    assert df.iloc[1][('TensorFlowInceptionV3Extractor', 'score_2')] == '0.17326'

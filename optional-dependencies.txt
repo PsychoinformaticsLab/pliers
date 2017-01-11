@@ -7,3 +7,4 @@ seaborn
 SpeechRecognition
 pytesseract
 IndicoIo
+tensorflow
