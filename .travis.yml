@@ -40,7 +40,7 @@ before_install:
 install:
 - pip install -r requirements.txt
 - pip install --upgrade --ignore-installed setuptools
-- pip install --upgrade coveralls pytest-cov pysrt xlrd clarifai pytesseract matplotlib SpeechRecognition IndicoIo tensorflow
+- pip install --upgrade coveralls pytest-cov pysrt xlrd clarifai seaborn pytesseract matplotlib SpeechRecognition IndicoIo tensorflow
 
 before_script:
   - python -m pliers.support.download
