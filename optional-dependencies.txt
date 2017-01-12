@@ -4,6 +4,7 @@ google-api-python-client
 matplotlib
 pysrt
 seaborn
-SpeechRecognition
+SpeechRecognition>=3.6.0
 pytesseract
 IndicoIo
+tensorflow

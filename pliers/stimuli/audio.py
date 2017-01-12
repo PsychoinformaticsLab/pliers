@@ -14,7 +14,9 @@ class AudioStim(Stim):
 
         self._load_clip()
 
-        self.data = self.clip.to_soundarray()
+        # Small default buffer isn't ideal, but moviepy has persistent issues
+        # with some files otherwise; see https://github.com/Zulko/moviepy/issues/246
+        self.data = self.clip.to_soundarray(buffersize=1000)
         duration = self.clip.duration
 
         if self.data.ndim > 1:

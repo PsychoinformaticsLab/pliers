@@ -6,6 +6,7 @@ from .google import (GoogleVisionAPIFaceExtractor,
                      GoogleVisionAPIPropertyExtractor)
 from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
                     VibranceExtractor)
+from .models import TensorFlowInceptionV3Extractor
 from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
                    NumUniqueWordsExtractor, PartOfSpeechExtractor)
@@ -24,6 +25,7 @@ __all__ = [
     'SaliencyExtractor',
     'SharpnessExtractor',
     'VibranceExtractor',
+    'TensorFlowInceptionV3Extractor',
     'ComplexTextExtractor',
     'DictionaryExtractor',
     'PredefinedDictionaryExtractor',

@@ -1,4 +1,5 @@
 sudo: required
+dist: trusty
 
 env:
   global:
@@ -20,6 +21,7 @@ matrix:
          - MINICONDA_URL="https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh"
 
 before_install:
+- sudo add-apt-repository ppa:joyard-nicolas/ffmpeg -y
 - export MINICONDA=$HOME/miniconda
 - export PATH="$MINICONDA/bin:$PATH"
 - hash -r
@@ -32,11 +34,13 @@ before_install:
 - conda config --add channels conda-forge
 - conda install python=$PYTHON_VERSION $CONDA_DEPS
 - sudo apt-get -qq update
+- sudo apt-get install ffmpeg
 - sudo apt-get install tesseract-ocr
 
 install:
 - pip install -r requirements.txt
-- pip install --upgrade coveralls pytest-cov pysrt xlrd clarifai pytesseract matplotlib SpeechRecognition IndicoIo
+- pip install --upgrade --ignore-installed setuptools
+- pip install --upgrade coveralls pytest-cov pysrt xlrd clarifai seaborn pytesseract matplotlib SpeechRecognition IndicoIo tensorflow
 
 before_script:
   - python -m pliers.support.download
