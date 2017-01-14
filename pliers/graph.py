@@ -68,9 +68,9 @@ class Graph(Node):
         if isinstance(node, (list, tuple)):
             kwargs['transformer'] = node[0]
             if len(node) > 1:
-                kwargs['name'] = node[1]
+                kwargs['children'] = node[1]
             if len(node) > 2:
-                kwargs['children'] = node[2]
+                kwargs['name'] = node[2]
         else:
             kwargs['transformer'] = node
 
