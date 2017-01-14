@@ -20,6 +20,13 @@ class Transformer(with_metaclass(ABCMeta)):
     _log_attributes = ()
     _loggable = True
 
+    # Stim types that *can* be passed as input, but aren't mandatory. This
+    # allows for disjunctive specification; e.g., if _input_type is empty
+    # and _optional_input_type is (AudioStim, TextStim), then _at least_ one
+    # of the two must be passed. If both are specified in _input_type, then
+    # the input would have to be a CompoundStim with both audio and text slots.
+    _optional_input_type = ()
+
     def __init__(self, name=None):
         if name is None:
             name = self.__class__.__name__
@@ -61,8 +68,7 @@ class Transformer(with_metaclass(ABCMeta)):
                 return result
 
     def _validate(self, stim):
-        if not isinstance(stim, self._input_type) and not \
-               (isinstance(stim, CompoundStim) and stim.has_types(self._input_type)):
+        if not self._stim_matches_input_types(stim):
             from pliers.converters.base import get_converter
             converter = get_converter(type(stim), self._input_type)
             if converter:
@@ -77,6 +83,25 @@ class Transformer(with_metaclass(ABCMeta)):
                         stim.__class__.__name__)
                 raise TypeError(msg)
         return stim
+
+    def _stim_matches_input_types(self, stim):
+        # Checks if passed Stim meets all _input_type and _optional_input_type
+        # specifications.
+
+        mandatory = tuple(listify(self._input_type))
+        optional = tuple(listify(self._optional_input_type))
+
+        if isinstance(stim, CompoundStim):
+            return stim.has_types(mandatory) or (not mandatory and stim.has_types(optional, False))
+
+        if len(mandatory) > 1:
+            msg = "Transformer of class %s requires multiple mandatory " + \
+                  "inputs, so the passed input Stim must be a CompoundStim" + \
+                  "--which it isn't." % self.__class__.__name__
+            raise ValueError("Transformer %s requires multiple mandatory inputs ")
+
+        return isinstance(stim, mandatory) or (not mandatory and isinstance(stim, optional))
+
 
     def _iterate(self, stims, *args, **kwargs):
         return (self.transform(s, *args, **kwargs) for s in stims)
