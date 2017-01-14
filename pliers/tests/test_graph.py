@@ -25,11 +25,11 @@ def test_node_arg_parsing():
     args2 = Graph._parse_node_args(n2)
     assert args1 == args2 == {'transformer': 'MyLovelyExtractor'}
 
-    node = ('saliencyextractor', 'saliency')
+    node = ('saliencyextractor', [])
     args = Graph._parse_node_args(node)
-    assert set(args.keys()) == {'transformer', 'name'}
+    assert set(args.keys()) == {'transformer', 'children'}
 
-    node = ('saliencyextractor', 'my_name', [('child1'), ('child2')])
+    node = ('saliencyextractor', [('child1'), ('child2')], 'my_name')
     args = Graph._parse_node_args(node)
     assert set(args.keys()) == {'transformer', 'name', 'children'}
     assert len(args['children']) == 2
@@ -42,7 +42,7 @@ def test_node_arg_parsing():
 def test_graph_smoke_test():
     filename = join(get_test_data_path(), 'image', 'obama.jpg')
     stim = ImageStim(filename)
-    nodes = [(BrightnessExtractor(), 'brightness')]
+    nodes = [(BrightnessExtractor(), [], 'brightness')]
     graph = Graph(nodes)
     result = graph.extract(stim)
     brightness = result[('BrightnessExtractor', 'brightness')].values[0]
@@ -60,7 +60,7 @@ def test_add_children():
 def test_add_nested_children():
     graph = Graph()
     de1, de2, de3 = DummyExtractor(), DummyExtractor(), DummyExtractor()
-    graph.add_children([de1, (de2, 'child', [(de3, "child's child")])])
+    graph.add_children([de1, (de2, [(de3, [], "child's child")], 'child')])
     assert len(graph.children) == 2
     assert isinstance(graph.children[1].children[0], Node)
     assert graph.children[1].children[0].name == "child's child"
@@ -70,8 +70,7 @@ def test_small_pipeline():
     pytest.importorskip('pytesseract')
     filename = join(get_test_data_path(), 'image', 'button.jpg')
     stim = ImageStim(filename)
-    nodes = [(TesseractConverter(), 'tesseract', 
-                [(LengthExtractor(), 'length')])]
+    nodes = [(TesseractConverter(), [LengthExtractor()])]
     graph = Graph(nodes)
     result = list(graph.extract([stim], merge=False))
     history = result[0].history.to_df()
@@ -87,14 +86,13 @@ def test_small_pipeline():
 def test_big_pipeline():
     filename = join(get_test_data_path(), 'video', 'obama_speech.mp4')
     video = VideoStim(filename)
-    visual_nodes = [(FrameSamplingConverter(every=15), 'framesampling',
-                    [(TesseractConverter(), 'visual_text',
-                    [(LengthExtractor(), 'visual_text_length')]),
-                    (VibranceExtractor(), 'visual_vibrance'),
-                    (BrightnessExtractor(), 'brightness')])]
-    audio_nodes = [(VideoToAudioConverter(), 'audio',
-                    [(WitTranscriptionConverter(), 'audio_text',
-                    [(LengthExtractor(), 'audio_text_length')])])]
+    visual_nodes = [(FrameSamplingConverter(every=15), [
+                        (TesseractConverter(), [LengthExtractor()]),
+                        VibranceExtractor(), 'BrightnessExtractor',
+                    ])]
+    audio_nodes = [(VideoToAudioConverter(), [
+                        WitTranscriptionConverter(), 'LengthExtractor'],
+                        'video_to_audio')]
     graph = Graph()
     graph.add_children(visual_nodes)
     graph.add_children(audio_nodes)
@@ -102,5 +100,6 @@ def test_big_pipeline():
     assert ('LengthExtractor', 'text_length') in result.columns
     assert ('VibranceExtractor', 'vibrance') in result.columns
     assert not result[('onset', '')].isnull().any()
-    assert 'text[together]' in result['stim'].values
+    print(result['stim'].values)
+    assert 'text[negotiations]' in result['stim'].values
     assert 'frame[90]' in result['stim'].values
