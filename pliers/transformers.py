@@ -49,9 +49,13 @@ class Transformer(with_metaclass(ABCMeta)):
                 raise ValueError("No stims of class %s found in the provided"
                                  "CompoundStim instance." % self._input_type)
 
-        # If stims is an iterable, naively loop over elements.
+        # If stims is an iterable, naively loop over elements, removing
+        # invalid results if needed
         if isinstance(stims, (list, tuple, GeneratorType)):
-            return self._iterate(stims, *args, **kwargs)
+            iters = self._iterate(stims, *args, **kwargs)
+            if config.drop_bad_extractor_results:
+                return (i for i in iters if i is not None)
+            return iters
 
         # Validate stim, and then either pass it directly to the Transformer
         # or, if a conversion occurred, recurse.
