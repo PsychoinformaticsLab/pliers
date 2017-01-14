@@ -14,8 +14,7 @@ class TextStim(Stim):
         if filename is not None and text is None:
             text = open(filename).read()
         self.text = text
-        label = 'text[%s]' % text[:20]  # Truncate at 20 chars
-        name = label if filename is None else filename + '->' + label
+        name = 'text[%s]' % text[:40]  # Truncate at 40 chars
         super(TextStim, self).__init__(filename, onset, duration, name)
 
 

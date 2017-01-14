@@ -69,16 +69,23 @@ class CompoundStim(object):
             return [] if return_all else None
         return matches
 
-    def has_types(self, types):
+    def get_types(self):
+        ''' Return tuple of types of all available Stims. '''
+        return tuple(set([e.__class__ for e in self.elements]))
+
+    def has_types(self, types, all_=True):
         ''' Check whether the current component list matches all Stim types
         in the types argument.
         Args:
             types (Stim, list): a Stim class or iterable of Stim classes.
+            all_ (bool): if True, all input types must match; if False, at least
+                one input type must match.
         Return:
             True if all passed types match at least one Stim in the component
             list, otherwise False.
         '''
-        return all([self.get_stim(t) for t in listify(types)])
+        func = all if all_ else any
+        return func([self.get_stim(t) for t in listify(types)])
 
     def __getattr__(self, attr):
         try:

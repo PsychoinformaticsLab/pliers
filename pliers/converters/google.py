@@ -40,4 +40,4 @@ class GoogleVisionAPITextConverter(GoogleVisionAPITransformer, ImageToTextConver
                 return texts
             
         else:
-            return TextStim(text='')
+            return TextStim(text='', onset=stim.onset, duration=stim.duration)

@@ -3,8 +3,8 @@ Extractors that interact with external (e.g., deep learning) services.
 '''
 
 from pliers.extractors.image import ImageExtractor
-from pliers.extractors.text import ComplexTextExtractor
-from pliers.extractors.base import ExtractorResult
+from pliers.extractors.base import Extractor, ExtractorResult
+from pliers.stimuli.text import TextStim, ComplexTextStim
 from scipy.misc import imsave
 import os
 import tempfile
@@ -19,7 +19,7 @@ try:
 except ImportError:
     pass
 
-class IndicoAPIExtractor(ComplexTextExtractor):
+class IndicoAPIExtractor(Extractor):
 
     ''' Uses the Indico API to extract sentiment of text.
     Args:
@@ -29,9 +29,11 @@ class IndicoAPIExtractor(ComplexTextExtractor):
     '''
 
     _log_attributes = ('models',)
+    _input_type = ()
+    _optional_input_type = (TextStim, ComplexTextStim)
 
     def __init__(self, api_key=None, models=None):
-        ComplexTextExtractor.__init__(self)
+        super(IndicoAPIExtractor, self).__init__()
         if api_key is None:
             try:
                 self.api_key = os.environ['INDICO_APP_KEY']
@@ -50,32 +52,42 @@ class IndicoAPIExtractor(ComplexTextExtractor):
                 self.models = [getattr(ico, model) for model in models]
                 self.names = models
             except AttributeError:
-                raise ValueError("Unsupported model specified. Muse use of of the following:\n"
-                                "sentiment, sentiment_hq, emotion, text_tags, language, "
-                                "political, keywords, people, places, organizations, "
-                                "twitter_engagement, personality, personas, text_features")
+                msg = ("Unsupported model(s) specified. Must use one or more "
+                       "of the following: sentiment, sentiment_hq, emotion, "
+                       "text_tags, language, political, keywords, people, "
+                       "places, organizations, twitter_engagement, "
+                       "personality, personas, text_features.")
+                raise ValueError(msg)
 
     def _extract(self, stim):
-        tokens = [token.text for token in stim]
+
+        if isinstance(stim, TextStim):
+            if not stim.text:
+                return None
+            stim = [stim]
+
+        tokens = [token.text for token in stim if token.text]
         scores = [model(tokens) for model in self.models]
-        data = []
-        onsets = []
-        durations = []
-        for i, w in enumerate(stim):
-            features = []
-            values = []
+
+        data, onsets, durations = [], [], []
+
+        for i, s in enumerate(stim):
+            features, values = [], []
             for j, score in enumerate(scores):
-                if type(score[i]) == float:
+                if isinstance(score[i], float):
                     features.append(self.names[j])
                     values.append(score[i])
-                elif type(score[i]) == dict:
+                elif isinstance(score[i], dict):
                     for k in score[i].keys():
                         features.append(self.names[j] + '_' + k)
                         values.append(score[i][k])
 
             data.append(values)
-            onsets.append(w.onset)
-            durations.append(w.duration)
+            onsets.append(s.onset)
+            durations.append(s.duration)
+
+        if not data:
+            data = [pd]
 
         return ExtractorResult(data, stim, self, features=features, 
                                 onsets=onsets, durations=durations)

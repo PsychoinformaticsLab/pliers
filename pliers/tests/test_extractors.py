@@ -207,11 +207,14 @@ def test_optical_flow_extractor():
 
 
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
-def test_indicoAPI_extractor():
+def test_indico_api_extractor():
+
+    ext = IndicoAPIExtractor(api_key=os.environ['INDICO_APP_KEY'],
+                             models=['emotion', 'personality'])
+
+    # With ComplexTextStim input
     srtfile = join(get_test_data_path(), 'text', 'wonderful.srt')
     srt_stim = ComplexTextStim(srtfile)
-    ext = IndicoAPIExtractor(
-        api_key=os.environ['INDICO_APP_KEY'], models=['emotion', 'personality'])
     result = ext.transform(srt_stim).to_df()
     outdfKeysCheck = set([
         'onset',
@@ -227,9 +230,15 @@ def test_indicoAPI_extractor():
         'personality_conscientiousness'])
     assert set(result.columns) == outdfKeysCheck
 
+    # With TextStim input
+    ts = TextStim(text="It's a wonderful life.")
+    result = ext.transform(ts).to_df()
+    assert set(result.columns) == outdfKeysCheck
+    assert len(result) == 1
+
 
 @pytest.mark.skipif("'CLARIFAI_APP_ID' not in os.environ")
-def test_clarifaiAPI_extractor():
+def test_clarifai_api_extractor():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
     result = ClarifaiAPIExtractor().transform(stim).to_df()
