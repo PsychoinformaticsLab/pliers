@@ -35,10 +35,20 @@ class ExtractorResult(object):
     def __init__(self, data, stim, extractor, features=None, onsets=None,
                  durations=None):
         self.data = data
-        self.stim = stim
         self.extractor = extractor
         self.features = features
         self._history = None
+
+        # Some Extractors pass a list of Stims for various reasons
+        if isinstance(stim, (list, tuple)):
+            if not len(set(stim)) == 1:
+                raise ValueError("Multiple Stim instances passed to the 'stim'"
+                                 " argument in ExtractorResult initialization;"
+                                 " each ExtractorResult can only be associated"
+                                 " with a single Stim.")
+            stim = stim[0]
+        self.stim = stim
+
         if onsets is None:
             onsets = stim.onset
         self.onsets = onsets if onsets is not None else np.nan
@@ -136,6 +146,8 @@ def merge_results(results, extractor_names=True, stim_names=True):
     Returns: a pandas DataFrame with features concatenated along the column
         axis and stims concatenated along the row axis.
     '''
+
+
 
     stims = defaultdict(list)
 
