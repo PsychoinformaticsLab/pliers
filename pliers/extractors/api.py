@@ -3,8 +3,8 @@ Extractors that interact with external (e.g., deep learning) services.
 '''
 
 from pliers.extractors.image import ImageExtractor
-from pliers.extractors.text import ComplexTextExtractor
-from pliers.extractors.base import ExtractorResult
+from pliers.extractors.base import Extractor, ExtractorResult
+from pliers.stimuli.text import TextStim, ComplexTextStim
 from scipy.misc import imsave
 import os
 import tempfile
@@ -19,7 +19,7 @@ try:
 except ImportError:
     pass
 
-class IndicoAPIExtractor(ComplexTextExtractor):
+class IndicoAPIExtractor(Extractor):
 
     ''' Uses the Indico API to extract sentiment of text.
     Args:
@@ -29,9 +29,11 @@ class IndicoAPIExtractor(ComplexTextExtractor):
     '''
 
     _log_attributes = ('models',)
+    _input_type = ()
+    _optional_input_type = (TextStim, ComplexTextStim)
 
     def __init__(self, api_key=None, models=None):
-        ComplexTextExtractor.__init__(self)
+        super(IndicoAPIExtractor, self).__init__()
         if api_key is None:
             try:
                 self.api_key = os.environ['INDICO_APP_KEY']
@@ -56,6 +58,8 @@ class IndicoAPIExtractor(ComplexTextExtractor):
                                 "twitter_engagement, personality, personas, text_features")
 
     def _extract(self, stim):
+        if isinstance(stim, TextStim):
+            stim = [stim]
         tokens = [token.text for token in stim]
         scores = [model(tokens) for model in self.models]
         data = []
