@@ -4,6 +4,7 @@ from itertools import chain
 from pliers.utils import listify, flatten
 from six import string_types
 from collections import OrderedDict
+from types import GeneratorType
 
 
 class Node(object):
@@ -24,17 +25,22 @@ class Node(object):
 
     def collect(self, stim):
         if hasattr(self, 'transformer') and self.transformer is not None:
+            result = listify(self.transformer.transform(stim))
             if isinstance(self.transformer, Extractor):
-                return listify(self.transformer.transform(stim))
-            stim = self.transformer.transform(stim)
+                return result
+            stim = result
+            # If result is a generator, the first child will destroy the
+            # iterable, so cache via list conversion
+            if len(self.children) > 1 and isinstance(stim, GeneratorType):
+                stim = list(stim)
         return list(chain(*[c.collect(stim) for c in self.children]))
-   
+
     def add_child(self, node):
         ''' Append a child to the list of children. '''
         self.children.append(node)
 
     def is_leaf(self):
-        return len(self.children) > 0
+        return len(self.children)
 
 
 class Graph(Node):
