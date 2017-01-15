@@ -48,7 +48,7 @@ def test_derived_video_converter():
     # Should refilter from original frames
     conv = FrameSamplingConverter(hertz=15)
     derived = conv.transform(derived)
-    assert len(derived.elements) == math.ceil(video.n_frames / 6.0)
+    assert len(derived._frames) == math.ceil(video.n_frames / 6.0)
     first = next(f for f in derived)
     assert type(first) == VideoFrameStim
     assert first.duration == 3 * (1 / 15.0)
@@ -61,7 +61,7 @@ def test_derived_video_converter_cv2():
 
     conv = FrameSamplingConverter(top_n=5)
     derived = conv.transform(video)
-    assert len(derived.elements) == 5
+    assert len(derived._frames) == 5
     assert type(next(f for f in derived)) == VideoFrameStim
 
 

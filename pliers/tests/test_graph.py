@@ -100,6 +100,5 @@ def test_big_pipeline():
     assert ('LengthExtractor', 'text_length') in result.columns
     assert ('VibranceExtractor', 'vibrance') in result.columns
     assert not result[('onset', '')].isnull().any()
-    print(result['stim'].values)
     assert 'text[negotiations]' in result['stim'].values
     assert 'frame[90]' in result['stim'].values
