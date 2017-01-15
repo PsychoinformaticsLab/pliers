@@ -74,7 +74,8 @@ class Transformer(with_metaclass(ABCMeta)):
     def _validate(self, stim):
         if not self._stim_matches_input_types(stim):
             from pliers.converters.base import get_converter
-            converter = get_converter(type(stim), self._input_type)
+            in_type = self._input_type if self._input_type else self._optional_input_type
+            converter = get_converter(type(stim), in_type)
             if converter:
                 _old_stim = stim
                 stim = converter.transform(stim)
@@ -83,7 +84,7 @@ class Transformer(with_metaclass(ABCMeta)):
                 msg = "Transformers of type %s can only be applied to stimuli " \
                       " of type(s) %s (not type %s), and no applicable " \
                       "Converter was found."
-                msg = msg % (self.__class__.__name__, self._input_type.__name__,
+                msg = msg % (self.__class__.__name__, in_type,
                         stim.__class__.__name__)
                 raise TypeError(msg)
         return stim
@@ -105,7 +106,6 @@ class Transformer(with_metaclass(ABCMeta)):
             raise ValueError("Transformer %s requires multiple mandatory inputs ")
 
         return isinstance(stim, mandatory) or (not mandatory and isinstance(stim, optional))
-
 
     def _iterate(self, stims, *args, **kwargs):
         return (self.transform(s, *args, **kwargs) for s in stims)
