@@ -1,7 +1,7 @@
 from .base import Converter, get_converter
 from pliers.stimuli.base import Stim
 from pliers.stimuli.audio import AudioStim
-from pliers.stimuli.video import VideoStim
+from pliers.stimuli.video import VideoStim, DerivedVideoStim
 from pliers.stimuli.text import TextStim, ComplexTextStim
 
 
@@ -34,6 +34,13 @@ class MultiStepConverter(Converter):
                 converter = step
             stim = converter.transform(stim)
         return stim
+
+
+# Current approach requires explicit naming of every possible path. This is
+# not ideal and could get big in a hurry. We should probably switch to
+# walking the inheritance hierarchy of each Stim instance and using the first
+# MultiStepConverter that matches (e.g., a DerivedVideoStim that needs to be
+# converted to a TextStim should be able to use the VideoToTextConverter).
 
 
 class VideoToTextConverter(MultiStepConverter):

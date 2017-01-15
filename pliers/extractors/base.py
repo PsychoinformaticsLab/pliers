@@ -29,7 +29,6 @@ class Extractor(with_metaclass(ABCMeta, Transformer)):
         return self._extract(stim, *args, **kwargs)
 
 
-
 class ExtractorResult(object):
 
     def __init__(self, data, stim, extractor, features=None, onsets=None,
@@ -146,8 +145,6 @@ def merge_results(results, extractor_names=True, stim_names=True):
     Returns: a pandas DataFrame with features concatenated along the column
         axis and stims concatenated along the row axis.
     '''
-
-
 
     stims = defaultdict(list)
 
