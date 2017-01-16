@@ -12,10 +12,10 @@ from numpy.testing import assert_almost_equal
 
 
 def test_node_init():
-    n = Node('my_node', BrightnessExtractor())
+    n = Node(BrightnessExtractor(), 'my_node')
     assert isinstance(n.transformer, BrightnessExtractor)
     assert n.name == 'my_node'
-    n = Node('my_node', 'brightnessextractor')    
+    n = Node('brightnessextractor', 'my_node')
     assert isinstance(n.transformer, BrightnessExtractor)
 
 
@@ -44,7 +44,7 @@ def test_graph_smoke_test():
     stim = ImageStim(filename)
     nodes = [(BrightnessExtractor(), [], 'brightness')]
     graph = Graph(nodes)
-    result = graph.extract(stim)
+    result = graph.run(stim)
     brightness = result[('BrightnessExtractor', 'brightness')].values[0]
     assert_almost_equal(brightness, 0.556134, 5)
 
@@ -52,18 +52,18 @@ def test_graph_smoke_test():
 def test_add_children():
     graph = Graph()
     de1, de2, de3 = DummyExtractor(), DummyExtractor(), DummyExtractor()
-    graph.add_children([de1, de2, de3])
-    assert len(graph.children) == 3
-    assert all([isinstance(c, Node) for c in graph.children])
+    graph.add_nodes([de1, de2, de3])
+    assert len(graph.roots) == 3
+    assert all([isinstance(c, Node) for c in graph.roots])
 
 
 def test_add_nested_children():
     graph = Graph()
     de1, de2, de3 = DummyExtractor(), DummyExtractor(), DummyExtractor()
-    graph.add_children([de1, (de2, [(de3, [], "child's child")], 'child')])
-    assert len(graph.children) == 2
-    assert isinstance(graph.children[1].children[0], Node)
-    assert graph.children[1].children[0].name == "child's child"
+    graph.add_nodes([de1, (de2, [(de3, [], "child's child")], 'child')])
+    assert len(graph.roots) == 2
+    assert isinstance(graph.roots[1].children[0], Node)
+    assert graph.roots[1].children[0].name == "child's child"
 
 
 def test_small_pipeline():
@@ -72,7 +72,7 @@ def test_small_pipeline():
     stim = ImageStim(filename)
     nodes = [(TesseractConverter(), [LengthExtractor()])]
     graph = Graph(nodes)
-    result = list(graph.extract([stim], merge=False))
+    result = list(graph.run([stim], merge=False))
     history = result[0].history.to_df()
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
@@ -94,9 +94,9 @@ def test_big_pipeline():
                         WitTranscriptionConverter(), 'LengthExtractor'],
                         'video_to_audio')]
     graph = Graph()
-    graph.add_children(visual_nodes)
-    graph.add_children(audio_nodes)
-    result = graph.extract(video)
+    graph.add_nodes(visual_nodes)
+    graph.add_nodes(audio_nodes)
+    result = graph.run(video)
     assert ('LengthExtractor', 'text_length') in result.columns
     assert ('VibranceExtractor', 'vibrance') in result.columns
     assert not result[('onset', '')].isnull().any()

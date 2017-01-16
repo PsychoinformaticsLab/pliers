@@ -18,6 +18,7 @@ class DummyExtractor(Extractor):
     _log_attributes = ('param_A', 'param_B')
 
     def __init__(self, param_A=None, param_B='pie'):
+        super(DummyExtractor, self).__init__()
         self.param_A = param_A
         self.param_B = param_B
 
