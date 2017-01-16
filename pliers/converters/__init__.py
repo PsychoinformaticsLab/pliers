@@ -24,7 +24,3 @@ __all__ = [
     'Converter',
     'get_converter'
 ]
-
-
-
-

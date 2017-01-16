@@ -1,5 +1,4 @@
 from pliers.transformers import Transformer
-from pliers.utils import memory
 from pliers import config
 from abc import ABCMeta, abstractmethod
 from six import with_metaclass
@@ -10,8 +9,6 @@ class Filter(with_metaclass(ABCMeta, Transformer)):
 
     def __init__(self):
         super(Filter, self).__init__()
-        if config.cache_filters:
-            self.transform = memory.cache(self.transform)
 
     def transform(self, stim, *args, **kwargs):
         new_stim = self._filter(stim, *args, **kwargs)

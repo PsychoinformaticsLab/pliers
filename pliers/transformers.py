@@ -15,6 +15,9 @@ from types import GeneratorType
 import os
 
 
+_cache = {}
+
+
 class Transformer(with_metaclass(ABCMeta)):
 
     _log_attributes = ()
@@ -36,6 +39,22 @@ class Transformer(with_metaclass(ABCMeta)):
     def available(cls):
         return True
 
+    def _memoize(transform):
+        def wrapper(self, stim, *args, **kwargs):
+            use_cache = config.cache_transformers and isinstance(stim, Stim)
+            if use_cache:
+                key = hash((hash(self), id(stim)))
+                if key in _cache:
+                    return _cache[key]
+            result = transform(self, stim, *args, **kwargs)
+            if use_cache:
+                if isinstance(result, GeneratorType):
+                    result = list(result)
+                _cache[key] = result
+            return result
+        return wrapper
+
+    @_memoize
     def transform(self, stims, *args, **kwargs):
 
         if isinstance(stims, string_types):
@@ -74,7 +93,8 @@ class Transformer(with_metaclass(ABCMeta)):
     def _validate(self, stim):
         if not self._stim_matches_input_types(stim):
             from pliers.converters.base import get_converter
-            converter = get_converter(type(stim), self._input_type)
+            in_type = self._input_type if self._input_type else self._optional_input_type
+            converter = get_converter(type(stim), in_type)
             if converter:
                 _old_stim = stim
                 stim = converter.transform(stim)
@@ -83,7 +103,7 @@ class Transformer(with_metaclass(ABCMeta)):
                 msg = "Transformers of type %s can only be applied to stimuli " \
                       " of type(s) %s (not type %s), and no applicable " \
                       "Converter was found."
-                msg = msg % (self.__class__.__name__, self._input_type.__name__,
+                msg = msg % (self.__class__.__name__, in_type,
                         stim.__class__.__name__)
                 raise TypeError(msg)
         return stim
@@ -106,7 +126,6 @@ class Transformer(with_metaclass(ABCMeta)):
 
         return isinstance(stim, mandatory) or (not mandatory and isinstance(stim, optional))
 
-
     def _iterate(self, stims, *args, **kwargs):
         return (self.transform(s, *args, **kwargs) for s in stims)
 
@@ -117,6 +136,10 @@ class Transformer(with_metaclass(ABCMeta)):
     @abstractproperty
     def _input_type(self):
         pass
+
+    def __hash__(self):
+        tr_attrs = [getattr(self, attr) for attr in self._log_attributes]
+        return hash(self.name + str(dict(zip(self._log_attributes, tr_attrs))))
 
 
 class BatchTransformerMixin(object):

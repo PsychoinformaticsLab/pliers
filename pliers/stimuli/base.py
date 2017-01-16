@@ -72,7 +72,10 @@ def load_stims(source, dtype=None):
     from .text import TextStim
 
     if isinstance(source, string_types):
+        return_list = False
         source = [source]
+    else:
+        return_list = True
 
     source = [s for s in source if exists(s)]
 
@@ -101,7 +104,9 @@ def load_stims(source, dtype=None):
         else:
             load_file(s)
 
-    return stims
+    if return_list:
+        return stims
+    return None if stims[0] is None else stims[0]
 
 
 def _log_transformation(source, result, trans=None):

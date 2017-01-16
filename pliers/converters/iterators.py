@@ -7,8 +7,7 @@ from .base import Converter
 class StimCollectionIterator(Converter):
 
     def _convert(self, stim):
-        for element in stim:
-            yield element
+        return stim.__iter__()
 
 
 class VideoFrameIterator(StimCollectionIterator):

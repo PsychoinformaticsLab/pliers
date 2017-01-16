@@ -1,6 +1,5 @@
 from os.path import join, splitext
 from .utils import get_test_data_path
-from pliers.utils import memory
 from pliers.converters import (get_converter, FrameSamplingConverter,
                              VideoToAudioConverter, VideoToTextConverter,
                              TesseractConverter, WitTranscriptionConverter,
@@ -39,7 +38,7 @@ def test_derived_video_converter():
     # Test frame filters
     conv = FrameSamplingConverter(every=3)
     derived = conv.transform(video)
-    assert len(derived.elements) == math.ceil(video.n_frames / 3.0)
+    assert len(derived._frames) == math.ceil(video.n_frames / 3.0)
     first = next(f for f in derived)
     assert type(first) == VideoFrameStim
     assert first.name == 'frame[0]'
@@ -48,7 +47,7 @@ def test_derived_video_converter():
     # Should refilter from original frames
     conv = FrameSamplingConverter(hertz=15)
     derived = conv.transform(derived)
-    assert len(derived.elements) == math.ceil(video.n_frames / 6.0)
+    assert len(derived._frames) == math.ceil(video.n_frames / 6.0)
     first = next(f for f in derived)
     assert type(first) == VideoFrameStim
     assert first.duration == 3 * (1 / 15.0)
@@ -61,7 +60,7 @@ def test_derived_video_converter_cv2():
 
     conv = FrameSamplingConverter(top_n=5)
     derived = conv.transform(video)
-    assert len(derived.elements) == 5
+    assert len(derived._frames) == 5
     assert type(next(f for f in derived)) == VideoFrameStim
 
 
@@ -138,42 +137,42 @@ def test_get_converter():
     assert conv is None
 
 
-def test_converter_memoization():
+# def test_converter_memoization():
 
-    cache_value = config.cache_converters
-    config.cache_converters = True
+#     cache_value = config.cache_converters
+#     config.cache_converters = True
 
-    filename = join(get_test_data_path(), 'video', 'small.mp4')
-    video = VideoStim(filename)
-    conv = VideoToAudioConverter()
+#     filename = join(get_test_data_path(), 'video', 'small.mp4')
+#     video = VideoStim(filename)
+#     conv = VideoToAudioConverter()
 
-    def convert(stim):
-        start_time = time.time()
-        stim = conv.transform(stim)
-        return time.time() - start_time
+#     def convert(stim):
+#         start_time = time.time()
+#         stim = conv.transform(stim)
+#         return time.time() - start_time
 
-    # Time taken first time through
-    memory.clear()
+#     # Time taken first time through
+#     memory.clear()
 
-    convert_time = convert(video)
-    cache_time = convert(video)
+#     convert_time = convert(video)
+#     cache_time = convert(video)
 
-    # TODO: implement saner checking than this
-    # Converting should be at least twice as slow as retrieving from cache
-    assert convert_time >= cache_time * 2
+#     # TODO: implement saner checking than this
+#     # Converting should be at least twice as slow as retrieving from cache
+#     assert convert_time >= cache_time * 2
 
-    # After clearing the cache, checks should fail
-    memory.clear()
-    cache_time = convert(video)
-    assert convert_time <= cache_time * 2
+#     # After clearing the cache, checks should fail
+#     memory.clear()
+#     cache_time = convert(video)
+#     assert convert_time <= cache_time * 2
 
-    # When cach is disabled, check should also fail
-    config.cache_converters = False
-    conv = VideoToAudioConverter()
-    cache_time = convert(video)
-    assert convert_time <= cache_time * 2
+#     # When cach is disabled, check should also fail
+#     config.cache_converters = False
+#     conv = VideoToAudioConverter()
+#     cache_time = convert(video)
+#     assert convert_time <= cache_time * 2
 
-    config.cache_converters = cache_value
+#     config.cache_converters = cache_value
 
 
 @pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")

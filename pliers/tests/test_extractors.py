@@ -203,7 +203,8 @@ def test_optical_flow_extractor():
     stim = VideoStim(join(video_dir, 'small.mp4'))
     result = DenseOpticalFlowExtractor().transform(stim).to_df()
     target = result.query('onset==3.0')['total_flow']
-    assert np.isclose(target, 86248.05, 1e-5)
+    # Value returned by cv2 seems to change over versions, so use low precision
+    assert np.isclose(target, 86248.05, 1e-4)
 
 
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
