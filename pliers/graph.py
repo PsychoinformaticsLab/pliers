@@ -2,6 +2,7 @@ from pliers.extractors.base import Extractor, merge_results
 from pliers.transformers import get_transformer
 from itertools import chain
 from pliers.utils import listify, flatten
+from pliers import config
 from six import string_types
 from collections import OrderedDict
 from types import GeneratorType
@@ -16,24 +17,12 @@ class Node(object):
         transformer (Transformer): the Transformer instance at this node
     '''
 
-    def __init__(self, name, transformer):
+    def __init__(self, transformer, name):
         self.name = name
         self.children = []
         if isinstance(transformer, string_types):
             transformer = get_transformer(transformer)
         self.transformer = transformer
-
-    def collect(self, stim):
-        if hasattr(self, 'transformer') and self.transformer is not None:
-            result = listify(self.transformer.transform(stim))
-            if isinstance(self.transformer, Extractor):
-                return result
-            stim = result
-            # If result is a generator, the first child will destroy the
-            # iterable, so cache via list conversion
-            if len(self.children) > 1 and isinstance(stim, GeneratorType):
-                stim = list(stim)
-        return list(chain(*[c.collect(stim) for c in self.children]))
 
     def add_child(self, node):
         ''' Append a child to the list of children. '''
@@ -43,25 +32,61 @@ class Node(object):
         return len(self.children)
 
 
-class Graph(Node):
+class Graph(object):
 
     def __init__(self, nodes=None):
 
         self.nodes = OrderedDict()
-        self.children = []
+        self.roots = []
         if nodes is not None:
-            self.add_children(nodes)
+            self.add_nodes(nodes)
 
-    def add_branch(self, nodes, parent=None):
-        for n in nodes:
-            node_args = self._parse_node_args(n)
-            node = self.add_node(parent=parent, return_node=True, **node_args)
-            parent = node
-
-    def add_children(self, nodes, parent=None):
+    def add_nodes(self, nodes, parent=None):
         for n in nodes:
             node_args = self._parse_node_args(n)
             self.add_node(parent=parent, **node_args)
+
+    def add_node(self, transformer, name=None, children=None, parent=None,
+                 return_node=False):
+
+        if name is None:
+            name = id(transformer)
+
+        node = Node(transformer, name)
+        self.nodes[name] = node
+
+        if parent is None:
+            self.roots.append(node)
+        else:
+            parent = self.nodes[parent.name]
+            parent.add_child(node)
+
+        if children is not None:
+            self.add_nodes(children, parent=node)
+
+        if return_node:
+            return node
+
+    def run(self, stim, merge=True):
+        results = list(chain(*[self.run_node(n, stim) for n in self.roots]))
+        results = list(flatten(results))
+        return merge_results(results) if merge else results
+
+    def run_node(self, node, stim):
+
+        if isinstance(node, string_types):
+            node = self.nodes[node]
+
+        result = node.transformer.transform(stim)
+        if isinstance(node.transformer, Extractor):
+            return listify(result)
+
+        stim = result
+        # If result is a generator, the first child will destroy the
+        # iterable, so cache via list conversion
+        if len(node.children) > 1 and isinstance(stim, GeneratorType):
+            stim = list(stim)
+        return list(chain(*[self.run_node(c, stim) for c in node.children]))
 
     @staticmethod
     def _parse_node_args(node):
@@ -81,25 +106,3 @@ class Graph(Node):
             kwargs['transformer'] = node
 
         return kwargs
-
-    def add_node(self, transformer, name=None, children=None, parent=None,
-                 return_node=False):
-
-        if name is None:
-            name = id(transformer)
-
-        node = Node(name, transformer)
-        self.nodes[name] = node
-
-        parent = self if parent is None else self.nodes[parent.name]
-        parent.add_child(node)
-
-        if children is not None:
-            self.add_children(children, parent=node)
-
-        if return_node:
-            return node
-
-    def extract(self, stims, merge=True):
-        results = list(flatten(self.collect(stims)))
-        return merge_results(results) if merge else results
