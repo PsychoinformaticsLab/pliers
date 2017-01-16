@@ -19,6 +19,7 @@ BATCH_SIZE = 10
 class GoogleAPITransformer(Transformer, BatchTransformerMixin, EnvironmentKeyMixin):
 
     _env_keys = 'GOOGLE_APPLICATION_CREDENTIALS'
+    _log_attributes = ('handle_annotations',)
 
     def __init__(self, discovery_file=None, api_version='v1', max_results=100,
                  num_retries=3, handle_annotations='prefix'):

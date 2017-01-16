@@ -26,8 +26,8 @@ class MultiStepConverter(Converter):
             if issubclass(step, Stim):
                 converter = get_converter(type(stim), step)
                 if converter is None:
-                    msg = "Conversion failed at step %d; unable to find a " + \
-                            "Converter capable of transforming a %s into a %s." \
+                    msg = ("Conversion failed at step %d; unable to find a "
+                            "Converter capable of transforming a %s into a %s.") \
                             % (i, stim.__class__.__name__, step.__name__)
                     raise ValueError(msg)
             else:

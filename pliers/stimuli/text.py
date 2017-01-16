@@ -166,5 +166,7 @@ class ComplexTextStim(Stim, CollectionStimMixin):
 
             tokens = tokenize_text(text)
 
+        # TODO: track order as a separate attribute from duration, because we
+        # can't treat serial position as if it were time in seconds.
         for i, t in enumerate(tokens):
-            self._elements.append(TextStim(text=t, onset=i, duration=1))
+            self._elements.append(TextStim(text=t, onset=None, duration=None))

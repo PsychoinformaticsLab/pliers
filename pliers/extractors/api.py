@@ -141,7 +141,7 @@ class ClarifaiAPIExtractor(ImageExtractor):
                                     select_classes=self.select_classes)
         
         if stim.filename is None:
-            os.remove(temp_file)
+            os.remove(file)
 
         tagged = tags['results'][0]['result']['tag']
         return ExtractorResult([tagged['probs']], stim, self, 
