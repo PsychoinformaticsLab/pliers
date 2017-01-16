@@ -15,6 +15,9 @@ from types import GeneratorType
 import os
 
 
+_cache = {}
+
+
 class Transformer(with_metaclass(ABCMeta)):
 
     _log_attributes = ()
@@ -36,6 +39,22 @@ class Transformer(with_metaclass(ABCMeta)):
     def available(cls):
         return True
 
+    def _memoize(transform):
+        def wrapper(self, stim, *args, **kwargs):
+            use_cache = config.cache_transformers and isinstance(stim, Stim)
+            if use_cache:
+                key = hash((hash(self), id(stim)))
+                if key in _cache:
+                    return _cache[key]
+            result = transform(self, stim, *args, **kwargs)
+            if use_cache:
+                if isinstance(result, GeneratorType):
+                    result = list(result)
+                _cache[key] = result
+            return result
+        return wrapper
+
+    @_memoize
     def transform(self, stims, *args, **kwargs):
 
         if isinstance(stims, string_types):
@@ -117,6 +136,10 @@ class Transformer(with_metaclass(ABCMeta)):
     @abstractproperty
     def _input_type(self):
         pass
+
+    def __hash__(self):
+        tr_attrs = [getattr(self, attr) for attr in self._log_attributes]
+        return hash(self.name + str(dict(zip(self._log_attributes, tr_attrs))))
 
 
 class BatchTransformerMixin(object):
