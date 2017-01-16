@@ -1,5 +1,4 @@
 cryptography==1.4
-joblib
 python-magic
 numpy>=1.8.1
 nltk>=3.0.0

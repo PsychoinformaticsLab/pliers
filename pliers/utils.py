@@ -1,10 +1,6 @@
 import collections
 from six import string_types
-from joblib import Memory
 from tempfile import mkdtemp
-
-cachedir = mkdtemp()
-memory = Memory(cachedir=cachedir, verbose=0)
 
 
 def listify(obj):

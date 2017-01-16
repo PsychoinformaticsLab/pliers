@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 from collections import defaultdict
 from pliers import config
-from pliers.utils import memory
 from pliers.transformers import Transformer
 from types import GeneratorType
 
@@ -14,8 +13,6 @@ class Extractor(with_metaclass(ABCMeta, Transformer)):
 
     def __init__(self):
         super(Extractor, self).__init__()
-        if config.cache_extractors:
-            self.transform = memory.cache(self.transform)
 
     def transform(self, stim, *args, **kwargs):
         result = super(Extractor, self).transform(stim, *args, **kwargs)

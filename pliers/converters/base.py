@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 from pliers.transformers import Transformer, CollectionStimMixin
 from six import with_metaclass
-from pliers.utils import memory, listify
+from pliers.utils import listify
 import importlib
 from types import GeneratorType
 from pliers import config
@@ -13,8 +13,6 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
 
     def __init__(self):
         super(Converter, self).__init__()
-        if config.cache_converters:
-            self.transform = memory.cache(self.transform)
 
     @abstractmethod
     def _convert(self, stim):
