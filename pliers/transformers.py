@@ -3,15 +3,15 @@ from pliers.stimuli.base import (Stim, CollectionStimMixin,
 from pliers.stimuli.compound import CompoundStim
 from pliers.utils import listify
 from pliers import config
+from pliers.utils import (classproperty, progress_bar_wrapper, isiterable,
+                          isgenerator)
 import pliers
 
 from six import with_metaclass, string_types
 from abc import ABCMeta, abstractmethod, abstractproperty
-from pliers.utils import classproperty
 import importlib
 from copy import deepcopy
 import pandas as pd
-from types import GeneratorType
 import os
 
 
@@ -48,7 +48,7 @@ class Transformer(with_metaclass(ABCMeta)):
                     return _cache[key]
             result = transform(self, stim, *args, **kwargs)
             if use_cache:
-                if isinstance(result, GeneratorType):
+                if isgenerator(result):
                     result = list(result)
                 _cache[key] = result
             return result
@@ -70,11 +70,11 @@ class Transformer(with_metaclass(ABCMeta)):
 
         # If stims is an iterable, naively loop over elements, removing
         # invalid results if needed
-        if isinstance(stims, (list, tuple, GeneratorType)):
+        if isiterable(stims):
             iters = self._iterate(stims, *args, **kwargs)
             if config.drop_bad_extractor_results:
-                return (i for i in iters if i is not None)
-            return iters
+                iters = (i for i in iters if i is not None)
+            return progress_bar_wrapper(iters, desc='Stim')
 
         # Validate stim, and then either pass it directly to the Transformer
         # or, if a conversion occurred, recurse.
@@ -86,7 +86,7 @@ class Transformer(with_metaclass(ABCMeta)):
             else:
                 result = self._transform(validated_stim, *args, **kwargs)
                 result = _log_transformation(validated_stim, result, self)
-                if isinstance(result, GeneratorType):
+                if isgenerator(result):
                     result = list(result)
                 return result
 

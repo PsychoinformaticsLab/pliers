@@ -3,7 +3,6 @@ from pliers.transformers import Transformer, CollectionStimMixin
 from six import with_metaclass
 from pliers.utils import listify
 import importlib
-from types import GeneratorType
 from pliers import config
 import pliers
 

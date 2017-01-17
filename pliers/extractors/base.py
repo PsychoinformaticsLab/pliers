@@ -5,7 +5,7 @@ import numpy as np
 from collections import defaultdict
 from pliers import config
 from pliers.transformers import Transformer
-from types import GeneratorType
+from pliers.utils import isgenerator
 
 
 class Extractor(with_metaclass(ABCMeta, Transformer)):
@@ -16,7 +16,7 @@ class Extractor(with_metaclass(ABCMeta, Transformer)):
 
     def transform(self, stim, *args, **kwargs):
         result = super(Extractor, self).transform(stim, *args, **kwargs)
-        return list(result) if isinstance(result, GeneratorType) else result
+        return list(result) if isgenerator(result) else result
 
     @abstractmethod
     def _extract(self, stim):
