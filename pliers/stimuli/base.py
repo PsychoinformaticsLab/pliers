@@ -5,8 +5,9 @@ from six import with_metaclass, string_types
 import importlib
 from collections import namedtuple
 from pliers import config
+from pliers.utils import isiterable
 import pandas as pd
-from types import GeneratorType
+from tqdm import tqdm
 
 
 class Stim(with_metaclass(ABCMeta)):
@@ -115,7 +116,7 @@ def _log_transformation(source, result, trans=None):
               (trans is not None and not trans._loggable):
         return result
 
-    if isinstance(result, (list, tuple, GeneratorType)):
+    if isiterable(result):
         return (_log_transformation(source, r, trans) for r in result)
 
     values = [source.name, source.filename, source.__class__.__name__]

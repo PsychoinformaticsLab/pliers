@@ -1,11 +1,10 @@
 from pliers.extractors.base import Extractor, merge_results
 from pliers.transformers import get_transformer
 from itertools import chain
-from pliers.utils import listify, flatten
+from pliers.utils import listify, flatten, isgenerator
 from pliers import config
 from six import string_types
 from collections import OrderedDict
-from types import GeneratorType
 
 
 class Node(object):
@@ -84,7 +83,7 @@ class Graph(object):
         stim = result
         # If result is a generator, the first child will destroy the
         # iterable, so cache via list conversion
-        if len(node.children) > 1 and isinstance(stim, GeneratorType):
+        if len(node.children) > 1 and isgenerator(stim):
             stim = list(stim)
         return list(chain(*[self.run_node(c, stim) for c in node.children]))
 

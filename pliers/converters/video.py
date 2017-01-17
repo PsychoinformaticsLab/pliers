@@ -1,9 +1,11 @@
 from pliers.stimuli.video import VideoStim, DerivedVideoStim, VideoFrameStim
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.text import TextStim
+from pliers.utils import progress_bar_wrapper
 from .base import Converter
 import pandas as pd
 import os
+
 
 
 class VideoToAudioConverter(Converter):
@@ -89,7 +91,9 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
         # Construct new VideoFrameStim for each frame index
         onsets = [frame_num * (1. / video.fps) for frame_num in frame_index]
         frames = []
-        for i, f in enumerate(frame_index):
+        for i, f in progress_bar_wrapper(enumerate(frame_index),
+                                         desc='Video frame',
+                                         total=len(frame_index)):
             if f != frame_index[-1]:
                 dur = onsets[i+1] - onsets[i]
             else:
