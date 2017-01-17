@@ -1,6 +1,9 @@
 import collections
 from six import string_types
 from tempfile import mkdtemp
+from tqdm import tqdm
+from pliers import config
+from types import GeneratorType
 
 
 def listify(obj):
@@ -27,3 +30,22 @@ class classproperty(object):
 
     def __get__(self, owner_self, owner_cls):
         return self.fget(owner_cls)
+
+
+def isiterable(obj):
+    ''' Returns True if the object is one of allowable iterable types. '''
+    return isinstance(obj, (list, tuple, GeneratorType, tqdm))
+
+
+def isgenerator(obj):
+    ''' Returns True if object is a generator, or a generator wrapped by a
+    tqdm object. '''
+    return isinstance(obj, GeneratorType) or (hasattr(obj, 'iterable') and
+           isinstance(getattr(obj, 'iterable'), GeneratorType))
+
+
+def progress_bar_wrapper(iterable, **kwargs):
+    ''' Wrapper that applies tqdm progress bar conditional on config settings.
+    '''
+    return tqdm(iterable, **kwargs) if (config.progress_bar and
+        not isinstance(iterable, tqdm)) else iterable
