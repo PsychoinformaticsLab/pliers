@@ -16,7 +16,7 @@ setup(
                       'pillow', 'python-magic', 'requests', 'nltk'],
     packages=find_packages(exclude=['pliers/tests']),
     license='MIT',
-    package_data={'pliers': ['data/*'],
+    package_data={'pliers': ['datasets/*'],
                   'pliers.tests': ['data/*/*']
                   },
     download_url='https://github.com/tyarkoni/pliers/archive/%s.tar.gz' %
