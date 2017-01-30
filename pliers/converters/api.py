@@ -55,6 +55,11 @@ class GoogleSpeechAPIConverter(SpeechRecognitionAPIConverter):
     _env_keys = 'GOOGLE_APPLICATION_CREDENTIALS'
     recognize_method = 'recognize_google_cloud'
 
+    def _convert(self, audio):
+        with open(self.api_key) as json_data:
+            self.api_key = json_data.read()
+        super(GoogleSpeechAPIConverter, self)._convert(audio)
+
 
 class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
     ''' Uses the IBM Watson Text to Speech API to run speech-to-text 
