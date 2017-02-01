@@ -19,6 +19,7 @@ setup(
     package_data={'pliers': ['datasets/*'],
                   'pliers.tests': ['data/*/*']
                   },
+    zip_safe=True,
     download_url='https://github.com/tyarkoni/pliers/archive/%s.tar.gz' %
     __version__,
     **extra_setuptools_args
