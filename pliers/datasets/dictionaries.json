@@ -7,7 +7,21 @@
         "license": "http://creativecommons.org/licenses/by-nc-nd/3.0/deed.en_US",
         "format": "csv",
         "language": "english",
-        "index": "Word"
+        "index": "Word",
+        "columns": ["V.Mean.Sum", "V.SD.Sum", "V.Rat.Sum", "A.Mean.Sum",
+                    "A.SD.Sum", "A.Rat.Sum", "D.Mean.Sum", "D.SD.Sum",
+                    "D.Rat.Sum", "V.Mean.M", "V.SD.M", "V.Rat.M", "V.Mean.F",
+                    "V.SD.F", "V.Rat.F", "A.Mean.M", "A.SD.M", "A.Rat.M",
+                    "A.Mean.F", "A.SD.F", "A.Rat.F", "D.Mean.M", "D.SD.M",
+                    "D.Rat.M", "D.Mean.F", "D.SD.F", "D.Rat.F", "V.Mean.Y",
+                    "V.SD.Y", "V.Rat.Y", "V.Mean.O", "V.SD.O", "V.Rat.O",
+                    "A.Mean.Y", "A.SD.Y", "A.Rat.Y", "A.Mean.O", "A.SD.O",
+                    "A.Rat.O", "D.Mean.Y", "D.SD.Y", "D.Rat.Y", "D.Mean.O",
+                    "D.SD.O", "D.Rat.O", "V.Mean.L", "V.SD.L", "V.Rat.L",
+                    "V.Mean.H", "V.SD.H", "V.Rat.H", "A.Mean.L", "A.SD.L",
+                    "A.Rat.L", "A.Mean.H", "A.SD.H", "A.Rat.H", "D.Mean.L",
+                    "D.SD.L", "D.Rat.L", "D.Mean.H", "D.SD.H", "D.Rat.H"
+        ]
     },
 
     "aoa": {
@@ -19,7 +33,12 @@
         "rename": {},
         "format": "xls",
         "language": "english",
-        "index": "Word"
+        "index": "Word",
+        "columns": ["Alternative.spelling", "Freq_pm", "Dom_PoS_SUBTLEX",
+                    "Nletters", "Nphon", "Nsyll", "Lemma_highest_PoS",
+                    "AoA_Kup", "Perc_known", "AoA_Kup_lem", "Perc_known_lem",
+                    "AoA_Bird_lem", "AoA_Bristol_lem", "AoA_Cort_lem",
+                    "AoA_Schock"]
     },
 
     "concreteness": {
@@ -29,7 +48,9 @@
         "url": "http://crr.ugent.be/papers/Concreteness_ratings_Brysbaert_et_al_BRM.txt",
         "license": "http://creativecommons.org/licenses/by-nc-nd/3.0/deed.en_US",
         "format": "tsv",
-        "language": "english"
+        "language": "english",
+        "columns": ["Bigram", "Conc.M", "Conc.SD", "Unknown", "Total",
+                    "Percent_known", "SUBTLEX", "Dom_Pos"]
     },
 
     "SUBTLEXusfrequencyabove1": {
@@ -39,6 +60,8 @@
         "url": "http://www.ugent.be/pp/experimentele-psychologie/en/research/documents/subtlexus/subtlexus4.zip/at_download/file",
         "license": "",
         "format": "xls",
-        "language": "english"
+        "language": "english",
+        "columns": ["FREQcount", "CDcount", "FREQlow", "Cdlow", "SUBTLWF",
+                    "Lg10WF", "SUBTLCD", "Lg10CD"]
     }
 }

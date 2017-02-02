@@ -32,6 +32,9 @@ class Stim(with_metaclass(ABCMeta)):
     def history(self, history):
         self._history = history
 
+    def __hash__(self):
+        return hash((self.filename, self.name, self.onset, self.duration, id(self)))
+
 
 class CollectionStimMixin(with_metaclass(ABCMeta)):
 
