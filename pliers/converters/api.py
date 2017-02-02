@@ -55,6 +55,11 @@ class GoogleSpeechAPIConverter(SpeechRecognitionAPIConverter):
     _env_keys = 'GOOGLE_APPLICATION_CREDENTIALS'
     recognize_method = 'recognize_google_cloud'
 
+    def _convert(self, audio):
+        with open(self.api_key) as json_data:
+            self.api_key = json_data.read()
+        super(GoogleSpeechAPIConverter, self)._convert(audio)
+
 
 class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
     ''' Uses the IBM Watson Text to Speech API to run speech-to-text 
@@ -90,12 +95,17 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
         with sr.AudioFile(audio.filename) as source:
             clip = self.recognizer.record(source)
 
-        result = self._query_api(clip)
-
-        timestamps = result['results'][0]['alternatives'][0]['timestamps']
+        json = self._query_api(clip)
+        if 'results' in json:
+            results = json['results']
+        else:
+            raise Exception('received invalid results from API: {0}'.format(str(json)))
         elements = []
-        for i, entry in enumerate(timestamps):
-            elements.append(TextStim(text=entry[0], onset=entry[1],
+        for result in results:
+            if result['final'] is True:
+                timestamps = result['alternatives'][0]['timestamps']
+                for entry in timestamps:
+                    elements.append(TextStim(text=entry[0], onset=entry[1],
                                     duration=entry[2]-entry[1]))
         return ComplexTextStim(elements=elements)
 
@@ -111,6 +121,7 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
             "continuous": "true",
             "model": model,
             "timestamps": "true",
+            "inactivity_timeout":-1,
         }))
         request = Request(url, data = flac_data, headers = {
             "Content-Type": "audio/x-flac",
