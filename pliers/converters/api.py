@@ -95,7 +95,11 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
         with sr.AudioFile(audio.filename) as source:
             clip = self.recognizer.record(source)
 
-        results = self._query_api(clip)['results']
+        json = self._query_api(clip)
+        if 'results' in json:
+            results = json['results']
+        else:
+            raise Exception('received invalid results from API: {0}'.format(str(json)))
         elements = []
         for result in results:
             if result['final'] is True:
