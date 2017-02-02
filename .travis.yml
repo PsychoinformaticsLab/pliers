@@ -33,7 +33,8 @@ before_install:
 - wget $MINICONDA_URL -O miniconda.sh;
 - bash miniconda.sh -b -f -p $MINICONDA;
 
-- conda config --set always_yes yes --set changeps1 no --add channels conda-forge
+- conda config --set always_yes yes --set changeps1 no
+- conda config --add channels conda-forge
 - conda update conda
 - conda info -a
 - conda install python=$PYTHON_VERSION $CONDA_DEPS
