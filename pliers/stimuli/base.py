@@ -141,6 +141,7 @@ def _log_transformation(source, result, trans=None):
     result.history = TransformationLog(*values)
     return result
 
+
 class TransformationLog(namedtuple('TransformationLog', "source_name source_file " +
                              "source_class result_name result_file result_class " +
                              " transformer_class transformer_params string parent")):

@@ -6,9 +6,11 @@ from pliers.extractors import (BrightnessExtractor, VibranceExtractor,
                                LengthExtractor, merge_results)
 from pliers.stimuli import (ImageStim, VideoStim)
 from .utils import get_test_data_path, DummyExtractor
-from os.path import join
+from os.path import join, exists
 import numpy as np
 from numpy.testing import assert_almost_equal
+import tempfile
+import os
 
 
 def test_node_init():
@@ -84,6 +86,7 @@ def test_small_pipeline():
 
 @pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
 def test_big_pipeline():
+    pytest.importorskip('pygraphviz')
     filename = join(get_test_data_path(), 'video', 'obama_speech.mp4')
     video = VideoStim(filename)
     visual_nodes = [(FrameSamplingConverter(every=15), [
@@ -97,6 +100,11 @@ def test_big_pipeline():
     graph.add_nodes(visual_nodes)
     graph.add_nodes(audio_nodes)
     result = graph.run(video)
+    # Test that pygraphviz outputs a file
+    drawfile = next(tempfile._get_candidate_names())
+    graph.draw(drawfile)
+    assert exists(drawfile)
+    os.remove(drawfile)
     assert ('LengthExtractor', 'text_length') in result.columns
     assert ('VibranceExtractor', 'vibrance') in result.columns
     # assert not result[('onset', '')].isnull().any()

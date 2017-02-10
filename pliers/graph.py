@@ -6,6 +6,11 @@ from pliers import config
 from six import string_types
 from collections import OrderedDict
 
+try:
+    import pygraphviz as pgv
+except:
+    pgv = None
+
 
 class Node(object):
 
@@ -66,9 +71,57 @@ class Graph(object):
         if return_node:
             return node
 
+    def draw(self, filename):
+        ''' Render a plot of the graph via pygraphviz.
+        Args:
+            filename (str): Path to save the generated image to.
+        '''
+        if pgv is None:
+            raise ImportError("pygraphviz is required in order to plot graphs,"
+                              " but could not be successfully imported. Please"
+                              " make sure it is installed.")
+        if not hasattr(self, '_results'):
+            raise RuntimeError("Graph cannot be drawn before it is executed. "
+                             "Try calling run() first.")
+
+        g = pgv.AGraph(directed=True)
+        node_list = {}
+
+        for elem in self._results:
+            if not hasattr(elem, 'history'):
+                continue
+            log = elem.history
+
+            has_parent = True
+
+            while has_parent:
+
+                # Add nodes
+                source_from = log.parent[6] if log.parent else ''
+                s_node = hash((source_from, log[2]))
+                if s_node not in node_list:
+                    g.add_node(s_node, label=log[2], shape='ellipse')
+
+                t_node = hash((log[6], log[7]))
+                if t_node not in node_list:
+                    g.add_node(t_node, label=log[6], shape='box')
+
+                r_node = hash((log[6], log[5]))
+                if r_node not in node_list:
+                    g.add_node(r_node, label=log[5], shape='ellipse')
+
+                # Add edges
+                g.add_edge(s_node, t_node)
+                g.add_edge(t_node, r_node)
+                has_parent = log.parent
+                log = log.parent
+
+        g.draw(filename, prog='dot')
+
     def run(self, stim, merge=True):
         results = list(chain(*[self.run_node(n, stim) for n in self.roots]))
         results = list(flatten(results))
+        self._results = results  # For use in plotting
         return merge_results(results) if merge else results
 
     def run_node(self, node, stim):
