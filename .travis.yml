@@ -23,8 +23,8 @@ matrix:
 before_install:
 - sudo add-apt-repository ppa:joyard-nicolas/ffmpeg -y
 - sudo apt-get -qq update
-- sudo apt-get install ffmpeg
-- sudo apt-get install tesseract-ocr
+- sudo apt-get install ffmpeg tesseract-ocr graphviz
+
 
 - export MINICONDA=$HOME/miniconda
 - export PATH="$MINICONDA/bin:$PATH"
@@ -42,7 +42,8 @@ before_install:
 install:
 - pip install -r requirements.txt
 - pip install --upgrade --ignore-installed setuptools
-- pip install --upgrade coveralls pytest-cov pysrt xlrd clarifai seaborn pytesseract matplotlib SpeechRecognition IndicoIo tensorflow
+- pip install --upgrade coveralls pytest-cov pysrt xlrd clarifai seaborn pytesseract
+- pip install --upgrade matplotlib SpeechRecognition IndicoIo tensorflow pygraphviz
 - pip install 'numpy<1.12.0'
 
 before_script:

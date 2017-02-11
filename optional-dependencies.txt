@@ -2,6 +2,7 @@ clarifai
 cv2
 google-api-python-client
 matplotlib
+pygraphviz
 pysrt
 seaborn
 SpeechRecognition>=3.6.0

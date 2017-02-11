@@ -51,7 +51,7 @@ class STFTAudioExtractor(AudioExtractor):
         w = np.hanning(framesamp)
         X = np.array([fft(w*x[i:(i+framesamp)])
                       for i in range(0, len(x)-framesamp, hopsamp)])
-        nyquist_lim = X.shape[1]//2
+        nyquist_lim = int(X.shape[1]//2)
         X = np.log(X[:, :nyquist_lim])
         X = np.absolute(X)
         if self.spectrogram:
