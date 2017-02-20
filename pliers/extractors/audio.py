@@ -85,7 +85,8 @@ class STFTAudioExtractor(AudioExtractor):
         for i, fb in enumerate(self.freq_bins):
             start, stop = fb
             values[:, i] = data[:, start:stop].mean(1)
-        values = np.nan_to_num(values)
+        values[np.isnan(values)] = 0.
+        values[np.isinf(values)] = 0.
         return ExtractorResult(values, stim, self, features=features,
                                onsets=index, durations=self.hop_size)
 
