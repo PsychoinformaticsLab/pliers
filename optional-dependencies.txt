@@ -8,4 +8,4 @@ seaborn
 SpeechRecognition>=3.6.0
 pytesseract
 IndicoIo
-tensorflow
+tensorflow>=1.0.0
