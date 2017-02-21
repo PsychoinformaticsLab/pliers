@@ -1,3 +1,3 @@
-from .base import Filter
+from .text import WordStemmingFilter
 
-__all__ = ['Filter']
+__all__ = ['WordStemmingFilter']
