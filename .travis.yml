@@ -44,7 +44,6 @@ install:
 - pip install --upgrade --ignore-installed setuptools
 - pip install --upgrade coveralls pytest-cov pysrt xlrd clarifai seaborn pytesseract
 - pip install --upgrade matplotlib SpeechRecognition IndicoIo tensorflow pygraphviz
-- pip install 'numpy<1.12.0'
 
 before_script:
   - python -m pliers.support.download
