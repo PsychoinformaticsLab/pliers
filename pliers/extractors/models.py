@@ -50,9 +50,9 @@ class TensorFlowInceptionV3Extractor(Extractor):
             tarfile.open(self.model_file, 'r:gz').extractall(self.model_dir)
 
     def _extract(self, stim):
-        import tensorflow as tf
+        from pliers.external import tensorflow as tf
         tf_dir = os.path.dirname(tf.__file__)
-        script = os.path.join(tf_dir, 'models', 'image', 'imagenet', 'classify_image.py')
+        script = os.path.join(tf_dir, 'classify_image.py')
         
         if stim.filename is None:
             img_file = tempfile.mktemp() + '.jpg'
