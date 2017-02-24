@@ -44,6 +44,7 @@ install:
 - pip install --upgrade --ignore-installed setuptools
 - pip install --upgrade coveralls pytest-cov pysrt xlrd clarifai seaborn pytesseract
 - pip install --upgrade matplotlib SpeechRecognition IndicoIo tensorflow pygraphviz
+- pip install --upgrade pathos
 
 before_script:
   - python -m pliers.support.download
