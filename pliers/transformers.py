@@ -13,6 +13,11 @@ import importlib
 from copy import deepcopy
 import pandas as pd
 import os
+from functools import partial
+try:
+    from pathos.multiprocessing import ProcessingPool as Pool
+except:
+    Pool = None
 
 
 _cache = {}
@@ -127,6 +132,12 @@ class Transformer(with_metaclass(ABCMeta)):
         return isinstance(stim, mandatory) or (not mandatory and isinstance(stim, optional))
 
     def _iterate(self, stims, *args, **kwargs):
+
+        if config.parallelize and Pool is not None:
+            def _transform(s):
+                return self.transform(s, *args, **kwargs)
+            return Pool(config.n_jobs).map(_transform, stims)
+
         return (self.transform(s, *args, **kwargs) for s in stims)
 
     @abstractmethod

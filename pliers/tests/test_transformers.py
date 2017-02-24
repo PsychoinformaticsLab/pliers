@@ -1,7 +1,9 @@
 from pliers.transformers import get_transformer
-from pliers.extractors import Extractor, STFTAudioExtractor, BrightnessExtractor
+from pliers.extractors import (Extractor, STFTAudioExtractor,
+                               BrightnessExtractor, SaliencyExtractor)
 from pliers.stimuli.base import TransformationLog
-from pliers.stimuli import ImageStim
+from pliers.stimuli import ImageStim, VideoStim
+from pliers import config
 from os.path import join
 from .utils import get_test_data_path, DummyExtractor
 import numpy as np
@@ -27,8 +29,31 @@ def test_transformation_history():
     assert eval(df.iloc[0]['transformer_params'])['param_A'] == 'giraffe'
     assert str(res) == 'ImageStim->DummyExtractor/ExtractorResult'
 
+
 def test_transform_with_string_input():
 
     ext = BrightnessExtractor()
     res = ext.transform(join(get_test_data_path(), 'image', 'apple.jpg'))
     np.testing.assert_almost_equal(res.to_df()['brightness'].values[0], 0.887842942)
+
+
+def test_parallelization():
+    # TODO: test that parallelization actually happened (this will likely
+    # require some new logging functionality, or introspection). For now we
+    # just make sure the parallelized version produces the same result.
+    default = config.parallelize
+
+    filename = join(get_test_data_path(), 'video', 'small.mp4')
+    video = VideoStim(filename)
+    ext = BrightnessExtractor()
+
+    # With parallelization
+    config.parallelize = True
+    result1 = ext.transform(video)
+
+    # Without parallelization
+    config.parallelize = False
+    result2 = ext.transform(video)
+
+    assert result1 == result2
+    config.parallelize = default
