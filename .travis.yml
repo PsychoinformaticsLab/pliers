@@ -33,7 +33,7 @@ before_install:
 - wget $MINICONDA_URL -O miniconda.sh;
 - bash miniconda.sh -b -f -p $MINICONDA;
 
-- conda update -y conda
+# - conda update -y conda
 - conda config --set always_yes yes --set changeps1 no
 - conda config --add channels conda-forge
 - conda info -a
