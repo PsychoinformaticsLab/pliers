@@ -5,7 +5,6 @@ from six import with_metaclass
 from pliers.extractors.base import ExtractorResult
 
 
-
 class Exporter(with_metaclass(ABCMeta)):
 
     ''' Base exporter class. '''
@@ -26,8 +25,8 @@ def to_long_format(df):
         df = df.to_df()
 
     if isinstance(df.columns, pd.core.index.MultiIndex):
-        ids = list(set(df.columns) & set([('stim', ''), 
-                                        ('onset', ''), 
+        ids = list(set(df.columns) & set([('stim', ''),
+                                        ('onset', ''),
                                         ('duration', '')]))
         variables = ['extractor', 'feature']   
     else:

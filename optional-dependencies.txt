@@ -2,6 +2,7 @@ clarifai
 cv2
 google-api-python-client
 matplotlib
+pathos
 pygraphviz
 pysrt
 seaborn
