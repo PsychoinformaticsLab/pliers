@@ -1,5 +1,6 @@
-from pliers.stimuli.base import (Stim, CollectionStimMixin,
-                                 _log_transformation, load_stims)
+''' Core transformer logic. '''
+
+from pliers.stimuli.base import Stim, _log_transformation, load_stims
 from pliers.stimuli.compound import CompoundStim
 from pliers.utils import listify
 from pliers import config
@@ -10,10 +11,7 @@ import pliers
 from six import with_metaclass, string_types
 from abc import ABCMeta, abstractmethod, abstractproperty
 import importlib
-from copy import deepcopy
-import pandas as pd
 import os
-from functools import partial
 try:
     from pathos.multiprocessing import ProcessingPool as Pool
 except:
@@ -127,9 +125,10 @@ class Transformer(with_metaclass(ABCMeta)):
             msg = "Transformer of class %s requires multiple mandatory " + \
                   "inputs, so the passed input Stim must be a CompoundStim" + \
                   "--which it isn't." % self.__class__.__name__
-            raise ValueError("Transformer %s requires multiple mandatory inputs ")
+            raise ValueError(msg)
 
-        return isinstance(stim, mandatory) or (not mandatory and isinstance(stim, optional))
+        return isinstance(stim, mandatory) or (not mandatory and
+                                               isinstance(stim, optional))
 
     def _iterate(self, stims, *args, **kwargs):
 

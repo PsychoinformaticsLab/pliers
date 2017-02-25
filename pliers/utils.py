@@ -1,6 +1,5 @@
 import collections
 from six import string_types
-from tempfile import mkdtemp
 from tqdm import tqdm
 from pliers import config
 from types import GeneratorType
@@ -13,6 +12,7 @@ def listify(obj):
 
 
 def flatten(l):
+    ''' Flatten an iterable. '''
     for el in l:
         if isinstance(el, collections.Iterable) and not isinstance(el, string_types):
             for sub in flatten(el):
