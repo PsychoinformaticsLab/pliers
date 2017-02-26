@@ -1,11 +1,10 @@
+''' Converter classes that operate on VideoStim inputs. '''
+
+import os
 from pliers.stimuli.video import VideoStim, DerivedVideoStim, VideoFrameStim
 from pliers.stimuli.audio import AudioStim
-from pliers.stimuli.text import TextStim
 from pliers.utils import progress_bar_wrapper
 from .base import Converter
-import pandas as pd
-import os
-
 
 
 class VideoToAudioConverter(Converter):
@@ -16,8 +15,8 @@ class VideoToAudioConverter(Converter):
     _output_type = AudioStim
 
     def __init__(self, fps=44100, nbytes=2,
-                    buffersize=2000, bitrate=None,
-                    ffmpeg_params=None):
+                 buffersize=2000, bitrate=None,
+                 ffmpeg_params=None):
         super(VideoToAudioConverter, self).__init__()
         self.fps = fps
         self.nbytes = nbytes
@@ -28,8 +27,8 @@ class VideoToAudioConverter(Converter):
     def _convert(self, video):
         filename = os.path.splitext(video.filename)[0] + '.wav'
         video.clip.audio.write_audiofile(filename, self.fps, self.nbytes,
-                                        self.buffersize, self.bitrate,
-                                        self.ffmpeg_params)
+                                         self.buffersize, self.bitrate,
+                                         self.ffmpeg_params)
         return AudioStim(filename)
 
 
@@ -42,8 +41,8 @@ class VideoToDerivedVideoConverter(Converter):
 
 
 class FrameSamplingConverter(VideoToDerivedVideoConverter):
-    ''' 
-    Samples frames from video stimuli, to improve efficiency
+
+    ''' Samples frames from video stimuli, to improve efficiency.
 
     Args:
         every (int): takes every nth frame
@@ -84,7 +83,8 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
                     continue
                 diffs.append(sum(cv2.sumElems(cv2.absdiff(last, img))))
                 last = img
-            new_idx = sorted(range(len(diffs)), key=lambda i: diffs[i], reverse=True)[:self.top_n]
+            new_idx = sorted(range(len(diffs)), key=lambda i: diffs[i], reverse=True)[
+                :self.top_n]
 
         frame_index = sorted(list(set(frame_index).intersection(new_idx)))
 
@@ -104,4 +104,3 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
 
         return DerivedVideoStim(filename=video.filename, frames=frames,
                                 frame_index=frame_index)
-        

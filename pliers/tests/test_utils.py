@@ -1,9 +1,7 @@
-from pliers.utils import progress_bar_wrapper
 from pliers.stimuli import VideoStim
 from pliers.converters import FrameSamplingConverter
 from pliers import config
 from .utils import get_test_data_path
-from tqdm import tqdm
 from os.path import join
 import pytest
 

@@ -1,14 +1,24 @@
-from .base import Stim, CollectionStimMixin
-from pliers.support.decorators import requires_nltk_corpus
+''' Classes that represent text or sequences of text. '''
+
+import re
 import pandas as pd
 from six import string_types
-import re
-import unicodedata
+from pliers.support.decorators import requires_nltk_corpus
+from .base import Stim, CollectionStimMixin
 
 
 class TextStim(Stim):
 
-    ''' Any simple text stimulus--most commonly a single word. '''
+    ''' Any simple text stimulus--most commonly a single word.
+    Args:
+        filename (str): Path to input file, if one exists.
+        text (str): Text value to store. If none is provided, value is read
+            from filename.
+        onset (float): Optional onset of the text presentation (in secs) with
+            respect to some more general context or timeline the user wishes
+            to keep track of.
+        duration (float): Optional duration of the TextStim, in seconds.
+    '''
 
     def __init__(self, filename=None, text=None, onset=None, duration=None):
         if filename is not None and text is None:
@@ -114,19 +124,19 @@ class ComplexTextStim(Stim, CollectionStimMixin):
 
     def _from_srt(self, filename):
         import pysrt
-        
+
         data = pysrt.open(filename)
         list_ = [[] for _ in data]
         for i, row in enumerate(data):
             start = tuple(row.start)
             start_time = self._to_sec(start)
-            
+
             end_ = tuple(row.end)
             duration = self._to_sec(end_) - start_time
-            
+
             line = re.sub('\s+', ' ', row.text)
             list_[i] = [line, start_time, duration]
-        
+
         # Convert to pandas DataFrame
         df = pd.DataFrame(columns=["text", "onset", "duration"], data=list_)
 
@@ -141,7 +151,8 @@ class ComplexTextStim(Stim, CollectionStimMixin):
 
     def _to_sec(self, tup):
         hours, mins, secs, msecs = tup
-        total_msecs = (hours * 60 * 60 * 1000) + (mins * 60 * 1000) + (secs * 1000) + msecs
+        total_msecs = (hours * 60 * 60 * 1000) + (mins * 60 * 1000) + \
+            (secs * 1000) + msecs
         total_secs = total_msecs / 1000.
         return total_secs
 
@@ -162,7 +173,8 @@ class ComplexTextStim(Stim, CollectionStimMixin):
                 elif unit.startswith('sent'):
                     return nltk.sent_tokenize(text, language)
                 else:
-                    raise ValueError("unit must be either 'word' or 'sentence'")
+                    raise ValueError(
+                        "unit must be either 'word' or 'sentence'")
 
             tokens = tokenize_text(text)
 

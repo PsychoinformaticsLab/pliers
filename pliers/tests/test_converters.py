@@ -1,19 +1,17 @@
 from os.path import join, splitext
 from .utils import get_test_data_path
 from pliers.converters import (get_converter, FrameSamplingConverter,
-                             VideoToAudioConverter, VideoToTextConverter,
-                             TesseractConverter, WitTranscriptionConverter,
-                             GoogleSpeechAPIConverter, IBMSpeechAPIConverter,
-                             GoogleVisionAPITextConverter, ComplexTextIterator)
+                               VideoToAudioConverter, VideoToTextConverter,
+                               TesseractConverter, WitTranscriptionConverter,
+                               GoogleSpeechAPIConverter, IBMSpeechAPIConverter,
+                               GoogleVisionAPITextConverter,
+                               ComplexTextIterator)
 from pliers.converters.image import ImageToTextConverter
-from pliers.stimuli import (VideoStim, VideoFrameStim, DerivedVideoStim,
-                            TextStim, ComplexTextStim, AudioStim, ImageStim)
-from pliers import config
+from pliers.stimuli import (VideoStim, VideoFrameStim, TextStim,
+                            ComplexTextStim, AudioStim, ImageStim)
 import numpy as np
 import math
 import pytest
-import os
-import time
 
 
 def test_video_to_audio_converter():
@@ -90,7 +88,7 @@ def test_googleAPI_converter():
 
 
 @pytest.mark.skipif("'IBM_USERNAME' not in os.environ or "
-    "'IBM_PASSWORD' not in os.environ")
+                    "'IBM_PASSWORD' not in os.environ")
 def test_ibmAPI_converter():
     audio_dir = join(get_test_data_path(), 'audio')
     stim = AudioStim(join(audio_dir, 'homer.wav'))
@@ -100,7 +98,7 @@ def test_ibmAPI_converter():
     first_word = next(w for w in out_stim)
     assert isinstance(first_word, TextStim)
     assert first_word.duration > 0
-    assert first_word.onset != None
+    assert first_word.onset is not None
 
     full_text = [elem.text for elem in out_stim]
     assert 'thermodynamics' in full_text or 'obey' in full_text
@@ -195,7 +193,8 @@ def test_stim_history_tracking():
     assert str(stim.history) == 'VideoStim->VideoToAudioConverter/AudioStim'
     conv = WitTranscriptionConverter()
     stim = conv.transform(stim)
-    assert str(stim.history) == 'VideoStim->VideoToAudioConverter/AudioStim->WitTranscriptionConverter/ComplexTextStim'
+    assert str(
+        stim.history) == 'VideoStim->VideoToAudioConverter/AudioStim->WitTranscriptionConverter/ComplexTextStim'
 
 
 def test_stim_iteration_converter():
@@ -205,4 +204,5 @@ def test_stim_iteration_converter():
     assert len(words) == 231
     assert isinstance(words[1], TextStim)
     assert words[1].text == 'Sherlock'
-    assert str(words[1].history) == 'ComplexTextStim->ComplexTextIterator/TextStim'
+    assert str(
+        words[1].history) == 'ComplexTextStim->ComplexTextIterator/TextStim'

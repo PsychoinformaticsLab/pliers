@@ -1,3 +1,5 @@
+''' Google API-based feature extraction classes. '''
+
 from pliers.extractors.image import ImageExtractor
 from pliers.stimuli.image import ImageStim
 from pliers.google import GoogleVisionAPITransformer
@@ -7,11 +9,13 @@ import numpy as np
 
 class GoogleVisionAPIExtractor(GoogleVisionAPITransformer, ImageExtractor):
 
+    ''' Base class for all Extractors that use the Google Vision API. '''
+
     def _extract(self, stim):
         if isinstance(stim, ImageStim):
             stim = [stim]
 
-        request =  self._build_request(stim)
+        request = self._build_request(stim)
         responses = self._query_api(request)
 
         features = []
@@ -26,13 +30,16 @@ class GoogleVisionAPIExtractor(GoogleVisionAPITransformer, ImageExtractor):
                 raise Exception(response['error']['message'])
 
         data = [data]
-        onsets = [stim[i].onset if hasattr(stim[i], 'onset') else i for i in range(len(responses))]
+        onsets = [stim[i].onset if hasattr(
+            stim[i], 'onset') else i for i in range(len(responses))]
         durations = [stim[i].duration for i in range(len(responses))]
-        return ExtractorResult(data, stim, self, features=features, 
-                                onsets=onsets, durations=durations)
+        return ExtractorResult(data, stim, self, features=features,
+                               onsets=onsets, durations=durations)
 
 
 class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
+
+    ''' Identifies faces in images using the Google Cloud Vision API. '''
 
     request_type = 'FACE_DETECTION'
     response_object = 'faceAnnotations'
@@ -58,7 +65,8 @@ class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
                 elif field == 'landmarks':
                     for lm in val:
                         name = 'landmark_' + lm['type'] + '_%s'
-                        lm_pos = { name % k : v for (k, v) in lm['position'].items()}
+                        lm_pos = {name %
+                                  k: v for (k, v) in lm['position'].items()}
                         data_dict.update(lm_pos)
                 else:
                     data_dict[field] = val
@@ -74,6 +82,8 @@ class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
 
 class GoogleVisionAPILabelExtractor(GoogleVisionAPIExtractor):
 
+    ''' Labels objects in images using the Google Cloud Vision API. '''
+
     request_type = 'LABEL_DETECTION'
     response_object = 'labelAnnotations'
 
@@ -87,6 +97,8 @@ class GoogleVisionAPILabelExtractor(GoogleVisionAPIExtractor):
 
 
 class GoogleVisionAPIPropertyExtractor(GoogleVisionAPIExtractor):
+
+    ''' Extracts image properties using the Google Cloud Vision API. '''
 
     request_type = 'IMAGE_PROPERTIES'
     response_object = 'imagePropertiesAnnotation'

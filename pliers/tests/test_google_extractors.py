@@ -4,7 +4,6 @@ from pliers.extractors import (GoogleVisionAPIFaceExtractor,
 from pliers.extractors.google import GoogleVisionAPIExtractor
 from pliers.stimuli import ImageStim
 import pytest
-import os
 import json
 from os.path import join
 from .utils import get_test_data_path
@@ -27,12 +26,14 @@ def test_google_vision_api_face_extractor_inits():
     assert ext.service is not None
 
     # Test parsing of individual response
-    filename = join(get_test_data_path(), 'payloads', 'google_vision_api_face_payload.json')
+    filename = join(
+        get_test_data_path(), 'payloads', 'google_vision_api_face_payload.json')
     response = json.load(open(filename, 'r'))
     features, data = ext._parse_annotations(response['faceAnnotations'])
     assert len(features) == len(data)
     assert data[features.index('angerLikelihood')] == 'VERY_UNLIKELY'
-    assert data[features.index('landmark_LEFT_EYE_BOTTOM_BOUNDARY_y')] == 257.023
+    assert data[
+        features.index('landmark_LEFT_EYE_BOTTOM_BOUNDARY_y')] == 257.023
     assert np.isnan(data[features.index('boundingPoly_vertex2_y')])
 
 
@@ -80,4 +81,3 @@ def test_google_vision_api_properties_extractor():
     result = ext.transform(stim).to_df()
     assert (158, 13, 29) in result.columns
     assert np.isfinite(result[(158, 13, 29)][0])
-

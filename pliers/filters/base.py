@@ -1,7 +1,8 @@
-from pliers.transformers import Transformer
-from pliers import config
+''' Base Filter class and associated functionality. '''
+
 from abc import ABCMeta, abstractmethod
 from six import with_metaclass
+from pliers.transformers import Transformer
 
 
 class Filter(with_metaclass(ABCMeta, Transformer)):

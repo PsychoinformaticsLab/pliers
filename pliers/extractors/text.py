@@ -6,17 +6,17 @@ from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.exceptions import PliersError
 from pliers.support.decorators import requires_nltk_corpus
-from pliers.datasets.text import fetch_dictionary, datasets
+from pliers.datasets.text import fetch_dictionary
 import numpy as np
 import pandas as pd
 from six import string_types
-from collections import defaultdict
 
 # Optional dependencies
 try:
     import nltk
 except ImportError:
-    pass
+    nltk is None
+
 
 class TextExtractor(Extractor):
 
@@ -80,10 +80,30 @@ class DictionaryExtractor(TextExtractor):
             vals = self.data.loc[stim.text].fillna(self.missing)
         vals = vals.to_dict()
         return ExtractorResult(np.array([list(vals.values())]), stim, self,
-                                features=list(vals.keys()))
+                               features=list(vals.keys()))
 
 
 class PredefinedDictionaryExtractor(DictionaryExtractor):
+
+    ''' A generic Extractor that maps words onto values via one or more
+    pre-defined dictionaries accessed via the web.
+    Args:
+        variables (list or dict): A specification of the dictionaries and
+            column names to map the input TextStims onto. If a list, each
+            element must be a string with the format 'dict/column', where the
+            value before the slash gives the name of the dictionary, and the
+            value after the slash gives the name of the column in that
+            dictionary. These names can be found in the dictionaries.json
+            specification file under the datasets submodule. Examples of
+            valid values are 'affect/V.Mean.Sum' and
+            'subtlexusfrequency/Lg10WF'. If a dict, the keys are the names of
+            the dictionary files (e.g., 'affect'), and the values are lists
+            of columns to use (e.g., ['V.Mean.Sum', 'V.SD.Sum']).
+        missing (object): Value to use when an entry for a word is missing in
+            a dictionary (defaults to numpy's NaN).
+        case_sensitive (bool): If True, entries in the dictionary are treated
+            as case-sensitive (e.g., 'John' and 'john' are different words).
+    '''
 
     _log_attributes = ('variables', 'missing', 'case_sensitive')
 
@@ -112,7 +132,8 @@ class PredefinedDictionaryExtractor(DictionaryExtractor):
             dicts.append(d)
 
         dictionary = pd.concat(dicts, axis=1, join='outer')
-        super(PredefinedDictionaryExtractor, self).__init__(dictionary, missing=missing)
+        super(PredefinedDictionaryExtractor, self).__init__(
+            dictionary, missing=missing)
 
 
 class LengthExtractor(TextExtractor):
@@ -134,22 +155,19 @@ class NumUniqueWordsExtractor(TextExtractor):
         TextExtractor.__init__(self)
         self.tokenizer = tokenizer
 
-
     @requires_nltk_corpus
     def _extract(self, stim):
         text = stim.text
         if self.tokenizer is None:
-            try:
-                import nltk
-                num_words = len(set(nltk.word_tokenize(text)))
-            except:
+            if nltk is None:
                 num_words = len(set(text.split()))
+            else:
+                num_words = len(set(nltk.word_tokenize(text)))
         else:
             num_words = len(set(self.tokenizer.tokenize(text)))
 
         return ExtractorResult(np.array([[num_words]]), stim, self,
-                                features=['num_unique_words'])
-
+                               features=['num_unique_words'])
 
 
 class PartOfSpeechExtractor(ComplexTextExtractor):
@@ -177,7 +195,6 @@ class PartOfSpeechExtractor(ComplexTextExtractor):
             onsets.append(w.onset)
             durations.append(w.duration)
 
-        return ExtractorResult(np.array(list(data.values())).transpose(), stim, self,
-                                features=list(data.keys()),
-                                onsets=onsets, 
-                                durations=durations)
+        return ExtractorResult(np.array(list(data.values())).transpose(),
+                               stim, self, features=list(data.keys()),
+                               onsets=onsets, durations=durations)

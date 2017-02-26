@@ -1,6 +1,6 @@
 from os.path import dirname, join
 from pliers.stimuli import ImageStim
-from pliers.extractors import Extractor, ExtractorResult
+from pliers.extractors.base import Extractor, ExtractorResult
 import numpy as np
 from copy import deepcopy
 
@@ -11,6 +11,7 @@ def get_test_data_path():
 
 
 class DummyExtractor(Extractor):
+
     ''' A dummy Extractor class that always returns random values when
     extract() is called. Can set the extractor name inside _extract() to
     facilitate testing of results merging etc. '''

@@ -1,17 +1,29 @@
-from pliers.stimuli.image import ImageStim
-from pliers.extractors.base import Extractor, ExtractorResult
-import numpy as np
+''' Extractor classes based on pre-trained models. '''
+
 import os
 import tempfile
-import sys
-import requests
 import tarfile
-from scipy.misc import imsave
 import subprocess
 import re
+import requests
+from scipy.misc import imsave
+from pliers.stimuli.image import ImageStim
+from pliers.extractors.base import Extractor, ExtractorResult
 
 
 class TensorFlowInceptionV3Extractor(Extractor):
+
+    ''' Labels objects in images using a pretrained Inception V3 architecture
+     implemented in TensorFlow.
+    Args:
+        model_dir (str): path to save model file to. If None (default), creates
+            and uses a temporary folder.
+        data_url (str): URL to download model from. If None (default), uses
+            the preset inception model (dated 2015-12-05) used in the
+            TensoryFlow tutorials.
+        num_predictions (int): Number of top predicted labels to retain for
+            each image.
+     '''
 
     _input_type = ImageStim
 
@@ -36,7 +48,8 @@ class TensorFlowInceptionV3Extractor(Extractor):
             self._download_pretrained_model()
 
     def _download_pretrained_model(self):
-        # Adapted from def_maybe_download_and_extract() in TF's classify_image.py
+        # Adapted from def_maybe_download_and_extract() in TF's
+        # classify_image.py
         print("Downloading Inception-V3 model from TensorFlow website...")
         if not os.path.exists(self.model_dir):
             os.makedirs(self.model_dir)
@@ -53,7 +66,7 @@ class TensorFlowInceptionV3Extractor(Extractor):
         from pliers.external import tensorflow as tf
         tf_dir = os.path.dirname(tf.__file__)
         script = os.path.join(tf_dir, 'classify_image.py')
-        
+
         if stim.filename is None:
             img_file = tempfile.mktemp() + '.jpg'
             imsave(img_file, stim.data)
@@ -63,12 +76,12 @@ class TensorFlowInceptionV3Extractor(Extractor):
             use_tmp = False
 
         args = ' --image_file %s --model_dir %s --num_top_prediction %d' % \
-                (img_file, self.model_dir, self.num_predictions)
+            (img_file, self.model_dir, self.num_predictions)
         cmd = ('python ' + script + args).split()
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         output, errors = process.communicate()
         hits = output.decode('utf-8').splitlines()[-self.num_predictions:]
-        
+
         values, features = [], []
         for i, h in enumerate(hits):
             m = re.search('(.*?)\s\(score\s\=\s([0-9\.]+)\)', h.strip())

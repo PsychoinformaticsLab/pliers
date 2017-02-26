@@ -5,17 +5,16 @@ from pliers.extractors import (DictionaryExtractor, PartOfSpeechExtractor,
                                LengthExtractor, NumUniqueWordsExtractor,
                                PredefinedDictionaryExtractor, STFTAudioExtractor,
                                MeanAmplitudeExtractor, BrightnessExtractor,
-                               SharpnessExtractor,VibranceExtractor,
+                               SharpnessExtractor, VibranceExtractor,
                                SaliencyExtractor, DenseOpticalFlowExtractor,
                                IndicoAPIExtractor, ClarifaiAPIExtractor,
-                               ComplexTextExtractor, TensorFlowInceptionV3Extractor)
+                               TensorFlowInceptionV3Extractor)
 from pliers.stimuli import (TextStim, ComplexTextStim, ImageStim, VideoStim,
                             AudioStim, TranscribedAudioCompoundStim)
 from pliers.support.download import download_nltk_data
-from pliers.extractors.base import Extractor, ExtractorResult, merge_results
+from pliers.extractors.base import ExtractorResult, merge_results
 import numpy as np
 import pytest
-from copy import deepcopy
 
 TEXT_DIR = join(get_test_data_path(), 'text')
 
@@ -135,7 +134,7 @@ def test_stft_extractor():
     audio_dir = join(get_test_data_path(), 'audio')
     stim = AudioStim(join(audio_dir, 'barber.wav'))
     ext = STFTAudioExtractor(frame_size=1., spectrogram=False,
-                        freq_bins=[(100, 300), (300, 3000), (3000, 20000)])
+                             freq_bins=[(100, 300), (300, 3000), (3000, 20000)])
     result = ext.transform(stim)
     df = result.to_df()
     assert df.shape == (557, 5)
@@ -244,7 +243,7 @@ def test_clarifai_api_extractor():
     stim = ImageStim(join(image_dir, 'apple.jpg'))
     result = ClarifaiAPIExtractor().transform(stim).to_df()
     assert result['apple'][0] > 0.5
-    assert result.ix[:,5][0] > 0.0
+    assert result.ix[:, 5][0] > 0.0
 
 
 def test_merge_extractor_results_by_features():
@@ -275,7 +274,8 @@ def test_merge_extractor_results_by_stims():
     results = [de.transform(stim1), de.transform(stim2)]
     df = ExtractorResult.merge_stims(results)
     assert df.shape == (200, 6)
-    assert set(df.columns.tolist()) == set(['onset', 'duration', 0, 1, 2, 'stim'])
+    assert set(df.columns.tolist()) == set(
+        ['onset', 'duration', 0, 1, 2, 'stim'])
     assert set(df['stim'].unique()) == set(['obama.jpg', 'apple.jpg'])
 
 
@@ -304,5 +304,7 @@ def test_tensor_flow_inception_v3_extractor():
     results = ext.transform(imgs)
     df = merge_results(results)
     assert len(df) == 2
-    assert df.iloc[0][('TensorFlowInceptionV3Extractor', 'label_1')] == 'Granny Smith'
-    assert df.iloc[1][('TensorFlowInceptionV3Extractor', 'score_2')] == '0.22610'
+    assert df.iloc[0][
+        ('TensorFlowInceptionV3Extractor', 'label_1')] == 'Granny Smith'
+    assert df.iloc[1][
+        ('TensorFlowInceptionV3Extractor', 'score_2')] == '0.22610'

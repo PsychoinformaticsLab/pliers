@@ -1,3 +1,5 @@
+''' Converters that operate on AudioStim inputs. '''
+
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.text import TextStim
 from .base import Converter
