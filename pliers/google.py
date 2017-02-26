@@ -6,7 +6,7 @@ from pliers.transformers import (Transformer, BatchTransformerMixin,
                                  EnvironmentKeyMixin)
 
 try:
-    from googleapiclient import discovery, errors
+    from googleapiclient import discovery
     from oauth2client.client import GoogleCredentials
 except ImportError:
     pass
@@ -27,9 +27,10 @@ class GoogleAPITransformer(Transformer, BatchTransformerMixin, EnvironmentKeyMix
         if discovery_file is None:
             if 'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ:
                 raise ValueError("No Google application credentials found. "
-                    "A JSON service account key must be either passed as the "
-                    "discovery_file argument, or set in the "
-                    "GOOGLE_APPLICATION_CREDENTIALS environment variable.")
+                                 "A JSON service account key must be either "
+                                 "passed as the discovery_file argument, or "
+                                 "set in the GOOGLE_APPLICATION_CREDENTIALS "
+                                 "environment variable.")
             discovery_file = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
 
         self.credentials = GoogleCredentials.from_stream(discovery_file)
@@ -60,17 +61,17 @@ class GoogleVisionAPITransformer(GoogleAPITransformer):
                 imsave(file, image.data)
             else:
                 file = image.filename
-            
+
             img_data = open(file, 'rb').read()
             content = base64.b64encode(img_data).decode()
             request.append(
                 {
-                'image': { 'content': content },
-                'features': [{
-                    'type': self.request_type,
-                    'maxResults': self.max_results,
-                }]
-            })
+                    'image': {'content': content},
+                    'features': [{
+                        'type': self.request_type,
+                        'maxResults': self.max_results,
+                    }]
+                })
 
             if image.filename is None:
                 os.remove(file)

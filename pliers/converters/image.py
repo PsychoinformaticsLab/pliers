@@ -1,7 +1,9 @@
+''' Converter classes that operate on ImageStim inputs. '''
+
 from pliers.stimuli.image import ImageStim
 from pliers.stimuli.text import TextStim
-from .base import Converter
 from PIL import Image
+from .base import Converter
 
 
 class ImageToTextConverter(Converter):
@@ -13,7 +15,8 @@ class ImageToTextConverter(Converter):
 
 
 class TesseractConverter(ImageToTextConverter):
-    ''' Uses the Tesseract library to extract text from images '''
+
+    ''' Uses the Tesseract library to extract text from images. '''
 
     def _convert(self, stim):
         import pytesseract

@@ -1,11 +1,14 @@
-from .base import Converter, get_converter
+''' Converter classes that wrap multiple conversion steps under one class. '''
+
 from pliers.stimuli.base import Stim
 from pliers.stimuli.audio import AudioStim
-from pliers.stimuli.video import VideoStim, DerivedVideoStim
+from pliers.stimuli.video import VideoStim
 from pliers.stimuli.text import TextStim, ComplexTextStim
+from .base import Converter, get_converter
 
 
 class MultiStepConverter(Converter):
+
     ''' Base class for Converters doing more than one step.
     Args:
         steps (list): Ordered list describing the sequence of desired
@@ -27,8 +30,8 @@ class MultiStepConverter(Converter):
                 converter = get_converter(type(stim), step)
                 if converter is None:
                     msg = ("Conversion failed at step %d; unable to find a "
-                            "Converter capable of transforming a %s into a %s.") \
-                            % (i, stim.__class__.__name__, step.__name__)
+                           "Converter capable of transforming a %s into a %s.") \
+                        % (i, stim.__class__.__name__, step.__name__)
                     raise ValueError(msg)
             else:
                 converter = step
@@ -45,12 +48,16 @@ class MultiStepConverter(Converter):
 
 class VideoToTextConverter(MultiStepConverter):
 
+    ''' Converts a VideoStim directly to a TextStim. '''
+
     _input_type = VideoStim
     _output_type = TextStim
     _steps = [AudioStim, TextStim]
 
 
 class VideoToComplexTextConverter(MultiStepConverter):
+
+    ''' Converts a VideoStim directly to a ComplexTextStim. '''
 
     _input_type = VideoStim
     _output_type = ComplexTextStim

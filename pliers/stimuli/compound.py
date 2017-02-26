@@ -1,3 +1,6 @@
+''' A CompoundStim class represents a combination of constituent Stim classes.
+'''
+
 from abc import ABCMeta, abstractmethod, abstractproperty
 from six import with_metaclass, string_types
 from pliers.utils import listify
@@ -10,7 +13,8 @@ class CompoundStim(object):
 
     ''' A container for an arbitrary set of Stim elements.
     Args:
-        elements (Stim or list): a single Stim (of any type) or a list of elements.
+        elements (Stim or list): a single Stim (of any type) or a list of
+        elements.
     '''
 
     _allowed_types = None
@@ -53,9 +57,9 @@ class CompoundStim(object):
                 specified type as a list. When False (default), returns only
                 the first matching Stim.
         Returns:
-            If return_all is True, a list of matching elements (or an empty list
-            if no elements match). If return_all is False, returns the first
-            matching Stim, or None if no elements match.
+            If return_all is True, a list of matching elements (or an empty
+            list if no elements match). If return_all is False, returns the
+            first matching Stim, or None if no elements match.
         '''
         if isinstance(type_, string_types):
             type_ = _get_stim_class(type_)
@@ -78,8 +82,8 @@ class CompoundStim(object):
         in the types argument.
         Args:
             types (Stim, list): a Stim class or iterable of Stim classes.
-            all_ (bool): if True, all input types must match; if False, at least
-                one input type must match.
+            all_ (bool): if True, all input types must match; if False, at
+                least one input type must match.
         Return:
             True if all passed types match at least one Stim in the component
             list, otherwise False.
@@ -100,12 +104,9 @@ class TranscribedAudioCompoundStim(CompoundStim):
     ''' An AudioStim with an associated text transcription.
     Args:
         filename (str): The path to the audio clip.
-        transcription (str or ComplexTextStim): the associated transcription.
-            If a string, this is interpreted as the name of a file containing
-            data needed to initialize a new ComplexTextStim. Otherwise, must
-            pass an existing ComplexTextStim instance.
-        kwargs (dict): optional keywords passed to the ComplexTextStim
-            initializer if transcription argument is a string.
+        audio (AudioStim): An AudioStim containing the audio content.
+        text (ComplexTextStim): A ComplexTextStim containing the transcribed
+            text (and associated timing information).
     '''
     _allowed_types = (AudioStim, ComplexTextStim)
     _allow_multiple = False

@@ -1,16 +1,26 @@
+''' Classes that represent video clips. '''
+
 from __future__ import division
+from moviepy.video.io.VideoFileClip import VideoFileClip
+import pandas as pd
 from .base import Stim, CollectionStimMixin
 from .audio import AudioStim
 from .image import ImageStim
-from moviepy.video.io.VideoFileClip import VideoFileClip
-import pandas as pd
 
 
 class VideoFrameStim(ImageStim):
 
-    ''' A single frame of video. '''
+    ''' A single frame of video.
+    Args:
+        video (VideoStim): The source VideoStim the frame is drawn from.
+        frame_num (int): The index of the current frame in the source video.
+        duration (float): Optional duration of presentation, in seconds.
+        filename (str): Path to input video file, if one exists.
+        data (ndarray): Optional numpy array to initialize the image from.
+    '''
 
-    def __init__(self, video, frame_num, duration=None, filename=None, data=None):
+    def __init__(self, video, frame_num, duration=None, filename=None,
+                 data=None):
         self.video = video
         self.frame_num = frame_num
         spf = 1. / video.fps
@@ -24,7 +34,13 @@ class VideoFrameStim(ImageStim):
 
 class VideoStim(Stim, CollectionStimMixin):
 
-    ''' A video. '''
+    ''' A video.
+    Args:
+        filename (str): Path to input file, if one exists.
+        onset (float): Optional onset of the video file (in seconds) with
+            respect to some more general context or timeline the user wishes
+            to keep track of.
+    '''
 
     def __init__(self, filename, onset=None):
 
@@ -68,10 +84,17 @@ class VideoStim(Stim, CollectionStimMixin):
 
 
 class DerivedVideoStim(VideoStim):
+
     """
     VideoStim containing keyframes (for API calls). Each keyframe is associated
     with a duration reflecting the length of its "scene."
+    Args:
+        filename (str): Path to input file, if one exists.
+        frames (iterable): iterable of frames retained from original VideoStim.
+        frame_index (list): List of indices of frames retained from the
+            original VideoStim.
     """
+
     def __init__(self, filename, frames, frame_index=None):
         super(DerivedVideoStim, self).__init__(filename)
         self._frames = frames
@@ -81,6 +104,6 @@ class DerivedVideoStim(VideoStim):
     @property
     def frames(self):
         return (f for f in self._frames)
-        
+
     def __iter__(self):
         return self.frames

@@ -53,7 +53,7 @@
                     "Percent_known", "SUBTLEX", "Dom_Pos"]
     },
 
-    "SUBTLEXusfrequencyabove1": {
+    "subtlexusfrequency": {
         "title": "SUBTLEX US English word frequency for 60,384 words that have a frequency higher than 1",
         "description_url": "http://www.ugent.be/pp/experimentele-psychologie/en/research/documents/subtlexus/overview.htm",
         "source": "Brysbaert, M., & New, B. (2009). Moving beyond Kučera and Francis: A critical evaluation of current word frequency norms and the introduction of a new and improved word frequency measure for American English. Behavior research methods, 41(4), 977-990.",

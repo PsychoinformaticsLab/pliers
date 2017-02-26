@@ -1,6 +1,7 @@
 from pliers.transformers import get_transformer
-from pliers.extractors import (Extractor, STFTAudioExtractor,
-                               BrightnessExtractor, SaliencyExtractor)
+from pliers.extractors.base import Extractor
+from pliers.extractors import (STFTAudioExtractor, BrightnessExtractor,
+                               SaliencyExtractor)
 from pliers.stimuli.base import TransformationLog
 from pliers.stimuli import ImageStim, VideoStim
 from pliers import config

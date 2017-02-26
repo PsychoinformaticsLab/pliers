@@ -12,7 +12,7 @@
 
 import cv2
 import numpy as np
-from pliers.external import pySaliencyMapDefs
+from pliers.external.pysaliency import pySaliencyMapDefs
 
 class pySaliencyMap:
     # initialization

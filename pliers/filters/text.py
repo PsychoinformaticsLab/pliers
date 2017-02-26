@@ -1,15 +1,20 @@
-from pliers.stimuli.text import TextStim
-from .base import Filter
+''' Filters that operate on TextStim inputs. '''
+
 from six import string_types
 from nltk import stem
+from pliers.stimuli.text import TextStim
+from .base import Filter
 
 
 class TextFilter(Filter):
+
+    ''' Base class for all TextFilters. '''
 
     _input_type = TextStim
 
 
 class WordStemmingFilter(TextFilter):
+
     ''' Nltk-based word stemming Filter. 
     Args:
         stemmer (str, Stemmer): If a string, must be the name of one of the
@@ -34,7 +39,7 @@ class WordStemmingFilter(TextFilter):
     def __init__(self, stemmer='porter', *args, **kwargs):
 
         if isinstance(stemmer, string_types):
-            if not stemmer in self.stemmers:
+            if stemmer not in self.stemmers:
                 valid = list(self.stemmers.keys())
                 raise ValueError("Invalid stemmer '%s'; please use one of %s." %
                                  (stemmer, valid))

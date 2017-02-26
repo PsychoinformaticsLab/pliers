@@ -6,6 +6,7 @@ from pliers.stimuli.image import ImageStim
 from pliers.extractors.base import Extractor, ExtractorResult
 import numpy as np
 
+
 class ImageExtractor(Extractor):
 
     ''' Base Image Extractor class; all subclasses can only be applied to
@@ -42,7 +43,8 @@ class SharpnessExtractor(ImageExtractor):
         data = stim.data
         gray_image = cv2.cvtColor(data, cv2.COLOR_BGR2GRAY)
 
-        sharpness = np.max(cv2.convertScaleAbs(cv2.Laplacian(gray_image, 3))) / 255.0
+        sharpness = np.max(
+            cv2.convertScaleAbs(cv2.Laplacian(gray_image, 3))) / 255.0
         return ExtractorResult(np.array([[sharpness]]), stim, self,
                                features=['sharpness'])
 
@@ -63,13 +65,14 @@ class VibranceExtractor(ImageExtractor):
 
 class SaliencyExtractor(ImageExtractor):
 
-    ''' Determines the saliency of the image using Itti & Koch (1998) algorithm implemented in pySaliencyMap '''
+    ''' Determines the saliency of the image using Itti & Koch (1998) algorithm
+    implemented in pySaliencyMap '''
 
     def __init__(self):
         super(self.__class__, self).__init__()
 
     def _extract(self, stim):
-        from pliers.external import pySaliencyMap
+        from pliers.external.pysaliency import pySaliencyMap
         # pySaliencyMap from https://github.com/akisato-/pySaliencyMap
         data = stim.data
 
@@ -80,13 +83,16 @@ class SaliencyExtractor(ImageExtractor):
         # Compute saliency maps and store full maps as derivatives
         stim.derivatives = dict()
         stim.derivatives['saliency_map'] = sm.SMGetSM(stim.data)
-        stim.derivatives['binarized_map'] = sm.SMGetBinarizedSM(stim.data) #thresholding done using Otsu
+        stim.derivatives['binarized_map'] = sm.SMGetBinarizedSM(
+            stim.data)  # thresholding done using Otsu
 
         # Compute summary statistics
         output = {}
         output['max_saliency'] = np.max(stim.derivatives['saliency_map'])
-        output['max_y'], output['max_x'] = [list(i)[0] for i in np.where(stim.derivatives['saliency_map']==output['max_saliency'])]
-        output['frac_high_saliency'] = np.sum(stim.derivatives['binarized_map']/255.0)/(h * w)
+        output['max_y'], output['max_x'] = [list(i)[0] for i in np.where(
+            stim.derivatives['saliency_map'] == output['max_saliency'])]
+        output['frac_high_saliency'] = np.sum(
+            stim.derivatives['binarized_map']/255.0)/(h * w)
 
         return ExtractorResult(np.array([list(output.values())]), stim, self,
                                features=list(output.keys()))

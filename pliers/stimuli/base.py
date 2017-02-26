@@ -1,18 +1,30 @@
-from abc import ABCMeta, abstractmethod, abstractproperty
+''' Base class for all Stimuli and associated functionality. '''
+
+
+from abc import ABCMeta, abstractmethod
 from os.path import exists, isdir, join, basename
 from glob import glob
 from six import with_metaclass, string_types
-import importlib
 from collections import namedtuple
 from pliers import config
 from pliers.utils import isiterable
 import pandas as pd
-from tqdm import tqdm
 
 
 class Stim(with_metaclass(ABCMeta)):
 
-    ''' Base Stim class. '''
+    ''' Base class for all classes in the Stim hierarchy.
+    Args:
+        filename (str): Path to input file, if one exists.
+        onset (float): Optional onset of the Stim (in seconds) with
+            respect to some more general context or timeline the user wishes
+            to keep track of.
+        duration (float): Optional duration of the Stim, in seconds.
+        name (str): Optional name to give the Stim instance. If None is
+            provided, the name will be derived from the filename if one is
+            defined. If no filename is defined, name will be an empty string.
+    '''
+
     def __init__(self, filename=None, onset=None, duration=None, name=None):
 
         self.filename = filename
@@ -37,6 +49,8 @@ class Stim(with_metaclass(ABCMeta)):
 
 
 class CollectionStimMixin(with_metaclass(ABCMeta)):
+
+    ''' A simple mixin that enforces the use of iteration over sub-stims. '''
 
     @abstractmethod
     def __iter__(self):
@@ -116,7 +130,7 @@ def load_stims(source, dtype=None):
 def _log_transformation(source, result, trans=None):
 
     if result is None or not config.log_transformations or \
-              (trans is not None and not trans._loggable):
+            (trans is not None and not trans._loggable):
         return result
 
     if isiterable(result):
@@ -141,10 +155,13 @@ def _log_transformation(source, result, trans=None):
     result.history = TransformationLog(*values)
     return result
 
+_trans_log = namedtuple('TransformationLog', "source_name source_file " +
+                        "source_class result_name result_file result_class " +
+                        " transformer_class transformer_params string parent")
 
-class TransformationLog(namedtuple('TransformationLog', "source_name source_file " +
-                             "source_class result_name result_file result_class " +
-                             " transformer_class transformer_params string parent")):
+
+class TransformationLog(_trans_log):
+
     '''A namedtuple that stores information about a single transformation. '''
 
     __slots__ = ()

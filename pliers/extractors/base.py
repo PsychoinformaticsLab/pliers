@@ -1,14 +1,16 @@
-from six import with_metaclass
+''' Base Extractor class and associated functionality. '''
+
+from collections import defaultdict
 from abc import ABCMeta, abstractmethod
+from six import with_metaclass
 import pandas as pd
 import numpy as np
-from collections import defaultdict
-from pliers import config
 from pliers.transformers import Transformer
 from pliers.utils import isgenerator
 
 
 class Extractor(with_metaclass(ABCMeta, Transformer)):
+
     ''' Base class for Converters.'''
 
     def __init__(self):
@@ -112,7 +114,7 @@ class ExtractorResult(object):
                              "not possible to merge mismatched instances.")
 
         durations = result.xs('duration', level=1, axis=1)
-        if durations.apply(lambda x: x.nunique()<=1, axis=1).all():
+        if durations.apply(lambda x: x.nunique() <= 1, axis=1).all():
             result = result.drop('duration', axis=1, level=1)
 
         result.insert(0, 'class', results[0].stim.__class__.__name__)
@@ -126,7 +128,8 @@ class ExtractorResult(object):
 
     @classmethod
     def merge_stims(cls, results, stim_names=True):
-        results = [r.to_df(True) if isinstance(r, ExtractorResult) else r for r in results]
+        results = [r.to_df(True) if isinstance(
+            r, ExtractorResult) else r for r in results]
         return pd.concat(results, axis=0).sort_values('onset').reset_index(drop=True)
 
 
@@ -154,4 +157,5 @@ def merge_results(results, extractor_names=True, stim_names=True):
 
     # Now concatenate all Stims
     stims = list(stims.values())
-    return stims[0] if len(stims) == 1 else ExtractorResult.merge_stims(stims)
+    return stims[0] if len(stims) == 1 else \
+        ExtractorResult.merge_stims(stims, stim_names)

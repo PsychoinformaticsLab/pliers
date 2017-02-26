@@ -1,4 +1,6 @@
-from .base import Stim, load_stims
+''' Stim hierarchy. '''
+
+from .base import load_stims
 from .audio import AudioStim
 from .compound import CompoundStim, TranscribedAudioCompoundStim
 from .image import ImageStim

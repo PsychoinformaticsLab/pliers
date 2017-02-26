@@ -4,13 +4,14 @@ Diagnostic functions for detecting outliers in the data
 
 import pandas as pd
 import numpy as np
-
 from scipy.spatial.distance import mahalanobis
 from numpy.linalg import LinAlgError
 
+
 def mahalanobis_distances(df, axis=0):
     '''
-    Returns a pandas Series with Mahalanobis distances for each sample on the axis.
+    Returns a pandas Series with Mahalanobis distances for each sample on the
+    axis.
 
     Note: does not work well when # of observations < # of dimensions
     Will either return NaN in answer 

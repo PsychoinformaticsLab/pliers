@@ -1,6 +1,7 @@
+''' Extractors that operate on AudioStim inputs. '''
+
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.text import ComplexTextStim
-from pliers.stimuli.compound import TranscribedAudioCompoundStim
 from pliers.extractors.base import Extractor, ExtractorResult
 import numpy as np
 from scipy import fft
@@ -21,7 +22,7 @@ class STFTAudioExtractor(AudioExtractor):
             in seconds.
         hop_size (float): The step size to increment the window by on each
             iteration, in seconds (effectively, the sampling rate).
-        bins (list or int): The set of bins or frequency bands to extract
+        freq_bins (list or int): The set of bins or frequency bands to extract
             power for. If an int is passed, this is the number of bins
             returned, with each bin spanning an equal range of frequencies.
             E.g., if bins=5 and the frequency spectrum runs from 0 to 20KHz,
@@ -108,12 +109,12 @@ class MeanAmplitudeExtractor(Extractor):
             onsets.append(onset)
             duration = sampling_rate * el.duration
             durations.append(duration)
-            
+
             r_onset = np.round(onset).astype(int)
             r_offset = np.round(onset+duration).astype(int)
             if not r_offset <= amps.shape[0]:
                 raise Exception('Block ends after data.')
-            
+
             mean_amplitude = np.mean(amps[r_onset:r_offset])
             values.append(mean_amplitude)
 

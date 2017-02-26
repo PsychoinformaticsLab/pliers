@@ -1,11 +1,13 @@
-import requests
-import pandas as pd
+''' Functionality for loading and manipulating text datasets. '''
+
+import zipfile
 import json
 import os
 import tempfile
-import zipfile
-import shutil
 import io
+import requests
+import pandas as pd
+
 
 def _load_datasets():
     path = os.path.abspath(__file__)
@@ -19,7 +21,8 @@ datasets = _load_datasets()
 def _get_dictionary_path():
     # For now, stash everything under home directory.
     # TODO: Generalize this to support default system paths, env vars, etc.
-    dir_path = os.path.expanduser(os.path.join('~', 'pliers_data', 'dictionaries'))
+    dir_path = os.path.expanduser(
+        os.path.join('~', 'pliers_data', 'dictionaries'))
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
     return dir_path

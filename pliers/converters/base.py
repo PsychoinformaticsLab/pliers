@@ -1,13 +1,15 @@
+''' Base Converter class and utilities. '''
+
 from abc import ABCMeta, abstractmethod, abstractproperty
-from pliers.transformers import Transformer, CollectionStimMixin
+from pliers.transformers import Transformer
 from six import with_metaclass
 from pliers.utils import listify
-import importlib
 from pliers import config
 import pliers
 
 
 class Converter(with_metaclass(ABCMeta, Transformer)):
+
     ''' Base class for Converters.'''
 
     def __init__(self):
@@ -36,7 +38,8 @@ def get_converter(in_type, out_type, *args, **kwargs):
     '''
     convs = pliers.converters.__all__
 
-    # If config includes default converters for this combination, try them first
+    # If config includes default converters for this combination, try them
+    # first
     out_type = listify(out_type)[::-1]
     for ot in out_type:
         conv_str = '%s->%s' % (in_type.__name__, ot.__name__)

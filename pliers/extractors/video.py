@@ -15,12 +15,14 @@ except ImportError:
 
 
 class VideoExtractor(Extractor):
+
     ''' Base Video Extractor class; all subclasses can only be applied to
     video. '''
     _input_type = VideoStim
 
 
 class DenseOpticalFlowExtractor(VideoExtractor):
+
     ''' Extracts total amount of optical flow between every pair of video
     frames.
     '''
@@ -56,5 +58,5 @@ class DenseOpticalFlowExtractor(VideoExtractor):
             onsets.append(f.onset)
             durations.append(f.duration)
 
-        return ExtractorResult(flows, stim, self, features=['total_flow'], 
-                                onsets=onsets, durations=durations)
+        return ExtractorResult(flows, stim, self, features=['total_flow'],
+                               onsets=onsets, durations=durations)

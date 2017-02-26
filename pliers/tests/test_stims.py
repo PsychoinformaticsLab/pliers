@@ -1,9 +1,10 @@
 from .utils import get_test_data_path
-from pliers.stimuli import (Stim, VideoStim, VideoFrameStim, ComplexTextStim,
+from pliers.stimuli import (VideoStim, VideoFrameStim, ComplexTextStim,
                             AudioStim, ImageStim, CompoundStim,
                             TranscribedAudioCompoundStim)
-from pliers.stimuli.base import _get_stim_class
-from pliers.extractors import (Extractor, ExtractorResult, BrightnessExtractor)
+from pliers.stimuli.base import Stim, _get_stim_class
+from pliers.extractors import BrightnessExtractor
+from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.download import download_nltk_data
 import numpy as np
 from os.path import join
@@ -16,7 +17,7 @@ class DummyExtractor(Extractor):
     _input_type = Stim
 
     def _extract(self, stim):
-        return ExtractorResult(np.array([[1]]), stim, self, 
+        return ExtractorResult(np.array([[1]]), stim, self,
                                 features=['constant'])
 
 

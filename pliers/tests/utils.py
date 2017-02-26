@@ -1,6 +1,6 @@
 from os.path import dirname, join
 from pliers.stimuli import ImageStim
-from pliers.extractors import Extractor, ExtractorResult
+from pliers.extractors.base import Extractor, ExtractorResult
 import numpy as np
 from copy import deepcopy
 

@@ -1,11 +1,21 @@
+''' Classes that represent audio clips. '''
+
+import six
 from .base import Stim
 from moviepy.audio.io.AudioFileClip import AudioFileClip
-import six
 
 
 class AudioStim(Stim):
 
-    ''' An audio clip. For now, only handles wav files. '''
+    ''' Represents an audio clip. For now, only handles wav files.
+    Args:
+        filename (str): Path to audio file.
+        onset (float): Optional onset of the audio file (in seconds) with
+            respect to some more general context or timeline the user wishes
+            to keep track of.
+        sampling_rate (int): Sampling rate of clip, in hertz.
+
+    '''
 
     def __init__(self, filename, onset=None, sampling_rate=44100):
 
@@ -15,7 +25,8 @@ class AudioStim(Stim):
         self._load_clip()
 
         # Small default buffer isn't ideal, but moviepy has persistent issues
-        # with some files otherwise; see https://github.com/Zulko/moviepy/issues/246
+        # with some files otherwise; see
+        # https://github.com/Zulko/moviepy/issues/246
         self.data = self.clip.to_soundarray(buffersize=1000)
         duration = self.clip.duration
 
@@ -23,7 +34,8 @@ class AudioStim(Stim):
             # Average channels to make data mono
             self.data = self.data.mean(axis=1)
 
-        super(AudioStim, self).__init__(filename, onset=onset, duration=duration)
+        super(AudioStim, self).__init__(
+            filename, onset=onset, duration=duration)
 
     def _load_clip(self):
         self.clip = AudioFileClip(self.filename, fps=self.sampling_rate)
