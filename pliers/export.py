@@ -15,7 +15,7 @@ class Exporter(with_metaclass(ABCMeta)):
 
 
 def to_long_format(df):
-    ''' Convert from wide to long format, making each row a single 
+    ''' Convert from wide to long format, making each row a single
     feature/value pair.
 
     Args:
@@ -26,17 +26,19 @@ def to_long_format(df):
 
     if isinstance(df.columns, pd.core.index.MultiIndex):
         ids = list(set(df.columns) & set([('stim', ''),
-                                        ('onset', ''),
-                                        ('duration', '')]))
-        variables = ['extractor', 'feature']   
+                                          ('onset', ''),
+                                          ('duration', '')]))
+        variables = ['extractor', 'feature']
     else:
-        df = df.reset_index() if not isinstance(df.index, pd.Int64Index) else df
+        df = df.reset_index() if not isinstance(
+            df.index, pd.Int64Index) else df
         ids = list(set(df.columns) & set(['stim', 'onset', 'duration']))
         variables = 'feature'
-        
+
     values = list(set(df.columns) - set(ids))
     converted = pd.melt(df, id_vars=ids, value_vars=values, var_name=variables)
-    converted.columns = [c[0] if isinstance(c, tuple) else c for c in converted.columns]
+    converted.columns = [
+        c[0] if isinstance(c, tuple) else c for c in converted.columns]
     return converted
 
 

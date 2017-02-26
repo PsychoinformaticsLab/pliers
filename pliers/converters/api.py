@@ -14,7 +14,7 @@ from six.moves.urllib.error import URLError, HTTPError
 
 class SpeechRecognitionAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
 
-    ''' Uses the SpeechRecognition API, which interacts with several APIs, 
+    ''' Uses the SpeechRecognition API, which interacts with several APIs,
     like Google and Wit, to run speech-to-text transcription on an audio file.
     Args:
         api_key (str): API key. Must be passed explicitly or stored in
@@ -69,7 +69,7 @@ class GoogleSpeechAPIConverter(SpeechRecognitionAPIConverter):
 
 class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
 
-    ''' Uses the IBM Watson Text to Speech API to run speech-to-text 
+    ''' Uses the IBM Watson Text to Speech API to run speech-to-text
     transcription on an audio file.
 
     Args:

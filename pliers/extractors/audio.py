@@ -70,7 +70,6 @@ class STFTAudioExtractor(AudioExtractor):
 
     def _extract(self, stim):
         data = self._stft(stim)
-        events = []
         time_bins = np.arange(0., stim.duration-self.frame_size, self.hop_size)
 
         if isinstance(self.freq_bins, int):

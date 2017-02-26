@@ -14,7 +14,7 @@ def mahalanobis_distances(df, axis=0):
     axis.
 
     Note: does not work well when # of observations < # of dimensions
-    Will either return NaN in answer 
+    Will either return NaN in answer
     or (in the extreme case) fail with a Singular Matrix LinAlgError
 
     Args:

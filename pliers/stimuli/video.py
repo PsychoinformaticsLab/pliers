@@ -2,9 +2,7 @@
 
 from __future__ import division
 from moviepy.video.io.VideoFileClip import VideoFileClip
-import pandas as pd
 from .base import Stim, CollectionStimMixin
-from .audio import AudioStim
 from .image import ImageStim
 
 

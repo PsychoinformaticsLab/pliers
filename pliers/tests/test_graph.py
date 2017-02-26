@@ -7,7 +7,6 @@ from pliers.extractors import (BrightnessExtractor, VibranceExtractor,
 from pliers.stimuli import (ImageStim, VideoStim)
 from .utils import get_test_data_path, DummyExtractor
 from os.path import join, exists
-import numpy as np
 from numpy.testing import assert_almost_equal
 import tempfile
 import os
@@ -36,7 +35,7 @@ def test_node_arg_parsing():
     assert set(args.keys()) == {'transformer', 'name', 'children'}
     assert len(args['children']) == 2
 
-    node = { 'transformer': '...', 'name': '...'}
+    node = {'transformer': '...', 'name': '...'}
     args = Graph._parse_node_args(node)
     assert args == node
 
@@ -90,12 +89,12 @@ def test_big_pipeline():
     filename = join(get_test_data_path(), 'video', 'obama_speech.mp4')
     video = VideoStim(filename)
     visual_nodes = [(FrameSamplingConverter(every=15), [
-                        (TesseractConverter(), [LengthExtractor()]),
-                        VibranceExtractor(), 'BrightnessExtractor',
-                    ])]
+        (TesseractConverter(), [LengthExtractor()]),
+        VibranceExtractor(), 'BrightnessExtractor',
+    ])]
     audio_nodes = [(VideoToAudioConverter(), [
-                        WitTranscriptionConverter(), 'LengthExtractor'],
-                        'video_to_audio')]
+        WitTranscriptionConverter(), 'LengthExtractor'],
+        'video_to_audio')]
     graph = Graph()
     graph.add_nodes(visual_nodes)
     graph.add_nodes(audio_nodes)

@@ -1,6 +1,5 @@
 ''' Classes that represent audio clips. '''
 
-import six
 from .base import Stim
 from moviepy.audio.io.AudioFileClip import AudioFileClip
 

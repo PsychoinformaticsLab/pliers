@@ -74,8 +74,6 @@ class SaliencyExtractor(ImageExtractor):
     def _extract(self, stim):
         from pliers.external.pysaliency import pySaliencyMap
         # pySaliencyMap from https://github.com/akisato-/pySaliencyMap
-        data = stim.data
-
         # Initialize variables
         h, w, c = stim.data.shape
         sm = pySaliencyMap.pySaliencyMap(h, w)

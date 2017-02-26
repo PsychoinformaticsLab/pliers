@@ -6,11 +6,10 @@ from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.exceptions import PliersError
 from pliers.support.decorators import requires_nltk_corpus
-from pliers.datasets.text import fetch_dictionary, datasets
+from pliers.datasets.text import fetch_dictionary
 import numpy as np
 import pandas as pd
 from six import string_types
-from collections import defaultdict
 
 # Optional dependencies
 try:

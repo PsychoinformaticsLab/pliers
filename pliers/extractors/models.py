@@ -1,4 +1,5 @@
-import sys
+''' Extractor classes based on pre-trained models. '''
+
 import os
 import tempfile
 import tarfile

@@ -89,7 +89,7 @@ class IndicoAPIExtractor(Extractor):
             durations.append(s.duration)
 
         if not data:
-            data = [pd]
+            data = []
 
         return ExtractorResult(data, stim, self, features=features,
                                onsets=onsets, durations=durations)
@@ -124,7 +124,7 @@ class ClarifaiAPIExtractor(ImageExtractor):
                                  "extractor is initialized.")
 
         self.tagger = ClarifaiApi(app_id=app_id, app_secret=app_secret)
-        if not model is None:
+        if model is not None:
             self.tagger.set_model(model)
 
         self.model = model

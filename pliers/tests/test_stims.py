@@ -18,7 +18,7 @@ class DummyExtractor(Extractor):
 
     def _extract(self, stim):
         return ExtractorResult(np.array([[1]]), stim, self,
-                                features=['constant'])
+                               features=['constant'])
 
 
 class DummyIterableExtractor(Extractor):
@@ -28,8 +28,8 @@ class DummyIterableExtractor(Extractor):
     def _extract(self, stim):
         time_bins = np.arange(0., stim.duration, 1.)
         return ExtractorResult(np.array([1] * len(time_bins)), stim, self,
-                                features=['constant'], onsets=time_bins,
-                                durations=[1.] * len (time_bins))
+                               features=['constant'], onsets=time_bins,
+                               durations=[1.] * len(time_bins))
 
 
 @pytest.fixture(scope='module')

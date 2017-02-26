@@ -43,7 +43,6 @@ class DenseOpticalFlowExtractor(VideoExtractor):
 
             if i == 0:
                 last_frame = img
-                total_flow = 0
 
             flow = cv2.calcOpticalFlowFarneback(
                 last_frame, img, None, 0.5, 3, 15, 3, 5, 1.2, 0)

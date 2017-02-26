@@ -1,8 +1,7 @@
 from os.path import join
-import os
 from .utils import get_test_data_path
 from pliers.filters import WordStemmingFilter
-from pliers.stimuli import TextStim, ComplexTextStim
+from pliers.stimuli import ComplexTextStim
 from nltk import stem as nls
 import pytest
 

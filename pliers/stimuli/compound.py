@@ -1,8 +1,7 @@
 ''' A CompoundStim class represents a combination of constituent Stim classes.
 '''
 
-from abc import ABCMeta, abstractmethod, abstractproperty
-from six import with_metaclass, string_types
+from six import string_types
 from pliers.utils import listify
 from .base import _get_stim_class
 from .audio import AudioStim
@@ -36,7 +35,7 @@ class CompoundStim(object):
                 _type_dict[stim_cl] = 1
                 self.elements.append(s)
             else:
-                msg = "Multiple components of same type not allowed, and "+ \
+                msg = "Multiple components of same type not allowed, and " + \
                       "a stim of type %s already exists in this %s." % (stim_cl, self_cl)
                 raise ValueError(msg)
 
