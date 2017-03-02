@@ -1,7 +1,8 @@
 from .utils import get_test_data_path
 from pliers.stimuli import (VideoStim, VideoFrameStim, ComplexTextStim,
                             AudioStim, ImageStim, CompoundStim,
-                            TranscribedAudioCompoundStim)
+                            TranscribedAudioCompoundStim, RemoteStim,
+                            TextStim)
 from pliers.stimuli.base import Stim, _get_stim_class
 from pliers.extractors import BrightnessExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
@@ -174,3 +175,33 @@ def test_transcribed_audio_stim():
     stim = TranscribedAudioCompoundStim(audio=audio, text=text)
     assert isinstance(stim.audio, AudioStim)
     assert isinstance(stim.complex_text, ComplexTextStim)
+
+
+def test_remote_stim():
+    # Test video url
+    url = 'http://www.obamadownloads.com/videos/iran-deal-speech.mp4'
+    stim = RemoteStim(url)
+    assert stim.content_type is VideoStim
+    video = stim.convert()
+    assert isinstance(video, VideoStim)
+
+    # Test audio url
+    url = 'http://www.bobainsworth.com/wav/simpsons/themodyn.wav'
+    stim = RemoteStim(url)
+    assert stim.content_type is AudioStim
+    audio = stim.convert()
+    assert isinstance(audio, AudioStim)
+
+    # Test image url
+    url = 'https://www.whitehouse.gov/sites/whitehouse.gov/files/images/twitter_cards_potus.jpg'
+    stim = RemoteStim(url)
+    assert stim.content_type is ImageStim
+    image = stim.convert()
+    assert isinstance(image, ImageStim)
+
+    # Test text url
+    url = 'https://github.com/tyarkoni/pliers/blob/master/README.md'
+    stim = RemoteStim(url)
+    assert stim.content_type is TextStim
+    text = stim.convert()
+    assert isinstance(text, TextStim)
