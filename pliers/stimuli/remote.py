@@ -6,6 +6,9 @@ from .audio import AudioStim
 from .text import TextStim
 
 from six.moves.urllib.request import urlopen
+from PIL import Image
+import io
+import numpy as np
 
 
 class RemoteStim(Stim):
@@ -13,12 +16,11 @@ class RemoteStim(Stim):
     ''' Represents a remote Stim accessible via URL.
     Args:
         url (str): URL to input.
-        other_arg (type): what is does.
     '''
 
     def __init__(self, url):
         self.url = url
-
+        # This keeps the connection open, which may be bad
         self.req = urlopen(url)
         main_type = self.req.info().getmaintype()
         stim_map = {
@@ -34,7 +36,7 @@ class RemoteStim(Stim):
         if self.content_type is VideoStim or self.content_type is AudioStim:
             return self.content_type(self.url)
         elif self.content_type is ImageStim:
-            # This might need openCV
-            return
+            img = Image.open(io.BytesIO(self.req.read()))
+            return ImageStim(data=np.array(img))
         else:
-            return
+            return TextStim(text=self.req.read())
