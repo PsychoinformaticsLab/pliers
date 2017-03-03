@@ -20,9 +20,7 @@ class RemoteStim(Stim):
 
     def __init__(self, url):
         self.url = url
-        # This keeps the connection open, which may be bad
-        self.req = urlopen(url)
-        main_type = self.req.info().getmaintype()
+        main_type = urlopen(url).info().getmaintype()
         stim_map = {
             'image': ImageStim,
             'video': VideoStim,
@@ -36,7 +34,7 @@ class RemoteStim(Stim):
         if self.content_type is VideoStim or self.content_type is AudioStim:
             return self.content_type(self.url)
         elif self.content_type is ImageStim:
-            img = Image.open(io.BytesIO(self.req.read()))
+            img = Image.open(io.BytesIO(urlopen(self.url).read()))
             return ImageStim(data=np.array(img))
         else:
-            return TextStim(text=self.req.read())
+            return TextStim(text=urlopen(self.url).read())
