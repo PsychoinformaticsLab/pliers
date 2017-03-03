@@ -178,30 +178,18 @@ def test_transcribed_audio_stim():
 
 
 def test_remote_stim():
-    # Test video url
     url = 'http://www.obamadownloads.com/videos/iran-deal-speech.mp4'
-    stim = RemoteStim(url)
-    assert stim.content_type is VideoStim
-    video = stim.convert()
-    assert isinstance(video, VideoStim)
+    video = VideoStim(url=url)
+    assert video.fps == 12
 
-    # Test audio url
     url = 'http://www.bobainsworth.com/wav/simpsons/themodyn.wav'
-    stim = RemoteStim(url)
-    assert stim.content_type is AudioStim
-    audio = stim.convert()
-    assert isinstance(audio, AudioStim)
+    audio = AudioStim(url=url)
+    assert round(audio.duration) == 3
 
-    # Test image url
     url = 'https://www.whitehouse.gov/sites/whitehouse.gov/files/images/twitter_cards_potus.jpg'
-    stim = RemoteStim(url)
-    assert stim.content_type is ImageStim
-    image = stim.convert()
-    assert isinstance(image, ImageStim)
+    image = ImageStim(url=url)
+    assert image.data.shape == (240, 240, 3)
 
-    # Test text url
     url = 'https://github.com/tyarkoni/pliers/blob/master/README.md'
-    stim = RemoteStim(url)
-    assert stim.content_type is TextStim
-    text = stim.convert()
-    assert isinstance(text, TextStim)
+    text = TextStim(url=url)
+    assert len(text.text) > 1

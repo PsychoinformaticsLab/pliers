@@ -18,6 +18,18 @@ def test_magic_loader():
     assert stims[2].width == 560
 
 
+def test_magic_loader2():
+    text_file = join(get_test_data_path(), 'text', 'sample_text.txt')
+    video_url = 'http://www.obamadownloads.com/videos/iran-deal-speech.mp4'
+    audio_url = 'http://www.bobainsworth.com/wav/simpsons/themodyn.wav'
+    image_url = 'https://www.whitehouse.gov/sites/whitehouse.gov/files/images/twitter_cards_potus.jpg'
+    text_url = 'https://github.com/tyarkoni/pliers/blob/master/README.md'
+    stims = load_stims([text_file, video_url, audio_url, image_url, text_url])
+    assert len(stims) == 5
+    assert stims[1].fps == 12
+    assert stims[3].data.shape == (240, 240, 3)
+
+
 def test_convert_to_long():
     audio_dir = join(get_test_data_path(), 'audio')
     stim = AudioStim(join(audio_dir, 'barber.wav'))
