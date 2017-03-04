@@ -4,7 +4,6 @@ from .base import load_stims
 from .audio import AudioStim
 from .compound import CompoundStim, TranscribedAudioCompoundStim
 from .image import ImageStim
-from .remote import RemoteStim
 from .text import TextStim, ComplexTextStim
 from .video import VideoStim, DerivedVideoStim, VideoFrameStim
 
@@ -14,7 +13,6 @@ __all__ = [
     'CompoundStim',
     'TranscribedAudioCompoundStim',
     'ImageStim',
-    'RemoteStim',
     'TextStim',
     'ComplexTextStim',
     'VideoStim',

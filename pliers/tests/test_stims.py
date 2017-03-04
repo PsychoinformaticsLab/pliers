@@ -1,7 +1,7 @@
 from .utils import get_test_data_path
 from pliers.stimuli import (VideoStim, VideoFrameStim, ComplexTextStim,
                             AudioStim, ImageStim, CompoundStim,
-                            TranscribedAudioCompoundStim, RemoteStim,
+                            TranscribedAudioCompoundStim,
                             TextStim)
 from pliers.stimuli.base import Stim, _get_stim_class
 from pliers.extractors import BrightnessExtractor
@@ -177,7 +177,7 @@ def test_transcribed_audio_stim():
     assert isinstance(stim.complex_text, ComplexTextStim)
 
 
-def test_remote_stim():
+def test_remote_stims():
     url = 'http://www.obamadownloads.com/videos/iran-deal-speech.mp4'
     video = VideoStim(url=url)
     assert video.fps == 12
