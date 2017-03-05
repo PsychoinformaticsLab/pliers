@@ -422,11 +422,11 @@ Many of the `Transformer`s in pliers rely on web-based APIs. For example, pliers
 | ----------------: | :---------: | :-------------------: | :---------------------: |
 | WitTranscriptionConverter | [Wit.ai speech-to-text API](http://wit.ai)   | WIT_AI_API_KEY | Server Access Token |
 | IBMSpeechAPIConverter | [IBM Watson speech-to-text API](https://www.ibm.com/watson/developercloud/speech-to-text.html) | IBM_USERNAME, IBM_PASSWORD | API username and password
-| GoogleSpeechAPIConverter | [Google Cloud Speech API](https://cloud.google.com/speech/) | GOOGLE_CREDENTIALS | path to .json discovery file |
-| GoogleVisionAPITextConverter | [Google Cloud Vision API](https://cloud.google.com/vision/) | GOOGLE_CREDENTIALS | path to .json discovery file |
-| GoogleVisionAPIFaceExtractor | [Google Cloud Vision API](https://cloud.google.com/vision/) | GOOGLE_CREDENTIALS | path to .json discovery file |
-| GoogleVisionAPILabelExtractor | [Google Cloud Vision API](https://cloud.google.com/vision/) | GOOGLE_CREDENTIALS | path to .json discovery file |
-| GoogleVisionAPIPropertyExtractor | [Google Cloud Vision API](https://cloud.google.com/vision/) | GOOGLE_CREDENTIALS | path to .json discovery file |
+| GoogleSpeechAPIConverter | [Google Cloud Speech API](https://cloud.google.com/speech/) | GOOGLE_APPLICATION_CREDENTIALS | path to .json discovery file |
+| GoogleVisionAPITextConverter | [Google Cloud Vision API](https://cloud.google.com/vision/) | GOOGLE_APPLICATION_CREDENTIALS | path to .json discovery file |
+| GoogleVisionAPIFaceExtractor | [Google Cloud Vision API](https://cloud.google.com/vision/) | GOOGLE_APPLICATION_CREDENTIALS | path to .json discovery file |
+| GoogleVisionAPILabelExtractor | [Google Cloud Vision API](https://cloud.google.com/vision/) | GOOGLE_APPLICATION_CREDENTIALS | path to .json discovery file |
+| GoogleVisionAPIPropertyExtractor | [Google Cloud Vision API](https://cloud.google.com/vision/) | GOOGLE_APPLICATION_CREDENTIALS | path to .json discovery file |
 | IndicoAPIExtractor | [Indico.io API](https://indico.io) | INDICO_APP_KEY | API key |
 | ClarifaiAPIExtractor | [Clarifai image recognition API](https://clarifai.com) | CLARIFAI_APP_ID, CLARIFAI_APP_SECRET | API app ID and secret |
 
