@@ -5,6 +5,8 @@ from abc import ABCMeta, abstractmethod
 from os.path import exists, isdir, join, basename
 from glob import glob
 from six import with_metaclass, string_types
+from six.moves.urllib.request import urlopen
+from six.moves.urllib.parse import urlparse
 from collections import namedtuple
 from pliers import config
 from pliers.utils import isiterable
@@ -95,9 +97,14 @@ def load_stims(source, dtype=None):
     else:
         return_list = True
 
-    source = [s for s in source if exists(s)]
-
     stims = []
+
+    stim_map = {
+        'image': ImageStim,
+        'video': VideoStim,
+        'text': TextStim,
+        'audio': AudioStim
+    }
 
     def load_file(source):
         import magic  # requires libmagic, so import here
@@ -105,21 +112,23 @@ def load_stims(source, dtype=None):
         if not isinstance(mime, string_types):
             mime = mime.decode('utf-8')
         mime = mime.split('/')[0]
-        stim_map = {
-            'image': ImageStim,
-            'video': VideoStim,
-            'text': TextStim,
-            'audio': AudioStim
-        }
         if mime in stim_map.keys():
             s = stim_map[mime](source)
             stims.append(s)
 
+    def load_url(source):
+        main_type = urlopen(source).info().getmaintype()
+        if main_type in stim_map.keys():
+            s = stim_map[main_type](url=source)
+            stims.append(s)
+
     for s in source:
-        if isdir(s):
+        if bool(urlparse(s).scheme):
+            load_url(s)
+        elif isdir(s):
             for f in glob(join(s, '*')):
                 load_file(f)
-        else:
+        elif exists(s):
             load_file(s)
 
     if return_list:

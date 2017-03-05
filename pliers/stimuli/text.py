@@ -3,6 +3,7 @@
 import re
 import pandas as pd
 from six import string_types
+from six.moves.urllib.request import urlopen
 from pliers.support.decorators import requires_nltk_corpus
 from .base import Stim, CollectionStimMixin
 
@@ -20,9 +21,11 @@ class TextStim(Stim):
         duration (float): Optional duration of the TextStim, in seconds.
     '''
 
-    def __init__(self, filename=None, text=None, onset=None, duration=None):
+    def __init__(self, filename=None, text=None, onset=None, duration=None, url=None):
         if filename is not None and text is None:
             text = open(filename).read()
+        if url is not None:
+            text = urlopen(url).read()
         self.text = text
         name = 'text[%s]' % text[:40]  # Truncate at 40 chars
         super(TextStim, self).__init__(filename, onset, duration, name)
