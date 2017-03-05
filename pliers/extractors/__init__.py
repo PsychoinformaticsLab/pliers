@@ -5,7 +5,8 @@ from .api import IndicoAPIExtractor, ClarifaiAPIExtractor
 from .audio import STFTAudioExtractor, MeanAmplitudeExtractor
 from .google import (GoogleVisionAPIFaceExtractor,
                      GoogleVisionAPILabelExtractor,
-                     GoogleVisionAPIPropertyExtractor)
+                     GoogleVisionAPIPropertyExtractor,
+                     GoogleVisionAPISafeSearchExtractor)
 from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
                     VibranceExtractor)
 from .models import TensorFlowInceptionV3Extractor
