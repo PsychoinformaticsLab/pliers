@@ -1,6 +1,7 @@
 from pliers.extractors import (GoogleVisionAPIFaceExtractor,
                                GoogleVisionAPILabelExtractor,
-                               GoogleVisionAPIPropertyExtractor)
+                               GoogleVisionAPIPropertyExtractor,
+                               GoogleVisionAPISafeSearchExtractor)
 from pliers.extractors.google import GoogleVisionAPIExtractor
 from pliers.stimuli import ImageStim
 import pytest
@@ -84,7 +85,7 @@ def test_google_vision_api_properties_extractor():
 
 pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_safe_search():
-    ext = GoogleVisionAPIFaceExtractor(num_retries=5)
+    ext = GoogleVisionAPISafeSearchExtractor(num_retries=5)
     filename = join(get_test_data_path(), 'image', 'obama.jpg')
     stim = ImageStim(filename)
     result = ext.transform(stim).to_df()
