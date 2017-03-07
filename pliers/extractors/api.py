@@ -16,7 +16,7 @@ except ImportError:
     pass
 
 try:
-    import indicoio as ico
+        import indicoio as ico
 except ImportError:
     pass
 
@@ -50,17 +50,14 @@ class IndicoAPIExtractor(Extractor):
         if models is None:
             raise ValueError("Must enter a valid list of models to use of "
                              "possible types: sentiment, sentiment_hq, emotion.")
-        else:
-            try:
-                self.models = [getattr(ico, model) for model in models]
-                self.names = models
-            except AttributeError:
-                msg = ("Unsupported model(s) specified. Must use one or more "
-                       "of the following: sentiment, sentiment_hq, emotion, "
-                       "text_tags, language, political, keywords, people, "
-                       "places, organizations, twitter_engagement, "
-                       "personality, personas, text_features.")
-                raise ValueError(msg)
+        for model in models:
+            if model not in self.allowed_models:
+                raise ValueError(
+                "Unsupported model {} specified. Must use one or more "
+                "of the following: {}".format(model, ", ".join(self.allowed_models)))
+
+        self.models = [getattr(ico, model) for model in models]
+        self.names = models
 
 class IndicoAPITextExtractor(IndicoAPIExtractor):
 
@@ -76,6 +73,7 @@ class IndicoAPITextExtractor(IndicoAPIExtractor):
     _optional_input_type = (TextStim, ComplexTextStim)
 
     def __init__(self, api_key=None, models=None):
+        self.allowed_models = ico.TEXT_APIS.keys()
         super(IndicoAPITextExtractor, self).__init__(api_key, models)
 
     def _extract(self, stim):
