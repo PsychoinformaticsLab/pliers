@@ -23,7 +23,8 @@ except ImportError:
 
 class IndicoAPIExtractor(Extractor):
 
-    ''' Uses the Indico API to extract sentiment of text.
+    ''' Base class for all Indico API Extractors
+
     Args:
         api_key (str): A valid API key for the Indico API. Only needs to be
             passed the first time the extractor is initialized.
@@ -60,6 +61,22 @@ class IndicoAPIExtractor(Extractor):
                        "places, organizations, twitter_engagement, "
                        "personality, personas, text_features.")
                 raise ValueError(msg)
+
+class IndicoAPITextExtractor(IndicoAPIExtractor):
+
+    ''' Base class for all Indico API Extractors that work on text, such as
+    sentiment extraction.
+
+    Args:
+        api_key (str): A valid API key for the Indico API. Only needs to be
+            passed the first time the extractor is initialized.
+        models (list): The names of the Indico models to use.
+    '''
+
+    _optional_input_type = (TextStim, ComplexTextStim)
+
+    def __init__(self, api_key=None, models=None):
+        super(IndicoAPITextExtractor, self).__init__()
 
     def _extract(self, stim):
 
