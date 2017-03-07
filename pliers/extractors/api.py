@@ -59,6 +59,32 @@ class IndicoAPIExtractor(Extractor):
         self.models = [getattr(ico, model) for model in models]
         self.names = models
 
+    def _extract(self, stim):
+        scores = [model(stim) for model in self.models]
+
+        data, onsets, durations = [], [], []
+
+        for i, s in enumerate(stim):
+            features, values = [], []
+            for j, score in enumerate(scores):
+                if isinstance(score[i], float):
+                    features.append(self.names[j])
+                    values.append(score[i])
+                elif isinstance(score[i], dict):
+                    for k in score[i].keys():
+                        features.append(self.names[j] + '_' + k)
+                        values.append(score[i][k])
+
+            data.append(values)
+            onsets.append(s.onset)
+            durations.append(s.duration)
+
+        if not data:
+            data = []
+
+        return ExtractorResult(data, stim, self, features=features,
+                               onsets=onsets, durations=durations)
+
 class IndicoAPITextExtractor(IndicoAPIExtractor):
 
     ''' Base class for all Indico API Extractors that work on text, such as
@@ -84,30 +110,8 @@ class IndicoAPITextExtractor(IndicoAPIExtractor):
             stim = [stim]
 
         tokens = [token.text for token in stim if token.text]
-        scores = [model(tokens) for model in self.models]
 
-        data, onsets, durations = [], [], []
-
-        for i, s in enumerate(stim):
-            features, values = [], []
-            for j, score in enumerate(scores):
-                if isinstance(score[i], float):
-                    features.append(self.names[j])
-                    values.append(score[i])
-                elif isinstance(score[i], dict):
-                    for k in score[i].keys():
-                        features.append(self.names[j] + '_' + k)
-                        values.append(score[i][k])
-
-            data.append(values)
-            onsets.append(s.onset)
-            durations.append(s.duration)
-
-        if not data:
-            data = []
-
-        return ExtractorResult(data, stim, self, features=features,
-                               onsets=onsets, durations=durations)
+        super(IndicoAPITextExtractor, self)._extract(tokens)
 
 
 class ClarifaiAPIExtractor(ImageExtractor):
