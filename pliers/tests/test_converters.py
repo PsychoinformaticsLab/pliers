@@ -19,10 +19,8 @@ def test_video_to_audio_converter():
     video = VideoStim(filename)
     conv = VideoToAudioConverter()
     audio = conv.transform(video)
-    assert audio.name == 'small.wav'
     assert audio.history.source_class == 'VideoStim'
     assert audio.history.source_file == filename
-    assert splitext(video.filename)[0] == splitext(audio.filename)[0]
     assert np.isclose(video.duration, audio.duration, 1e-2)
 
 

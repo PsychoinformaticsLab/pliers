@@ -16,12 +16,14 @@ class AudioStim(Stim):
 
     '''
 
-    def __init__(self, filename, onset=None, sampling_rate=44100):
+    def __init__(self, filename=None, onset=None, sampling_rate=44100, clip=None):
 
         self.filename = filename
         self.sampling_rate = sampling_rate
+        self.clip = clip
 
-        self._load_clip()
+        if self.clip is None:
+            self._load_clip()
 
         # Small default buffer isn't ideal, but moviepy has persistent issues
         # with some files otherwise; see
