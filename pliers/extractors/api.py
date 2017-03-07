@@ -59,9 +59,7 @@ class IndicoAPIExtractor(Extractor):
         self.models = [getattr(ico, model) for model in models]
         self.names = models
 
-    def _extract(self, stim):
-        scores = [model(stim) for model in self.models]
-
+    def _extract(self, stim, scores):
         data, onsets, durations = [], [], []
 
         for i, s in enumerate(stim):
@@ -103,15 +101,15 @@ class IndicoAPITextExtractor(IndicoAPIExtractor):
         super(IndicoAPITextExtractor, self).__init__(api_key, models)
 
     def _extract(self, stim):
-
         if isinstance(stim, TextStim):
             if not stim.text:
                 return None
             stim = [stim]
 
         tokens = [token.text for token in stim if token.text]
+        scores = [model(tokens) for model in self.models]
 
-        super(IndicoAPITextExtractor, self)._extract(tokens)
+        super(IndicoAPITextExtractor, self)._extract(stim, scores)
 
 
 class ClarifaiAPIExtractor(ImageExtractor):
