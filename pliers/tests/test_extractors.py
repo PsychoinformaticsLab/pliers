@@ -7,7 +7,7 @@ from pliers.extractors import (DictionaryExtractor, PartOfSpeechExtractor,
                                MeanAmplitudeExtractor, BrightnessExtractor,
                                SharpnessExtractor, VibranceExtractor,
                                SaliencyExtractor, DenseOpticalFlowExtractor,
-                               IndicoAPIExtractor, ClarifaiAPIExtractor,
+                               IndicoAPITextExtractor, ClarifaiAPIExtractor,
                                TensorFlowInceptionV3Extractor)
 from pliers.stimuli import (TextStim, ComplexTextStim, ImageStim, VideoStim,
                             AudioStim, TranscribedAudioCompoundStim)
@@ -207,9 +207,9 @@ def test_optical_flow_extractor():
 
 
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
-def test_indico_api_extractor():
+def test_indico_api_text_extractor():
 
-    ext = IndicoAPIExtractor(api_key=os.environ['INDICO_APP_KEY'],
+    ext = IndicoAPITextExtractor(api_key=os.environ['INDICO_APP_KEY'],
                              models=['emotion', 'personality'])
 
     # With ComplexTextStim input

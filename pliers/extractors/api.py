@@ -76,7 +76,7 @@ class IndicoAPITextExtractor(IndicoAPIExtractor):
     _optional_input_type = (TextStim, ComplexTextStim)
 
     def __init__(self, api_key=None, models=None):
-        super(IndicoAPITextExtractor, self).__init__()
+        super(IndicoAPITextExtractor, self).__init__(api_key, models)
 
     def _extract(self, stim):
 
