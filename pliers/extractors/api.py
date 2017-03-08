@@ -16,7 +16,7 @@ except ImportError:
     pass
 
 try:
-        import indicoio as ico
+    import indicoio as ico
 except ImportError:
     pass
 
@@ -33,7 +33,6 @@ class IndicoAPIExtractor(Extractor):
 
     _log_attributes = ('models',)
     _input_type = ()
-    _optional_input_type = (TextStim, ComplexTextStim)
 
     def __init__(self, api_key=None, models=None):
         super(IndicoAPIExtractor, self).__init__()
@@ -47,6 +46,7 @@ class IndicoAPIExtractor(Extractor):
         else:
             self.api_key = api_key
         ico.config.api_key = self.api_key
+
         if models is None:
             raise ValueError("Must enter a valid list of models to use of "
                              "possible types: sentiment, sentiment_hq, emotion.")
@@ -59,7 +59,7 @@ class IndicoAPIExtractor(Extractor):
         self.models = [getattr(ico, model) for model in models]
         self.names = models
 
-    def _extract(self, stim, scores):
+    def _annotate(self, stim, scores):
         data, onsets, durations = [], [], []
 
         for i, s in enumerate(stim):
@@ -109,7 +109,7 @@ class IndicoAPITextExtractor(IndicoAPIExtractor):
         tokens = [token.text for token in stim if token.text]
         scores = [model(tokens) for model in self.models]
 
-        super(IndicoAPITextExtractor, self)._extract(stim, scores)
+        return self._annotate(stim, scores)
 
 
 class ClarifaiAPIExtractor(ImageExtractor):
