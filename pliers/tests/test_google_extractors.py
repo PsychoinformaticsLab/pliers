@@ -83,7 +83,8 @@ def test_google_vision_api_properties_extractor():
     assert (158, 13, 29) in result.columns
     assert np.isfinite(result[(158, 13, 29)][0])
 
-pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
+
+@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_safe_search():
     ext = GoogleVisionAPISafeSearchExtractor(num_retries=5)
     filename = join(get_test_data_path(), 'image', 'obama.jpg')
