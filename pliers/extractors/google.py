@@ -112,3 +112,13 @@ class GoogleVisionAPIPropertyExtractor(GoogleVisionAPIExtractor):
             features.append((rgb['red'], rgb['green'], rgb['blue']))
             values.append(color['score'])
         return features, values
+
+class GoogleVisionAPISafeSearchExtractor(GoogleVisionAPIExtractor):
+
+    ''' Extracts safe search detection using the Google Cloud Vision API. '''
+
+    request_type = 'SAFE_SEARCH_DETECTION'
+    response_object = 'safeSearchAnnotation'
+
+    def _parse_annotations(self, annotation):
+        return annotation.keys(), annotation.values()

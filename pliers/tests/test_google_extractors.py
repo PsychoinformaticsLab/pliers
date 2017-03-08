@@ -1,6 +1,7 @@
 from pliers.extractors import (GoogleVisionAPIFaceExtractor,
                                GoogleVisionAPILabelExtractor,
-                               GoogleVisionAPIPropertyExtractor)
+                               GoogleVisionAPIPropertyExtractor,
+                               GoogleVisionAPISafeSearchExtractor)
 from pliers.extractors.google import GoogleVisionAPIExtractor
 from pliers.stimuli import ImageStim
 import pytest
@@ -81,3 +82,12 @@ def test_google_vision_api_properties_extractor():
     result = ext.transform(stim).to_df()
     assert (158, 13, 29) in result.columns
     assert np.isfinite(result[(158, 13, 29)][0])
+
+pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
+def test_google_vision_api_safe_search():
+    ext = GoogleVisionAPISafeSearchExtractor(num_retries=5)
+    filename = join(get_test_data_path(), 'image', 'obama.jpg')
+    stim = ImageStim(filename)
+    result = ext.transform(stim).to_df()
+    assert 'adult' in result.columns
+    assert result['violence'][0] == 'VERY_UNLIKELY'

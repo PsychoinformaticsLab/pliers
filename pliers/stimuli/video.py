@@ -40,8 +40,9 @@ class VideoStim(Stim, CollectionStimMixin):
             to keep track of.
     '''
 
-    def __init__(self, filename, onset=None):
-
+    def __init__(self, filename=None, onset=None, url=None):
+        if url is not None:
+            filename = url
         self.filename = filename
         self._load_clip()
         self.fps = self.clip.fps

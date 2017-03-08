@@ -1,7 +1,8 @@
 from .utils import get_test_data_path
 from pliers.stimuli import (VideoStim, VideoFrameStim, ComplexTextStim,
                             AudioStim, ImageStim, CompoundStim,
-                            TranscribedAudioCompoundStim)
+                            TranscribedAudioCompoundStim,
+                            TextStim)
 from pliers.stimuli.base import Stim, _get_stim_class
 from pliers.extractors import BrightnessExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
@@ -174,3 +175,21 @@ def test_transcribed_audio_stim():
     stim = TranscribedAudioCompoundStim(audio=audio, text=text)
     assert isinstance(stim.audio, AudioStim)
     assert isinstance(stim.complex_text, ComplexTextStim)
+
+
+def test_remote_stims():
+    url = 'http://www.obamadownloads.com/videos/iran-deal-speech.mp4'
+    video = VideoStim(url=url)
+    assert video.fps == 12
+
+    url = 'http://www.bobainsworth.com/wav/simpsons/themodyn.wav'
+    audio = AudioStim(url=url)
+    assert round(audio.duration) == 3
+
+    url = 'https://www.whitehouse.gov/sites/whitehouse.gov/files/images/twitter_cards_potus.jpg'
+    image = ImageStim(url=url)
+    assert image.data.shape == (240, 240, 3)
+
+    url = 'https://github.com/tyarkoni/pliers/blob/master/README.md'
+    text = TextStim(url=url)
+    assert len(text.text) > 1

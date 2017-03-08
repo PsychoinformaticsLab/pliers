@@ -16,8 +16,9 @@ class AudioStim(Stim):
 
     '''
 
-    def __init__(self, filename=None, onset=None, sampling_rate=44100, clip=None):
-
+    def __init__(self, filename=None, onset=None, sampling_rate=44100, url=None, clip=None):
+        if url is not None:
+            filename = url
         self.filename = filename
         self.sampling_rate = sampling_rate
         self.clip = clip

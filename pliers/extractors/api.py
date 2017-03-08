@@ -25,7 +25,7 @@ class IndicoAPIExtractor(Extractor):
 
     ''' Uses the Indico API to extract sentiment of text.
     Args:
-        app_key (str): A valid API key for the Indico API. Only needs to be
+        api_key (str): A valid API key for the Indico API. Only needs to be
             passed the first time the extractor is initialized.
         models (list): The names of the Indico models to use.
     '''
