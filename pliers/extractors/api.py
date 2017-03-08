@@ -49,12 +49,12 @@ class IndicoAPIExtractor(Extractor):
 
         if models is None:
             raise ValueError("Must enter a valid list of models to use of "
-                             "possible types: sentiment, sentiment_hq, emotion.")
+                             "possible types{}".format(model, ", ".join(self.allowed_models)))
         for model in models:
             if model not in self.allowed_models:
                 raise ValueError(
-                "Unsupported model {} specified. Must use one or more "
-                "of the following: {}".format(model, ", ".join(self.allowed_models)))
+                "Unsupported model {} specified. "
+                "Valid models: {}".format(model, ", ".join(self.allowed_models)))
 
         self.models = [getattr(ico, model) for model in models]
         self.names = models
