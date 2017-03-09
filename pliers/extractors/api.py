@@ -59,7 +59,9 @@ class IndicoAPIExtractor(Extractor):
         self.models = [getattr(ico, model) for model in models]
         self.names = models
 
-    def _annotate(self, stim, scores):
+    def _score(self, stim, tokens):
+        scores = [model(tokens) for model in self.models]
+
         data, onsets, durations = [], [], []
 
         for i, s in enumerate(stim):
@@ -85,20 +87,15 @@ class IndicoAPIExtractor(Extractor):
 
 class IndicoAPITextExtractor(IndicoAPIExtractor):
 
-    ''' Base class for all Indico API Extractors that work on text, such as
+    ''' Uses to Indico API to extract features from text, such as
     sentiment extraction.
-
-    Args:
-        api_key (str): A valid API key for the Indico API. Only needs to be
-            passed the first time the extractor is initialized.
-        models (list): The names of the Indico models to use.
     '''
 
     _optional_input_type = (TextStim, ComplexTextStim)
 
-    def __init__(self, api_key=None, models=None):
+    def __init__(self, **kwargs):
         self.allowed_models = ico.TEXT_APIS.keys()
-        super(IndicoAPITextExtractor, self).__init__(api_key, models)
+        super(IndicoAPITextExtractor, self).__init__(**kwargs)
 
     def _extract(self, stim):
         if isinstance(stim, TextStim):
@@ -107,10 +104,21 @@ class IndicoAPITextExtractor(IndicoAPIExtractor):
             stim = [stim]
 
         tokens = [token.text for token in stim if token.text]
-        scores = [model(tokens) for model in self.models]
 
-        return self._annotate(stim, scores)
+        return self._score(stim, tokens)
 
+class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
+
+    ''' Uses to Indico API to extract features from Images, such as
+    facial emotion recognition or content filtering.
+    '''
+
+    def __init__(self, **kwargs):
+        self.allowed_models = ico.IMAGE_APIS.keys()
+        super(IndicoAPIImageExtractor, self).__init__(**kwargs)
+
+    def _extract(self, stim):
+        return self._score([stim], [stim.data])
 
 class ClarifaiAPIExtractor(ImageExtractor):
 

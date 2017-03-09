@@ -7,7 +7,8 @@ from pliers.extractors import (DictionaryExtractor, PartOfSpeechExtractor,
                                MeanAmplitudeExtractor, BrightnessExtractor,
                                SharpnessExtractor, VibranceExtractor,
                                SaliencyExtractor, DenseOpticalFlowExtractor,
-                               IndicoAPITextExtractor, ClarifaiAPIExtractor,
+                               IndicoAPITextExtractor, IndicoAPIImageExtractor,
+                               ClarifaiAPIExtractor,
                                TensorFlowInceptionV3Extractor)
 from pliers.stimuli import (TextStim, ComplexTextStim, ImageStim, VideoStim,
                             AudioStim, TranscribedAudioCompoundStim)
@@ -236,6 +237,34 @@ def test_indico_api_text_extractor():
     assert set(result.columns) == outdfKeysCheck
     assert len(result) == 1
 
+
+@pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
+def test_indico_api_image_extractor():
+
+    ext = IndicoAPIImageExtractor(api_key=os.environ['INDICO_APP_KEY'],
+                             models=['fer', 'content_filtering'])
+
+    image_dir = join(get_test_data_path(), 'image')
+    stim1 = ImageStim(join(image_dir, 'apple.jpg'))
+    result1 = ext.transform(stim1).to_df()
+
+    outdfKeysCheck = set(['onset',
+        'duration',
+        'fer_Surprise',
+        'fer_Neutral',
+        'fer_Sad',
+        'fer_Happy',
+        'fer_Angry',
+        'fer_Fear',
+        'content_filtering'])
+
+    assert set(result1.columns) == outdfKeysCheck
+    assert result1['content_filtering'][0] < 0.1
+
+    stim2 = ImageStim(join(image_dir, 'obama.jpg'))
+    result2 = ext.transform(stim2).to_df()
+    assert set(result2.columns) == outdfKeysCheck
+    assert result2['fer_Happy'][0] > 0.7
 
 @pytest.mark.skipif("'CLARIFAI_APP_ID' not in os.environ")
 def test_clarifai_api_extractor():
