@@ -27,23 +27,24 @@ before_install:
 
 - export MINICONDA=$HOME/miniconda
 - export PATH="$MINICONDA/bin:$PATH"
-- hash -r
-- echo $MINICONDA_URL
 - wget $MINICONDA_URL -O miniconda.sh;
 - bash miniconda.sh -b -f -p $MINICONDA;
+- hash -r
+- echo $MINICONDA_URL
+
 
 - conda config --set always_yes yes --set changeps1 no
-- conda config --add channels conda-forge
-- conda update -y conda
+# - conda config --add channels conda-forge
+# - conda update -y conda
 - conda install python=$PYTHON_VERSION
 - conda info -a
 
 install:
 - pip install -r requirements.txt
 - pip install --upgrade --ignore-installed setuptools
-- pip install --upgrade coveralls pytest-cov pysrt xlrd clarifai seaborn pytesseract
-- pip install --upgrade matplotlib SpeechRecognition IndicoIo tensorflow pygraphviz
-- pip install --upgrade pathos
+- pip install coveralls pytest-cov pysrt xlrd clarifai seaborn pytesseract
+- pip install matplotlib SpeechRecognition IndicoIo tensorflow pygraphviz
+- pip install pathos
 
 before_script:
   - python -m pliers.support.download
