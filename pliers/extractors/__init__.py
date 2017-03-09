@@ -16,7 +16,8 @@ from .video import (DenseOpticalFlowExtractor)
 
 __all__ = [
     'ExtractorResult',
-    'IndicoAPIExtractor',
+    'IndicoAPITextExtractor',
+    'IndicoAPIImageExtractor',
     'ClarifaiAPIExtractor',
     'STFTAudioExtractor',
     'MeanAmplitudeExtractor',
