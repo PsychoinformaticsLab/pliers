@@ -38,7 +38,8 @@ before_install:
 - conda config --add channels conda-forge
 - conda config --add channels birdhouse
 - conda update -y conda
-- conda create -q -f -n test-env python=$PYTHON_VERSION $CONDA_DEPS
+- rm -rf /home/travis/miniconda/envs/test-env
+- conda create -q -n test-env python=$PYTHON_VERSION $CONDA_DEPS
 - source activate test-env
 
 install:
