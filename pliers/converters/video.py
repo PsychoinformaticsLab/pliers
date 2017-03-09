@@ -14,22 +14,8 @@ class VideoToAudioConverter(Converter):
     _input_type = VideoStim
     _output_type = AudioStim
 
-    def __init__(self, fps=44100, nbytes=2,
-                 buffersize=2000, bitrate=None,
-                 ffmpeg_params=None):
-        super(VideoToAudioConverter, self).__init__()
-        self.fps = fps
-        self.nbytes = nbytes
-        self.buffersize = buffersize
-        self.bitrate = bitrate
-        self.ffmpeg_params = ffmpeg_params
-
     def _convert(self, video):
-        filename = os.path.splitext(video.filename)[0] + '.wav'
-        video.clip.audio.write_audiofile(filename, self.fps, self.nbytes,
-                                         self.buffersize, self.bitrate,
-                                         self.ffmpeg_params)
-        return AudioStim(filename)
+        return AudioStim(clip=video.clip.audio)
 
 
 class VideoToDerivedVideoConverter(Converter):

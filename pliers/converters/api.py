@@ -3,6 +3,7 @@
 import os
 import base64
 import json
+import tempfile
 from abc import abstractproperty
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.transformers import EnvironmentKeyMixin
@@ -39,10 +40,21 @@ class SpeechRecognitionAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
 
     def _convert(self, audio):
         import speech_recognition as sr
-        with sr.AudioFile(audio.filename) as source:
+
+        if audio.filename is None:
+            file = tempfile.mktemp() + '.wav'
+            audio.clip.write_audiofile(file)
+        else:
+            file = audio.filename
+
+        with sr.AudioFile(file) as source:
             clip = self.recognizer.record(source)
         text = getattr(self.recognizer, self.recognize_method)(
             clip, self.api_key)
+
+        if audio.filename is None:
+            os.remove(file)
+
         return ComplexTextStim(text=text)
 
 
@@ -105,7 +117,14 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
 
     def _convert(self, audio):
         import speech_recognition as sr
-        with sr.AudioFile(audio.filename) as source:
+
+        if audio.filename is None:
+            file = tempfile.mktemp() + '.wav'
+            audio.clip.write_audiofile(file)
+        else:
+            file = audio.filename
+
+        with sr.AudioFile(file) as source:
             clip = self.recognizer.record(source)
 
         _json = self._query_api(clip)
