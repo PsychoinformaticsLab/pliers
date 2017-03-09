@@ -13,7 +13,7 @@ matrix:
     - os: linux
       env:
          - PYTHON_VERSION=3.5
-         - MINICONDA_URL="https://repo.continuum.io/miniconda/Miniconda3-4.2.12-Linux-x86_64.sh"
+         - MINICONDA_URL="https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh"
     - os: linux
       env:
          - PYTHON_VERSION=2.7
@@ -30,14 +30,14 @@ before_install:
 - wget $MINICONDA_URL -O miniconda.sh;
 - bash miniconda.sh -b -f -p $MINICONDA;
 - hash -r
-- echo $MINICONDA_URL
+- conda info -a
 
 
 - conda config --set always_yes yes --set changeps1 no
 # - conda config --add channels conda-forge
-# - conda update -y conda
-- conda install python=$PYTHON_VERSION
-- conda info -a
+- conda update -y conda
+- conda create -q -n test-env python=$PYTHON_VERSION
+- source activate test-env
 
 install:
 - pip install -r requirements.txt
