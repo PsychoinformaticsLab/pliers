@@ -36,6 +36,7 @@ before_install:
 - conda config --set always_yes yes --set changeps1 no
 - conda config --add channels conda-forge
 - conda update -y conda
+- rm -rf /home/travis/miniconda/envs/test-env
 - conda create -q -n test-env python=$PYTHON_VERSION $CONDA_DEPS
 - source activate test-env
 
@@ -58,7 +59,6 @@ before_cache:
 # this makes the cache rebuilt less frequently
 - conda clean --tarballs --packages --index-cache
 - rm -rf $HOME/miniconda/pkgs/cache
-- rm -rf /home/travis/miniconda/envs/test-env
 
 cache:
   directories:
