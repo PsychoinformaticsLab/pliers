@@ -99,9 +99,20 @@ def test_ibmAPI_converter():
     assert isinstance(first_word, TextStim)
     assert first_word.duration > 0
     assert first_word.onset is not None
-
+    num_words = len(out_stim.elements)
     full_text = [elem.text for elem in out_stim]
     assert 'thermodynamics' in full_text or 'obey' in full_text
+
+    conv2 = IBMSpeechAPIConverter(resolution='phrases')
+    out_stim = conv2.transform(stim)
+    assert isinstance(out_stim, ComplexTextStim)
+    first_phrase = next(w for w in out_stim)
+    assert isinstance(first_phrase, TextStim)
+    full_text = first_phrase.text
+    print full_text
+    assert len(full_text.split()) > 1
+    assert 'thermodynamics' in full_text or 'obey' in full_text
+    assert len(out_stim.elements) < num_words
 
 
 def test_tesseract_converter():

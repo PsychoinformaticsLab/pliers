@@ -79,11 +79,16 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
         password (str): API credential password. Must be passed explicitly
             or stored in the environment variable specified in the _env_keys
             field.
+        resolution (str): what resolution the resultant ComplexTextStim should
+            be separated by (i.e. the unit each TextStim in the ComplexTextStim
+            elements should be). Currently, only 'words' or 'phrases' are
+            supported.
     '''
 
     _env_keys = ('IBM_USERNAME', 'IBM_PASSWORD')
+    _log_attributes = ('resolution',)
 
-    def __init__(self, username=None, password=None):
+    def __init__(self, username=None, password=None, resolution='words'):
         super(IBMSpeechAPIConverter, self).__init__()
         import speech_recognition as sr
         if username is None or password is None:
@@ -96,6 +101,7 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
         self.recognizer = sr.Recognizer()
         self.username = username
         self.password = password
+        self.resolution = resolution
 
     def _convert(self, audio):
         import speech_recognition as sr
@@ -112,9 +118,19 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
         for result in results:
             if result['final'] is True:
                 timestamps = result['alternatives'][0]['timestamps']
-                for entry in timestamps:
-                    elements.append(TextStim(text=entry[0], onset=entry[1],
-                                             duration=entry[2]-entry[1]))
+                if self.resolution is 'words':
+                    for entry in timestamps:
+                        text = entry[0]
+                        start = entry[1]
+                        end = entry[2]
+                        elements.append(TextStim(text=text, onset=start,
+                                                 duration=end-start))
+                elif self.resolution is 'phrases':
+                    text = result['alternatives'][0]['transcript']
+                    start = timestamps[0][1]
+                    end = timestamps[-1][2]
+                    elements.append(TextStim(text=text, onset=start,
+                                             duration=end-start))
         return ComplexTextStim(elements=elements)
 
     def _query_api(self, clip):
