@@ -23,7 +23,8 @@ except ImportError:
 
 class IndicoAPIExtractor(Extractor):
 
-    ''' Uses the Indico API to extract sentiment of text.
+    ''' Base class for all Indico API Extractors
+
     Args:
         api_key (str): A valid API key for the Indico API. Only needs to be
             passed the first time the extractor is initialized.
@@ -32,7 +33,6 @@ class IndicoAPIExtractor(Extractor):
 
     _log_attributes = ('models',)
     _input_type = ()
-    _optional_input_type = (TextStim, ComplexTextStim)
 
     def __init__(self, api_key=None, models=None):
         super(IndicoAPIExtractor, self).__init__()
@@ -46,29 +46,20 @@ class IndicoAPIExtractor(Extractor):
         else:
             self.api_key = api_key
         ico.config.api_key = self.api_key
+
         if models is None:
             raise ValueError("Must enter a valid list of models to use of "
-                             "possible types: sentiment, sentiment_hq, emotion.")
-        else:
-            try:
-                self.models = [getattr(ico, model) for model in models]
-                self.names = models
-            except AttributeError:
-                msg = ("Unsupported model(s) specified. Must use one or more "
-                       "of the following: sentiment, sentiment_hq, emotion, "
-                       "text_tags, language, political, keywords, people, "
-                       "places, organizations, twitter_engagement, "
-                       "personality, personas, text_features.")
-                raise ValueError(msg)
+                             "possible types{}".format(model, ", ".join(self.allowed_models)))
+        for model in models:
+            if model not in self.allowed_models:
+                raise ValueError(
+                "Unsupported model {} specified. "
+                "Valid models: {}".format(model, ", ".join(self.allowed_models)))
 
-    def _extract(self, stim):
+        self.models = [getattr(ico, model) for model in models]
+        self.names = models
 
-        if isinstance(stim, TextStim):
-            if not stim.text:
-                return None
-            stim = [stim]
-
-        tokens = [token.text for token in stim if token.text]
+    def _score(self, stim, tokens):
         scores = [model(tokens) for model in self.models]
 
         data, onsets, durations = [], [], []
@@ -94,6 +85,40 @@ class IndicoAPIExtractor(Extractor):
         return ExtractorResult(data, stim, self, features=features,
                                onsets=onsets, durations=durations)
 
+class IndicoAPITextExtractor(IndicoAPIExtractor):
+
+    ''' Uses to Indico API to extract features from text, such as
+    sentiment extraction.
+    '''
+
+    _optional_input_type = (TextStim, ComplexTextStim)
+
+    def __init__(self, **kwargs):
+        self.allowed_models = ico.TEXT_APIS.keys()
+        super(IndicoAPITextExtractor, self).__init__(**kwargs)
+
+    def _extract(self, stim):
+        if isinstance(stim, TextStim):
+            if not stim.text:
+                return None
+            stim = [stim]
+
+        tokens = [token.text for token in stim if token.text]
+
+        return self._score(stim, tokens)
+
+class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
+
+    ''' Uses to Indico API to extract features from Images, such as
+    facial emotion recognition or content filtering.
+    '''
+
+    def __init__(self, **kwargs):
+        self.allowed_models = ico.IMAGE_APIS.keys()
+        super(IndicoAPIImageExtractor, self).__init__(**kwargs)
+
+    def _extract(self, stim):
+        return self._score([stim], [stim.data])
 
 class ClarifaiAPIExtractor(ImageExtractor):
 
