@@ -107,7 +107,6 @@ def test_ibmAPI_converter():
     first_phrase = next(w for w in out_stim)
     assert isinstance(first_phrase, TextStim)
     full_text = first_phrase.text
-    print full_text
     assert len(full_text.split()) > 1
     assert 'thermodynamics' in full_text or 'obey' in full_text
     assert len(out_stim.elements) < num_words
@@ -142,44 +141,6 @@ def test_get_converter():
     assert isinstance(conv, ImageToTextConverter)
     conv = get_converter(TextStim, ImageStim)
     assert conv is None
-
-
-# def test_converter_memoization():
-
-#     cache_value = config.cache_converters
-#     config.cache_converters = True
-
-#     filename = join(get_test_data_path(), 'video', 'small.mp4')
-#     video = VideoStim(filename)
-#     conv = VideoToAudioConverter()
-
-#     def convert(stim):
-#         start_time = time.time()
-#         stim = conv.transform(stim)
-#         return time.time() - start_time
-
-#     # Time taken first time through
-#     memory.clear()
-
-#     convert_time = convert(video)
-#     cache_time = convert(video)
-
-#     # TODO: implement saner checking than this
-#     # Converting should be at least twice as slow as retrieving from cache
-#     assert convert_time >= cache_time * 2
-
-#     # After clearing the cache, checks should fail
-#     memory.clear()
-#     cache_time = convert(video)
-#     assert convert_time <= cache_time * 2
-
-#     # When cach is disabled, check should also fail
-#     config.cache_converters = False
-#     conv = VideoToAudioConverter()
-#     cache_time = convert(video)
-#     assert convert_time <= cache_time * 2
-
-#     config.cache_converters = cache_value
 
 
 @pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")

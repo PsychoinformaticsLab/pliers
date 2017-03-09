@@ -3,7 +3,7 @@ dist: trusty
 
 env:
   global:
-    - CONDA_DEPS="pip pytest numpy pillow pandas requests scipy nltk six"
+    - CONDA_DEPS="pip pytest numpy pillow pandas requests scipy nltk six tqdm seaborn matplotlib pathos tensorflow"
     - secure: "XwXubMYVa7nTQK2XwJySgtFM/+8xzzaQClSWI76Nik5eqb2yVW4DTJnpeZgp66EvTHEc202bddmleZ6bPw/wWauk+UEjTuRckeocM70rIdSEjzGuDMEKNRmxSQ+5ysf2f7akrog6aUtNjKaEZJIV8RlUWHGLNNAybtTS73tiwcM="
     - secure: "OAxWIyFPse0jBXLdS9GzcQgM4d0/lYY9zzAycth0hqOPIrjAzkfUSFz/aGu0ODErwRcOrJPCV8RSaBq5uVCGQ4U7Yl/UKYhS4fkye/CUehmUUDtRxlUIl7pwUznjR8YDHglB9GcGN2FQEz44eLmSWz7JQCKEyqfGEqIHJxb4HmA="
     - secure: "NZyKWPNNYP1vAIYAl3yqGNJzAvNkiSgrQZOpxkbDvAXZWaObmeeaUPDoxrG8gs7ypv09+FaHyy7rdhkknl5anmSmA8j8VS3CweU97Wz7J+TLr+S6Gnox4z7Y9hwFI29inAEyIUxPQFafRGOOZbyWt6FBo0O4MvB1FKw9fl8Hcf0="
@@ -28,23 +28,22 @@ before_install:
 
 - export MINICONDA=$HOME/miniconda
 - export PATH="$MINICONDA/bin:$PATH"
-- hash -r
-- echo $MINICONDA_URL
 - wget $MINICONDA_URL -O miniconda.sh;
 - bash miniconda.sh -b -f -p $MINICONDA;
+- hash -r
+- conda info -a
 
-- conda update -y conda
 - conda config --set always_yes yes --set changeps1 no
 - conda config --add channels conda-forge
-- conda info -a
-- conda install python=$PYTHON_VERSION $CONDA_DEPS
+- conda update -y conda
+- rm -rf /home/travis/miniconda/envs/test-env
+- conda create -q -n test-env python=$PYTHON_VERSION $CONDA_DEPS
+- source activate test-env
 
 install:
-- pip install -r requirements.txt
 - pip install --upgrade --ignore-installed setuptools
-- pip install --upgrade coveralls pytest-cov pysrt xlrd clarifai seaborn pytesseract
-- pip install --upgrade matplotlib SpeechRecognition IndicoIo tensorflow pygraphviz
-- pip install --upgrade pathos
+- pip install python-magic moviepy coveralls pytest-cov pysrt xlrd clarifai pytesseract
+- pip install SpeechRecognition IndicoIo pygraphviz
 
 before_script:
   - python -m pliers.support.download
@@ -58,6 +57,7 @@ after_success:
 before_cache:
 # clean unused packages & installed files from conda cache
 # this makes the cache rebuilt less frequently
+- rm -rf /home/travis/miniconda/envs/test-env
 - conda clean --tarballs --packages --index-cache
 - rm -rf $HOME/miniconda/pkgs/cache
 
