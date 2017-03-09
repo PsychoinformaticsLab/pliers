@@ -10,7 +10,7 @@ A Python package for automated extraction of features from multimodal stimuli.
 
 Pliers is a Python package for automated extraction of features from multimodal stimuli. It's designed to let you rapidly and flexibly extract all kinds of useful information from videos, images, audio, and text. It's also easily extensible, allowing users to write new feature extractors in relatively little code, and providing a common framework for interfacing with all kinds of domain-specific tools.
 
-Pliers is still in early development, so we reserve the right to break the API fairly regularly as we gradually move towards a stable release.
+Pliers is still in early development, so the API may occasionally break, though no major changes are rare at this point.
 
 ## Installation
 
@@ -75,7 +75,7 @@ The totality of the code required to do this (assuming you have a [Google Cloud 
 from pliers.extractors import GoogleVisionAPIFaceExtractor
 
 ext = GoogleVisionAPIFaceExtractor()
-result = ext.transform('obama.jpg')[0].to_df()
+result = ext.transform('obama.jpg').to_df()
 ```
 
 Suppose our input looks like this:
@@ -400,7 +400,7 @@ Second, because many `Converter`s call API-based services, if you're going to re
 We'll have a more thorough listing and description of available `Converter` classes here in the near future. For now, you can scour the rest of this README, or have a look at the codebase.
 
 ### Filters
-A `Filter` is a kind of `Transformer` that returns an object of the same `Stim` class as its input. For example, suppose you want to convert a color image to grayscale. In principle, one could easily write a `ColorToGrayScaleImageFilter` that fills this niche. In practice, there isn't much to be said about the `Filter` hierarchy at the moment, because we haven't actually implemented any `Filter`s in pliers yet. So consider this a placeholder for the moment---and feel free to submit PRs with useful new `Filter` classes!
+A `Filter` is a kind of `Transformer` that returns an object of the same `Stim` class as its input. For example, suppose you want to convert a color image to grayscale. In principle, one could easily write a `ColorToGrayScaleImageFilter` that fills this niche. In practice, there isn't much to be said about the `Filter` hierarchy at the moment, because we've hardly implemented any `Filter`s yet. So consider this a placeholder for the moment---and feel free to submit PRs with useful new `Filter` classes!
 
 ### Iterable-aware transformations
 A useful feature of the `Transformer` API is that it's inherently iterable-aware: every pliers `Transformer` (including all `Extractors`, `Converters`, and `Filters`) can be passed an iterable (specifically, a list, tuple, or generator) of `Stim` objects rather than just a single `Stim`. The transformation will then be applied independently to each `Stim`.

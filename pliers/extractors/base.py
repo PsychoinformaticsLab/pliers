@@ -27,6 +27,10 @@ class Extractor(with_metaclass(ABCMeta, Transformer)):
     def _transform(self, stim, *args, **kwargs):
         return self._extract(stim, *args, **kwargs)
 
+    def plot(self, result, stim=None):
+        raise NotImplementedError("No plotting method is defined for class "
+                                  "%s." % self.__class__.__name__)
+
 
 class ExtractorResult(object):
 
