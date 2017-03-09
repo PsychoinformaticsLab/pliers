@@ -117,7 +117,10 @@ def load_stims(source, dtype=None):
             stims.append(s)
 
     def load_url(source):
-        main_type = urlopen(source).info().getmaintype()
+        try:
+            main_type = urlopen(source).info().get_content_maintype()  # Py3
+        except:
+            main_type = urlopen(source).info().getmaintype()  # Py2
         if main_type in stim_map.keys():
             s = stim_map[main_type](url=source)
             stims.append(s)
