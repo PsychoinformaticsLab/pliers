@@ -86,6 +86,7 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
     '''
 
     _env_keys = ('IBM_USERNAME', 'IBM_PASSWORD')
+    _log_attributes = ('resolution',)
 
     def __init__(self, username=None, password=None, resolution='words'):
         super(IBMSpeechAPIConverter, self).__init__()
