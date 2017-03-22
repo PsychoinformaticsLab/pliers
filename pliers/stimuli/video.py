@@ -2,7 +2,7 @@
 
 from __future__ import division
 from moviepy.video.io.VideoFileClip import VideoFileClip
-from .base import Stim, CollectionStimMixin
+from .base import Stim
 from .image import ImageStim
 
 
@@ -30,7 +30,7 @@ class VideoFrameStim(ImageStim):
         self.name += 'frame[%s]' % frame_num
 
 
-class VideoStim(Stim, CollectionStimMixin):
+class VideoStim(Stim):
 
     ''' A video.
     Args:
