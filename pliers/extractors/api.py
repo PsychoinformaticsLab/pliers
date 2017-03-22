@@ -49,7 +49,7 @@ class IndicoAPIExtractor(Extractor):
 
         if models is None:
             raise ValueError("Must enter a valid list of models to use of "
-                             "possible types{}".format(model, ", ".join(self.allowed_models)))
+                             "possible types{}".format(", ".join(self.allowed_models)))
         for model in models:
             if model not in self.allowed_models:
                 raise ValueError(
