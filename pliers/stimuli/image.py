@@ -3,10 +3,14 @@
 from .base import Stim
 from scipy.misc import imread
 from PIL import Image
+from six.moves.urllib.request import urlopen
+from contextlib import contextmanager
+from scipy.misc import imsave
 import six
 import io
+import os
+import tempfile
 import numpy as np
-from six.moves.urllib.request import urlopen
 
 
 class ImageStim(Stim):
@@ -31,3 +35,13 @@ class ImageStim(Stim):
             filename = url
         self.data = data
         super(ImageStim, self).__init__(filename, onset=onset, duration=duration)
+
+    @contextmanager
+    def get_filename(self):
+        if self.filename is None or not os.path.exists(self.filename):
+            tf = tempfile.mktemp() + '.png'
+            imsave(tf, self.data)
+            yield tf
+            os.remove(tf)
+        else:
+            yield self.filename
