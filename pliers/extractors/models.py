@@ -67,20 +67,13 @@ class TensorFlowInceptionV3Extractor(Extractor):
         tf_dir = os.path.dirname(tf.__file__)
         script = os.path.join(tf_dir, 'classify_image.py')
 
-        if stim.filename is None:
-            img_file = tempfile.mktemp() + '.jpg'
-            imsave(img_file, stim.data)
-            use_tmp = True
-        else:
-            img_file = stim.filename
-            use_tmp = False
-
-        args = ' --image_file %s --model_dir %s --num_top_prediction %d' % \
-            (img_file, self.model_dir, self.num_predictions)
-        cmd = ('python ' + script + args).split()
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        output, errors = process.communicate()
-        hits = output.decode('utf-8').splitlines()[-self.num_predictions:]
+        with stim.get_filename() as filename:
+            args = ' --image_file %s --model_dir %s --num_top_prediction %d' % \
+                (filename, self.model_dir, self.num_predictions)
+            cmd = ('python ' + script + args).split()
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+            output, errors = process.communicate()
+            hits = output.decode('utf-8').splitlines()[-self.num_predictions:]
 
         values, features = [], []
         for i, h in enumerate(hits):
@@ -88,8 +81,5 @@ class TensorFlowInceptionV3Extractor(Extractor):
             values.extend(m.groups())
             ind = i + 1
             features.extend(['label_%d' % ind, 'score_%d' % ind])
-
-        if use_tmp:
-            os.remove(img_file)
 
         return ExtractorResult([values], stim, self, features=features)

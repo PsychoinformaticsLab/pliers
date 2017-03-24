@@ -3,11 +3,9 @@ Extractors that interact with external (e.g., deep learning) services.
 '''
 
 import os
-import tempfile
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.stimuli.text import TextStim, ComplexTextStim
-from scipy.misc import imsave
 
 
 try:
@@ -85,6 +83,7 @@ class IndicoAPIExtractor(Extractor):
         return ExtractorResult(data, stim, self, features=features,
                                onsets=onsets, durations=durations)
 
+
 class IndicoAPITextExtractor(IndicoAPIExtractor):
 
     ''' Uses to Indico API to extract features from text, such as
@@ -107,6 +106,7 @@ class IndicoAPITextExtractor(IndicoAPIExtractor):
 
         return self._score(stim, tokens)
 
+
 class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
 
     ''' Uses to Indico API to extract features from Images, such as
@@ -119,6 +119,7 @@ class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
 
     def _extract(self, stim):
         return self._score([stim], [stim.data])
+
 
 class ClarifaiAPIExtractor(ImageExtractor):
 
@@ -160,17 +161,9 @@ class ClarifaiAPIExtractor(ImageExtractor):
             self.select_classes = ','.join(select_classes)
 
     def _extract(self, stim):
-        if stim.filename is None:
-            file = tempfile.mktemp() + '.png'
-            imsave(file, stim.data)
-        else:
-            file = stim.filename
-
-        tags = self.tagger.tag_images(open(file, 'rb'),
-                                      select_classes=self.select_classes)
-
-        if stim.filename is None:
-            os.remove(file)
+        with stim.get_filename() as filename:
+            with open(filename, 'rb') as f:
+                tags = self.tagger.tag_images(f, select_classes=self.select_classes)
 
         tagged = tags['results'][0]['result']['tag']
         return ExtractorResult([tagged['probs']], stim, self,

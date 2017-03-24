@@ -1,7 +1,5 @@
 import base64
 import os
-import tempfile
-from scipy.misc import imsave
 from pliers.transformers import (Transformer, BatchTransformerMixin,
                                  EnvironmentKeyMixin)
 
@@ -56,13 +54,10 @@ class GoogleVisionAPITransformer(GoogleAPITransformer):
     def _build_request(self, stims):
         request = []
         for image in stims:
-            if image.filename is None:
-                file = tempfile.mktemp() + '.png'
-                imsave(file, image.data)
-            else:
-                file = image.filename
+            with image.get_filename() as filename:
+                with open(filename, 'rb') as f:
+                    img_data = f.read()
 
-            img_data = open(file, 'rb').read()
             content = base64.b64encode(img_data).decode()
             request.append(
                 {
@@ -73,6 +68,4 @@ class GoogleVisionAPITransformer(GoogleAPITransformer):
                     }]
                 })
 
-            if image.filename is None:
-                os.remove(file)
         return request

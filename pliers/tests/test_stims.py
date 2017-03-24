@@ -8,7 +8,7 @@ from pliers.extractors import BrightnessExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.download import download_nltk_data
 import numpy as np
-from os.path import join
+from os.path import join, exists
 import pandas as pd
 import pytest
 
@@ -193,3 +193,17 @@ def test_remote_stims():
     url = 'https://github.com/tyarkoni/pliers/blob/master/README.md'
     text = TextStim(url=url)
     assert len(text.text) > 1
+
+
+def test_get_filename():
+    url = 'http://www.bobainsworth.com/wav/simpsons/themodyn.wav'
+    audio = AudioStim(url=url)
+    with audio.get_filename() as filename:
+        assert exists(filename)
+    assert not exists(filename)
+
+    url = 'https://tuition.utexas.edu/sites/all/themes/tuition/logo.png'
+    image = ImageStim(url=url)
+    with image.get_filename() as filename:
+        assert exists(filename)
+    assert not exists(filename)
