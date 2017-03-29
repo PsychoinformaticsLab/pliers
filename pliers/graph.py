@@ -5,6 +5,8 @@ from pliers.utils import listify, flatten, isgenerator
 from six import string_types
 from collections import OrderedDict
 
+import json
+
 try:
     import pygraphviz as pgv
 except:
@@ -20,11 +22,11 @@ class Node(object):
         transformer (Transformer): the Transformer instance at this node
     '''
 
-    def __init__(self, transformer, name):
+    def __init__(self, transformer, name, parameters=None):
         self.name = name
         self.children = []
         if isinstance(transformer, string_types):
-            transformer = get_transformer(transformer)
+            transformer = get_transformer(transformer, parameters)
         self.transformer = transformer
 
     def add_child(self, node):
@@ -37,12 +39,17 @@ class Node(object):
 
 class Graph(object):
 
-    def __init__(self, nodes=None):
+    def __init__(self, nodes=None, spec=None):
 
         self.nodes = OrderedDict()
         self.roots = []
         if nodes is not None:
+            if isinstance(nodes, dict):
+                nodes = nodes['roots']
             self.add_nodes(nodes)
+        elif spec is not None:
+            with open(spec) as spec_file:
+                self.add_nodes(json.load(spec_file)['roots'])
 
     def add_nodes(self, nodes, parent=None):
         for n in nodes:
@@ -50,12 +57,12 @@ class Graph(object):
             self.add_node(parent=parent, **node_args)
 
     def add_node(self, transformer, name=None, children=None, parent=None,
-                 return_node=False):
+                 parameters=None, return_node=False):
 
         if name is None:
             name = id(transformer)
 
-        node = Node(transformer, name)
+        node = Node(transformer, name, parameters)
         self.nodes[name] = node
 
         if parent is None:
