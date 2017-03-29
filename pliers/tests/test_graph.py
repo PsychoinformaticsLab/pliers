@@ -83,6 +83,34 @@ def test_small_pipeline():
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
 
 
+def test_small_pipeline_json_spec():
+    pytest.importorskip('pytesseract')
+    filename = join(get_test_data_path(), 'image', 'button.jpg')
+    stim = ImageStim(filename)
+    nodes = {
+        'roots': [
+            {
+                "transformer": "TesseractConverter",
+                "children": [
+                    {
+                        "transformer": "LengthExtractor",
+                        "children": []
+                    }
+                ]
+            }
+        ]
+    }
+    graph = Graph(nodes)
+    result = list(graph.run([stim], merge=False))
+    history = result[0].history.to_df()
+    assert history.shape == (2, 8)
+    assert history.iloc[0]['result_class'] == 'TextStim'
+    result = merge_results(result)
+    assert (0, 'text[Exit]') in result['stim'].values
+    assert ('LengthExtractor', 'text_length') in result.columns
+    assert result[('LengthExtractor', 'text_length')].values[0] == 4
+
+
 @pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
 def test_big_pipeline():
     pytest.importorskip('pygraphviz')

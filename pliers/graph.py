@@ -20,11 +20,11 @@ class Node(object):
         transformer (Transformer): the Transformer instance at this node
     '''
 
-    def __init__(self, transformer, name):
+    def __init__(self, transformer, name, **kwargs):
         self.name = name
         self.children = []
         if isinstance(transformer, string_types):
-            transformer = get_transformer(transformer)
+            transformer = get_transformer(transformer, **kwargs)
         self.transformer = transformer
 
     def add_child(self, node):
@@ -42,6 +42,8 @@ class Graph(object):
         self.nodes = OrderedDict()
         self.roots = []
         if nodes is not None:
+            if isinstance(nodes, dict):
+                nodes = nodes['roots']
             self.add_nodes(nodes)
 
     def add_nodes(self, nodes, parent=None):
@@ -50,12 +52,12 @@ class Graph(object):
             self.add_node(parent=parent, **node_args)
 
     def add_node(self, transformer, name=None, children=None, parent=None,
-                 return_node=False):
+                 parameters=None, return_node=False):
 
         if name is None:
             name = id(transformer)
 
-        node = Node(transformer, name)
+        node = Node(transformer, name, parameters)
         self.nodes[name] = node
 
         if parent is None:
