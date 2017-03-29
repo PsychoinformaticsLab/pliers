@@ -88,7 +88,7 @@ def test_small_pipeline_json_spec():
     filename = join(get_test_data_path(), 'image', 'button.jpg')
     stim = ImageStim(filename)
     nodes = {
-        'roots': [
+        "roots": [
             {
                 "transformer": "TesseractConverter",
                 "children": [
@@ -101,6 +101,22 @@ def test_small_pipeline_json_spec():
         ]
     }
     graph = Graph(nodes)
+    result = list(graph.run([stim], merge=False))
+    history = result[0].history.to_df()
+    assert history.shape == (2, 8)
+    assert history.iloc[0]['result_class'] == 'TextStim'
+    result = merge_results(result)
+    assert (0, 'text[Exit]') in result['stim'].values
+    assert ('LengthExtractor', 'text_length') in result.columns
+    assert result[('LengthExtractor', 'text_length')].values[0] == 4
+
+
+def test_small_pipeline_json_spec2():
+    pytest.importorskip('pytesseract')
+    filename = join(get_test_data_path(), 'image', 'button.jpg')
+    stim = ImageStim(filename)
+    spec = join(get_test_data_path(), 'graph', 'simple_graph.json')
+    graph = Graph(spec=spec)
     result = list(graph.run([stim], merge=False))
     history = result[0].history.to_df()
     assert history.shape == (2, 8)

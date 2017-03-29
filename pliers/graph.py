@@ -5,6 +5,8 @@ from pliers.utils import listify, flatten, isgenerator
 from six import string_types
 from collections import OrderedDict
 
+import json
+
 try:
     import pygraphviz as pgv
 except:
@@ -20,11 +22,11 @@ class Node(object):
         transformer (Transformer): the Transformer instance at this node
     '''
 
-    def __init__(self, transformer, name, **kwargs):
+    def __init__(self, transformer, name, parameters=None):
         self.name = name
         self.children = []
         if isinstance(transformer, string_types):
-            transformer = get_transformer(transformer, **kwargs)
+            transformer = get_transformer(transformer, parameters)
         self.transformer = transformer
 
     def add_child(self, node):
@@ -37,7 +39,7 @@ class Node(object):
 
 class Graph(object):
 
-    def __init__(self, nodes=None):
+    def __init__(self, nodes=None, spec=None):
 
         self.nodes = OrderedDict()
         self.roots = []
@@ -45,6 +47,9 @@ class Graph(object):
             if isinstance(nodes, dict):
                 nodes = nodes['roots']
             self.add_nodes(nodes)
+        elif spec is not None:
+            with open(spec) as spec_file:
+                self.add_nodes(json.load(spec_file)['roots'])
 
     def add_nodes(self, nodes, parent=None):
         for n in nodes:
