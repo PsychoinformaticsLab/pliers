@@ -8,6 +8,8 @@ from pliers.graph import Graph
 from os.path import join
 from six import string_types
 
+import pytest
+
 
 def test_magic_loader():
     text_file = join(get_test_data_path(), 'text', 'sample_text.txt')
@@ -51,6 +53,7 @@ def test_convert_to_long():
     assert '100_300' not in long_timeline.columns
 
 
+@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_convert_to_long_graph():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'obama.jpg'))
