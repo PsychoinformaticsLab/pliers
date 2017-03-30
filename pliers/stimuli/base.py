@@ -136,7 +136,11 @@ def load_stims(source, dtype=None):
 
     if return_list:
         return stims
-    return None if stims[0] is None else stims[0]
+
+    if not stims or stims[0]:
+        return None
+    else:
+        return stims[0]
 
 
 def _log_transformation(source, result, trans=None):
