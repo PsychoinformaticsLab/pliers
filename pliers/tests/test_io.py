@@ -1,7 +1,10 @@
 from .utils import get_test_data_path
-from pliers.stimuli import (load_stims, AudioStim)
-from pliers.extractors import (STFTAudioExtractor, ExtractorResult)
+from pliers.stimuli import (load_stims, AudioStim, ImageStim)
+from pliers.extractors import (STFTAudioExtractor,
+                               GoogleVisionAPIFaceExtractor,
+                               ExtractorResult)
 from pliers.export import to_long_format
+from pliers.graph import Graph
 from os.path import join
 from six import string_types
 
@@ -46,3 +49,15 @@ def test_convert_to_long():
     assert 'feature' in long_timeline.columns
     assert 'extractor' in long_timeline.columns
     assert '100_300' not in long_timeline.columns
+
+
+def test_convert_to_long_graph():
+    image_dir = join(get_test_data_path(), 'image')
+    stim = ImageStim(join(image_dir, 'obama.jpg'))
+    ext = GoogleVisionAPIFaceExtractor()
+    g = Graph([ext])
+    timeline = g.run(stim)
+    long_timeline = to_long_format(timeline)
+    assert 'feature' in long_timeline.columns
+    assert 'extractor' in long_timeline.columns
+    assert 'history' in long_timeline.columns

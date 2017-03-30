@@ -25,9 +25,7 @@ def to_long_format(df):
         df = df.to_df()
 
     if isinstance(df.columns, pd.core.index.MultiIndex):
-        ids = list(set(df.columns) & set([('stim', ''),
-                                          ('onset', ''),
-                                          ('duration', '')]))
+        ids = filter(lambda x: x[1] is '', df.columns)
         variables = ['extractor', 'feature']
     else:
         df = df.reset_index() if not isinstance(
