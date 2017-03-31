@@ -63,7 +63,7 @@ class ExtractorResult(object):
         df.insert(0, 'duration', self.durations)
         df.insert(0, 'onset', self.onsets)
         if stim_name:
-            df['stim'] = self.stim.name
+            df['stim_name'] = self.stim.name
         return df
 
     @property
@@ -75,7 +75,8 @@ class ExtractorResult(object):
         self._history = history
 
     @classmethod
-    def merge_features(cls, results, extractor_names=True, stim_names=True):
+    def merge_features(cls, results, extractor_names=True, stim_names=True,
+                       source_files=True):
         ''' Merge a list of ExtractorResults bound to the same Stim into a
         single DataFrame.
 
@@ -126,7 +127,10 @@ class ExtractorResult(object):
         result.insert(0, 'history', str(results[0].history))
 
         if stim_names:
-            result.insert(0, 'stim', list(stims)[0])
+            result.insert(0, 'stim_name', list(stims)[0])
+
+        if source_files:
+            result.insert(0, 'source_file', results[0].history.to_df().iloc[0].source_file)
 
         return result.sort_values(['onset']).reset_index(drop=True)
 
