@@ -54,6 +54,9 @@ class ExtractorResult(object):
         if onsets is None:
             onsets = stim.onset
         self.onsets = onsets if onsets is not None else np.nan
+
+        if durations is None:
+            durations = stim.duration
         self.durations = durations if durations is not None else np.nan
 
     def to_df(self, stim_name=False):
@@ -118,9 +121,9 @@ class ExtractorResult(object):
                              "onsets and have the same number of rows. It is "
                              "not possible to merge mismatched instances.")
 
-        durations = result.xs('duration', level=1, axis=1)
-        if durations.apply(lambda x: x.nunique() <= 1, axis=1).all():
-            result = result.drop('duration', axis=1, level=1)
+        result = result.drop('duration', axis=1, level=1)
+        result.columns = pd.MultiIndex.from_tuples(result.columns.values)
+        result.insert(0, 'duration', results[0].durations)
 
         result.insert(0, 'class', results[0].stim.__class__.__name__)
         result.insert(0, 'filename', results[0].stim.filename)
