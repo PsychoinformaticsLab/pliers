@@ -43,10 +43,10 @@ def test_node_arg_parsing():
 def test_graph_smoke_test():
     filename = join(get_test_data_path(), 'image', 'obama.jpg')
     stim = ImageStim(filename)
-    nodes = [(BrightnessExtractor(), [], 'brightness')]
+    nodes = [(BrightnessExtractor(), [], 'brightness_node')]
     graph = Graph(nodes)
     result = graph.run(stim)
-    brightness = result[('BrightnessExtractor', 'brightness')].values[0]
+    brightness = result[('brightness_node', 'brightness')].values[0]
     assert_almost_equal(brightness, 0.556134, 5)
 
 
