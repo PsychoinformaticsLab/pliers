@@ -1,0 +1,13 @@
+{
+        "roots": [
+            {
+                "transformer": "TesseractConverter",
+                "children": [
+                    {
+                        "transformer": "LengthExtractor",
+                        "children": []
+                    }
+                ]
+            }
+        ]
+}
