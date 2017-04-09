@@ -79,7 +79,7 @@ class ExtractorResult(object):
 
     @classmethod
     def merge_features(cls, results, extractor_names=True, stim_names=True,
-                       source_files=True):
+                       source_files=True, flatten_columns=False):
         ''' Merge a list of ExtractorResults bound to the same Stim into a
         single DataFrame.
 
@@ -89,6 +89,9 @@ class ExtractorResult(object):
                 names in the top level of the column MultiIndex.
             stim_names (bool): if True, stores the associated Stim names in the
                 top level of the row MultiIndex.
+            flatten_columns (bool): if True, flattens the resultant column
+            MultiIndex such that feature columns are in the format
+            <extractor class>_<feature name>
         '''
 
         # Make sure all ExtractorResults are associated with same Stim.
@@ -135,7 +138,10 @@ class ExtractorResult(object):
         if source_files:
             result.insert(0, 'source_file', results[0].history.to_df().iloc[0].source_file)
 
-        return result.sort_values(['onset']).reset_index(drop=True)
+        result = result.sort_values(['onset']).reset_index(drop=True)
+        if flatten_columns:
+            result.columns = ['_'.join(str(lvl) for lvl in col).strip('_') for col in result.columns.values]
+        return result
 
     @classmethod
     def merge_stims(cls, results, stim_names=True):
@@ -144,7 +150,8 @@ class ExtractorResult(object):
         return pd.concat(results, axis=0).sort_values('onset').reset_index(drop=True)
 
 
-def merge_results(results, extractor_names=True, stim_names=True):
+def merge_results(results, extractor_names=True, stim_names=True,
+                  flatten_columns=False):
     ''' Merges a list of ExtractorResults instances and returns a pandas DF.
     Args:
         results (list, tuple): A list of ExtractorResult instances to merge.
@@ -152,6 +159,9 @@ def merge_results(results, extractor_names=True, stim_names=True):
             names in the top level of the column MultiIndex.
         stim_names (bool): if True, stores the associated Stim names in the
             top level of the row MultiIndex.
+        flatten_columns (bool): if True, flattens the resultant column
+            MultiIndex such that feature columns are in the format
+            <extractor class>_<feature name>
 
     Returns: a pandas DataFrame with features concatenated along the column
         axis and stims concatenated along the row axis.
@@ -164,7 +174,8 @@ def merge_results(results, extractor_names=True, stim_names=True):
 
     # First concatenate all features separately for each Stim
     for k, v in stims.items():
-        stims[k] = ExtractorResult.merge_features(v, extractor_names)
+        stims[k] = ExtractorResult.merge_features(v, extractor_names,
+                                            flatten_columns=flatten_columns)
 
     # Now concatenate all Stims
     stims = list(stims.values())

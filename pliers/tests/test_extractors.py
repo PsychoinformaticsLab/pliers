@@ -327,6 +327,25 @@ def test_merge_extractor_results():
     assert set(df['stim_name'].unique()) == set(['obama.jpg', 'apple.jpg'])
 
 
+def test_merge_extractor_results_flattened():
+    np.random.seed(100)
+    image_dir = join(get_test_data_path(), 'image')
+    stim1 = ImageStim(join(image_dir, 'apple.jpg'))
+    stim2 = ImageStim(join(image_dir, 'obama.jpg'))
+    de = DummyExtractor()
+    de_names = ['Extractor1', 'Extractor2', 'Extractor3']
+    results = [de.transform(stim1, name) for name in de_names]
+    results += [de.transform(stim2, name) for name in de_names]
+    df = merge_results(results, flatten_columns=True)
+    de_cols = ['Extractor1_0', 'Extractor1_1', 'Extractor1_2',
+               'Extractor2_0', 'Extractor2_1', 'Extractor2_2',
+               'Extractor3_0', 'Extractor3_1', 'Extractor3_2']
+    assert df.shape == (355, 16)
+    cols = ['onset', 'class', 'filename', 'history', 'stim_name', 'duration',
+            'source_file']
+    assert set(df.columns.unique().tolist()) == set(cols + de_cols)
+
+
 def test_tensor_flow_inception_v3_extractor():
     image_dir = join(get_test_data_path(), 'image')
     imgs = [join(image_dir, f) for f in ['apple.jpg', 'obama.jpg']]
