@@ -20,6 +20,7 @@ class Node(object):
     Args:
         name (str): Name of the node
         transformer (Transformer): the Transformer instance at this node
+        parameters (kwargs): parameters for initializing the Transformer
     '''
 
     def __init__(self, transformer, name=None, **parameters):

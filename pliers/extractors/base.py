@@ -89,9 +89,11 @@ class ExtractorResult(object):
                 names in the top level of the column MultiIndex.
             stim_names (bool): if True, stores the associated Stim names in the
                 top level of the row MultiIndex.
+            source_files (bool): if True, stores the full path of the stimuli
+                on disk in a new column.
             flatten_columns (bool): if True, flattens the resultant column
-            MultiIndex such that feature columns are in the format
-            <extractor class>_<feature name>
+                MultiIndex such that feature columns are in the format
+                <extractor class>_<feature name>
         '''
 
         # Make sure all ExtractorResults are associated with same Stim.
@@ -144,24 +146,18 @@ class ExtractorResult(object):
         return result
 
     @classmethod
-    def merge_stims(cls, results, stim_names=True):
+    def merge_stims(cls, results):
         results = [r.to_df(True) if isinstance(
             r, ExtractorResult) else r for r in results]
         return pd.concat(results, axis=0).sort_values('onset').reset_index(drop=True)
 
 
-def merge_results(results, extractor_names=True, stim_names=True,
-                  flatten_columns=False):
+def merge_results(results, **merge_feature_args):
     ''' Merges a list of ExtractorResults instances and returns a pandas DF.
     Args:
         results (list, tuple): A list of ExtractorResult instances to merge.
-        extractor_names (bool): if True, stores the associated Extractor
-            names in the top level of the column MultiIndex.
-        stim_names (bool): if True, stores the associated Stim names in the
-            top level of the row MultiIndex.
-        flatten_columns (bool): if True, flattens the resultant column
-            MultiIndex such that feature columns are in the format
-            <extractor class>_<feature name>
+        merge_feature_args (kwargs): Additional argument settings to use
+            when merging across features.
 
     Returns: a pandas DataFrame with features concatenated along the column
         axis and stims concatenated along the row axis.
@@ -174,10 +170,9 @@ def merge_results(results, extractor_names=True, stim_names=True,
 
     # First concatenate all features separately for each Stim
     for k, v in stims.items():
-        stims[k] = ExtractorResult.merge_features(v, extractor_names,
-                                            flatten_columns=flatten_columns)
+        stims[k] = ExtractorResult.merge_features(v, **merge_feature_args)
 
     # Now concatenate all Stims
     stims = list(stims.values())
     return stims[0] if len(stims) == 1 else \
-        ExtractorResult.merge_stims(stims, stim_names)
+        ExtractorResult.merge_stims(stims)
