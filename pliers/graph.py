@@ -22,12 +22,15 @@ class Node(object):
         transformer (Transformer): the Transformer instance at this node
     '''
 
-    def __init__(self, transformer, name, **parameters):
+    def __init__(self, transformer, name=None, **parameters):
         self.name = name
         self.children = []
         if isinstance(transformer, string_types):
             transformer = get_transformer(transformer, **parameters)
         self.transformer = transformer
+        if name is not None:
+            self.transformer.name = name
+        self.id = id(transformer)
 
     def add_child(self, node):
         ''' Append a child to the list of children. '''
@@ -59,16 +62,13 @@ class Graph(object):
     def add_node(self, transformer, name=None, children=None, parent=None,
                  parameters={}, return_node=False):
 
-        if name is None:
-            name = id(transformer)
-
         node = Node(transformer, name, **parameters)
-        self.nodes[name] = node
+        self.nodes[node.id] = node
 
         if parent is None:
             self.roots.append(node)
         else:
-            parent = self.nodes[parent.name]
+            parent = self.nodes[parent.id]
             parent.add_child(node)
 
         if children is not None:

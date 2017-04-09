@@ -43,10 +43,10 @@ def test_node_arg_parsing():
 def test_graph_smoke_test():
     filename = join(get_test_data_path(), 'image', 'obama.jpg')
     stim = ImageStim(filename)
-    nodes = [(BrightnessExtractor(), [], 'brightness')]
+    nodes = [(BrightnessExtractor(), [], 'brightness_node')]
     graph = Graph(nodes)
     result = graph.run(stim)
-    brightness = result[('BrightnessExtractor', 'brightness')].values[0]
+    brightness = result[('brightness_node', 'brightness')].values[0]
     assert_almost_equal(brightness, 0.556134, 5)
 
 
@@ -78,7 +78,7 @@ def test_small_pipeline():
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
     result = merge_results(result)
-    assert (0, 'text[Exit]') in result['stim'].values
+    assert (0, 'text[Exit]') in result['stim_name'].values
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
 
@@ -106,7 +106,7 @@ def test_small_pipeline_json_spec():
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
     result = merge_results(result)
-    assert (0, 'text[Exit]') in result['stim'].values
+    assert (0, 'text[Exit]') in result['stim_name'].values
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
 
@@ -122,7 +122,7 @@ def test_small_pipeline_json_spec2():
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
     result = merge_results(result)
-    assert (0, 'text[Exit]') in result['stim'].values
+    assert (0, 'text[Exit]') in result['stim_name'].values
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
 
@@ -154,7 +154,7 @@ def test_small_pipeline_json_spec3():
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
     result = merge_results(result)
-    assert (0, 'text[Exit\n]') in result['stim'].values
+    assert (0, 'text[Exit\n]') in result['stim_name'].values
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
 
@@ -183,8 +183,8 @@ def test_big_pipeline():
     assert ('LengthExtractor', 'text_length') in result.columns
     assert ('VibranceExtractor', 'vibrance') in result.columns
     # assert not result[('onset', '')].isnull().any()
-    assert 'text[negotiations]' in result['stim'].values
-    assert 'frame[90]' in result['stim'].values
+    assert 'text[negotiations]' in result['stim_name'].values
+    assert 'frame[90]' in result['stim_name'].values
 
 
 @pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
@@ -241,5 +241,5 @@ def test_big_pipeline_json():
     assert ('LengthExtractor', 'text_length') in result.columns
     assert ('VibranceExtractor', 'vibrance') in result.columns
     # assert not result[('onset', '')].isnull().any()
-    assert 'text[negotiations]' in result['stim'].values
-    assert 'frame[90]' in result['stim'].values
+    assert 'text[negotiations]' in result['stim_name'].values
+    assert 'frame[90]' in result['stim_name'].values

@@ -83,7 +83,7 @@ def test_text_extractor():
                              variables=['length', 'frequency'])
     assert td.data.shape == (7, 2)
     result = td.transform(stim)[2].to_df()
-    assert np.isnan(result.iloc[0, 1])
+    assert result.iloc[0, 1] == 1
     assert result.shape == (1, 4)
     assert np.isclose(result['frequency'][0], 11.729, 1e-5)
 
@@ -289,9 +289,10 @@ def test_merge_extractor_results_by_features():
     de_names = ['Extractor1', 'Extractor2', 'Extractor3']
     results = [de.transform(stim, name) for name in de_names]
     df = ExtractorResult.merge_features(results)
-    assert df.shape == (177, 14)
-    assert df.columns.levels[1].unique().tolist() == ['duration', 0, 1, 2, '']
-    cols = cols = ['onset', 'class', 'filename', 'history', 'stim']
+    assert df.shape == (177, 16)
+    assert df.columns.levels[1].unique().tolist() == [0, 1, 2, '']
+    cols = ['onset', 'duration', 'class', 'filename', 'history', 'stim_name',
+            'source_file']
     assert df.columns.levels[0].unique().tolist() == de_names + cols
 
 
@@ -304,8 +305,8 @@ def test_merge_extractor_results_by_stims():
     df = ExtractorResult.merge_stims(results)
     assert df.shape == (200, 6)
     assert set(df.columns.tolist()) == set(
-        ['onset', 'duration', 0, 1, 2, 'stim'])
-    assert set(df['stim'].unique()) == set(['obama.jpg', 'apple.jpg'])
+        ['onset', 'duration', 0, 1, 2, 'stim_name'])
+    assert set(df['stim_name'].unique()) == set(['obama.jpg', 'apple.jpg'])
 
 
 def test_merge_extractor_results():
@@ -318,11 +319,12 @@ def test_merge_extractor_results():
     results = [de.transform(stim1, name) for name in de_names]
     results += [de.transform(stim2, name) for name in de_names]
     df = merge_results(results)
-    assert df.shape == (355, 14)
-    cols = ['onset', 'class', 'filename', 'history', 'stim']
+    assert df.shape == (355, 16)
+    cols = ['onset', 'duration', 'class', 'filename', 'history', 'stim_name',
+            'source_file']
     assert df.columns.levels[0].unique().tolist() == de_names + cols
-    assert df.columns.levels[1].unique().tolist() == ['duration', 0, 1, 2, '']
-    assert set(df['stim'].unique()) == set(['obama.jpg', 'apple.jpg'])
+    assert df.columns.levels[1].unique().tolist() == [0, 1, 2, '']
+    assert set(df['stim_name'].unique()) == set(['obama.jpg', 'apple.jpg'])
 
 
 def test_tensor_flow_inception_v3_extractor():

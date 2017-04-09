@@ -54,6 +54,9 @@ class ExtractorResult(object):
         if onsets is None:
             onsets = stim.onset
         self.onsets = onsets if onsets is not None else np.nan
+
+        if durations is None:
+            durations = stim.duration
         self.durations = durations if durations is not None else np.nan
 
     def to_df(self, stim_name=False):
@@ -63,7 +66,7 @@ class ExtractorResult(object):
         df.insert(0, 'duration', self.durations)
         df.insert(0, 'onset', self.onsets)
         if stim_name:
-            df['stim'] = self.stim.name
+            df['stim_name'] = self.stim.name
         return df
 
     @property
@@ -75,7 +78,8 @@ class ExtractorResult(object):
         self._history = history
 
     @classmethod
-    def merge_features(cls, results, extractor_names=True, stim_names=True):
+    def merge_features(cls, results, extractor_names=True, stim_names=True,
+                       source_files=True):
         ''' Merge a list of ExtractorResults bound to the same Stim into a
         single DataFrame.
 
@@ -117,16 +121,19 @@ class ExtractorResult(object):
                              "onsets and have the same number of rows. It is "
                              "not possible to merge mismatched instances.")
 
-        durations = result.xs('duration', level=1, axis=1)
-        if durations.apply(lambda x: x.nunique() <= 1, axis=1).all():
-            result = result.drop('duration', axis=1, level=1)
+        result = result.drop('duration', axis=1, level=1)
+        result.columns = pd.MultiIndex.from_tuples(result.columns.values)
+        result.insert(0, 'duration', results[0].durations)
 
         result.insert(0, 'class', results[0].stim.__class__.__name__)
         result.insert(0, 'filename', results[0].stim.filename)
         result.insert(0, 'history', str(results[0].history))
 
         if stim_names:
-            result.insert(0, 'stim', list(stims)[0])
+            result.insert(0, 'stim_name', list(stims)[0])
+
+        if source_files:
+            result.insert(0, 'source_file', results[0].history.to_df().iloc[0].source_file)
 
         return result.sort_values(['onset']).reset_index(drop=True)
 
