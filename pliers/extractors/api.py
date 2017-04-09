@@ -46,8 +46,8 @@ class IndicoAPIExtractor(Extractor):
         ico.config.api_key = self.api_key
 
         if models is None:
-            raise ValueError("Must enter a valid list of models to use of "
-                             "possible types{}".format(", ".join(self.allowed_models)))
+            raise ValueError("Must enter a valid list of models to use. "
+                             "Valid models: {}".format(", ".join(self.allowed_models)))
         for model in models:
             if model not in self.allowed_models:
                 raise ValueError(
