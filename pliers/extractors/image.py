@@ -18,9 +18,6 @@ class BrightnessExtractor(ImageExtractor):
 
     ''' Gets the average luminosity of the pixels in the image '''
 
-    def __init__(self):
-        super(self.__class__, self).__init__()
-
     def _extract(self, stim):
         data = stim.data
         brightness = np.amax(data, 2).mean() / 255.0
@@ -32,9 +29,6 @@ class BrightnessExtractor(ImageExtractor):
 class SharpnessExtractor(ImageExtractor):
 
     ''' Gets the degree of blur/sharpness of the image '''
-
-    def __init__(self):
-        super(self.__class__, self).__init__()
 
     def _extract(self, stim):
         import cv2
@@ -53,9 +47,6 @@ class VibranceExtractor(ImageExtractor):
 
     ''' Gets the variance of color channels of the image '''
 
-    def __init__(self):
-        super(self.__class__, self).__init__()
-
     def _extract(self, stim):
         data = stim.data
         vibrance = np.var(data, 2).mean()
@@ -67,9 +58,6 @@ class SaliencyExtractor(ImageExtractor):
 
     ''' Determines the saliency of the image using Itti & Koch (1998) algorithm
     implemented in pySaliencyMap '''
-
-    def __init__(self):
-        super(self.__class__, self).__init__()
 
     def _extract(self, stim):
         from pliers.external.pysaliency import pySaliencyMap

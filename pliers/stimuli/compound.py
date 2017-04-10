@@ -111,6 +111,5 @@ class TranscribedAudioCompoundStim(CompoundStim):
     _allow_multiple = False
     _primary = AudioStim
 
-    # def __init__(self, filename, transcription, onset=None, **kwargs):
     def __init__(self, audio, text):
         super(TranscribedAudioCompoundStim, self).__init__(elements=[audio, text])

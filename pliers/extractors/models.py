@@ -6,12 +6,11 @@ import tarfile
 import subprocess
 import re
 import requests
-from scipy.misc import imsave
-from pliers.stimuli.image import ImageStim
-from pliers.extractors.base import Extractor, ExtractorResult
+from pliers.extractors.image import ImageExtractor
+from pliers.extractors.base import ExtractorResult
 
 
-class TensorFlowInceptionV3Extractor(Extractor):
+class TensorFlowInceptionV3Extractor(ImageExtractor):
 
     ''' Labels objects in images using a pretrained Inception V3 architecture
      implemented in TensorFlow.
@@ -24,8 +23,6 @@ class TensorFlowInceptionV3Extractor(Extractor):
         num_predictions (int): Number of top predicted labels to retain for
             each image.
      '''
-
-    _input_type = ImageStim
 
     def __init__(self, model_dir=None, data_url=None, num_predictions=5):
 

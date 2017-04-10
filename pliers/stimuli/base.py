@@ -50,15 +50,6 @@ class Stim(with_metaclass(ABCMeta)):
         return hash((self.filename, self.name, self.onset, self.duration, id(self)))
 
 
-class CollectionStimMixin(with_metaclass(ABCMeta)):
-
-    ''' A simple mixin that enforces the use of iteration over sub-stims. '''
-
-    @abstractmethod
-    def __iter__(self):
-        pass
-
-
 def _get_stim_class(name):
 
     name = name.lower().replace('_', '')

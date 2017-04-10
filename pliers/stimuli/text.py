@@ -5,7 +5,7 @@ import pandas as pd
 from six import string_types
 from six.moves.urllib.request import urlopen
 from pliers.support.decorators import requires_nltk_corpus
-from .base import Stim, CollectionStimMixin
+from .base import Stim
 
 
 class TextStim(Stim):
@@ -31,7 +31,7 @@ class TextStim(Stim):
         super(TextStim, self).__init__(filename, onset, duration, name)
 
 
-class ComplexTextStim(Stim, CollectionStimMixin):
+class ComplexTextStim(Stim):
 
     ''' A collection of text stims (e.g., a story), typically ordered and with
     onsets and/or durations associated with each element.
