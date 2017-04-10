@@ -1,6 +1,5 @@
 ''' Converter classes that operate on VideoStim inputs. '''
 
-import os
 from pliers.stimuli.video import VideoStim, DerivedVideoStim, VideoFrameStim
 from pliers.stimuli.audio import AudioStim
 from pliers.utils import progress_bar_wrapper

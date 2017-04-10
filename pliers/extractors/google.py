@@ -113,6 +113,7 @@ class GoogleVisionAPIPropertyExtractor(GoogleVisionAPIExtractor):
             values.append(color['score'])
         return features, values
 
+
 class GoogleVisionAPISafeSearchExtractor(GoogleVisionAPIExtractor):
 
     ''' Extracts safe search detection using the Google Cloud Vision API. '''

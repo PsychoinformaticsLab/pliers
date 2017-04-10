@@ -152,7 +152,7 @@ class NumUniqueWordsExtractor(TextExtractor):
     _log_attributes = ('tokenizer',)
 
     def __init__(self, tokenizer=None):
-        TextExtractor.__init__(self)
+        super(NumUniqueWordsExtractor, self).__init__()
         self.tokenizer = tokenizer
 
     @requires_nltk_corpus

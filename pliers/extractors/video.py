@@ -28,7 +28,7 @@ class DenseOpticalFlowExtractor(VideoExtractor):
     '''
 
     def __init__(self, show=False):
-        super(self.__class__, self).__init__()
+        super(DenseOpticalFlowExtractor, self).__init__()
         self.show = show
 
     def _extract(self, stim):

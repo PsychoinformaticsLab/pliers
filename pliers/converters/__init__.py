@@ -1,5 +1,5 @@
 from .api import (WitTranscriptionConverter, GoogleSpeechAPIConverter,
-                 IBMSpeechAPIConverter)
+                  IBMSpeechAPIConverter)
 from .base import Converter, get_converter
 from .google import GoogleVisionAPITextConverter
 from .image import TesseractConverter
