@@ -79,7 +79,7 @@ class ExtractorResult(object):
 
     @classmethod
     def merge_features(cls, results, extractor_names=True, stim_names=True,
-                       source_files=True):
+                       source_files=True, flatten_columns=False):
         ''' Merge a list of ExtractorResults bound to the same Stim into a
         single DataFrame.
 
@@ -91,6 +91,9 @@ class ExtractorResult(object):
                 top level of the row MultiIndex.
             source_files (bool): if True, stores the full path of the stimuli
                 on disk in a new column.
+            flatten_columns (bool): if True, flattens the resultant column
+                MultiIndex such that feature columns are in the format
+                <extractor class>_<feature name>
         '''
 
         # Make sure all ExtractorResults are associated with same Stim.
@@ -137,7 +140,10 @@ class ExtractorResult(object):
         if source_files:
             result.insert(0, 'source_file', results[0].history.to_df().iloc[0].source_file)
 
-        return result.sort_values(['onset']).reset_index(drop=True)
+        result = result.sort_values(['onset']).reset_index(drop=True)
+        if flatten_columns:
+            result.columns = ['_'.join(str(lvl) for lvl in col).strip('_') for col in result.columns.values]
+        return result
 
     @classmethod
     def merge_stims(cls, results):
