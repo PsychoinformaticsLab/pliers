@@ -76,7 +76,7 @@ def _get_stim_class(name):
     raise KeyError("No Stim class matches '%s' (case-insensitive)." % name)
 
 
-def load_stims(source, dtype=None):
+def load_stims(source, dtype=None, fail_silently=False):
     """ Load one or more stimuli directly from file, inferring/extracting
     metadata as needed.
     Args:
@@ -85,6 +85,8 @@ def load_stims(source, dtype=None):
         dtype (str): The type of stim to load. If dtype is None, relies on the
             filename extension for guidance. If dtype is provided, must be
             one of 'video', 'image', 'audio', or 'text'.
+        fail_silently (bool): If True do not raise error when trying to load a
+            missing stimulus from a list of sources.
     Returns: A list of Stims.
     """
     from .video import VideoStim, ImageStim
@@ -133,14 +135,14 @@ def load_stims(source, dtype=None):
                 load_file(f)
         elif exists(s):
             load_file(s)
+        else:
+            if not (return_list and fail_silently):
+                raise IOError("File not found")
 
     if return_list:
         return stims
 
-    if not stims or stims[0]:
-        return None
-    else:
-        return stims[0]
+    return stims[0]
 
 
 def _log_transformation(source, result, trans=None):

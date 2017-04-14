@@ -4,6 +4,7 @@ from pliers.extractors import (STFTAudioExtractor, ExtractorResult)
 from pliers.export import to_long_format
 from os.path import join
 from six import string_types
+import pytest
 
 
 def test_magic_loader():
@@ -28,6 +29,23 @@ def test_magic_loader2():
     assert len(stims) == 5
     assert stims[1].fps == 12
     assert stims[3].data.shape == (240, 240, 3)
+
+
+def test_loader_nonexistent():
+    text_file = 'this/doesnt/exist.txt'
+    with pytest.raises(IOError):
+        stims = load_stims(text_file)
+
+    audio_file = 'no/audio/here.wav'
+    with pytest.raises(IOError):
+        stims = load_stims([text_file, audio_file])
+
+    text_file = join(get_test_data_path(), 'text', 'sample_text.txt')
+    stims = load_stims([text_file, audio_file], fail_silently=True)
+    assert len(stims) == 1
+
+    with pytest.raises(IOError):
+        stims = load_stims(audio_file, fail_silently=True)
 
 
 def test_convert_to_long():
