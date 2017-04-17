@@ -107,8 +107,8 @@ class DerivedVideoStim(VideoStim):
             original VideoStim.
     """
 
-    def __init__(self, filename, frames, frame_index=None):
-        super(DerivedVideoStim, self).__init__(filename)
+    def __init__(self, filename, frames, frame_index=None, onset=None):
+        super(DerivedVideoStim, self).__init__(filename, onset=onset)
         self._frames = frames
         self.frame_index = frame_index
         self.name += '_derived'

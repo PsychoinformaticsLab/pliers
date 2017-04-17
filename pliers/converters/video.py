@@ -14,7 +14,7 @@ class VideoToAudioConverter(Converter):
     _output_type = AudioStim
 
     def _convert(self, video):
-        return AudioStim(clip=video.clip.audio)
+        return AudioStim(clip=video.clip.audio, onset=video.onset)
 
 
 class VideoToDerivedVideoConverter(Converter):
@@ -85,7 +85,11 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
                 dur = (video.n_frames / video.fps) - onsets[i]
 
             elem = VideoFrameStim(video=video, frame_num=f, duration=dur)
+            offset = 0.0 if video.onset is None else video.onset
+            elem.onset = offset + elem.onset
             frames.append(elem)
 
-        return DerivedVideoStim(filename=video.filename, frames=frames,
-                                frame_index=frame_index)
+        return DerivedVideoStim(filename=video.filename,
+                                frames=frames,
+                                frame_index=frame_index,
+                                onset=video.onset)
