@@ -26,6 +26,8 @@ class ImageStim(Stim):
             if no filename is passed.
     '''
 
+    _default_file_extension = '.png'
+
     def __init__(self, filename=None, onset=None, duration=None, data=None, url=None):
         if data is None and isinstance(filename, six.string_types):
             data = imread(filename)
@@ -35,6 +37,9 @@ class ImageStim(Stim):
             filename = url
         self.data = data
         super(ImageStim, self).__init__(filename, onset=onset, duration=duration)
+
+    def save(self, path):
+        imsave(path, self.data)
 
     @contextmanager
     def get_filename(self):

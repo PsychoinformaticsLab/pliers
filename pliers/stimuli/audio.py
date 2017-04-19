@@ -54,6 +54,9 @@ class AudioStim(Stim):
         self.__dict__ = d
         self._load_clip()
 
+    def save(self, path):
+        self.clip.write_audiofile(path)
+
     @contextmanager
     def get_filename(self):
         if self.filename is None or not os.path.exists(self.filename):

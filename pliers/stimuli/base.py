@@ -38,6 +38,10 @@ class Stim(with_metaclass(ABCMeta)):
             name = '' if self.filename is None else basename(self.filename)
         self.name = name
 
+    @abstractmethod
+    def save(self, path):
+        pass
+
     @property
     def history(self):
         return self._history

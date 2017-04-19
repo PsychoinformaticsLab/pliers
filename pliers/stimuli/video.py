@@ -84,6 +84,9 @@ class VideoStim(Stim):
             index = int(onset * self.fps)
         return VideoFrameStim(self, index, data=self.clip.get_frame(onset))
 
+    def save(self, path):
+        self.clip.write_videofile(path)
+
     @contextmanager
     def get_filename(self):
         if self.filename is None or not os.path.exists(self.filename):
