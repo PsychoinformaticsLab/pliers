@@ -4,9 +4,6 @@ from __future__ import division
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from .base import Stim
 from .image import ImageStim
-from contextlib import contextmanager
-import os
-import tempfile
 
 
 class VideoFrameStim(ImageStim):
@@ -88,16 +85,6 @@ class VideoStim(Stim):
 
     def save(self, path):
         self.clip.write_videofile(path)
-
-    @contextmanager
-    def get_filename(self):
-        if self.filename is None or not os.path.exists(self.filename):
-            tf = tempfile.mktemp() + '.mp4'
-            self.clip.write_videofile(tf)
-            yield tf
-            os.remove(tf)
-        else:
-            yield self.filename
 
 
 class DerivedVideoStim(VideoStim):

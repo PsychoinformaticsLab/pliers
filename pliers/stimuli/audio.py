@@ -2,9 +2,6 @@
 
 from .base import Stim
 from moviepy.audio.io.AudioFileClip import AudioFileClip
-from contextlib import contextmanager
-import tempfile
-import os
 
 
 class AudioStim(Stim):
@@ -58,13 +55,3 @@ class AudioStim(Stim):
 
     def save(self, path):
         self.clip.write_audiofile(path)
-
-    @contextmanager
-    def get_filename(self):
-        if self.filename is None or not os.path.exists(self.filename):
-            tf = tempfile.mktemp() + '.wav'
-            self.clip.write_audiofile(tf)
-            yield tf
-            os.remove(tf)
-        else:
-            yield self.filename
