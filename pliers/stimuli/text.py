@@ -129,6 +129,14 @@ class ComplexTextStim(Stim):
                 elem = TextStim(filename, r['text'], r['onset'], duration)
             self._elements.append(elem)
 
+    def save(self, path):
+        with open(path, 'w') as f:
+            f.write('onset\ttext\tduration\n')
+            for elem in self._elements:
+                f.write('{}\t{}\t{}\n'.format(elem.onset,
+                                              elem.text,
+                                              elem.duration))
+
     def _from_srt(self, filename):
         import pysrt
 

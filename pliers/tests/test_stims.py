@@ -207,3 +207,7 @@ def test_get_filename():
     with image.get_filename() as filename:
         assert exists(filename)
     assert not exists(filename)
+
+
+def test_save():
+    pass
