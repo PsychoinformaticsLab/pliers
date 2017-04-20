@@ -2,9 +2,6 @@
 
 from .base import Stim
 from moviepy.audio.io.AudioFileClip import AudioFileClip
-from contextlib import contextmanager
-import tempfile
-import os
 
 
 class AudioStim(Stim):
@@ -18,6 +15,8 @@ class AudioStim(Stim):
         sampling_rate (int): Sampling rate of clip, in hertz.
 
     '''
+
+    _default_file_extension = '.wav'
 
     def __init__(self, filename=None, onset=None, sampling_rate=44100, url=None, clip=None):
         if url is not None:
@@ -54,12 +53,5 @@ class AudioStim(Stim):
         self.__dict__ = d
         self._load_clip()
 
-    @contextmanager
-    def get_filename(self):
-        if self.filename is None or not os.path.exists(self.filename):
-            tf = tempfile.mktemp() + '.wav'
-            self.clip.write_audiofile(tf)
-            yield tf
-            os.remove(tf)
-        else:
-            yield self.filename
+    def save(self, path):
+        self.clip.write_audiofile(path)
