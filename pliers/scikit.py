@@ -1,3 +1,5 @@
+from pliers.extractors import ExtractorResult
+
 from sklearn.base import TransformerMixin
 
 
@@ -20,5 +22,15 @@ class PliersTransformer(TransformerMixin):
         return self.transform(stimulus_files)
 
     def transform(self, stimulus_files):
-        # TODO: add more postprocessing of ExtractorResult
-        return self.transformer.transform(stimulus_files)
+        result = self.transformer.transform(stimulus_files)
+
+        if isinstance(result, ExtractorResult):
+            result = result.to_df()
+
+        result.drop(['onset', 'duration', 'history', 'class',
+                     'filename', 'stim_name', 'source_file'],
+                    axis=1,
+                    inplace=True,
+                    errors='ignore')
+
+        return result.as_matrix()
