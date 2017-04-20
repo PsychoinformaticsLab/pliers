@@ -125,6 +125,9 @@ class Graph(object):
 
         g.draw(filename, prog='dot')
 
+    def transform(self, stims):
+        return self.run(stims)
+
     def run(self, stim, merge=True):
         results = list(chain(*[self.run_node(n, stim) for n in self.roots]))
         results = list(flatten(results))
