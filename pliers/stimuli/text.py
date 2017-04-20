@@ -21,6 +21,8 @@ class TextStim(Stim):
         duration (float): Optional duration of the TextStim, in seconds.
     '''
 
+    _default_file_extension = '.txt'
+
     def __init__(self, filename=None, text=None, onset=None, duration=None, url=None):
         if filename is not None and text is None:
             text = open(filename).read()
@@ -79,6 +81,8 @@ class ComplexTextStim(Stim):
         language (str): The language to use; passed to nltk. Only used if
             tokenizer is None. Defaults to English. Ignored if text is None.
     '''
+
+    _default_file_extension = '.txt'
 
     def __init__(self, filename=None, onset=None, duration=None, columns=None,
                  default_duration=None, elements=None, text=None, unit='word',

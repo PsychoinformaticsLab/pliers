@@ -43,6 +43,8 @@ class VideoStim(Stim):
             to keep track of.
     '''
 
+    _default_file_extension = '.mp4'
+
     def __init__(self, filename=None, onset=None, url=None):
         if url is not None:
             filename = url

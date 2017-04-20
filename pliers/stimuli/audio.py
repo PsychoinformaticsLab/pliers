@@ -19,6 +19,8 @@ class AudioStim(Stim):
 
     '''
 
+    _default_file_extension = '.wav'
+
     def __init__(self, filename=None, onset=None, sampling_rate=44100, url=None, clip=None):
         if url is not None:
             filename = url
