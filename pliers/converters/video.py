@@ -86,7 +86,7 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
 
             elem = VideoFrameStim(video=video, frame_num=f, duration=dur)
             offset = 0.0 if video.onset is None else video.onset
-            elem.onset = offset + elem.onset
+            elem.onset = offset + onsets[i]
             frames.append(elem)
 
         return DerivedVideoStim(filename=video.filename,
