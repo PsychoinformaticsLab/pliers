@@ -42,7 +42,8 @@ before_install:
 
 install:
 - pip install --upgrade --ignore-installed setuptools
-- pip install python-magic moviepy coveralls pytest-cov pysrt xlrd clarifai pytesseract
+- pip install python-magic coveralls pytest-cov pysrt xlrd clarifai pytesseract
+- pip install moviepy==0.2.2.13
 - pip install SpeechRecognition IndicoIo pygraphviz
 
 before_script:
