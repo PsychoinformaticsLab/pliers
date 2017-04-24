@@ -1,9 +1,9 @@
 from pliers.extractors import ExtractorResult
 
-from sklearn.base import TransformerMixin
+from sklearn.base import TransformerMixin, BaseEstimator
 
 
-class PliersTransformer(TransformerMixin):
+class PliersTransformer(BaseEstimator, TransformerMixin):
 
     ''' Simple wrapper for using pliers within a sklearn workflow.
     Args:
