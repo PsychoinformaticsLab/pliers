@@ -27,6 +27,8 @@ class VideoFrameStim(ImageStim):
         spf = 1. / video.fps
         duration = spf if duration is None else duration
         onset = frame_num * spf
+        if video.onset:
+            onset += video.onset
         super(VideoFrameStim, self).__init__(filename, onset, duration, data)
         if data is None:
             self.data = self.video.get_frame(index=frame_num).data
