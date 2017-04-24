@@ -4,9 +4,6 @@ from __future__ import division
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from .base import Stim
 from .image import ImageStim
-from contextlib import contextmanager
-import os
-import tempfile
 
 
 class VideoFrameStim(ImageStim):
@@ -42,6 +39,8 @@ class VideoStim(Stim):
             respect to some more general context or timeline the user wishes
             to keep track of.
     '''
+
+    _default_file_extension = '.mp4'
 
     def __init__(self, filename=None, onset=None, url=None):
         if url is not None:
@@ -84,15 +83,8 @@ class VideoStim(Stim):
             index = int(onset * self.fps)
         return VideoFrameStim(self, index, data=self.clip.get_frame(onset))
 
-    @contextmanager
-    def get_filename(self):
-        if self.filename is None or not os.path.exists(self.filename):
-            tf = tempfile.mktemp() + '.mp4'
-            self.clip.write_videofile(tf)
-            yield tf
-            os.remove(tf)
-        else:
-            yield self.filename
+    def save(self, path):
+        self.clip.write_videofile(path)
 
 
 class DerivedVideoStim(VideoStim):

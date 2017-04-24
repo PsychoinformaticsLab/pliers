@@ -21,6 +21,8 @@ class TextStim(Stim):
         duration (float): Optional duration of the TextStim, in seconds.
     '''
 
+    _default_file_extension = '.txt'
+
     def __init__(self, filename=None, text=None, onset=None, duration=None, url=None):
         if filename is not None and text is None:
             text = open(filename).read()
@@ -29,6 +31,10 @@ class TextStim(Stim):
         self.text = text
         name = 'text[%s]' % text[:40]  # Truncate at 40 chars
         super(TextStim, self).__init__(filename, onset, duration, name)
+
+    def save(self, path):
+        with open(path, 'w') as f:
+            f.write(self.text)
 
 
 class ComplexTextStim(Stim):
@@ -75,6 +81,8 @@ class ComplexTextStim(Stim):
         language (str): The language to use; passed to nltk. Only used if
             tokenizer is None. Defaults to English. Ignored if text is None.
     '''
+
+    _default_file_extension = '.txt'
 
     def __init__(self, filename=None, onset=None, duration=None, columns=None,
                  default_duration=None, elements=None, text=None, unit='word',
@@ -124,6 +132,14 @@ class ComplexTextStim(Stim):
                     duration = default_duration
                 elem = TextStim(filename, r['text'], r['onset'], duration)
             self._elements.append(elem)
+
+    def save(self, path):
+        with open(path, 'w') as f:
+            f.write('onset\ttext\tduration\n')
+            for elem in self._elements:
+                f.write('{}\t{}\t{}\n'.format(elem.onset,
+                                              elem.text,
+                                              elem.duration))
 
     def _from_srt(self, filename):
         import pysrt

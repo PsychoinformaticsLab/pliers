@@ -8,9 +8,12 @@ from six import with_metaclass, string_types
 from six.moves.urllib.request import urlopen
 from six.moves.urllib.parse import urlparse
 from collections import namedtuple
+from contextlib import contextmanager
 from pliers import config
 from pliers.utils import isiterable
 import pandas as pd
+import os
+import tempfile
 
 
 class Stim(with_metaclass(ABCMeta)):
@@ -37,6 +40,20 @@ class Stim(with_metaclass(ABCMeta)):
         if name is None:
             name = '' if self.filename is None else basename(self.filename)
         self.name = name
+
+    @abstractmethod
+    def save(self, path):
+        pass
+
+    @contextmanager
+    def get_filename(self):
+        if self.filename is None or not os.path.exists(self.filename):
+            tf = tempfile.mktemp() + self._default_file_extension
+            self.save(tf)
+            yield tf
+            os.remove(tf)
+        else:
+            yield self.filename
 
     @property
     def history(self):
