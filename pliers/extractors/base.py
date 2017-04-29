@@ -132,7 +132,7 @@ class ExtractorResult(object):
 
         result.insert(0, 'class', results[0].stim.__class__.__name__)
         result.insert(0, 'filename', results[0].stim.filename)
-        result.insert(0, 'history', str(results[0].history))
+        result.insert(0, 'history', str(results[0].stim.history))
 
         if stim_names:
             result.insert(0, 'stim_name', list(stims)[0])
