@@ -67,7 +67,7 @@ class GoogleSpeechAPIConverter(SpeechRecognitionAPIConverter):
     def _convert(self, audio):
         with open(self.api_key) as json_data:
             self.api_key = json_data.read()
-        super(GoogleSpeechAPIConverter, self)._convert(audio)
+        return super(GoogleSpeechAPIConverter, self)._convert(audio)
 
 
 class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
