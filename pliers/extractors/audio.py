@@ -80,7 +80,8 @@ class STFTAudioExtractor(AudioExtractor):
             self.freq_bins = bins
 
         features = ['%d_%d' % fb for fb in self.freq_bins]
-        index = [tb for tb in time_bins]
+        offset = 0.0 if stim.onset is None else stim.onset
+        index = [tb + offset for tb in time_bins]
         values = np.zeros((len(index), len(features)))
         for i, fb in enumerate(self.freq_bins):
             start, stop = fb

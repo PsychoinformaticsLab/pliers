@@ -59,7 +59,7 @@ def test_image_stim(dummy_iter_extractor):
 def test_video_stim():
     ''' Test VideoStim functionality. '''
     filename = join(get_test_data_path(), 'video', 'small.mp4')
-    video = VideoStim(filename)
+    video = VideoStim(filename, onset=4.2)
     assert video.fps == 30
     assert video.n_frames in (167, 168)
     assert video.width == 560
@@ -76,6 +76,7 @@ def test_video_stim():
     f2 = video.get_frame(index=100)
     assert isinstance(f2, VideoFrameStim)
     assert isinstance(f2.onset, float)
+    assert f2.onset > 4.2
     f2.data.shape == (320, 560, 3)
 
 
@@ -100,6 +101,9 @@ def test_complex_text_stim():
     assert len(stim.elements) == 4
     assert stim.elements[2].onset == 34
     assert stim.elements[2].duration == 0.2
+    stim = ComplexTextStim(join(text_dir, 'complex_stim_no_header.txt'),
+                           columns='ot', default_duration=0.2, onset=4.2)
+    assert stim.elements[2].onset == 38.2
     stim = ComplexTextStim(join(text_dir, 'complex_stim_with_header.txt'))
     assert len(stim.elements) == 4
     assert stim.elements[2].duration == 0.1
