@@ -18,14 +18,17 @@ class DummyExtractor(Extractor):
     _input_type = ImageStim
     _log_attributes = ('param_A', 'param_B')
 
-    def __init__(self, param_A=None, param_B='pie'):
+    def __init__(self, param_A=None, param_B='pie', name=None, n_rows=100,
+                 n_cols=3, max_time=1000):
         super(DummyExtractor, self).__init__()
         self.param_A = param_A
         self.param_B = param_B
-
-    def _extract(self, stim, name=None, n_rows=100, n_cols=3, max_time=1000):
-        data = np.random.randint(0, 1000, (n_rows, n_cols))
-        onsets = np.random.choice(n_rows*2, n_rows, False)
         if name is not None:
             self.name = name
+        self.n_rows = n_rows
+        self.n_cols = n_cols
+
+    def _extract(self, stim):
+        data = np.random.randint(0, 1000, (self.n_rows, self.n_cols))
+        onsets = np.random.choice(self.n_rows*2, self.n_rows, False)
         return ExtractorResult(data, stim, deepcopy(self), onsets=onsets)

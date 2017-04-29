@@ -92,7 +92,6 @@ def test_small_pipeline2():
     history = result[0].history.to_df()
     assert history.shape == (1, 8)
     result = merge_results(result)
-    print result
     assert ('BrightnessExtractor', 'brightness') in result.columns
     brightness = result[('BrightnessExtractor', 'brightness')].values[0]
     vibrance = result[('VibranceExtractor', 'vibrance')].values[0]
