@@ -166,7 +166,7 @@ def merge_results(results, **merge_feature_args):
     stims = defaultdict(list)
 
     for r in results:
-        stims[id(r.stim)].append(r)
+        stims[hash(r.stim)].append(r)
 
     # First concatenate all features separately for each Stim
     for k, v in stims.items():
