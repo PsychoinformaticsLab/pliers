@@ -355,7 +355,7 @@ def test_tensor_flow_inception_v3_extractor():
     results = ext.transform(imgs)
     df = merge_results(results)
     assert len(df) == 2
-    assert df.iloc[0][
-        ('TensorFlowInceptionV3Extractor', 'label_1')] == 'Granny Smith'
-    assert df.iloc[1][
-        ('TensorFlowInceptionV3Extractor', 'score_2')] == '0.22610'
+    assert 'Granny Smith' in df[
+        ('TensorFlowInceptionV3Extractor', 'label_1')].values
+    assert '0.22610' in df[
+        ('TensorFlowInceptionV3Extractor', 'score_2')].values
