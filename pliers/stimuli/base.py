@@ -64,7 +64,7 @@ class Stim(with_metaclass(ABCMeta)):
         self._history = history
 
     def __hash__(self):
-        return hash((self.filename, self.name, self.onset, self.duration, id(self)))
+        return hash((self.filename, self.name, self.onset, self.duration, self.history))
 
 
 def _get_stim_class(name):
