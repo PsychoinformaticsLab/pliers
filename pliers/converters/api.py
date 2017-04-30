@@ -46,7 +46,7 @@ class SpeechRecognitionAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
 
         text = getattr(self.recognizer, self.recognize_method)(clip, self.api_key)
 
-        return ComplexTextStim(text=text)
+        return ComplexTextStim(text=text, onset=audio.onset)
 
 
 class WitTranscriptionConverter(SpeechRecognitionAPIConverter):
@@ -67,7 +67,7 @@ class GoogleSpeechAPIConverter(SpeechRecognitionAPIConverter):
     def _convert(self, audio):
         with open(self.api_key) as json_data:
             self.api_key = json_data.read()
-        super(GoogleSpeechAPIConverter, self)._convert(audio)
+        return super(GoogleSpeechAPIConverter, self)._convert(audio)
 
 
 class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
@@ -107,6 +107,8 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
         self.resolution = resolution
 
     def _convert(self, audio):
+        offset = 0.0 if audio.onset is None else audio.onset
+
         import speech_recognition as sr
 
         with audio.get_filename() as filename:
@@ -128,15 +130,17 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
                         text = entry[0]
                         start = entry[1]
                         end = entry[2]
-                        elements.append(TextStim(text=text, onset=start,
+                        elements.append(TextStim(text=text,
+                                                 onset=offset+start,
                                                  duration=end-start))
                 elif self.resolution is 'phrases':
                     text = result['alternatives'][0]['transcript']
                     start = timestamps[0][1]
                     end = timestamps[-1][2]
-                    elements.append(TextStim(text=text, onset=start,
+                    elements.append(TextStim(text=text,
+                                             onset=offset+start,
                                              duration=end-start))
-        return ComplexTextStim(elements=elements)
+        return ComplexTextStim(elements=elements, onset=audio.onset)
 
     def _query_api(self, clip):
         # Adapted from SpeechRecognition source code, modified to get text

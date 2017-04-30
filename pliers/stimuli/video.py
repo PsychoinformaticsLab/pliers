@@ -24,6 +24,8 @@ class VideoFrameStim(ImageStim):
         spf = 1. / video.fps
         duration = spf if duration is None else duration
         onset = frame_num * spf
+        if video.onset:
+            onset += video.onset
         super(VideoFrameStim, self).__init__(filename, onset, duration, data)
         if data is None:
             self.data = self.video.get_frame(index=frame_num).data
@@ -99,8 +101,8 @@ class DerivedVideoStim(VideoStim):
             original VideoStim.
     """
 
-    def __init__(self, filename, frames, frame_index=None):
-        super(DerivedVideoStim, self).__init__(filename)
+    def __init__(self, filename, frames, frame_index=None, onset=None):
+        super(DerivedVideoStim, self).__init__(filename, onset=onset)
         self._frames = frames
         self.frame_index = frame_index
         self.name += '_derived'

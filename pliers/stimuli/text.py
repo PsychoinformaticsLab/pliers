@@ -92,6 +92,8 @@ class ComplexTextStim(Stim):
             raise ValueError("At least one of the 'filename', 'elements', or "
                              "text arguments must be specified.")
 
+        super(ComplexTextStim, self).__init__(filename, onset, duration)
+
         self._elements = []
 
         if filename is not None:
@@ -105,8 +107,6 @@ class ComplexTextStim(Stim):
 
         if text is not None:
             self._from_text(text, unit, tokenizer, language)
-
-        super(ComplexTextStim, self).__init__(filename, onset, duration)
 
     @property
     def elements(self):
@@ -131,7 +131,7 @@ class ComplexTextStim(Stim):
                 if duration is None:
                     duration = default_duration
                 elem = TextStim(filename, r['text'], r['onset'], duration)
-            self._elements.append(elem)
+            self.add_elem(elem)
 
     def save(self, path):
         with open(path, 'w') as f:
@@ -161,7 +161,12 @@ class ComplexTextStim(Stim):
 
         for i, r in df.iterrows():
             elem = TextStim(filename, r['text'], r['onset'], r["duration"])
-            self._elements.append(elem)
+            self.add_elem(elem)
+
+    def add_elem(self, elem):
+        offset = 0.0 if self.onset is None else self.onset
+        elem.onset = offset if elem.onset is None else offset + elem.onset
+        self._elements.append(elem)
 
     def __iter__(self):
         """ Iterate text elements. """
@@ -200,4 +205,4 @@ class ComplexTextStim(Stim):
         # TODO: track order as a separate attribute from duration, because we
         # can't treat serial position as if it were time in seconds.
         for i, t in enumerate(tokens):
-            self._elements.append(TextStim(text=t, onset=None, duration=None))
+            self.add_elem(TextStim(text=t, onset=None, duration=None))
