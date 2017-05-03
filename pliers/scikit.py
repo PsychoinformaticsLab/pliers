@@ -1,6 +1,9 @@
 from pliers.extractors import ExtractorResult
 
-from sklearn.base import TransformerMixin, BaseEstimator
+try:
+    from sklearn.base import TransformerMixin, BaseEstimator
+except:
+    TransformerMixin, BaseEstimator = None
 
 
 class PliersTransformer(BaseEstimator, TransformerMixin):
