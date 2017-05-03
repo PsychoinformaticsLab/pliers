@@ -24,6 +24,7 @@ def test_graph_scikit():
     res = trans.fit_transform([stim1, stim2])
     assert res.shape == (2, 1)
     assert res[0][0] == 4 or res[1][0] == 4
+    meta = trans.metadata
 
 
 def test_extractor_scikit():
@@ -35,6 +36,8 @@ def test_extractor_scikit():
     res = trans.fit_transform(stim)
     assert res.shape == (1, 1)
     assert np.isclose(res[0][0], 0.88784294, 1e-5)
+    meta = trans.metadata
+    assert np.isnan(meta['onset'][0])
 
 
 def test_within_pipeline():
@@ -49,3 +52,4 @@ def test_within_pipeline():
     assert res.shape == (1, 2)
     assert np.isclose(res[0][0], 0.66393, 1e-5)
     assert np.isclose(res[0][1], 0.74780, 1e-5)
+    meta = trans.metadata

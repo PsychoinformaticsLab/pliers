@@ -17,6 +17,7 @@ class PliersTransformer(BaseEstimator, TransformerMixin):
 
     def __init__(self, transformer):
         self.transformer = transformer
+        self.metadata = None
 
     def fit(self, X, y=None):
         return self
@@ -30,10 +31,10 @@ class PliersTransformer(BaseEstimator, TransformerMixin):
         if isinstance(result, ExtractorResult):
             result = result.to_df()
 
-        result.drop(['onset', 'duration', 'history', 'class',
-                     'filename', 'stim_name', 'source_file'],
-                    axis=1,
-                    inplace=True,
-                    errors='ignore')
+        extra_columns = list(set(['onset', 'duration', 'history', 'class',
+                                  'filename', 'stim_name', 'source_file']) &
+                             set(result.columns))
+        self.metadata = result[extra_columns]
+        result.drop(extra_columns, axis=1, inplace=True, errors='ignore')
 
         return result.as_matrix()
