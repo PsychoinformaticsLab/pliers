@@ -223,7 +223,7 @@ def test_optical_flow_extractor():
 def test_indico_api_text_extractor():
 
     ext = IndicoAPITextExtractor(api_key=os.environ['INDICO_APP_KEY'],
-                             models=['emotion', 'personality'])
+                                 models=['emotion', 'personality'])
 
     # With ComplexTextStim input
     srtfile = join(get_test_data_path(), 'text', 'wonderful.srt')
@@ -255,7 +255,7 @@ def test_indico_api_text_extractor():
 def test_indico_api_image_extractor():
 
     ext = IndicoAPIImageExtractor(api_key=os.environ['INDICO_APP_KEY'],
-                             models=['fer', 'content_filtering'])
+                                  models=['fer', 'content_filtering'])
 
     image_dir = join(get_test_data_path(), 'image')
     stim1 = ImageStim(join(image_dir, 'apple.jpg'))
@@ -299,9 +299,9 @@ def test_merge_extractor_results_by_features():
     results = [e.transform(stim) for e in extractors]
     df = ExtractorResult.merge_features(results)
 
-    de = DummyExtractor()
     de_names = ['Extractor1', 'Extractor2', 'Extractor3']
-    results = [de.transform(stim, name) for name in de_names]
+    des = [DummyExtractor(name=name) for name in de_names]
+    results = [de.transform(stim) for de in des]
     df = ExtractorResult.merge_features(results)
     assert df.shape == (177, 16)
     assert df.columns.levels[1].unique().tolist() == [0, 1, 2, '']
@@ -328,12 +328,12 @@ def test_merge_extractor_results():
     image_dir = join(get_test_data_path(), 'image')
     stim1 = ImageStim(join(image_dir, 'apple.jpg'))
     stim2 = ImageStim(join(image_dir, 'obama.jpg'))
-    de = DummyExtractor()
     de_names = ['Extractor1', 'Extractor2', 'Extractor3']
-    results = [de.transform(stim1, name) for name in de_names]
-    results += [de.transform(stim2, name) for name in de_names]
+    des = [DummyExtractor(name=name) for name in de_names]
+    results = [de.transform(stim1) for de in des]
+    results += [de.transform(stim2) for de in des]
     df = merge_results(results)
-    assert df.shape == (355, 16)
+    assert df.shape == (354, 16)
     cols = ['onset', 'duration', 'class', 'filename', 'history', 'stim_name',
             'source_file']
     assert df.columns.levels[0].unique().tolist() == de_names + cols
@@ -346,15 +346,15 @@ def test_merge_extractor_results_flattened():
     image_dir = join(get_test_data_path(), 'image')
     stim1 = ImageStim(join(image_dir, 'apple.jpg'))
     stim2 = ImageStim(join(image_dir, 'obama.jpg'))
-    de = DummyExtractor()
     de_names = ['Extractor1', 'Extractor2', 'Extractor3']
-    results = [de.transform(stim1, name) for name in de_names]
-    results += [de.transform(stim2, name) for name in de_names]
+    des = [DummyExtractor(name=name) for name in de_names]
+    results = [de.transform(stim1) for de in des]
+    results += [de.transform(stim2) for de in des]
     df = merge_results(results, flatten_columns=True)
     de_cols = ['Extractor1_0', 'Extractor1_1', 'Extractor1_2',
                'Extractor2_0', 'Extractor2_1', 'Extractor2_2',
                'Extractor3_0', 'Extractor3_1', 'Extractor3_2']
-    assert df.shape == (355, 16)
+    assert df.shape == (354, 16)
     cols = ['onset', 'class', 'filename', 'history', 'stim_name', 'duration',
             'source_file']
     assert set(df.columns.unique().tolist()) == set(cols + de_cols)
@@ -368,9 +368,9 @@ def test_tensor_flow_inception_v3_extractor():
     results = ext.transform(imgs)
     df = merge_results(results)
     assert len(df) == 2
-    assert df.iloc[0][
-        ('TensorFlowInceptionV3Extractor', 'label_1')] == 'Granny Smith'
-    assert df.iloc[1][
-        ('TensorFlowInceptionV3Extractor', 'score_2')] == '0.22610'
-    assert df[('onset', '')][0] == 4.2
-    assert df[('duration', '')][1] == 1
+    assert 'Granny Smith' in df[
+        ('TensorFlowInceptionV3Extractor', 'label_1')].values
+    assert '0.22610' in df[
+        ('TensorFlowInceptionV3Extractor', 'score_2')].values
+    assert 4.2 in df[('onset', '')].values
+    assert 1 in df[('duration', '')].values

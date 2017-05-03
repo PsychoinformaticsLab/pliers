@@ -8,6 +8,7 @@ from pliers.stimuli import (ImageStim, VideoStim)
 from .utils import get_test_data_path, DummyExtractor
 from os.path import join, exists
 from numpy.testing import assert_almost_equal
+import numpy as np
 import tempfile
 import os
 
@@ -81,6 +82,22 @@ def test_small_pipeline():
     assert (0, 'text[Exit]') in result['stim_name'].values
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
+
+
+def test_small_pipeline2():
+    filename = join(get_test_data_path(), 'image', 'button.jpg')
+    nodes = [BrightnessExtractor(), VibranceExtractor()]
+    graph = Graph(nodes)
+    result = list(graph.run([filename], merge=False))
+    history = result[0].history.to_df()
+    assert history.shape == (1, 8)
+    result = merge_results(result)
+    assert ('BrightnessExtractor', 'brightness') in result.columns
+    brightness = result[('BrightnessExtractor', 'brightness')].values[0]
+    vibrance = result[('VibranceExtractor', 'vibrance')].values[0]
+    assert_almost_equal(brightness, 0.746965, 5)
+    assert ('VibranceExtractor', 'vibrance') in result.columns
+    assert_almost_equal(vibrance, 841.577274, 5)
 
 
 def test_small_pipeline_json_spec():
