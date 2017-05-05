@@ -1,4 +1,4 @@
-from pliers.extractors import ExtractorResult
+from pliers.extractors import Extractor, merge_results
 
 try:
     from sklearn.base import TransformerMixin, BaseEstimator
@@ -26,10 +26,11 @@ class PliersTransformer(BaseEstimator, TransformerMixin):
         return self.transform(stimulus_files)
 
     def transform(self, stimulus_files):
-        result = self.transformer.transform(stimulus_files)
-
-        if isinstance(result, ExtractorResult):
-            result = result.to_df()
+        if isinstance(self.transformer, Extractor):
+            result = self.transformer.transform(stimulus_files).to_df()
+        else:
+            result = self.transformer.transform(stimulus_files, merge=False)
+            result = merge_results(result, flatten_columns=True)
 
         extra_columns = list(set(['onset', 'duration', 'history', 'class',
                                   'filename', 'stim_name', 'source_file']) &

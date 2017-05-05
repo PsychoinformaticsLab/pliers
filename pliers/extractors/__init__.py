@@ -1,6 +1,6 @@
 ''' Extractor hierarchy. '''
 
-from .base import ExtractorResult, merge_results
+from .base import Extractor, ExtractorResult, merge_results
 from .api import IndicoAPITextExtractor, IndicoAPIImageExtractor, ClarifaiAPIExtractor
 from .audio import STFTAudioExtractor, MeanAmplitudeExtractor
 from .google import (GoogleVisionAPIFaceExtractor,
@@ -16,6 +16,7 @@ from .text import (ComplexTextExtractor, DictionaryExtractor,
 from .video import (DenseOpticalFlowExtractor)
 
 __all__ = [
+    'Extractor',
     'ExtractorResult',
     'IndicoAPITextExtractor',
     'IndicoAPIImageExtractor',

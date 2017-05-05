@@ -25,6 +25,8 @@ def test_graph_scikit():
     assert res.shape == (2, 1)
     assert res[0][0] == 4 or res[1][0] == 4
     meta = trans.metadata
+    assert 'history' in meta.columns
+    assert meta['history'][1] == 'ImageStim->TesseractConverter/TextStim'
 
 
 def test_extractor_scikit():
@@ -53,3 +55,5 @@ def test_within_pipeline():
     assert np.isclose(res[0][0], 0.66393, 1e-5)
     assert np.isclose(res[0][1], 0.74780, 1e-5)
     meta = trans.metadata
+    assert np.isnan(meta['onset'][0])
+    assert meta['class'][0] == 'ImageStim'
