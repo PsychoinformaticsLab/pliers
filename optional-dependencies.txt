@@ -10,4 +10,4 @@ SpeechRecognition>=3.6.0
 pytesseract
 IndicoIo
 tensorflow>=1.0.0
-sklearn
+scikit-learn
