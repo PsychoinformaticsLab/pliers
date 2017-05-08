@@ -3,9 +3,15 @@ Extractors that interact with external (e.g., deep learning) services.
 '''
 
 import os
+try:
+    from contextlib import ExitStack
+except:
+    from contextlib2 import ExitStack
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.stimuli.text import TextStim, ComplexTextStim
+from pliers.transformers import BatchTransformerMixin
+from pliers.utils import isiterable, listify
 
 
 try:
@@ -121,7 +127,7 @@ class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
         return self._score([stim], [stim.data])
 
 
-class ClarifaiAPIExtractor(ImageExtractor):
+class ClarifaiAPIExtractor(ImageExtractor, BatchTransformerMixin):
 
     ''' Uses the Clarifai API to extract tags of images.
     Args:
@@ -136,6 +142,7 @@ class ClarifaiAPIExtractor(ImageExtractor):
     '''
 
     _log_attributes = ('model', 'select_classes')
+    _batch_size = 128
 
     def __init__(self, app_id=None, app_secret=None, model=None,
                  select_classes=None):
@@ -161,10 +168,20 @@ class ClarifaiAPIExtractor(ImageExtractor):
             self.select_classes = ','.join(select_classes)
 
     def _extract(self, stim):
-        with stim.get_filename() as filename:
-            with open(filename, 'rb') as f:
-                tags = self.tagger.tag_images(f, select_classes=self.select_classes)
+        stims = listify(stim)
 
-        tagged = tags['results'][0]['result']['tag']
-        return ExtractorResult([tagged['probs']], stim, self,
-                               features=tagged['classes'])
+        with ExitStack() as stack:
+            files = [stack.enter_context(s.get_filename()) for s in stims]
+            fps = [stack.enter_context(open(f, 'rb')) for f in files]
+            tags = self.tagger.tag_images(fps, select_classes=self.select_classes)
+
+        extracted = []
+        for i, res in enumerate(tags['results']):
+            tagged = res['result']['tag']
+            extracted.append(ExtractorResult([tagged['probs']], stims[i],
+                             self, features=tagged['classes']))
+
+        if isiterable(stim):
+            return extracted
+        else:
+            return extracted[0]

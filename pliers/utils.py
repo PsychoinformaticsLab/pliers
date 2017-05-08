@@ -3,6 +3,7 @@ from six import string_types
 from tqdm import tqdm
 from pliers import config
 from types import GeneratorType
+from itertools import islice
 
 
 def listify(obj):
@@ -19,6 +20,16 @@ def flatten(l):
                 yield sub
         else:
             yield el
+
+
+def batch_iterable(l, n):
+    ''' Chunks iterable into n sized batches
+    Solution from: http://stackoverflow.com/questions/1915170/split-a-generator-iterable-every-n-items-in-python-splitevery'''
+    i = iter(l)
+    piece = list(islice(i, n))
+    while piece:
+        yield piece
+        piece = list(islice(i, n))
 
 
 class classproperty(object):

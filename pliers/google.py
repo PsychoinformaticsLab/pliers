@@ -14,7 +14,7 @@ DISCOVERY_URL = 'https://{api}.googleapis.com/$discovery/rest?version={apiVersio
 BATCH_SIZE = 10
 
 
-class GoogleAPITransformer(Transformer, BatchTransformerMixin, EnvironmentKeyMixin):
+class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
 
     _env_keys = 'GOOGLE_APPLICATION_CREDENTIALS'
     _log_attributes = ('handle_annotations',)

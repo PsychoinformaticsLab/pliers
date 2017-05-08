@@ -2,7 +2,7 @@
 
 from pliers.stimuli.base import Stim, _log_transformation, load_stims
 from pliers.stimuli.compound import CompoundStim
-from pliers.utils import listify
+from pliers.utils import listify, batch_iterable
 from pliers import config
 from pliers.utils import (classproperty, progress_bar_wrapper, isiterable,
                           isgenerator)
@@ -74,6 +74,8 @@ class Transformer(with_metaclass(ABCMeta)):
         # If stims is an iterable, naively loop over elements, removing
         # invalid results if needed
         if isiterable(stims):
+            if isinstance(self, BatchTransformerMixin):
+                stims = batch_iterable(stims, self._batch_size)
             iters = self._iterate(stims, *args, **kwargs)
             if config.drop_bad_extractor_results:
                 iters = (i for i in iters if i is not None)
@@ -157,8 +159,6 @@ class BatchTransformerMixin(object):
     whenever batch processing of multiple stimuli should be handled within the
     _transform method rather than applying a naive loop--e.g., for API
     Extractors that can handle list inputs. '''
-    def transform(self, stims, *args, **kwargs):
-        return self._transform(self._validate(stims), *args, **kwargs)
 
 
 class EnvironmentKeyMixin(object):
