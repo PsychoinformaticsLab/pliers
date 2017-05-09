@@ -8,4 +8,3 @@ requests
 scipy>=0.13.3
 six
 tqdm
-contextlib2

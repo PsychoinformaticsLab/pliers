@@ -3,7 +3,7 @@ dist: trusty
 
 env:
   global:
-    - CONDA_DEPS="pip pytest numpy pillow pandas requests scipy nltk six tqdm seaborn matplotlib pathos tensorflow contextlib2"
+    - CONDA_DEPS="pip pytest numpy pillow pandas requests scipy nltk six tqdm seaborn matplotlib pathos tensorflow"
     - secure: "XwXubMYVa7nTQK2XwJySgtFM/+8xzzaQClSWI76Nik5eqb2yVW4DTJnpeZgp66EvTHEc202bddmleZ6bPw/wWauk+UEjTuRckeocM70rIdSEjzGuDMEKNRmxSQ+5ysf2f7akrog6aUtNjKaEZJIV8RlUWHGLNNAybtTS73tiwcM="
     - secure: "OAxWIyFPse0jBXLdS9GzcQgM4d0/lYY9zzAycth0hqOPIrjAzkfUSFz/aGu0ODErwRcOrJPCV8RSaBq5uVCGQ4U7Yl/UKYhS4fkye/CUehmUUDtRxlUIl7pwUznjR8YDHglB9GcGN2FQEz44eLmSWz7JQCKEyqfGEqIHJxb4HmA="
     - secure: "NZyKWPNNYP1vAIYAl3yqGNJzAvNkiSgrQZOpxkbDvAXZWaObmeeaUPDoxrG8gs7ypv09+FaHyy7rdhkknl5anmSmA8j8VS3CweU97Wz7J+TLr+S6Gnox4z7Y9hwFI29inAEyIUxPQFafRGOOZbyWt6FBo0O4MvB1FKw9fl8Hcf0="
