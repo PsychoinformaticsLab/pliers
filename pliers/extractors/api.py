@@ -169,7 +169,6 @@ class ClarifaiAPIExtractor(ImageExtractor, BatchTransformerMixin):
 
         with nested(*(s.get_filename() for s in stims)) as files:
             with nested(*(open(f, 'rb') for f in files)) as fps:
-                print 'CALLING API'
                 tags = self.tagger.tag_images(fps, select_classes=self.select_classes)
 
         extracted = []
