@@ -2,7 +2,7 @@
 
 from pliers.stimuli.base import Stim, _log_transformation, load_stims
 from pliers.stimuli.compound import CompoundStim
-from pliers.utils import listify, batch_iterable
+from pliers.utils import listify, batch_iterable, flatten
 from pliers import config
 from pliers.utils import (classproperty, progress_bar_wrapper, isiterable,
                           isgenerator)
@@ -76,6 +76,8 @@ class Transformer(with_metaclass(ABCMeta)):
         if isiterable(stims):
             if isinstance(self, BatchTransformerMixin):
                 stims = batch_iterable(stims, self._batch_size)
+                return flatten(self._transform(s, *args, **kwargs) for s in stims)
+
             iters = self._iterate(stims, *args, **kwargs)
             if config.drop_bad_extractor_results:
                 iters = (i for i in iters if i is not None)
