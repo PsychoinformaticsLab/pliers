@@ -3,7 +3,10 @@ Extractors that interact with external (e.g., deep learning) services.
 '''
 
 import os
-from contextlib import nested
+try:
+    from contextlib import ExitStack
+except:
+    from contextlib2 import ExitStack
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.stimuli.text import TextStim, ComplexTextStim
@@ -167,9 +170,10 @@ class ClarifaiAPIExtractor(ImageExtractor, BatchTransformerMixin):
     def _extract(self, stim):
         stims = listify(stim)
 
-        with nested(*(s.get_filename() for s in stims)) as files:
-            with nested(*(open(f, 'rb') for f in files)) as fps:
-                tags = self.tagger.tag_images(fps, select_classes=self.select_classes)
+        with ExitStack() as stack:
+            files = [stack.enter_context(s.get_filename()) for s in stims]
+            fps = [stack.enter_context(open(f, 'rb')) for f in files]
+            tags = self.tagger.tag_images(fps, select_classes=self.select_classes)
 
         extracted = []
         for i, res in enumerate(tags['results']):

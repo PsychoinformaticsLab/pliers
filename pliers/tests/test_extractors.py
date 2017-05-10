@@ -288,12 +288,6 @@ def test_clarifai_api_extractor():
     assert result['apple'][0] > 0.5
     assert result.ix[:, 5][0] > 0.0
 
-    # Make sure extractor knows how to use temp files
-    stim2 = ImageStim(data=stim.data)
-    result = ClarifaiAPIExtractor().transform(stim2).to_df()
-    assert result['apple'][0] > 0.5
-    assert result.ix[:, 5][0] > 0.0
-
 
 def test_merge_extractor_results_by_features():
     np.random.seed(100)
