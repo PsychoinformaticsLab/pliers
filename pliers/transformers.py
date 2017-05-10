@@ -75,8 +75,14 @@ class Transformer(with_metaclass(ABCMeta)):
         # invalid results if needed
         if isiterable(stims):
             if isinstance(self, BatchTransformerMixin):
-                stims = batch_iterable(stims, self._batch_size)
-                return flatten(self._transform(s, *args, **kwargs) for s in stims)
+                batches = batch_iterable(stims, self._batch_size)
+                results = []
+                for batch in batches:
+                    result = self._transform(batch, *args, **kwargs)
+                    for i, stim in enumerate(batch):
+                        result[i] = _log_transformation(stim, result[i], self)
+                    results.extend(result)
+                return results
 
             iters = self._iterate(stims, *args, **kwargs)
             if config.drop_bad_extractor_results:

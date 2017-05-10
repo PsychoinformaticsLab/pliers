@@ -288,6 +288,22 @@ def test_clarifai_api_extractor():
     assert result['apple'][0] > 0.5
     assert result.ix[:, 5][0] > 0.0
 
+    # Make sure extractor knows how to use temp files
+    stim2 = ImageStim(data=stim.data)
+    result = ClarifaiAPIExtractor().transform(stim2).to_df()
+    assert result['apple'][0] > 0.5
+    assert result.ix[:, 5][0] > 0.0
+
+
+@pytest.mark.skipif("'CLARIFAI_APP_ID' not in os.environ")
+def test_clarifai_api_extractor_batch():
+    image_dir = join(get_test_data_path(), 'image')
+    stim = ImageStim(join(image_dir, 'apple.jpg'))
+    stim2 = ImageStim(join(image_dir, 'obama.jpg'))
+    results = ClarifaiAPIExtractor().transform([stim, stim2])
+    results = merge_results(results)
+    assert results[('ClarifaiAPIExtractor', 'apple')][0] > 0.5
+
 
 def test_merge_extractor_results_by_features():
     np.random.seed(100)
