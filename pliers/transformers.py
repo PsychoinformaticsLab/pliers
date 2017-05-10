@@ -162,11 +162,18 @@ class Transformer(with_metaclass(ABCMeta)):
         return hash(self.name + str(dict(zip(self._log_attributes, tr_attrs))))
 
 
-class BatchTransformerMixin(object):
+class BatchTransformerMixin(Transformer):
     ''' A mixin that overrides the default implicit iteration behavior. Use
     whenever batch processing of multiple stimuli should be handled within the
     _transform method rather than applying a naive loop--e.g., for API
     Extractors that can handle list inputs. '''
+    def _transform(self, stim, *args, **kwargs):
+        stims = listify(stim)
+        result = super(BatchTransformerMixin, self)._transform(stims, *args, **kwargs)
+        if isiterable(stim):
+            return result
+        else:
+            return result[0]
 
 
 class EnvironmentKeyMixin(object):

@@ -127,7 +127,7 @@ class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
         return self._score([stim], [stim.data])
 
 
-class ClarifaiAPIExtractor(ImageExtractor, BatchTransformerMixin):
+class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor):
 
     ''' Uses the Clarifai API to extract tags of images.
     Args:
@@ -167,9 +167,7 @@ class ClarifaiAPIExtractor(ImageExtractor, BatchTransformerMixin):
         else:
             self.select_classes = ','.join(select_classes)
 
-    def _extract(self, stim):
-        stims = listify(stim)
-
+    def _extract(self, stims):
         with ExitStack() as stack:
             files = [stack.enter_context(s.get_filename()) for s in stims]
             fps = [stack.enter_context(open(f, 'rb')) for f in files]
@@ -181,7 +179,4 @@ class ClarifaiAPIExtractor(ImageExtractor, BatchTransformerMixin):
             extracted.append(ExtractorResult([tagged['probs']], stims[i],
                              self, features=tagged['classes']))
 
-        if isiterable(stim):
-            return extracted
-        else:
-            return extracted[0]
+        return extracted
