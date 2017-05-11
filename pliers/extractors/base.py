@@ -130,9 +130,8 @@ class ExtractorResult(object):
                              "onsets and have the same number of rows. It is "
                              "not possible to merge mismatched instances.")
 
-        if metadata:
-            extra_columns.remove('onset')
-        else:
+        extra_columns.remove('onset')
+        if not metadata:
             extra_columns = ['duration']
         for col in extra_columns:
             result.insert(0, col, dfs[0][col][0])
