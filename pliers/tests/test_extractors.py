@@ -302,7 +302,8 @@ def test_clarifai_api_extractor_batch():
     stim2 = ImageStim(join(image_dir, 'obama.jpg'))
     results = ClarifaiAPIExtractor().transform([stim, stim2])
     results = merge_results(results)
-    assert results[('ClarifaiAPIExtractor', 'apple')][0] > 0.5
+    assert results[('ClarifaiAPIExtractor', 'apple')][0] > 0.5 or \
+        results[('ClarifaiAPIExtractor', 'apple')][1] > 0.5
 
 
 def test_merge_extractor_results_by_features():
