@@ -1,7 +1,6 @@
 ''' Google API-based feature extraction classes. '''
 
 from pliers.extractors.image import ImageExtractor
-from pliers.stimuli.image import ImageStim
 from pliers.google import GoogleVisionAPITransformer
 from pliers.extractors.base import ExtractorResult
 import numpy as np
@@ -11,30 +10,22 @@ class GoogleVisionAPIExtractor(GoogleVisionAPITransformer, ImageExtractor):
 
     ''' Base class for all Extractors that use the Google Vision API. '''
 
-    def _extract(self, stim):
-        if isinstance(stim, ImageStim):
-            stim = [stim]
-
-        request = self._build_request(stim)
+    def _extract(self, stims):
+        request = self._build_request(stims)
         responses = self._query_api(request)
 
-        features = []
-        data = []
+        results = []
         for i, response in enumerate(responses):
             if response and self.response_object in response:
                 annotations = response[self.response_object]
-                feat, values = self._parse_annotations(annotations)
-                features += feat
-                data += values
+                features, values = self._parse_annotations(annotations)
+                values = [values]
+                results.append(ExtractorResult(values, stims[i], self,
+                                               features=features))
             elif 'error' in response:
                 raise Exception(response['error']['message'])
 
-        data = [data]
-        onsets = [stim[i].onset if hasattr(
-            stim[i], 'onset') else i for i in range(len(responses))]
-        durations = [stim[i].duration for i in range(len(responses))]
-        return ExtractorResult(data, stim, self, features=features,
-                               onsets=onsets, durations=durations)
+        return results
 
 
 class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):

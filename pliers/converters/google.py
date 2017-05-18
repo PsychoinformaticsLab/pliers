@@ -25,31 +25,34 @@ class GoogleVisionAPITextConverter(GoogleVisionAPITransformer, ImageToTextConver
         super(GoogleVisionAPITextConverter, self).__init__(*args, **kwargs)
         self.handle_annotations = handle_annotations
 
-    def _convert(self, stim):
-        request = self._build_request([stim])
+    def _convert(self, stims):
+        request = self._build_request(stims)
         responses = self._query_api(request)
-        response = responses[0]
+        texts = []
 
-        if response:
-            annotations = response[self.response_object]
-            # Combine the annotations
-            if self.handle_annotations == 'first':
-                text = annotations[0]['description']
-                return TextStim(text=text, onset=stim.onset,
-                                duration=stim.duration)
-            elif self.handle_annotations == 'concatenate':
-                text = ''
-                for annotation in annotations:
-                    text += annotation['description']
-                return TextStim(text=text, onset=stim.onset,
-                                duration=stim.duration)
-            elif self.handle_annotations == 'list':
-                texts = []
-                for annotation in annotations:
-                    texts.append(TextStim(text=annotation['description'],
-                                          onset=stim.onset,
-                                          duration=stim.duration))
-                return texts
+        for i, response in enumerate(responses):
+            stim = stims[i]
+            if response and self.response_object in response:
+                annotations = response[self.response_object]
+                # Combine the annotations
+                if self.handle_annotations == 'first':
+                    text = annotations[0]['description']
+                    texts.append(TextStim(text=text, onset=stim.onset,
+                                 duration=stim.duration))
+                elif self.handle_annotations == 'concatenate':
+                    text = ''
+                    for annotation in annotations:
+                        text += annotation['description']
+                    texts.append(TextStim(text=text, onset=stim.onset,
+                                 duration=stim.duration))
+                elif self.handle_annotations == 'list':
+                    for annotation in annotations:
+                        texts.append(TextStim(text=annotation['description'],
+                                              onset=stim.onset,
+                                              duration=stim.duration))
+            elif 'error' in response:
+                raise Exception(response['error']['message'])
+            else:
+                texts.append(TextStim(text='', onset=stim.onset, duration=stim.duration))
 
-        else:
-            return TextStim(text='', onset=stim.onset, duration=stim.duration)
+        return texts

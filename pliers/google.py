@@ -11,7 +11,6 @@ except ImportError:
 
 
 DISCOVERY_URL = 'https://{api}.googleapis.com/$discovery/rest?version={apiVersion}'
-BATCH_SIZE = 10
 
 
 class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
@@ -46,10 +45,11 @@ class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
         return request.execute(num_retries=self.num_retries)['responses']
 
 
-class GoogleVisionAPITransformer(GoogleAPITransformer):
+class GoogleVisionAPITransformer(BatchTransformerMixin, GoogleAPITransformer):
 
     api_name = 'vision'
     resource = 'images'
+    _batch_size = 10
 
     def _build_request(self, stims):
         request = []
