@@ -228,7 +228,7 @@ def test_indico_api_text_extractor():
     # With ComplexTextStim input
     srtfile = join(get_test_data_path(), 'text', 'wonderful.srt')
     srt_stim = ComplexTextStim(srtfile, onset=4.2)
-    result = ext.transform(srt_stim).to_df()
+    result = ExtractorResult.merge_stims(ext.transform(srt_stim))
     outdfKeysCheck = set([
         'onset',
         'duration',
@@ -241,7 +241,7 @@ def test_indico_api_text_extractor():
         'personality_extraversion',
         'personality_agreeableness',
         'personality_conscientiousness'])
-    assert set(result.columns) == outdfKeysCheck
+    assert set(result.columns) - set(['stim_name']) == outdfKeysCheck
     assert result['onset'][1] == 92.622
 
     # With TextStim input
@@ -259,7 +259,7 @@ def test_indico_api_image_extractor():
 
     image_dir = join(get_test_data_path(), 'image')
     stim1 = ImageStim(join(image_dir, 'apple.jpg'))
-    result1 = ext.transform(stim1).to_df()
+    result1 = ExtractorResult.merge_stims(ext.transform([stim1, stim1]))
 
     outdfKeysCheck = set(['onset',
         'duration',
@@ -271,7 +271,7 @@ def test_indico_api_image_extractor():
         'fer_Fear',
         'content_filtering'])
 
-    assert set(result1.columns) == outdfKeysCheck
+    assert set(result1.columns) - set(['stim_name']) == outdfKeysCheck
     assert result1['content_filtering'][0] < 0.1
 
     stim2 = ImageStim(join(image_dir, 'obama.jpg'))

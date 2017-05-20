@@ -65,6 +65,7 @@ def test_google_vision_multiple_face_extraction():
     assert result2.shape[1] > result1.shape[1]
 
 
+@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_face_batch():
     obama_file = join(get_test_data_path(), 'image', 'obama.jpg')
     people_file = join(get_test_data_path(), 'image', 'thai_people.jpg')

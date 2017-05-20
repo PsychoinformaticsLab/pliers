@@ -8,10 +8,9 @@ try:
 except:
     from contextlib2 import ExitStack
 from pliers.extractors.image import ImageExtractor
+from pliers.extractors.text import TextExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
-from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.transformers import BatchTransformerMixin
-from pliers.utils import isiterable, listify
 
 
 try:
@@ -25,7 +24,7 @@ except ImportError:
     pass
 
 
-class IndicoAPIExtractor(Extractor):
+class IndicoAPIExtractor(BatchTransformerMixin, Extractor):
 
     ''' Base class for all Indico API Extractors
 
@@ -37,6 +36,7 @@ class IndicoAPIExtractor(Extractor):
 
     _log_attributes = ('models',)
     _input_type = ()
+    _batch_size = 20
 
     def __init__(self, api_key=None, models=None):
         super(IndicoAPIExtractor, self).__init__()
@@ -63,54 +63,39 @@ class IndicoAPIExtractor(Extractor):
         self.models = [getattr(ico, model) for model in models]
         self.names = models
 
-    def _score(self, stim, tokens):
+    def _extract(self, stims):
+        tokens = [stim.data for stim in stims if stim.data is not None]
         scores = [model(tokens) for model in self.models]
 
-        data, onsets, durations = [], [], []
-
-        for i, s in enumerate(stim):
-            features, values = [], []
+        results = []
+        for i, stim in enumerate(stims):
+            features, data = [], []
             for j, score in enumerate(scores):
                 if isinstance(score[i], float):
                     features.append(self.names[j])
-                    values.append(score[i])
+                    data.append(score[i])
                 elif isinstance(score[i], dict):
                     for k in score[i].keys():
                         features.append(self.names[j] + '_' + k)
-                        values.append(score[i][k])
+                        data.append(score[i][k])
 
-            data.append(values)
-            onsets.append(s.onset)
-            durations.append(s.duration)
+            results.append(ExtractorResult([data], stim, self,
+                                           features=features,
+                                           onsets=stim.onset,
+                                           durations=stim.onset))
 
-        if not data:
-            data = []
-
-        return ExtractorResult(data, stim, self, features=features,
-                               onsets=onsets, durations=durations)
+        return results
 
 
-class IndicoAPITextExtractor(IndicoAPIExtractor):
+class IndicoAPITextExtractor(TextExtractor, IndicoAPIExtractor):
 
     ''' Uses to Indico API to extract features from text, such as
     sentiment extraction.
     '''
 
-    _optional_input_type = (TextStim, ComplexTextStim)
-
     def __init__(self, **kwargs):
         self.allowed_models = ico.TEXT_APIS.keys()
         super(IndicoAPITextExtractor, self).__init__(**kwargs)
-
-    def _extract(self, stim):
-        if isinstance(stim, TextStim):
-            if not stim.text:
-                return None
-            stim = [stim]
-
-        tokens = [token.text for token in stim if token.text]
-
-        return self._score(stim, tokens)
 
 
 class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
@@ -122,9 +107,6 @@ class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
     def __init__(self, **kwargs):
         self.allowed_models = ico.IMAGE_APIS.keys()
         super(IndicoAPIImageExtractor, self).__init__(**kwargs)
-
-    def _extract(self, stim):
-        return self._score([stim], [stim.data])
 
 
 class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor):

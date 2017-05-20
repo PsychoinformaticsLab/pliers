@@ -74,9 +74,7 @@ class Transformer(with_metaclass(ABCMeta)):
         # If stims is an iterable, naively loop over elements, removing
         # invalid results if needed
         if isiterable(stims):
-            if isinstance(self, BatchTransformerMixin) and \
-               self._stim_matches_input_types(list(islice(stims, 1))[0]):
-
+            if isinstance(self, BatchTransformerMixin):
                 batches = batch_iterable(stims, self._batch_size)
                 results = []
                 for batch in batches:

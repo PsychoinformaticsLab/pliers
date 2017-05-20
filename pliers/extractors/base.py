@@ -40,15 +40,6 @@ class ExtractorResult(object):
         self.extractor = extractor
         self.features = features
         self._history = None
-
-        # Some Extractors pass a list of Stims for various reasons
-        if isinstance(stim, (list, tuple)):
-            if not len(set(stim)) == 1:
-                raise ValueError("Multiple Stim instances passed to the 'stim'"
-                                 " argument in ExtractorResult initialization;"
-                                 " each ExtractorResult can only be associated"
-                                 " with a single Stim.")
-            stim = stim[0]
         self.stim = stim
 
         if onsets is None:
