@@ -317,9 +317,10 @@ def test_merge_extractor_results_by_stims():
     de = DummyExtractor()
     results = [de.transform(stim1), de.transform(stim2)]
     df = ExtractorResult.merge_stims(results)
-    assert df.shape == (200, 6)
+    assert df.shape == (200, 10)
     assert set(df.columns.tolist()) == set(
-        ['onset', 'duration', 0, 1, 2, 'stim_name'])
+        ['onset', 'duration', 0, 1, 2, 'stim_name', 'class', 'filename',
+         'history', 'source_file'])
     assert set(df['stim_name'].unique()) == set(['obama.jpg', 'apple.jpg'])
 
 
