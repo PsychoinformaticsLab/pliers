@@ -242,7 +242,7 @@ image_list = [
 images = []
 for (filename, onset, duration) in image_list:
     img = ImageStim(filename, onset=onset, duration=duration)
-    images.append(img) 
+    images.append(img)
 ```
 
 If we now run the `images` list through one or more `ImageExtractor`s, the resulting `ExtractorResults` or pandas `DataFrame` (see the [ExtractorResult](#extractorresults) section below) will automatically log the correct onset and duration.
@@ -406,7 +406,7 @@ A `Filter` is a kind of `Transformer` that returns an object of the same `Stim` 
 A useful feature of the `Transformer` API is that it's inherently iterable-aware: every pliers `Transformer` (including all `Extractors`, `Converters`, and `Filters`) can be passed an iterable (specifically, a list, tuple, or generator) of `Stim` objects rather than just a single `Stim`. The transformation will then be applied independently to each `Stim`.
 
 ### Caching and memory conservation
-By default, pliers will cache  the output of all `.extract` calls to any `Transformer`. This can save an enormous amount of processing time, as it's very common to need to re-use converted `Stim` objects multiple times in a typical pliers workflow. However, this does have the potentially unwelcome side effect of ensuring all `Transformer` results are stored in memory (at the moment, pliers doesn't use disk-based caching). On a modern machine, this will rarely be a problem unless you're working with enormous files, but there may be cases where the default approach just isn't cutting it, and pliers' memory footprint gets too big. 
+By default, pliers will cache  the output of all `.extract` calls to any `Transformer`. This can save an enormous amount of processing time, as it's very common to need to re-use converted `Stim` objects multiple times in a typical pliers workflow. However, this does have the potentially unwelcome side effect of ensuring all `Transformer` results are stored in memory (at the moment, pliers doesn't use disk-based caching). On a modern machine, this will rarely be a problem unless you're working with enormous files, but there may be cases where the default approach just isn't cutting it, and pliers' memory footprint gets too big.
 In such cases, you can take advantage of the fact that pliers internally uses generators rather than lists almost everywhere (and it's only the caching step that forces the conversion from the former to the latter). This means, for instance, that if you feed a video to an `Extractor` that expects an `ImageStim` input, the individual frames won't all be read into memory at conversion time; instead, a generator will be created, and each `VideoFrameStim` extracted from the `VideoStim` will only be instantiated when needed (a trick borrowed from the underlying [MoviePy](https://github.com/Zulko/moviepy/) library, which also iterates frames lazily). The upshot is that if you disable caching like so:
 
 ```python
@@ -427,6 +427,7 @@ Many of the `Transformer`s in pliers rely on web-based APIs. For example, pliers
 | GoogleVisionAPIFaceExtractor | [Google Cloud Vision API](https://cloud.google.com/vision/) | GOOGLE_APPLICATION_CREDENTIALS | path to .json discovery file |
 | GoogleVisionAPILabelExtractor | [Google Cloud Vision API](https://cloud.google.com/vision/) | GOOGLE_APPLICATION_CREDENTIALS | path to .json discovery file |
 | GoogleVisionAPIPropertyExtractor | [Google Cloud Vision API](https://cloud.google.com/vision/) | GOOGLE_APPLICATION_CREDENTIALS | path to .json discovery file |
+| GoogleVisionAPIWebEntitiesExtractor | [Google Cloud Vision API](https://cloud.google.com/vision/) | GOOGLE_APPLICATION_CREDENTIALS | path to .json discovery file |
 | IndicoAPIExtractor | [Indico.io API](https://indico.io) | INDICO_APP_KEY | API key |
 | ClarifaiAPIExtractor | [Clarifai image recognition API](https://clarifai.com) | CLARIFAI_APP_ID, CLARIFAI_APP_SECRET | API app ID and secret |
 
@@ -467,7 +468,7 @@ segments = [VideoStim(s) for s in segments]
 frame_conv = FrameSamplingConverter(hertz=2)
 frames = frame_conv.transform(segments)
 
-# Run each image through Google's text detection API 
+# Run each image through Google's text detection API
 text_conv = GoogleVisionAPITextConverter()
 texts = text_conv.transform(frames)
 
