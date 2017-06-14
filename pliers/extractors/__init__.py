@@ -6,7 +6,8 @@ from .audio import STFTAudioExtractor, MeanAmplitudeExtractor
 from .google import (GoogleVisionAPIFaceExtractor,
                      GoogleVisionAPILabelExtractor,
                      GoogleVisionAPIPropertyExtractor,
-                     GoogleVisionAPISafeSearchExtractor)
+                     GoogleVisionAPISafeSearchExtractor,
+                     GoogleVisionAPIWebEntitiesExtractor)
 from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
                     VibranceExtractor)
 from .models import TensorFlowInceptionV3Extractor
@@ -26,6 +27,7 @@ __all__ = [
     'GoogleVisionAPIFaceExtractor',
     'GoogleVisionAPILabelExtractor',
     'GoogleVisionAPIPropertyExtractor',
+    'GoogleVisionAPIWebEntitiesExtractor',
     'BrightnessExtractor',
     'SaliencyExtractor',
     'SharpnessExtractor',
