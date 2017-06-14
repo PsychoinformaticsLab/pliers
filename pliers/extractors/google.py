@@ -134,10 +134,9 @@ class GoogleVisionAPIWebEntitiesExtractor(GoogleVisionAPIExtractor):
     def _parse_annotations(self, annotations):
         features = []
         values = []
-        try:
+        if 'webEntities' in annotations:
             for annotation in annotations['webEntities']:
-                features.append(annotation['description'])
-                values.append(annotation['score'])
-        except:
-            pass
+                if 'description' in annotation and 'score' in annotation:
+                    features.append(annotation['description'])
+                    values.append(annotation['score'])
         return features, values
