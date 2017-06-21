@@ -6,8 +6,6 @@ from pliers import config
 from pliers.utils import (classproperty, progress_bar_wrapper, isiterable,
                           isgenerator, listify, batch_iterable)
 import pliers
-
-from itertools import islice
 from six import with_metaclass, string_types
 from abc import ABCMeta, abstractmethod, abstractproperty
 import importlib
@@ -170,11 +168,14 @@ class BatchTransformerMixin(Transformer):
 
     def _transform(self, stim, *args, **kwargs):
         stims = listify(stim)
-        result = super(BatchTransformerMixin, self)._transform(stims, *args, **kwargs)
-        if isiterable(stim):
-            return result
+        if all(self._stim_matches_input_types(s) for s in stims):
+            result = super(BatchTransformerMixin, self)._transform(stims, *args, **kwargs)
+            if isiterable(stim):
+                return result
+            else:
+                return result[0]
         else:
-            return result[0]
+            return super(BatchTransformerMixin, self)._iterate(stims, *args, **kwargs)
 
 
 class EnvironmentKeyMixin(object):
