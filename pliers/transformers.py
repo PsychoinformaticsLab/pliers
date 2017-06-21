@@ -74,16 +74,6 @@ class Transformer(with_metaclass(ABCMeta)):
         # If stims is an iterable, naively loop over elements, removing
         # invalid results if needed
         if isiterable(stims):
-            if isinstance(self, BatchTransformerMixin):
-                batches = batch_iterable(stims, self._batch_size)
-                results = []
-                for batch in batches:
-                    result = self._transform(batch, *args, **kwargs)
-                    for i, stim in enumerate(batch):
-                        result[i] = _log_transformation(stim, result[i], self)
-                    results.extend(result)
-                return results
-
             iters = self._iterate(stims, *args, **kwargs)
             if config.drop_bad_extractor_results:
                 iters = (i for i in iters if i is not None)
@@ -167,6 +157,17 @@ class BatchTransformerMixin(Transformer):
     whenever batch processing of multiple stimuli should be handled within the
     _transform method rather than applying a naive loop--e.g., for API
     Extractors that can handle list inputs. '''
+
+    def _iterate(self, stims, *args, **kwargs):
+        batches = batch_iterable(stims, self._batch_size)
+        results = []
+        for batch in batches:
+            result = self._transform(batch, *args, **kwargs)
+            for i, stim in enumerate(batch):
+                result[i] = _log_transformation(stim, result[i], self)
+            results.extend(result)
+        return results
+
     def _transform(self, stim, *args, **kwargs):
         stims = listify(stim)
         result = super(BatchTransformerMixin, self)._transform(stims, *args, **kwargs)
