@@ -84,6 +84,12 @@ def test_google_vision_face_batch():
     assert 'joyLikelihood' in result.columns
     assert result.shape == (105, 137)
 
+    video = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
+    result = ext.transform(video)
+    result = ExtractorResult.merge_stims(result)
+    assert 'joyLikelihood' not in result.columns
+    assert result.shape == (168, 7)
+
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_label_extractor():

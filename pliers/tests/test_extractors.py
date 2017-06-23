@@ -229,7 +229,7 @@ def test_indico_api_text_extractor():
     srtfile = join(get_test_data_path(), 'text', 'wonderful.srt')
     srt_stim = ComplexTextStim(srtfile, onset=4.2)
     result = ExtractorResult.merge_stims(ext.transform(srt_stim))
-    outdfKeysCheck = set([
+    outdfKeysCheck = {
         'onset',
         'duration',
         'emotion_anger',
@@ -240,8 +240,12 @@ def test_indico_api_text_extractor():
         'personality_openness',
         'personality_extraversion',
         'personality_agreeableness',
-        'personality_conscientiousness'])
-    assert set(result.columns) - set(['stim_name']) == outdfKeysCheck
+        'personality_conscientiousness'}
+    meta_columns = {'source_file',
+                    'history',
+                    'class',
+                    'filename'}
+    assert set(result.columns) - set(['stim_name']) == outdfKeysCheck | meta_columns
     assert result['onset'][1] == 92.622
 
     # With TextStim input
@@ -261,7 +265,8 @@ def test_indico_api_image_extractor():
     stim1 = ImageStim(join(image_dir, 'apple.jpg'))
     result1 = ExtractorResult.merge_stims(ext.transform([stim1, stim1]))
 
-    outdfKeysCheck = set(['onset',
+    outdfKeysCheck = {
+        'onset',
         'duration',
         'fer_Surprise',
         'fer_Neutral',
@@ -269,9 +274,13 @@ def test_indico_api_image_extractor():
         'fer_Happy',
         'fer_Angry',
         'fer_Fear',
-        'content_filtering'])
+        'content_filtering'}
+    meta_columns = {'source_file',
+                    'history',
+                    'class',
+                    'filename'}
 
-    assert set(result1.columns) - set(['stim_name']) == outdfKeysCheck
+    assert set(result1.columns) - set(['stim_name']) == outdfKeysCheck | meta_columns
     assert result1['content_filtering'][0] < 0.1
 
     stim2 = ImageStim(join(image_dir, 'obama.jpg'))

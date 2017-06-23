@@ -25,6 +25,10 @@ class GoogleVisionAPIExtractor(GoogleVisionAPITransformer, ImageExtractor):
             elif 'error' in response:
                 raise Exception(response['error']['message'])
 
+            else:
+                results.append(ExtractorResult([[]], stims[i], self,
+                                               features=[]))
+
         return results
 
 
