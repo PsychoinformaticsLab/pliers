@@ -315,9 +315,10 @@ def test_clarifai_api_extractor_batch():
     assert results[('ClarifaiAPIExtractor', 'apple')][0] > 0.5 or \
         results[('ClarifaiAPIExtractor', 'apple')][1] > 0.5
 
-    video = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
-    results = ExtractorResult.merge_stims(ext.transform(video))
-    assert 'Lego' in results.columns and 'robot' in results.columns
+    # This takes too long to execute
+    # video = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
+    # results = ExtractorResult.merge_stims(ext.transform(video))
+    # assert 'Lego' in results.columns and 'robot' in results.columns
 
 
 def test_merge_extractor_results_by_features():
