@@ -5,7 +5,7 @@ from pliers.extractors import (GoogleVisionAPIFaceExtractor,
                                GoogleVisionAPIWebEntitiesExtractor,
                                ExtractorResult)
 from pliers.extractors.google import GoogleVisionAPIExtractor
-from pliers.stimuli import ImageStim
+from pliers.stimuli import ImageStim, VideoStim
 import pytest
 import json
 from os.path import join
@@ -77,6 +77,12 @@ def test_google_vision_face_batch():
     assert 'joyLikelihood' in result.columns
     assert result['joyLikelihood'][0] == 'VERY_LIKELY'
     assert result['joyLikelihood'][1] == 'VERY_LIKELY'
+
+    video = VideoStim(join(get_test_data_path(), 'video', 'obama_speech.mp4'))
+    result = ext.transform(video)
+    result = ExtractorResult.merge_stims(result)
+    assert 'joyLikelihood' in result.columns
+    assert result.shape == (105, 137)
 
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")

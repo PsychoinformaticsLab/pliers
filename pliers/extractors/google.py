@@ -115,6 +115,7 @@ class GoogleVisionAPISafeSearchExtractor(GoogleVisionAPIExtractor):
     def _parse_annotations(self, annotation):
         return annotation.keys(), annotation.values()
 
+
 class GoogleVisionAPIWebEntitiesExtractor(GoogleVisionAPIExtractor):
 
     ''' Extracts web entities using the Google Cloud Vision API. '''

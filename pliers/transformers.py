@@ -160,10 +160,10 @@ class BatchTransformerMixin(Transformer):
         batches = batch_iterable(stims, self._batch_size)
         results = []
         for batch in batches:
-            result = self._transform(batch, *args, **kwargs)
-            for i, stim in enumerate(batch):
-                result[i] = _log_transformation(stim, result[i], self)
-            results.extend(result)
+            res = self._transform(batch, *args, **kwargs)
+            for i in range(len(res)):
+                res[i] = _log_transformation(res[i].stim, res[i], self)
+            results.extend(res)
         return results
 
     def _transform(self, stim, *args, **kwargs):
