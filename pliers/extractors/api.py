@@ -150,6 +150,7 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor):
             self.select_classes = ','.join(select_classes)
 
     def _extract(self, stims):
+        print 'Hello'
         with ExitStack() as stack:
             files = [stack.enter_context(s.get_filename()) for s in stims]
             fps = [stack.enter_context(open(f, 'rb')) for f in files]

@@ -309,10 +309,15 @@ def test_clarifai_api_extractor_batch():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
     stim2 = ImageStim(join(image_dir, 'obama.jpg'))
-    results = ClarifaiAPIExtractor().transform([stim, stim2])
+    ext = ClarifaiAPIExtractor()
+    results = ext.transform([stim, stim2])
     results = merge_results(results)
     assert results[('ClarifaiAPIExtractor', 'apple')][0] > 0.5 or \
         results[('ClarifaiAPIExtractor', 'apple')][1] > 0.5
+
+    video = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
+    results = ExtractorResult.merge_stims(ext.transform(video))
+    assert 'Lego' in results.columns and 'robot' in results.columns
 
 
 def test_merge_extractor_results_by_features():
