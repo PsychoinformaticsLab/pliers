@@ -114,3 +114,20 @@ class GoogleVisionAPISafeSearchExtractor(GoogleVisionAPIExtractor):
 
     def _parse_annotations(self, annotation):
         return annotation.keys(), annotation.values()
+
+class GoogleVisionAPIWebEntitiesExtractor(GoogleVisionAPIExtractor):
+
+    ''' Extracts web entities using the Google Cloud Vision API. '''
+
+    request_type = 'WEB_DETECTION'
+    response_object = 'webDetection'
+
+    def _parse_annotations(self, annotations):
+        features = []
+        values = []
+        if 'webEntities' in annotations:
+            for annotation in annotations['webEntities']:
+                if 'description' in annotation and 'score' in annotation:
+                    features.append(annotation['description'])
+                    values.append(annotation['score'])
+        return features, values

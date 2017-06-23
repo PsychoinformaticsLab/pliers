@@ -2,6 +2,7 @@ from pliers.extractors import (GoogleVisionAPIFaceExtractor,
                                GoogleVisionAPILabelExtractor,
                                GoogleVisionAPIPropertyExtractor,
                                GoogleVisionAPISafeSearchExtractor,
+                               GoogleVisionAPIWebEntitiesExtractor,
                                ExtractorResult)
 from pliers.extractors.google import GoogleVisionAPIExtractor
 from pliers.stimuli import ImageStim
@@ -106,3 +107,12 @@ def test_google_vision_api_safe_search():
     result = ext.transform(stim).to_df()
     assert 'adult' in result.columns
     assert result['violence'][0] == 'VERY_UNLIKELY'
+
+
+@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
+def test_google_vision_api_web_entities():
+    ext = GoogleVisionAPIWebEntitiesExtractor(num_retries=5)
+    filename = join(get_test_data_path(), 'image', 'obama.jpg')
+    stim = ImageStim(filename)
+    result = ext.transform(stim).to_df()
+    assert 'Barack Obama' in result.columns

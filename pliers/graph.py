@@ -131,6 +131,8 @@ class Graph(object):
         self._results = results  # For use in plotting
         return merge_results(results) if merge else results
 
+    transform = run
+
     def run_node(self, node, stim):
 
         if isinstance(node, string_types):
