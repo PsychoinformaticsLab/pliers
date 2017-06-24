@@ -1,10 +1,10 @@
 from pliers.transformers import get_transformer
-from pliers.extractors import (STFTAudioExtractor, BrightnessExtractor)
+from pliers.extractors import (STFTAudioExtractor, BrightnessExtractor, ExtractorResult)
 from pliers.stimuli.base import TransformationLog
 from pliers.stimuli import ImageStim, VideoStim
 from pliers import config
 from os.path import join
-from .utils import get_test_data_path, DummyExtractor
+from .utils import get_test_data_path, DummyExtractor, DummyBatchExtractor
 import numpy as np
 
 
@@ -56,3 +56,17 @@ def test_parallelization():
 
     assert result1 == result2
     config.parallelize = default
+
+
+def test_batch_transformer():
+    img1 = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
+    img2 = ImageStim(join(get_test_data_path(), 'image', 'button.jpg'))
+    img3 = ImageStim(join(get_test_data_path(), 'image', 'obama.jpg'))
+    ext = DummyBatchExtractor()
+    res = ExtractorResult.merge_stims(ext.transform([img1, img2, img3]))
+    assert ext.num_calls == 1
+    assert res.shape == (3, 8)
+    ext = DummyBatchExtractor(batch_size=1)
+    res2 = ExtractorResult.merge_stims(ext.transform([img1, img2, img3]))
+    assert ext.num_calls == 3
+    assert res.equals(res2)

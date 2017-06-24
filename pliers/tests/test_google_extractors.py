@@ -1,3 +1,4 @@
+from pliers.converters import FrameSamplingConverter
 from pliers.extractors import (GoogleVisionAPIFaceExtractor,
                                GoogleVisionAPILabelExtractor,
                                GoogleVisionAPIPropertyExtractor,
@@ -79,16 +80,19 @@ def test_google_vision_face_batch():
     assert result['joyLikelihood'][1] == 'VERY_LIKELY'
 
     video = VideoStim(join(get_test_data_path(), 'video', 'obama_speech.mp4'))
+    conv = FrameSamplingConverter(every=10)
+    video = conv.transform(video)
     result = ext.transform(video)
     result = ExtractorResult.merge_stims(result)
     assert 'joyLikelihood' in result.columns
-    assert result.shape == (105, 137)
+    assert result.shape == (11, 137)
 
     video = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
+    video = conv.transform(video)
     result = ext.transform(video)
     result = ExtractorResult.merge_stims(result)
     assert 'joyLikelihood' not in result.columns
-    assert result.shape == (168, 7)
+    assert result.shape == (17, 7)
 
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")

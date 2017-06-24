@@ -156,6 +156,11 @@ class BatchTransformerMixin(Transformer):
     _transform method rather than applying a naive loop--e.g., for API
     Extractors that can handle list inputs. '''
 
+    def __init__(self, batch_size=None, *args, **kwargs):
+        if batch_size:
+            self._batch_size = batch_size
+        super(BatchTransformerMixin, self).__init__(*args, **kwargs)
+
     def _iterate(self, stims, *args, **kwargs):
         batches = batch_iterable(stims, self._batch_size)
         results = []

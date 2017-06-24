@@ -42,7 +42,7 @@ class GoogleVisionAPITextConverter(GoogleVisionAPITransformer, ImageToTextConver
                 elif self.handle_annotations == 'concatenate':
                     text = ''
                     for annotation in annotations:
-                        text += annotation['description']
+                        text = ' '.join([text, annotation['description']])
                     texts.append(TextStim(text=text, onset=stim.onset,
                                  duration=stim.duration))
                 elif self.handle_annotations == 'list':
