@@ -149,6 +149,8 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor):
         else:
             self.select_classes = ','.join(select_classes)
 
+        self._batch_size = self.tagger.get_info()['max_batch_size']
+
     def _extract(self, stims):
         # Clarifai client expects a list of open file pointers
         # ExitStack lets us use several file context managers simultaneous
