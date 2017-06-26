@@ -32,7 +32,6 @@ class WordStemmingFilter(TextFilter):
         'lancaster': 'LancasterStemmer',
         'isri': 'ISRIStemmer',
         'regexp': 'RegexpStemmer',
-        'wordnet': 'WordNetLemmatizer',
         'rslp': 'RSLPStemmer'
     }
 
