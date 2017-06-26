@@ -36,6 +36,8 @@ class WordStemmingFilter(TextFilter):
         'rslp': 'RSLPStemmer'
     }
 
+    _log_attributes = ('stemmer',)
+
     def __init__(self, stemmer='porter', *args, **kwargs):
 
         if isinstance(stemmer, string_types):
