@@ -14,7 +14,10 @@ from pliers.transformers import BatchTransformerMixin
 
 
 try:
-    from clarifai.client import ClarifaiApi
+    from clarifai.rest.client import (ClarifaiApp,
+                                      ModelOutputConfig,
+                                      ModelOutputInfo,
+                                      Image)
 except ImportError:
     pass
 
@@ -123,11 +126,13 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor):
             For example, ['food', 'animal'].
     '''
 
-    _log_attributes = ('model', 'select_classes')
+    _log_attributes = ('model', 'min_value', 'max_concepts', 'select_concepts')
     _batch_size = 128
 
-    def __init__(self, app_id=None, app_secret=None, model=None,
-                 select_classes=None):
+    def __init__(self, app_id=None, app_secret=None, model='general-v1.3',
+                 min_value=None,
+                 max_concepts=None,
+                 select_concepts=None):
         ImageExtractor.__init__(self)
         if app_id is None or app_secret is None:
             try:
@@ -138,31 +143,33 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor):
                                  "must be passed the first time a Clarifai "
                                  "extractor is initialized.")
 
-        self.tagger = ClarifaiApi(app_id=app_id, app_secret=app_secret)
-        if model is not None:
-            self.tagger.set_model(model)
-
-        self.model = model
-
-        if select_classes is None:
-            self.select_classes = None
-        else:
-            self.select_classes = ','.join(select_classes)
-
-        self._batch_size = self.tagger.get_info()['max_batch_size']
+        self.api = ClarifaiApp(app_id=app_id, app_secret=app_secret)
+        self.model = self.api.models.get(model)
+        self.min_value = min_value
+        self.max_concepts = max_concepts
+        self.select_concepts = select_concepts
 
     def _extract(self, stims):
-        # Clarifai client expects a list of open file pointers
-        # ExitStack lets us use several file context managers simultaneous
+        output_config = ModelOutputConfig(min_value=self.min_value,
+                                          max_concepts=self.max_concepts,
+                                          select_concepts=self.select_concepts)
+        model_output_info = ModelOutputInfo(output_config=output_config)
+
+        # ExitStack lets us use filename context managers simultaneously
         with ExitStack() as stack:
             files = [stack.enter_context(s.get_filename()) for s in stims]
-            fps = [stack.enter_context(open(f, 'rb')) for f in files]
-            tags = self.tagger.tag_images(fps, select_classes=self.select_classes)
+            imgs = [Image(filename=filename) for filename in files]
+            tags = self.model.predict(imgs, model_output_info=model_output_info)
 
         extracted = []
-        for i, res in enumerate(tags['results']):
-            tagged = res['result']['tag']
-            extracted.append(ExtractorResult([tagged['probs']], stims[i],
-                             self, features=tagged['classes']))
+        for i, res in enumerate(tags['outputs']):
+            data = res['data']['concepts']
+            concepts = []
+            values = []
+            for d in data:
+                concepts.append(d['name'])
+                values.append(d['value'])
+            extracted.append(ExtractorResult([values], stims[i],
+                             self, features=concepts))
 
         return extracted
