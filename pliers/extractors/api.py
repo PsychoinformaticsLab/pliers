@@ -10,7 +10,7 @@ except:
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.text import TextExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
-from pliers.transformers import BatchTransformerMixin
+from pliers.transformers import BatchTransformerMixin, EnvironmentKeyMixin
 
 
 try:
@@ -27,7 +27,8 @@ except ImportError:
     pass
 
 
-class IndicoAPIExtractor(BatchTransformerMixin, Extractor):
+class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
+                         EnvironmentKeyMixin):
 
     ''' Base class for all Indico API Extractors
 
@@ -40,6 +41,7 @@ class IndicoAPIExtractor(BatchTransformerMixin, Extractor):
     _log_attributes = ('models',)
     _input_type = ()
     _batch_size = 20
+    _env_keys = 'INDICO_APP_KEY'
 
     def __init__(self, api_key=None, models=None):
         super(IndicoAPIExtractor, self).__init__()
@@ -112,7 +114,8 @@ class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
         super(IndicoAPIImageExtractor, self).__init__(**kwargs)
 
 
-class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor):
+class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
+                           EnvironmentKeyMixin):
 
     ''' Uses the Clarifai API to extract tags of images.
     Args:
@@ -128,6 +131,7 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor):
 
     _log_attributes = ('model', 'min_value', 'max_concepts', 'select_concepts')
     _batch_size = 128
+    _env_keys = ('CLARIFAI_APP_ID', 'CLARIFAI_APP_SECRET')
 
     def __init__(self, app_id=None, app_secret=None, model='general-v1.3',
                  min_value=None,
