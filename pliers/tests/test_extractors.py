@@ -401,9 +401,8 @@ def test_tensor_flow_inception_v3_extractor():
     results = ext.transform(imgs)
     df = merge_results(results)
     assert len(df) == 2
-    assert 'Granny Smith' in df[
-        ('TensorFlowInceptionV3Extractor', 'label_1')].values
-    assert '0.22610' in df[
-        ('TensorFlowInceptionV3Extractor', 'score_2')].values
+    assert ('TensorFlowInceptionV3Extractor', 'Granny Smith') in df.columns
+    assert 0.22610 in df[
+        ('TensorFlowInceptionV3Extractor', 'Windsor tie')].values
     assert 4.2 in df[('onset', '')].values
     assert 1 in df[('duration', '')].values
