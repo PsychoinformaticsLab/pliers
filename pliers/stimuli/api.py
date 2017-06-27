@@ -41,5 +41,6 @@ class TweetStim(CompoundStim, EnvironmentKeyMixin):
         self.status = self.api.GetStatus(status_id)
         elements = [TextStim(text=self.status.text)]
         if self.status.media:
-            elements.extend(load_stims([m.url for m in self.status.media]))
+            media_stims = load_stims([m.media_url for m in self.status.media])
+            elements.extend(media_stims)
         super(TweetStim, self).__init__(elements=elements)
