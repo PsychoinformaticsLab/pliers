@@ -137,7 +137,7 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
                  min_value=None,
                  max_concepts=None,
                  select_concepts=None):
-        ImageExtractor.__init__(self)
+        super(ClarifaiAPIExtractor, self).__init__()
         if app_id is None or app_secret is None:
             try:
                 app_id = os.environ['CLARIFAI_APP_ID']
