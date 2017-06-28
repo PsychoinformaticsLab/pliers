@@ -125,8 +125,12 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
             to be passed the first time the extractor is initialized.
         model (str): The name of the Clarifai model to use. If None, defaults
             to the general image tagger.
-        select_classes (list): List of classes (strings) to query from the API.
-            For example, ['food', 'animal'].
+        min_value (float): A value between 0.0 and 1.0 indicating the minimum
+            confidence required to return a prediction. Defaults to 0.0.
+        max_concepts (int): A value between 0 and 200 indicating the maximum
+            number of label predictions returned.
+        select_concepts (list): List of concepts (strings) to query from the
+            API. For example, ['food', 'animal'].
     '''
 
     _log_attributes = ('model', 'min_value', 'max_concepts', 'select_concepts')
