@@ -1,6 +1,7 @@
 from os.path import dirname, join
 from pliers.stimuli import ImageStim
 from pliers.extractors.base import Extractor, ExtractorResult
+from pliers.transformers import BatchTransformerMixin
 import numpy as np
 from copy import deepcopy
 
@@ -32,3 +33,20 @@ class DummyExtractor(Extractor):
         data = np.random.randint(0, 1000, (self.n_rows, self.n_cols))
         onsets = np.random.choice(self.n_rows*2, self.n_rows, False)
         return ExtractorResult(data, stim, deepcopy(self), onsets=onsets)
+
+
+class DummyBatchExtractor(BatchTransformerMixin, Extractor):
+
+    _input_type = ImageStim
+    _batch_size = 3
+
+    def __init__(self, *args, **kwargs):
+        self.num_calls = 0
+        super(DummyBatchExtractor, self).__init__(*args, **kwargs)
+
+    def _extract(self, stims):
+        self.num_calls += 1
+        results = []
+        for s in stims:
+            results.append(ExtractorResult([[len(s.name)]], s, self))
+        return results

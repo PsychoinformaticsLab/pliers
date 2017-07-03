@@ -2,12 +2,10 @@
 
 from pliers.stimuli.base import Stim, _log_transformation, load_stims
 from pliers.stimuli.compound import CompoundStim
-from pliers.utils import listify
 from pliers import config
 from pliers.utils import (classproperty, progress_bar_wrapper, isiterable,
-                          isgenerator)
+                          isgenerator, listify, batch_iterable)
 import pliers
-
 from six import with_metaclass, string_types
 from abc import ABCMeta, abstractmethod, abstractproperty
 import importlib
@@ -152,13 +150,37 @@ class Transformer(with_metaclass(ABCMeta)):
         return hash(self.name + str(dict(zip(self._log_attributes, tr_attrs))))
 
 
-class BatchTransformerMixin(object):
+class BatchTransformerMixin(Transformer):
     ''' A mixin that overrides the default implicit iteration behavior. Use
     whenever batch processing of multiple stimuli should be handled within the
     _transform method rather than applying a naive loop--e.g., for API
     Extractors that can handle list inputs. '''
-    def transform(self, stims, *args, **kwargs):
-        return self._transform(self._validate(stims), *args, **kwargs)
+
+    def __init__(self, batch_size=None, *args, **kwargs):
+        if batch_size:
+            self._batch_size = batch_size
+        super(BatchTransformerMixin, self).__init__(*args, **kwargs)
+
+    def _iterate(self, stims, *args, **kwargs):
+        batches = batch_iterable(stims, self._batch_size)
+        results = []
+        for batch in batches:
+            res = self._transform(batch, *args, **kwargs)
+            for i, stim in enumerate(batch):
+                res[i] = _log_transformation(stim, res[i], self)
+            results.extend(res)
+        return results
+
+    def _transform(self, stim, *args, **kwargs):
+        stims = listify(stim)
+        if all(self._stim_matches_input_types(s) for s in stims):
+            result = super(BatchTransformerMixin, self)._transform(stims, *args, **kwargs)
+            if isiterable(stim):
+                return result
+            else:
+                return result[0]
+        else:
+            return super(BatchTransformerMixin, self)._iterate(stims, *args, **kwargs)
 
 
 class EnvironmentKeyMixin(object):

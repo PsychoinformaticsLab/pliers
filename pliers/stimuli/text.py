@@ -32,6 +32,10 @@ class TextStim(Stim):
         name = 'text[%s]' % text[:40]  # Truncate at 40 chars
         super(TextStim, self).__init__(filename, onset, duration, name)
 
+    @property
+    def data(self):
+        return self.text
+
     def save(self, path):
         with open(path, 'w') as f:
             f.write(self.text)

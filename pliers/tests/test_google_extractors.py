@@ -1,10 +1,12 @@
+from pliers.converters import FrameSamplingConverter
 from pliers.extractors import (GoogleVisionAPIFaceExtractor,
                                GoogleVisionAPILabelExtractor,
                                GoogleVisionAPIPropertyExtractor,
                                GoogleVisionAPISafeSearchExtractor,
-                               GoogleVisionAPIWebEntitiesExtractor)
+                               GoogleVisionAPIWebEntitiesExtractor,
+                               ExtractorResult)
 from pliers.extractors.google import GoogleVisionAPIExtractor
-from pliers.stimuli import ImageStim
+from pliers.stimuli import ImageStim, VideoStim
 import pytest
 import json
 from os.path import join
@@ -66,6 +68,34 @@ def test_google_vision_multiple_face_extraction():
 
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
+def test_google_vision_face_batch():
+    obama_file = join(get_test_data_path(), 'image', 'obama.jpg')
+    people_file = join(get_test_data_path(), 'image', 'thai_people.jpg')
+    stims = [ImageStim(obama_file), ImageStim(people_file)]
+    ext = GoogleVisionAPIFaceExtractor(handle_annotations='first')
+    result = ext.transform(stims)
+    result = ExtractorResult.merge_stims(result)
+    assert 'joyLikelihood' in result.columns
+    assert result['joyLikelihood'][0] == 'VERY_LIKELY'
+    assert result['joyLikelihood'][1] == 'VERY_LIKELY'
+
+    video = VideoStim(join(get_test_data_path(), 'video', 'obama_speech.mp4'))
+    conv = FrameSamplingConverter(every=10)
+    video = conv.transform(video)
+    result = ext.transform(video)
+    result = ExtractorResult.merge_stims(result)
+    assert 'joyLikelihood' in result.columns
+    assert result.shape == (11, 137)
+
+    video = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
+    video = conv.transform(video)
+    result = ext.transform(video)
+    result = ExtractorResult.merge_stims(result)
+    assert 'joyLikelihood' not in result.columns
+    assert result.shape == (17, 7)
+
+
+@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_label_extractor():
     ext = GoogleVisionAPILabelExtractor(num_retries=5)
     filename = join(get_test_data_path(), 'image', 'apple.jpg')
@@ -93,6 +123,7 @@ def test_google_vision_api_safe_search():
     result = ext.transform(stim).to_df()
     assert 'adult' in result.columns
     assert result['violence'][0] == 'VERY_UNLIKELY'
+
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_web_entities():
