@@ -17,7 +17,8 @@ try:
     from clarifai.rest.client import (ClarifaiApp,
                                       ModelOutputConfig,
                                       ModelOutputInfo,
-                                      Image)
+                                      Image,
+                                      Concept)
 except ImportError:
     pass
 
@@ -156,6 +157,8 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
         self.min_value = min_value
         self.max_concepts = max_concepts
         self.select_concepts = select_concepts
+        if select_concepts:
+            self.select_concepts = [Concept(concept_name=n) for n in select_concepts]
 
     def _extract(self, stims):
         output_config = ModelOutputConfig(min_value=self.min_value,

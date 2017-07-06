@@ -297,11 +297,17 @@ def test_clarifai_api_extractor():
     assert result['apple'][0] > 0.5
     assert result.ix[:, 5][0] > 0.0
 
-    # Make sure extractor knows how to use temp files
-    stim2 = ImageStim(data=stim.data)
-    result = ClarifaiAPIExtractor().transform(stim2).to_df()
-    assert result['apple'][0] > 0.5
-    assert result.ix[:, 5][0] > 0.0
+    result = ClarifaiAPIExtractor(max_concepts=5).transform(stim).to_df()
+    assert result.shape == (1, 7)
+
+    result = ClarifaiAPIExtractor(min_value=0.9).transform(stim).to_df()
+    assert all(np.isnan(d) or d > 0.9 for d in result.values[0])
+
+    concepts = ['cat', 'dog']
+    result = ClarifaiAPIExtractor(select_concepts=concepts).transform(stim)
+    result = result.to_df()
+    assert result.shape == (1, 4)
+    assert 'cat' in result.columns and 'dog' in result.columns
 
 
 @pytest.mark.skipif("'CLARIFAI_APP_ID' not in os.environ")
