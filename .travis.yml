@@ -44,7 +44,7 @@ install:
 - pip install --upgrade --ignore-installed setuptools
 - pip install python-magic coveralls pytest-cov pysrt xlrd clarifai pytesseract
 - pip install moviepy==0.2.2.13
-- pip install SpeechRecognition IndicoIo pygraphviz sklearn
+- pip install SpeechRecognition IndicoIo pygraphviz sklearn python-twitter
 
 before_script:
   - python -m pliers.support.download

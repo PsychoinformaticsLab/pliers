@@ -233,6 +233,7 @@ def test_save():
         os.remove(path)
 
 
+@pytest.mark.skipif("'TWITTER_ACCESS_TOKEN_KEY' not in os.environ")
 def test_twitter():
     # Test stim creation
     pytest.importorskip('twitter')
