@@ -17,6 +17,11 @@ try:
 except ImportError:
     nltk is None
 
+try:
+    from gensim.models.keyedvectors import KeyedVectors
+except ImportError:
+    pass
+
 
 class TextExtractor(Extractor):
 
@@ -198,3 +203,31 @@ class PartOfSpeechExtractor(ComplexTextExtractor):
         return ExtractorResult(np.array(list(data.values())).transpose(),
                                stim, self, features=list(data.keys()),
                                onsets=onsets, durations=durations)
+
+
+class WordEmbeddingExtractor(TextExtractor):
+
+    ''' An extractor that gets the embedding vectors from words
+    Args:
+        embedding_file (str): path to a binary word embedding file
+    '''
+
+    def __init__(self, embedding_file, binary=False):
+        # TODO: download small one if None
+        # TODO: configuring UNKs
+        self.wvModel = KeyedVectors.load_word2vec_format(embedding_file,
+                                                         binary=binary)
+        super(WordEmbeddingExtractor, self).__init__()
+
+    def _extract(self, stim):
+        num_dims = self.wvModel.vector_size
+        if stim.text in self.wvModel:
+            embedding_vector = self.wvModel[stim.text]
+            features = ['embedding_dimension_%d' % i for i in range(num_dims)]
+        else:
+            embedding_vector = []
+            features = []
+        return ExtractorResult(embedding_vector,
+                               stim,
+                               self,
+                               features=features)
