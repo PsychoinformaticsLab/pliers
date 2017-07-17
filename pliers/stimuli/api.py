@@ -8,7 +8,7 @@ from .video import VideoStim
 from pliers.transformers import EnvironmentKeyMixin
 
 
-class TweetFactory(EnvironmentKeyMixin):
+class TweetStimFactory(EnvironmentKeyMixin):
 
     '''
     An object from which to generate TweetStims, creates an Api instance from
@@ -60,7 +60,7 @@ class TweetStim(CompoundStim):
     Represents the text and associated media from a single tweet.
 
     Args:
-        status (python-twitter Status objcet): the Status from which to
+        status (python-twitter Status object): the Status from which to
             extract information, can either be generated from the TweetFactory
             or user-provided.
     '''
@@ -70,6 +70,7 @@ class TweetStim(CompoundStim):
     _primary = TextStim
 
     def __init__(self, status):
+        self.status = status
         elements = [TextStim(text=status.text)]
         if status.media:
             media_stims = load_stims([m.media_url for m in status.media])

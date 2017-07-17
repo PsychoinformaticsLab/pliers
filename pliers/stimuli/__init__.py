@@ -1,7 +1,7 @@
 ''' Stim hierarchy. '''
 
 from .base import load_stims
-from .api import TweetStim
+from .api import TweetStim, TweetStimFactory
 from .audio import AudioStim
 from .compound import CompoundStim, TranscribedAudioCompoundStim
 from .image import ImageStim
@@ -19,6 +19,7 @@ __all__ = [
     'VideoStim',
     'DerivedVideoStim',
     'VideoFrameStim',
+    'TweetStimFactory'
     'TweetStim',
     'load_stims'
 ]
