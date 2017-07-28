@@ -27,9 +27,10 @@ class ImageStim(Stim):
 
     def __init__(self, filename=None, onset=None, duration=None, data=None, url=None):
         if data is None and isinstance(filename, six.string_types):
-            data = imread(filename)
+            data = imread(filename, mode='RGB')
         if url is not None:
             img = Image.open(io.BytesIO(urlopen(url).read()))
+            img = img.convert(mode='RGB')
             data = np.array(img)
             filename = url
         self.data = data

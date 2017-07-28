@@ -20,6 +20,7 @@ class BrightnessExtractor(ImageExtractor):
 
     def _extract(self, stim):
         data = stim.data
+        assert 0
         brightness = np.amax(data, 2).mean() / 255.0
 
         return ExtractorResult(np.array([[brightness]]), stim, self,
