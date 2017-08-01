@@ -11,6 +11,7 @@ from pliers.extractors.image import ImageExtractor
 from pliers.extractors.text import TextExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.transformers import BatchTransformerMixin, EnvironmentKeyMixin
+from pliers.utils import listify
 
 
 try:
@@ -158,6 +159,7 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
         self.max_concepts = max_concepts
         self.select_concepts = select_concepts
         if select_concepts:
+            select_concepts = listify(select_concepts)
             self.select_concepts = [Concept(concept_name=n) for n in select_concepts]
 
     def _extract(self, stims):
