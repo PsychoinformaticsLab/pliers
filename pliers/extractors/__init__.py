@@ -13,7 +13,8 @@ from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
 from .models import TensorFlowInceptionV3Extractor
 from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
-                   NumUniqueWordsExtractor, PartOfSpeechExtractor)
+                   NumUniqueWordsExtractor, PartOfSpeechExtractor,
+                   WordEmbeddingExtractor, TextVectorizerExtractor)
 from .video import (DenseOpticalFlowExtractor)
 
 __all__ = [
@@ -27,6 +28,7 @@ __all__ = [
     'GoogleVisionAPIFaceExtractor',
     'GoogleVisionAPILabelExtractor',
     'GoogleVisionAPIPropertyExtractor',
+    'GoogleVisionAPISafeSearchExtractor',
     'GoogleVisionAPIWebEntitiesExtractor',
     'BrightnessExtractor',
     'SaliencyExtractor',
@@ -40,5 +42,7 @@ __all__ = [
     'NumUniqueWordsExtractor',
     'PartOfSpeechExtractor',
     'DenseOpticalFlowExtractor',
+    'WordEmbeddingExtractor',
+    'TextVectorizerExtractor',
     'merge_results'
 ]

@@ -3,13 +3,15 @@ import os
 from .utils import get_test_data_path, DummyExtractor
 from pliers.extractors import (DictionaryExtractor, PartOfSpeechExtractor,
                                LengthExtractor, NumUniqueWordsExtractor,
-                               PredefinedDictionaryExtractor, STFTAudioExtractor,
+                               PredefinedDictionaryExtractor,
+                               STFTAudioExtractor,
                                MeanAmplitudeExtractor, BrightnessExtractor,
                                SharpnessExtractor, VibranceExtractor,
                                SaliencyExtractor, DenseOpticalFlowExtractor,
                                IndicoAPITextExtractor, IndicoAPIImageExtractor,
                                ClarifaiAPIExtractor,
-                               TensorFlowInceptionV3Extractor)
+                               TensorFlowInceptionV3Extractor,
+                               TextVectorizerExtractor)
 from pliers.stimuli import (TextStim, ComplexTextStim, ImageStim, VideoStim,
                             AudioStim, TranscribedAudioCompoundStim)
 from pliers.support.download import download_nltk_data
@@ -165,6 +167,23 @@ def test_part_of_speech_extractor():
     assert 'NN' in result.columns
     assert result['NN'].sum() == 1
     assert result['VBD'][3] == 1
+
+
+def test_vectorizer_extractor():
+    pytest.importorskip('sklearn')
+    stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
+    result = TextVectorizerExtractor().transform(stim).to_df()
+    assert 'woman' in result.columns
+    assert result['woman'][0] == 3
+
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    custom_vectorizer = TfidfVectorizer()
+    ext = TextVectorizerExtractor(vectorizer=custom_vectorizer)
+    stim2 = TextStim(join(TEXT_DIR, 'simple_text.txt'))
+    result = merge_results(ext.transform([stim, stim2]))
+    assert ('TextVectorizerExtractor', 'woman') in result.columns
+    val = result[('TextVectorizerExtractor', 'woman')][1]
+    assert np.isclose(val, 0.129568, 1e-5)
 
 
 def test_brightness_extractor():

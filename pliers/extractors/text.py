@@ -7,8 +7,10 @@ from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.exceptions import PliersError
 from pliers.support.decorators import requires_nltk_corpus
 from pliers.datasets.text import fetch_dictionary
+from pliers.transformers import BatchTransformerMixin
 import numpy as np
 import pandas as pd
+import sys
 from six import string_types
 
 # Optional dependencies
@@ -238,7 +240,7 @@ class WordEmbeddingExtractor(TextExtractor):
                                features=features)
 
 
-class TextVectorizerExtractor(TextExtractor):
+class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
 
     ''' Uses a scikit-learn Vectorizer to extract bag-of-words
     features from text.
@@ -249,6 +251,7 @@ class TextVectorizerExtractor(TextExtractor):
     '''
 
     _log_attributes = ('vectorizer',)
+    _batch_size = sys.maxint
 
     def __init__(self, vectorizer=None):
         super(TextVectorizerExtractor, self).__init__()
@@ -257,7 +260,10 @@ class TextVectorizerExtractor(TextExtractor):
         else:
             self.vectorizer = CountVectorizer()
 
-    def _extract(self, stim):
-        mat = self.vectorizer.fit_transform([stim.text]).toarray()
-        return ExtractorResult(mat, stim, self,
-                               features=self.vectorizer.get_feature_names())
+    def _extract(self, stims):
+        mat = self.vectorizer.fit_transform([s.text for s in stims]).toarray()
+        results = []
+        for i, row in enumerate(mat):
+            results.append(ExtractorResult([row], stims[i], self,
+                           features=self.vectorizer.get_feature_names()))
+        return results
