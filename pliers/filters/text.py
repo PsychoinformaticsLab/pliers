@@ -32,9 +32,10 @@ class WordStemmingFilter(TextFilter):
         'lancaster': 'LancasterStemmer',
         'isri': 'ISRIStemmer',
         'regexp': 'RegexpStemmer',
-        'wordnet': 'WordNetLemmatizer',
         'rslp': 'RSLPStemmer'
     }
+
+    _log_attributes = ('stemmer',)
 
     def __init__(self, stemmer='porter', *args, **kwargs):
 

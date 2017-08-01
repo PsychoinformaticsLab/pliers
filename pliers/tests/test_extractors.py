@@ -297,11 +297,17 @@ def test_clarifai_api_extractor():
     assert result['apple'][0] > 0.5
     assert result.ix[:, 5][0] > 0.0
 
-    # Make sure extractor knows how to use temp files
-    stim2 = ImageStim(data=stim.data)
-    result = ClarifaiAPIExtractor().transform(stim2).to_df()
-    assert result['apple'][0] > 0.5
-    assert result.ix[:, 5][0] > 0.0
+    result = ClarifaiAPIExtractor(max_concepts=5).transform(stim).to_df()
+    assert result.shape == (1, 7)
+
+    result = ClarifaiAPIExtractor(min_value=0.9).transform(stim).to_df()
+    assert all(np.isnan(d) or d > 0.9 for d in result.values[0])
+
+    concepts = ['cat', 'dog']
+    result = ClarifaiAPIExtractor(select_concepts=concepts).transform(stim)
+    result = result.to_df()
+    assert result.shape == (1, 4)
+    assert 'cat' in result.columns and 'dog' in result.columns
 
 
 @pytest.mark.skipif("'CLARIFAI_APP_ID' not in os.environ")
@@ -401,9 +407,8 @@ def test_tensor_flow_inception_v3_extractor():
     results = ext.transform(imgs)
     df = merge_results(results)
     assert len(df) == 2
-    assert 'Granny Smith' in df[
-        ('TensorFlowInceptionV3Extractor', 'label_1')].values
-    assert '0.22610' in df[
-        ('TensorFlowInceptionV3Extractor', 'score_2')].values
+    assert ('TensorFlowInceptionV3Extractor', 'Granny Smith') in df.columns
+    assert 0.22610 in df[
+        ('TensorFlowInceptionV3Extractor', 'Windsor tie')].values
     assert 4.2 in df[('onset', '')].values
     assert 1 in df[('duration', '')].values
