@@ -15,12 +15,17 @@ from six import string_types
 try:
     import nltk
 except ImportError:
-    nltk is None
+    nltk = None
 
 try:
     from gensim.models.keyedvectors import KeyedVectors
 except ImportError:
-    pass
+    KeyedVectors = None
+
+try:
+    from sklearn.feature_extraction.text import CountVectorizer
+except ImportError:
+    CountVectorizer = None
 
 
 class TextExtractor(Extractor):
@@ -223,7 +228,7 @@ class WordEmbeddingExtractor(TextExtractor):
         num_dims = self.wvModel.vector_size
         if stim.text in self.wvModel:
             embedding_vector = self.wvModel[stim.text]
-            features = ['embedding_dimension_%d' % i for i in range(num_dims)]
+            features = ['embedding_dim%d' % i for i in range(num_dims)]
         else:
             embedding_vector = []
             features = []
@@ -231,3 +236,28 @@ class WordEmbeddingExtractor(TextExtractor):
                                stim,
                                self,
                                features=features)
+
+
+class TextVectorizerExtractor(TextExtractor):
+
+    ''' Uses a scikit-learn Vectorizer to extract bag-of-words
+    features from text.
+
+    Args:
+        vectorizer (Vectorizer): a scikit-learn Vectorizer to extract with.
+        Will use the CountVectorizer by default.
+    '''
+
+    _log_attributes = ('vectorizer',)
+
+    def __init__(self, vectorizer=None):
+        super(TextVectorizerExtractor, self).__init__()
+        if vectorizer:
+            self.vectorizer = vectorizer
+        else:
+            self.vectorizer = CountVectorizer()
+
+    def _extract(self, stim):
+        mat = self.vectorizer.fit_transform([stim.text]).toarray()
+        return ExtractorResult(mat, stim, self,
+                               features=self.vectorizer.get_feature_names())
