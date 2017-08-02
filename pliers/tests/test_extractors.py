@@ -11,7 +11,8 @@ from pliers.extractors import (DictionaryExtractor, PartOfSpeechExtractor,
                                IndicoAPITextExtractor, IndicoAPIImageExtractor,
                                ClarifaiAPIExtractor,
                                TensorFlowInceptionV3Extractor,
-                               TextVectorizerExtractor)
+                               TextVectorizerExtractor,
+                               WordEmbeddingExtractor)
 from pliers.stimuli import (TextStim, ComplexTextStim, ImageStim, VideoStim,
                             AudioStim, TranscribedAudioCompoundStim)
 from pliers.support.download import download_nltk_data
@@ -169,6 +170,16 @@ def test_part_of_speech_extractor():
     assert result['VBD'][3] == 1
 
 
+def test_word_embedding_extractor():
+    pytest.importorskip('gensim')
+    stims = [TextStim(text='this'), TextStim(text='sentence')]
+    ext = WordEmbeddingExtractor(join(TEXT_DIR, 'simple_vectors.bin'),
+                                 binary=True)
+    result = merge_results(ext.transform(stims))
+    assert ('WordEmbeddingExtractor', 'embedding_dim99') in result.columns
+    assert 0.001091 in result[('WordEmbeddingExtractor', 'embedding_dim0')]
+
+
 def test_vectorizer_extractor():
     pytest.importorskip('sklearn')
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
@@ -182,8 +193,7 @@ def test_vectorizer_extractor():
     stim2 = TextStim(join(TEXT_DIR, 'simple_text.txt'))
     result = merge_results(ext.transform([stim, stim2]))
     assert ('TextVectorizerExtractor', 'woman') in result.columns
-    val = result[('TextVectorizerExtractor', 'woman')][1]
-    assert np.isclose(val, 0.129568, 1e-5)
+    assert 0.129568189476 in result[('TextVectorizerExtractor', 'woman')]
 
 
 def test_brightness_extractor():

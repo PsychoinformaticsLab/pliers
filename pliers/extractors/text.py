@@ -214,14 +214,23 @@ class PartOfSpeechExtractor(ComplexTextExtractor):
 
 class WordEmbeddingExtractor(TextExtractor):
 
-    ''' An extractor that gets the embedding vectors from words
+    ''' An extractor that uses a word embedding file to look up embedding
+    vectors for text.
+
     Args:
-        embedding_file (str): path to a binary word embedding file
+        embedding_file (str): path to a word embedding file
+        binary (bool): flag indicating whether embedding file is saved in a
+            binary format
     '''
 
+    _log_attributes = ('wvModel',)
+
     def __init__(self, embedding_file, binary=False):
-        # TODO: download small one if None
-        # TODO: configuring UNKs
+        if KeyedVectors is None:
+            raise ImportError("gensim is required to create a "
+                              "WordEmbeddingExtractor, but could not be "
+                              "successfully imported. Please make sure it is "
+                              "installed.")
         self.wvModel = KeyedVectors.load_word2vec_format(embedding_file,
                                                          binary=binary)
         super(WordEmbeddingExtractor, self).__init__()
@@ -230,11 +239,11 @@ class WordEmbeddingExtractor(TextExtractor):
         num_dims = self.wvModel.vector_size
         if stim.text in self.wvModel:
             embedding_vector = self.wvModel[stim.text]
-            features = ['embedding_dim%d' % i for i in range(num_dims)]
         else:
-            embedding_vector = []
-            features = []
-        return ExtractorResult(embedding_vector,
+            # UNKs will have zeroed-out vectors
+            embedding_vector = np.zeros(num_dims)
+        features = ['embedding_dim%d' % i for i in range(num_dims)]
+        return ExtractorResult([embedding_vector],
                                stim,
                                self,
                                features=features)
@@ -258,6 +267,12 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
         if vectorizer:
             self.vectorizer = vectorizer
         else:
+            if CountVectorizer is None:
+                raise ImportError("sklearn is required to create a "
+                                  "TextVectorizerExtractor if a vectorizer is "
+                                  "not provided, but could not be successfully"
+                                  " imported. Please make sure it is "
+                                  "installed.")
             self.vectorizer = CountVectorizer()
 
     def _extract(self, stims):
