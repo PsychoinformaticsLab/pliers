@@ -10,11 +10,16 @@ except:
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.text import TextExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
-from pliers.transformers import BatchTransformerMixin
+from pliers.transformers import BatchTransformerMixin, EnvironmentKeyMixin
+from pliers.utils import listify
 
 
 try:
-    from clarifai.client import ClarifaiApi
+    from clarifai.rest.client import (ClarifaiApp,
+                                      ModelOutputConfig,
+                                      ModelOutputInfo,
+                                      Image,
+                                      Concept)
 except ImportError:
     pass
 
@@ -24,7 +29,8 @@ except ImportError:
     pass
 
 
-class IndicoAPIExtractor(BatchTransformerMixin, Extractor):
+class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
+                         EnvironmentKeyMixin):
 
     ''' Base class for all Indico API Extractors
 
@@ -37,6 +43,7 @@ class IndicoAPIExtractor(BatchTransformerMixin, Extractor):
     _log_attributes = ('models',)
     _input_type = ()
     _batch_size = 20
+    _env_keys = 'INDICO_APP_KEY'
 
     def __init__(self, api_key=None, models=None):
         super(IndicoAPIExtractor, self).__init__()
@@ -109,7 +116,8 @@ class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
         super(IndicoAPIImageExtractor, self).__init__(**kwargs)
 
 
-class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor):
+class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
+                           EnvironmentKeyMixin):
 
     ''' Uses the Clarifai API to extract tags of images.
     Args:
@@ -119,16 +127,23 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor):
             to be passed the first time the extractor is initialized.
         model (str): The name of the Clarifai model to use. If None, defaults
             to the general image tagger.
-        select_classes (list): List of classes (strings) to query from the API.
-            For example, ['food', 'animal'].
+        min_value (float): A value between 0.0 and 1.0 indicating the minimum
+            confidence required to return a prediction. Defaults to 0.0.
+        max_concepts (int): A value between 0 and 200 indicating the maximum
+            number of label predictions returned.
+        select_concepts (list): List of concepts (strings) to query from the
+            API. For example, ['food', 'animal'].
     '''
 
-    _log_attributes = ('model', 'select_classes')
+    _log_attributes = ('model', 'min_value', 'max_concepts', 'select_concepts')
     _batch_size = 128
+    _env_keys = ('CLARIFAI_APP_ID', 'CLARIFAI_APP_SECRET')
 
-    def __init__(self, app_id=None, app_secret=None, model=None,
-                 select_classes=None):
-        ImageExtractor.__init__(self)
+    def __init__(self, app_id=None, app_secret=None, model='general-v1.3',
+                 min_value=None,
+                 max_concepts=None,
+                 select_concepts=None):
+        super(ClarifaiAPIExtractor, self).__init__()
         if app_id is None or app_secret is None:
             try:
                 app_id = os.environ['CLARIFAI_APP_ID']
@@ -138,31 +153,36 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor):
                                  "must be passed the first time a Clarifai "
                                  "extractor is initialized.")
 
-        self.tagger = ClarifaiApi(app_id=app_id, app_secret=app_secret)
-        if model is not None:
-            self.tagger.set_model(model)
-
-        self.model = model
-
-        if select_classes is None:
-            self.select_classes = None
-        else:
-            self.select_classes = ','.join(select_classes)
-
-        self._batch_size = self.tagger.get_info()['max_batch_size']
+        self.api = ClarifaiApp(app_id=app_id, app_secret=app_secret)
+        self.model = self.api.models.get(model)
+        self.min_value = min_value
+        self.max_concepts = max_concepts
+        self.select_concepts = select_concepts
+        if select_concepts:
+            select_concepts = listify(select_concepts)
+            self.select_concepts = [Concept(concept_name=n) for n in select_concepts]
 
     def _extract(self, stims):
-        # Clarifai client expects a list of open file pointers
-        # ExitStack lets us use several file context managers simultaneous
+        output_config = ModelOutputConfig(min_value=self.min_value,
+                                          max_concepts=self.max_concepts,
+                                          select_concepts=self.select_concepts)
+        model_output_info = ModelOutputInfo(output_config=output_config)
+
+        # ExitStack lets us use filename context managers simultaneously
         with ExitStack() as stack:
             files = [stack.enter_context(s.get_filename()) for s in stims]
-            fps = [stack.enter_context(open(f, 'rb')) for f in files]
-            tags = self.tagger.tag_images(fps, select_classes=self.select_classes)
+            imgs = [Image(filename=filename) for filename in files]
+            tags = self.model.predict(imgs, model_output_info=model_output_info)
 
         extracted = []
-        for i, res in enumerate(tags['results']):
-            tagged = res['result']['tag']
-            extracted.append(ExtractorResult([tagged['probs']], stims[i],
-                             self, features=tagged['classes']))
+        for i, res in enumerate(tags['outputs']):
+            data = res['data']['concepts']
+            concepts = []
+            values = []
+            for d in data:
+                concepts.append(d['name'])
+                values.append(d['value'])
+            extracted.append(ExtractorResult([values], stims[i],
+                             self, features=concepts))
 
         return extracted

@@ -6,7 +6,7 @@ from moviepy.audio.io.AudioFileClip import AudioFileClip
 
 class AudioStim(Stim):
 
-    ''' Represents an audio clip. For now, only handles wav files.
+    ''' Represents an audio clip.
     Args:
         filename (str): Path to audio file.
         onset (float): Optional onset of the audio file (in seconds) with

@@ -30,7 +30,7 @@ def test_word_stemming_filter():
     assert stems == target
 
     # Handles StemmerI stemmer
-    stemmer = nls.WordNetLemmatizer()
+    stemmer = nls.SnowballStemmer(language='english')
     filt = WordStemmingFilter(stemmer=stemmer)
     stemmed = filt.transform(stim)
     stems = [s.text for s in stemmed]

@@ -2,9 +2,11 @@ from .utils import get_test_data_path
 from pliers.stimuli import (VideoStim, VideoFrameStim, ComplexTextStim,
                             AudioStim, ImageStim, CompoundStim,
                             TranscribedAudioCompoundStim,
-                            TextStim)
+                            TextStim,
+                            TweetStimFactory,
+                            TweetStim)
 from pliers.stimuli.base import Stim, _get_stim_class
-from pliers.extractors import BrightnessExtractor
+from pliers.extractors import BrightnessExtractor, LengthExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.download import download_nltk_data
 import numpy as np
@@ -229,3 +231,30 @@ def test_save():
         s.save(path)
         assert exists(path)
         os.remove(path)
+
+
+@pytest.mark.skipif("'TWITTER_ACCESS_TOKEN_KEY' not in os.environ")
+def test_twitter():
+    # Test stim creation
+    pytest.importorskip('twitter')
+    factory = TweetStimFactory()
+    status_id = 821442726461931521
+    pliers_tweet = factory.get_status(status_id)
+    assert isinstance(pliers_tweet, TweetStim)
+    assert isinstance(pliers_tweet, CompoundStim)
+    assert len(pliers_tweet.elements) == 1
+
+    status_id = 884392294014746624
+    ut_tweet = factory.get_status(status_id)
+    assert len(ut_tweet.elements) == 2
+
+    # Test extraction
+    ext = LengthExtractor()
+    res = ext.transform(pliers_tweet)[0].to_df()
+    assert res['text_length'][0] == 104
+
+    # Test image extraction
+    ext = BrightnessExtractor()
+    res = ext.transform(ut_tweet)[0].to_df()
+    brightness = res['brightness'][0]
+    assert np.isclose(brightness, 0.54057, 1e-5)
