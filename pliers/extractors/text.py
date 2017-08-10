@@ -260,7 +260,7 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
     '''
 
     _log_attributes = ('vectorizer',)
-    _batch_size = sys.maxint
+    _batch_size = sys.maxsize
 
     def __init__(self, vectorizer=None):
         super(TextVectorizerExtractor, self).__init__()
