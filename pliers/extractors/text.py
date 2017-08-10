@@ -255,8 +255,8 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
     features from text.
 
     Args:
-        vectorizer (Vectorizer): a scikit-learn Vectorizer to extract with.
-        Will use the CountVectorizer by default.
+        vectorizer (sklearn Vectorizer): a scikit-learn Vectorizer to extract
+            with. Will use the CountVectorizer by default.
     '''
 
     _log_attributes = ('vectorizer',)

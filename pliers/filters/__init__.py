@@ -1,5 +1,8 @@
 ''' Filter hierarchy. '''
 
-from .text import WordStemmingFilter
+from .text import WordStemmingFilter, TokenizingFilter
 
-__all__ = ['WordStemmingFilter']
+__all__ = [
+    'WordStemmingFilter',
+    'TokenizingFilter'
+]

@@ -2,6 +2,7 @@
 
 from six import string_types
 from nltk import stem
+from nltk.tokenize import word_tokenize
 from pliers.stimuli.text import TextStim
 from .base import Filter
 
@@ -53,3 +54,27 @@ class WordStemmingFilter(TextFilter):
     def _filter(self, stim):
         stemmed = self.stemmer.stem(stim.text)
         return TextStim(stim.filename, stemmed, stim.onset, stim.duration)
+
+
+class TokenizingFilter(TextFilter):
+
+    ''' Tokenizes a TextStim into several word TextStims
+    Args:
+        tokenizer (nltk Tokenizer): a nltk Tokenizer to tokenize
+            with. Will use the word_tokenize method if none is specified.
+    '''
+
+    _log_attributes = ('tokenizer',)
+
+    def __init__(self, tokenizer=None):
+        self.tokenizer = tokenizer
+        super(TokenizingFilter, self).__init__()
+
+    def _filter(self, stim):
+        if self.tokenizer:
+            tokens = self.tokenizer.tokenize(stim.text)
+        else:
+            tokens = word_tokenize(stim.text)
+        stims = [TextStim(stim.filename, token, stim.onset, stim.duration)
+                 for token in tokens]
+        return stims
