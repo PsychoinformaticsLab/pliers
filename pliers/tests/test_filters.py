@@ -44,6 +44,11 @@ def test_word_stemming_filter():
     with pytest.raises(ValueError):
         filt = WordStemmingFilter(stemmer='nonexistent_stemmer')
 
+    # Try a long text stim
+    stim2 = TextStim(text='theres something happening here')
+    filt = WordStemmingFilter()
+    assert filt.transform(stim2).text == 'there someth happen here'
+
 
 def test_tokenizing_filter():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))

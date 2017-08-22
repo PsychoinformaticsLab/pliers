@@ -25,6 +25,8 @@ class WordStemmingFilter(TextFilter):
             'porter', 'snowball', 'isri', 'lancaster', 'regexp', 'wordet',
             or 'rslp'. Alternatively, an initialized nltk StemmerI instance
             can be passed.
+        tokenize (bool): if True, apply the stemmer to each token in the
+            TextStim, otherwise treat the whole TextStim as one token to stem.
         args, kwargs: Optional positional and keyword args passed onto the
             nltk stemmer.
     '''
@@ -38,9 +40,9 @@ class WordStemmingFilter(TextFilter):
         'rslp': 'RSLPStemmer'
     }
 
-    _log_attributes = ('stemmer',)
+    _log_attributes = ('stemmer', 'tokenize')
 
-    def __init__(self, stemmer='porter', *args, **kwargs):
+    def __init__(self, stemmer='porter', tokenize=True, *args, **kwargs):
 
         if isinstance(stemmer, string_types):
             if stemmer not in self.stemmers:
@@ -52,10 +54,15 @@ class WordStemmingFilter(TextFilter):
             raise ValueError("stemmer must be either a valid string, or an "
                              "instance of class StemmerI.")
         self.stemmer = stemmer
+        self.tokenize = tokenize
         super(WordStemmingFilter, self).__init__()
 
     def _filter(self, stim):
-        stemmed = self.stemmer.stem(stim.text)
+        if self.tokenize:
+            tokens = stim.text.split()
+            stemmed = ' '.join([self.stemmer.stem(tok) for tok in tokens])
+        else:
+            stemmed = self.stemmer.stem(stim.text)
         return TextStim(stim.filename, stemmed, stim.onset, stim.duration)
 
 
