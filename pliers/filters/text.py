@@ -1,5 +1,7 @@
 ''' Filters that operate on TextStim inputs. '''
 
+import nltk
+
 from six import string_types
 from nltk import stem
 from nltk.tokenize import word_tokenize
@@ -59,7 +61,7 @@ class WordStemmingFilter(TextFilter):
 
 class TokenizingFilter(TextFilter):
 
-    ''' Tokenizes a TextStim into several word TextStims
+    ''' Tokenizes a TextStim into several word TextStims.
     Args:
         tokenizer (nltk Tokenizer): a nltk Tokenizer to tokenize
             with. Will use the word_tokenize method if none is specified.
@@ -79,3 +81,38 @@ class TokenizingFilter(TextFilter):
         stims = [TextStim(stim.filename, token, stim.onset, stim.duration)
                  for token in tokens]
         return stims
+
+
+class TokenRemovalFilter(TextFilter):
+
+    ''' Removes tokens (e.g. stopwords, common words, punctuation) from a
+    TextStim.
+
+    Args:
+        tokens (list): a list of tokens (strings) to remove from a
+            TextStim. Will use nltk's default stopword list if none is
+            specified.
+        language (str): if using the default nltk stopwords, specifies
+            which language from which to use stopwords.
+    '''
+
+    _log_attributes = ('tokens', 'language')
+
+    def __init__(self, tokens=None, language='english'):
+        self.language = language
+        if tokens:
+            self.tokens = set(tokens)
+        else:
+            try:
+                nltk.data.find('corpora/stopwords')
+            except LookupError:
+                nltk.download('stopwords')
+            from nltk.corpus import stopwords
+            self.tokens = set(stopwords.words(self.language))
+        super(TokenRemovalFilter, self).__init__()
+
+    def _filter(self, stim):
+        tokens = word_tokenize(stim.text)
+        tokens = [tok for tok in tokens if tok not in self.tokens]
+        text = ' '.join(tokens)
+        return TextStim(stim.filename, text, stim.onset, stim.duration)

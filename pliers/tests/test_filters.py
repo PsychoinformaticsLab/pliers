@@ -1,10 +1,14 @@
 from os.path import join
 from .utils import get_test_data_path
-from pliers.filters import WordStemmingFilter, TokenizingFilter
+from pliers.filters import (WordStemmingFilter,
+                            TokenizingFilter,
+                            TokenRemovalFilter)
 from pliers.stimuli import ComplexTextStim, TextStim
 from nltk import stem as nls
 from nltk.tokenize import PunktSentenceTokenizer
+import nltk
 import pytest
+import string
 
 
 TEXT_DIR = join(get_test_data_path(), 'text')
@@ -62,3 +66,22 @@ def test_multiple_text_filters():
     stemmed_tokens = filt2.transform(filt1.transform(stim))
     full_text = ' '.join([s.text for s in stemmed_tokens])
     assert full_text == 'test the filter featur'
+
+
+def test_token_removal_filter():
+    stim = TextStim(text='this is not a very long sentence')
+    filt = TokenRemovalFilter()
+    assert filt.transform(stim).text == 'long sentence'
+
+    filt2 = TokenRemovalFilter(tokens=['a', 'the', 'is'])
+    assert filt2.transform(stim).text == 'this not very long sentence'
+
+    stim2 = TextStim(text='More. is Real, sentence that\'ll work')
+    try:
+        nltk.data.find('corpora/stopwords')
+    except LookupError:
+        nltk.download('stopwords')
+    from nltk.corpus import stopwords
+    tokens = set(stopwords.words('english')) | set(string.punctuation)
+    filt3 = TokenRemovalFilter(tokens=tokens)
+    assert filt3.transform(stim2).text == 'More Real sentence \'ll work'
