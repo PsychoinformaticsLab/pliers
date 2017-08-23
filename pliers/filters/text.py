@@ -1,6 +1,7 @@
 ''' Filters that operate on TextStim inputs. '''
 
 import nltk
+import string
 
 from six import string_types
 from nltk import stem
@@ -123,3 +124,11 @@ class TokenRemovalFilter(TextFilter):
         tokens = [tok for tok in tokens if tok not in self.tokens]
         text = ' '.join(tokens)
         return TextStim(stim.filename, text, stim.onset, stim.duration)
+
+
+class PunctuationRemovalFilter(TokenRemovalFilter):
+
+    ''' Removes punctuation from a TextStim. '''
+
+    def __init__(self, tokens=string.punctuation):
+        super(PunctuationRemovalFilter, self).__init__(tokens)

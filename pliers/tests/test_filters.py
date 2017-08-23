@@ -2,7 +2,8 @@ from os.path import join
 from .utils import get_test_data_path
 from pliers.filters import (WordStemmingFilter,
                             TokenizingFilter,
-                            TokenRemovalFilter)
+                            TokenRemovalFilter,
+                            PunctuationRemovalFilter)
 from pliers.stimuli import ComplexTextStim, TextStim
 from nltk import stem as nls
 from nltk.tokenize import PunktSentenceTokenizer
@@ -90,3 +91,10 @@ def test_token_removal_filter():
     tokens = set(stopwords.words('english')) | set(string.punctuation)
     filt3 = TokenRemovalFilter(tokens=tokens)
     assert filt3.transform(stim2).text == 'More Real sentence \'ll work'
+
+
+def test_punctuation_removal_filter():
+    stim = TextStim(text='this sentence, will have: punctuation, and words.')
+    filt = PunctuationRemovalFilter()
+    target = 'this sentence will have punctuation and words'
+    assert filt.transform(stim).text == target
