@@ -12,7 +12,8 @@ from pliers.extractors import (DictionaryExtractor, PartOfSpeechExtractor,
                                ClarifaiAPIExtractor,
                                TensorFlowInceptionV3Extractor,
                                TextVectorizerExtractor,
-                               WordEmbeddingExtractor)
+                               WordEmbeddingExtractor,
+                               VADERSentimentExtractor)
 from pliers.stimuli import (TextStim, ComplexTextStim, ImageStim, VideoStim,
                             AudioStim, TranscribedAudioCompoundStim)
 from pliers.support.download import download_nltk_data
@@ -194,6 +195,20 @@ def test_vectorizer_extractor():
     result = merge_results(ext.transform([stim, stim2]))
     assert ('TextVectorizerExtractor', 'woman') in result.columns
     assert 0.129568189476 in result[('TextVectorizerExtractor', 'woman')]
+
+
+def test_vader_sentiment_extractor():
+    stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
+    ext = VADERSentimentExtractor()
+    result = ext.transform(stim).to_df()
+    assert result['sentiment_neu'][0] == 0.752
+
+    stim2 = TextStim(text='VADER is smart, handsome, and funny!')
+    result2 = ext.transform(stim2).to_df()
+    assert result2['sentiment_pos'][0] == 0.752
+    assert result2['sentiment_neg'][0] == 0.0
+    assert result2['sentiment_neu'][0] == 0.248
+    assert result2['sentiment_compound'][0] == 0.8439
 
 
 def test_brightness_extractor():

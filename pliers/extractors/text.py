@@ -10,14 +10,10 @@ from pliers.datasets.text import fetch_dictionary
 from pliers.transformers import BatchTransformerMixin
 import numpy as np
 import pandas as pd
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import sys
 from six import string_types
-
-# Optional dependencies
-try:
-    import nltk
-except ImportError:
-    nltk = None
 
 try:
     from gensim.models.keyedvectors import KeyedVectors
@@ -282,3 +278,23 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
             results.append(ExtractorResult([row], stims[i], self,
                            features=self.vectorizer.get_feature_names()))
         return results
+
+
+class VADERSentimentExtractor(TextExtractor):
+
+    ''' Uses nltk's VADER lexicon to extract (0.0-1.0) values for the positve,
+    neutral, and negative sentiment of a TextStim. Also returns a compound
+    score ranging from -1 (very negative) to +1 (very positive). '''
+
+    _log_attributes = ('analyzer',)
+
+    def __init__(self):
+        self.analyzer = SentimentIntensityAnalyzer()
+        super(VADERSentimentExtractor, self).__init__()
+
+    @requires_nltk_corpus
+    def _extract(self, stim):
+        scores = self.analyzer.polarity_scores(stim.text)
+        features = ['sentiment_' + k for k in scores.keys()]
+        return ExtractorResult([scores.values()], stim, self,
+                               features=features)
