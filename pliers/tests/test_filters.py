@@ -51,3 +51,11 @@ def test_image_cropping_filter():
     assert np.array_equal(stim.data[0, 0], [255.0, 255.0, 255.0])
     # Top left corner goes white -> red
     assert np.array_equal(new_stim.data[0, 0], [136.0, 0.0, 0.0])
+
+    filt2 = ImageCroppingFilter()
+    new_stim = filt2.transform(stim)
+    assert new_stim.data.shape == (288, 420, 3)
+    stim2 = ImageStim(join(IMAGE_DIR, 'aspect_ratio_fail.jpg'))
+    assert stim2.data.shape == (240, 240, 3)
+    new_stim2 = filt2.transform(stim2)
+    assert new_stim2.data.shape == (112, 240, 3)
