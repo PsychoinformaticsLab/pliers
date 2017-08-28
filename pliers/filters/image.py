@@ -53,7 +53,7 @@ class PillowImageFilter(ImageFilter):
     SMOOTH, SMOOTH_MORE, SHARPEN
 
     Args:
-        filter (str or or type or ImageFilter): specific name or type of the
+        filter (str or type or ImageFilter): specific name or type of the
             filter to be used, with supporting *args and **kwargs. Also
             accepted to directly pass an instance of PIL's ImageFilter.Filter
     '''
@@ -71,8 +71,11 @@ class PillowImageFilter(ImageFilter):
 
         if isinstance(image_filter, PillowFilter.Filter):
             self.filter = image_filter
-        else:
+        elif isinstance(image_filter, str):
             self.filter = getattr(PillowFilter, image_filter)(*args, **kwargs)
+        else:
+            raise ValueError("Must provide an image_filter as a string, type, "
+                             "or ImageFilter object. ")
 
         super(PillowImageFilter, self).__init__()
 

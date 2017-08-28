@@ -79,6 +79,10 @@ def test_pillow_image_filter_filter():
     min_img = filt3.transform(stim)
     assert np.array_equal(min_img.data[0, 0], [122, 74, 36])
 
-    filt4 = PillowImageFilter(ImageFilter.MaxFilter, size=3)
-    med_img = filt4.transform(stim)
+    filt4 = PillowImageFilter('MinFilter')
+    min_img = filt4.transform(stim)
+    assert np.array_equal(min_img.data[0, 0], [122, 74, 36])
+
+    filt5 = PillowImageFilter(ImageFilter.MaxFilter, size=3)
+    med_img = filt5.transform(stim)
     assert np.array_equal(med_img.data[0, 0], [136, 86, 49])
