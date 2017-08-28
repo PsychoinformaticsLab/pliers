@@ -6,7 +6,7 @@ from .image import TesseractConverter
 from .iterators import (VideoFrameIterator, VideoFrameCollectionIterator,
                         ComplexTextIterator)
 from .multistep import VideoToTextConverter, VideoToComplexTextConverter
-from .video import VideoToAudioConverter, FrameSamplingConverter
+from .video import VideoToAudioConverter
 
 __all__ = [
     'WitTranscriptionConverter',
@@ -20,7 +20,6 @@ __all__ = [
     'VideoToTextConverter',
     'VideoToComplexTextConverter',
     'VideoToAudioConverter',
-    'FrameSamplingConverter',
     'Converter',
     'get_converter'
 ]

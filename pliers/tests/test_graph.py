@@ -1,14 +1,15 @@
 import pytest
 from pliers.graph import Graph, Node
-from pliers.converters import (TesseractConverter, FrameSamplingConverter,
-                               VideoToAudioConverter, WitTranscriptionConverter)
+from pliers.converters import (TesseractConverter,
+                               VideoToAudioConverter,
+                               WitTranscriptionConverter)
+from pliers.filters import FrameSamplingFilter
 from pliers.extractors import (BrightnessExtractor, VibranceExtractor,
                                LengthExtractor, merge_results)
 from pliers.stimuli import (ImageStim, VideoStim)
 from .utils import get_test_data_path, DummyExtractor
 from os.path import join, exists
 from numpy.testing import assert_almost_equal
-import numpy as np
 import tempfile
 import os
 
@@ -181,7 +182,7 @@ def test_big_pipeline():
     pytest.importorskip('pygraphviz')
     filename = join(get_test_data_path(), 'video', 'obama_speech.mp4')
     video = VideoStim(filename)
-    visual_nodes = [(FrameSamplingConverter(every=15), [
+    visual_nodes = [(FrameSamplingFilter(every=15), [
         (TesseractConverter(), [LengthExtractor()]),
         VibranceExtractor(), 'BrightnessExtractor',
     ])]
@@ -212,7 +213,7 @@ def test_big_pipeline_json():
     nodes = {
         "roots": [
             {
-                "transformer": "FrameSamplingConverter",
+                "transformer": "FrameSamplingFilter",
                 "parameters": {
                     "every": 15
                 },

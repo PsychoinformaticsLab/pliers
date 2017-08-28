@@ -68,7 +68,10 @@ class VideoFrameCollectionStim(Stim):
     def frames(self):
         return (f for f in self)
 
-    def get_frame(self, index=None):
+    def get_frame(self, index=None, onset=None):
+        if onset:
+            index = int(onset * self.fps)
+
         frame_num = self.frame_index[index]
         onset = float(frame_num) / self.fps
 
@@ -112,10 +115,3 @@ class VideoStim(VideoFrameCollectionStim):
         super(VideoStim, self).__init__(filename=filename,
                                         onset=onset,
                                         url=url)
-
-    def get_frame(self, index=None, onset=None):
-        if index is not None:
-            onset = float(index) / self.fps
-        else:
-            index = int(onset * self.fps)
-        return VideoFrameStim(self, index, data=self.clip.get_frame(onset))

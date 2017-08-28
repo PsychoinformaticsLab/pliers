@@ -1,16 +1,15 @@
 from os.path import join
 from .utils import get_test_data_path
-from pliers.converters import (get_converter, FrameSamplingConverter,
+from pliers.converters import (get_converter,
                                VideoToAudioConverter, VideoToTextConverter,
                                TesseractConverter, WitTranscriptionConverter,
                                GoogleSpeechAPIConverter, IBMSpeechAPIConverter,
                                GoogleVisionAPITextConverter,
                                ComplexTextIterator)
 from pliers.converters.image import ImageToTextConverter
-from pliers.stimuli import (VideoStim, VideoFrameStim, TextStim,
+from pliers.stimuli import (VideoStim, TextStim,
                             ComplexTextStim, AudioStim, ImageStim)
 import numpy as np
-import math
 import pytest
 
 
@@ -23,47 +22,6 @@ def test_video_to_audio_converter():
     assert audio.history.source_file == filename
     assert audio.onset == 4.2
     assert np.isclose(video.duration, audio.duration, 1e-2)
-
-
-def test_frame_sampling_video_converter():
-    filename = join(get_test_data_path(), 'video', 'small.mp4')
-    video = VideoStim(filename, onset=4.2)
-    assert video.fps == 30
-    assert video.n_frames in (167, 168)
-    assert video.width == 560
-
-    # Test frame filters
-    conv = FrameSamplingConverter(every=3)
-    derived = conv.transform(video)
-    assert derived.n_frames == math.ceil(video.n_frames / 3.0)
-    first = next(f for f in derived)
-    assert type(first) == VideoFrameStim
-    assert first.name == 'frame[0]'
-    assert first.onset == 4.2
-    assert first.duration == 3 * (1 / 30.0)
-    second = [f for f in derived][1]
-    assert second.onset == 4.3
-
-    # Should refilter from original frames
-    conv = FrameSamplingConverter(hertz=15)
-    derived = conv.transform(derived)
-    assert derived.n_frames == math.ceil(video.n_frames / 6.0)
-    first = next(f for f in derived)
-    assert type(first) == VideoFrameStim
-    assert first.duration == 3 * (1 / 15.0)
-    second = [f for f in derived][1]
-    assert second.onset == 4.4
-
-
-def test_derived_video_converter_cv2():
-    pytest.importorskip('cv2')
-    filename = join(get_test_data_path(), 'video', 'small.mp4')
-    video = VideoStim(filename)
-
-    conv = FrameSamplingConverter(top_n=5)
-    derived = conv.transform(video)
-    assert derived.n_frames == 5
-    assert type(next(f for f in derived)) == VideoFrameStim
 
 
 @pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")

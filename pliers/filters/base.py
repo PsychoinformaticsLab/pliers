@@ -13,7 +13,7 @@ class Filter(with_metaclass(ABCMeta, Transformer)):
 
     def _transform(self, stim, *args, **kwargs):
         new_stim = self._filter(stim, *args, **kwargs)
-        if not isinstance(new_stim, stim.__class__):
+        if not isinstance(new_stim, self._input_type):
             raise ValueError("Filter must return a Stim of the same type as "
                              "its input.")
         return new_stim
