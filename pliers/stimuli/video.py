@@ -46,12 +46,12 @@ class VideoFrameCollectionStim(Stim):
         self.fps = self.clip.fps
         self.width = self.clip.w
         self.height = self.clip.h
-        self.n_frames = int(self.fps * self.clip.duration)
-        duration = self.clip.duration
         if frame_index:
             self.frame_index = frame_index
         else:
-            self.frame_index = range(self.n_frames)
+            self.frame_index = range(int(self.fps * self.clip.duration))
+        self.n_frames = len(self.frame_index)
+        duration = self.clip.duration
         super(VideoFrameCollectionStim, self).__init__(filename,
                                                        onset=onset,
                                                        duration=duration)
@@ -72,8 +72,11 @@ class VideoFrameCollectionStim(Stim):
         frame_num = self.frame_index[index]
         onset = float(frame_num) / self.fps
 
-        next_frame_num = self.frame_index[index+1]
-        end = float(next_frame_num) / self.fps
+        if index < self.n_frames - 2:
+            next_frame_num = self.frame_index[index+1]
+            end = float(next_frame_num) / self.fps
+        else:
+            end = float(self.duration)
 
         duration = end - onset
 

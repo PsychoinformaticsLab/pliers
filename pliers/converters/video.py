@@ -1,8 +1,7 @@
 ''' Converter classes that operate on VideoStim inputs. '''
 
-from pliers.stimuli.video import VideoStim, DerivedVideoStim, VideoFrameStim
+from pliers.stimuli.video import VideoStim, VideoFrameCollectionStim
 from pliers.stimuli.audio import AudioStim
-from pliers.utils import progress_bar_wrapper
 from .base import Converter
 
 
@@ -21,8 +20,8 @@ class VideoToDerivedVideoConverter(Converter):
 
     ''' Base VideoToDerivedVideo Converter class; all subclasses can only be
     applied to video and convert to derived (sampled) video. '''
-    _input_type = VideoStim
-    _output_type = DerivedVideoStim
+    _input_type = VideoFrameCollectionStim
+    _output_type = VideoFrameCollectionStim
 
 
 class FrameSamplingConverter(VideoToDerivedVideoConverter):
@@ -49,16 +48,13 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
         self.top_n = top_n
 
     def _convert(self, video):
-        if not hasattr(video, "frame_index"):
-            frame_index = range(video.n_frames)
-        else:
-            frame_index = video.frame_index
-
         if self.every is not None:
-            new_idx = range(video.n_frames)[::self.every]
+            new_idx = range(int(video.fps * video.clip.duration))[::self.every]
         elif self.hertz is not None:
             interval = int(video.fps / self.hertz)
-            new_idx = range(video.n_frames)[::interval]
+            new_idx = range(int(video.fps * video.clip.duration))[::interval]
+            print video.frame_index
+            print new_idx
         elif self.top_n is not None:
             import cv2
             diffs = []
@@ -66,30 +62,14 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
                 if i == 0:
                     last = img
                     continue
-                diffs.append(sum(cv2.sumElems(cv2.absdiff(last, img))))
+                diffs.append(sum(cv2.sumElems(cv2.absdiff(last.data, img.data))))
                 last = img
-            new_idx = sorted(range(len(diffs)), key=lambda i: diffs[i], reverse=True)[
-                :self.top_n]
+            new_idx = sorted(range(len(diffs)),
+                             key=lambda i: diffs[i],
+                             reverse=True)[:self.top_n]
 
-        frame_index = sorted(list(set(frame_index).intersection(new_idx)))
+        frame_index = sorted(list(set(video.frame_index).intersection(new_idx)))
 
-        # Construct new VideoFrameStim for each frame index
-        onsets = [frame_num * (1. / video.fps) for frame_num in frame_index]
-        frames = []
-        for i, f in progress_bar_wrapper(enumerate(frame_index),
-                                         desc='Video frame',
-                                         total=len(frame_index)):
-            if f != frame_index[-1]:
-                dur = onsets[i+1] - onsets[i]
-            else:
-                dur = (video.n_frames / video.fps) - onsets[i]
-
-            elem = VideoFrameStim(video=video, frame_num=f, duration=dur)
-            offset = 0.0 if video.onset is None else video.onset
-            elem.onset = offset + onsets[i]
-            frames.append(elem)
-
-        return DerivedVideoStim(filename=video.filename,
-                                frames=frames,
-                                frame_index=frame_index,
-                                onset=video.onset)
+        return VideoFrameCollectionStim(filename=video.filename,
+                                        frame_index=frame_index,
+                                        onset=video.onset)
