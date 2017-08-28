@@ -32,19 +32,13 @@ class VideoFrameStim(ImageStim):
         self.name += 'frame[%s]' % frame_num
 
 
-class VideoStim(Stim):
+class VideoFrameCollectionStim(Stim):
 
-    ''' A video.
-    Args:
-        filename (str): Path to input file, if one exists.
-        onset (float): Optional onset of the video file (in seconds) with
-            respect to some more general context or timeline the user wishes
-            to keep track of.
-    '''
+    ''' A video. '''
 
     _default_file_extension = '.mp4'
 
-    def __init__(self, filename=None, onset=None, url=None):
+    def __init__(self, filename=None, frame_index=None, onset=None, url=None):
         if url is not None:
             filename = url
         self.filename = filename
@@ -54,16 +48,38 @@ class VideoStim(Stim):
         self.height = self.clip.h
         self.n_frames = int(self.fps * self.clip.duration)
         duration = self.clip.duration
-
-        super(VideoStim, self).__init__(filename, onset, duration)
+        if frame_index:
+            self.frame_index = frame_index
+        else:
+            self.frame_index = range(self.n_frames)
+        super(VideoFrameCollectionStim, self).__init__(filename,
+                                                       onset=onset,
+                                                       duration=duration)
 
     def _load_clip(self):
         self.clip = VideoFileClip(self.filename)
 
     def __iter__(self):
         """ Frame iteration. """
-        for i, f in enumerate(self.clip.iter_frames()):
-            yield VideoFrameStim(self, i, data=f)
+        for i, f in enumerate(self.frame_index):
+            yield self.get_frame(i)
+
+    @property
+    def frames(self):
+        return (f for f in self)
+
+    def get_frame(self, index=None):
+        frame_num = self.frame_index[index]
+        onset = float(frame_num) / self.fps
+
+        next_frame_num = self.frame_index[index+1]
+        end = float(next_frame_num) / self.fps
+
+        duration = end - onset
+
+        return VideoFrameStim(self, frame_num,
+                              data=self.clip.get_frame(onset),
+                              duration=duration)
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -74,9 +90,25 @@ class VideoStim(Stim):
         self.__dict__ = d
         self._load_clip()
 
-    @property
-    def frames(self):
-        return (f for f in self.clip.iter_frames())
+    def save(self, path):
+        # IMPORTANT WARNING: saves entire source video
+        self.clip.write_videofile(path)
+
+
+class VideoStim(VideoFrameCollectionStim):
+
+    ''' A video.
+    Args:
+        filename (str): Path to input file, if one exists.
+        onset (float): Optional onset of the video file (in seconds) with
+            respect to some more general context or timeline the user wishes
+            to keep track of.
+    '''
+
+    def __init__(self, filename=None, onset=None, url=None):
+        super(VideoStim, self).__init__(filename=filename,
+                                        onset=onset,
+                                        url=url)
 
     def get_frame(self, index=None, onset=None):
         if index is not None:
@@ -84,32 +116,3 @@ class VideoStim(Stim):
         else:
             index = int(onset * self.fps)
         return VideoFrameStim(self, index, data=self.clip.get_frame(onset))
-
-    def save(self, path):
-        self.clip.write_videofile(path)
-
-
-class DerivedVideoStim(VideoStim):
-
-    """
-    VideoStim containing keyframes (for API calls). Each keyframe is associated
-    with a duration reflecting the length of its "scene."
-    Args:
-        filename (str): Path to input file, if one exists.
-        frames (iterable): iterable of frames retained from original VideoStim.
-        frame_index (list): List of indices of frames retained from the
-            original VideoStim.
-    """
-
-    def __init__(self, filename, frames, frame_index=None, onset=None):
-        super(DerivedVideoStim, self).__init__(filename, onset=onset)
-        self._frames = frames
-        self.frame_index = frame_index
-        self.name += '_derived'
-
-    @property
-    def frames(self):
-        return (f for f in self._frames)
-
-    def __iter__(self):
-        return self.frames
