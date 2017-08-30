@@ -34,7 +34,17 @@ class VideoFrameStim(ImageStim):
 
 class VideoFrameCollectionStim(Stim):
 
-    ''' A video. '''
+    ''' A collection of video frames.
+    Args:
+        filename (str): Path to input file, if one exists.
+        frame_index (list): List of indices of frames retained from the
+            original video. Uses every frame by default
+            (i.e. for normal VideoStims).
+        onset (float): Optional onset of the video file (in seconds) with
+            respect to some more general context or timeline the user wishes
+            to keep track of.
+        url (str): Optional url source for a video.
+    '''
 
     _default_file_extension = '.mp4'
 
@@ -109,6 +119,7 @@ class VideoStim(VideoFrameCollectionStim):
         onset (float): Optional onset of the video file (in seconds) with
             respect to some more general context or timeline the user wishes
             to keep track of.
+        url (str): Optional url source for a video.
     '''
 
     def __init__(self, filename=None, onset=None, url=None):

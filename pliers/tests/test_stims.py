@@ -63,12 +63,13 @@ def test_video_stim():
     filename = join(get_test_data_path(), 'video', 'small.mp4')
     video = VideoStim(filename, onset=4.2)
     assert video.fps == 30
-    assert video.n_frames in (167, 168)
+    assert video.n_frames == 168
     assert video.width == 560
+    assert video.duration == 5.57
 
     # Test frame iterator
     frames = [f for f in video]
-    assert len(frames) in (167, 168)  # THIS IS A PROBLEM
+    assert len(frames) == 168
     f1 = frames[100]
     assert isinstance(f1, VideoFrameStim)
     assert isinstance(f1.onset, float)
@@ -80,6 +81,14 @@ def test_video_stim():
     assert isinstance(f2.onset, float)
     assert f2.onset > 4.2
     f2.data.shape == (320, 560, 3)
+
+    # Try another video
+    filename = join(get_test_data_path(), 'video', 'obama_speech.mp4')
+    video = VideoStim(filename)
+    assert video.fps == 12
+    assert video.n_frames == 105
+    assert video.width == 320
+    assert video.duration == 8.71
 
 
 def test_audio_stim(dummy_iter_extractor):

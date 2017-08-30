@@ -6,7 +6,7 @@ from .base import Filter
 
 class VideoFilter(Filter):
 
-    ''' Base class for all TextFilters. '''
+    ''' Base class for all VideoFilters. '''
 
     _input_type = VideoFrameCollectionStim
 
@@ -40,8 +40,6 @@ class FrameSamplingFilter(VideoFilter):
         elif self.hertz is not None:
             interval = int(video.fps / self.hertz)
             new_idx = range(int(video.fps * video.clip.duration))[::interval]
-            print video.frame_index
-            print new_idx
         elif self.top_n is not None:
             import cv2
             diffs = []
