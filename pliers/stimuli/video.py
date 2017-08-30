@@ -1,6 +1,7 @@
 ''' Classes that represent video clips. '''
 
 from __future__ import division
+from math import ceil
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from .base import Stim
 from .image import ImageStim
@@ -59,7 +60,7 @@ class VideoFrameCollectionStim(Stim):
         if frame_index:
             self.frame_index = frame_index
         else:
-            self.frame_index = range(int(self.fps * self.clip.duration))
+            self.frame_index = range(int(ceil(self.fps * self.clip.duration)))
         self.n_frames = len(self.frame_index)
         duration = self.clip.duration
         super(VideoFrameCollectionStim, self).__init__(filename,
