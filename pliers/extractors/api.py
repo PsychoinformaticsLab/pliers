@@ -10,8 +10,8 @@ except:
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.text import TextExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
-from pliers.transformers import BatchTransformerMixin, EnvironmentKeyMixin
-from pliers.utils import listify
+from pliers.transformers import BatchTransformerMixin
+from pliers.utils import listify, EnvironmentKeyMixin
 
 
 try:
