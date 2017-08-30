@@ -92,7 +92,7 @@ class VideoFrameCollectionStim(Stim):
         else:
             end = float(self.duration)
 
-        duration = end - onset
+        duration = end - onset if end > onset else 0.0
 
         return VideoFrameStim(self, frame_num,
                               data=self.clip.get_frame(onset),
