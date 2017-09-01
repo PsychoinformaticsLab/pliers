@@ -6,6 +6,11 @@ from pliers.extractors.base import Extractor, ExtractorResult
 import numpy as np
 from scipy import fft
 
+try:
+    import librosa
+except ImportError:
+    librosa = None
+
 
 class AudioExtractor(Extractor):
 
@@ -32,7 +37,8 @@ class STFTAudioExtractor(AudioExtractor):
             between 0 and 300Hz, and one between 300Hz and 3KHz.
         spectrogram (bool): If True, plots a spectrogram of the results.
 
-    Notes: code adapted from http://stackoverflow.com/questions/2459295/invertible-stft-and-istft-in-python
+    Notes: code adapted from
+    http://stackoverflow.com/questions/2459295/invertible-stft-and-istft-in-python
     '''
 
     _log_attributes = ('frame_size', 'hop_size', 'freq_bins')
@@ -120,3 +126,89 @@ class MeanAmplitudeExtractor(Extractor):
 
         return ExtractorResult(values, stim, self, features=['mean_amplitude'],
                                 onsets=onsets, durations=durations)
+
+
+class LibrosaFeatureExtractor(AudioExtractor):
+
+    ''' A generic class for all audio extractors using the librosa library. '''
+
+    def __init__(self):
+        if librosa is None:
+            raise ImportError("librosa is required to create a "
+                              "LibrosaFeatureExtractor, but could not be "
+                              "successfully imported. Please make sure it is "
+                              "installed.")
+        super(LibrosaFeatureExtractor, self).__init__()
+
+
+class SpectralCentroidExtractor(LibrosaFeatureExtractor):
+
+    ''' '''
+
+    def __init__(self):
+        super(SpectralCentroidExtractor, self).__init__()
+
+    def _extract(self, stim):
+        pass
+
+
+class RMSEExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts root mean square (RMS) energy from audio. '''
+
+    _log_attributes = ('frame_length', 'hop_length', 'center', 'pad_mode')
+
+    def __init__(self, frame_length=2048, hop_length=512, center=True,
+                 pad_mode='reflect'):
+        self.frame_length = frame_length
+        self.hop_length = hop_length
+        self.center = center
+        self.pad_mode = pad_mode
+        super(RMSEExtractor, self).__init__()
+
+    def _extract(self, stim):
+        rmse = librosa.feature.rmse(y=stim.data,
+                                    frame_length=self.frame_length,
+                                    hop_length=self.hop_length,
+                                    center=self.center,
+                                    pad_mode=self.pad_mode)
+        print rmse
+        print rmse.shape
+        print stim.data.shape
+        return ExtractorResult(rmse, stim, self,
+                               features=['RMSE'],
+                               onsets=None,
+                               durations=None)
+
+
+class ZeroCrossingRateExtractor(LibrosaFeatureExtractor):
+
+    ''' '''
+
+    def __init__(self):
+        super(ZeroCrossingRateExtractor, self).__init__()
+
+    def _extract(self, stim):
+        pass
+
+
+class ChromaSTFTExtractor(LibrosaFeatureExtractor):
+
+    ''' '''
+
+    def __init__(self):
+        super(ChromaSTFTExtractor, self).__init__()
+
+    def _extract(self, stim):
+        pass
+
+
+class MFCCExtractor(LibrosaFeatureExtractor):
+
+    ''' '''
+
+    def __init__(self):
+        super(MFCCExtractor, self).__init__()
+
+    def _extract(self, stim):
+        pass
