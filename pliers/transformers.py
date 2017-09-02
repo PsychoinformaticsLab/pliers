@@ -180,7 +180,7 @@ class BatchTransformerMixin(Transformer):
             else:
                 return result[0]
         else:
-            return super(BatchTransformerMixin, self)._iterate(stims, *args, **kwargs)
+            return list(super(BatchTransformerMixin, self)._iterate(stims, *args, **kwargs))
 
 
 class EnvironmentKeyMixin(object):
