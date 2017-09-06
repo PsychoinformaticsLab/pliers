@@ -3,8 +3,11 @@ import os
 from .utils import get_test_data_path, DummyExtractor
 from pliers.extractors import (DictionaryExtractor, PartOfSpeechExtractor,
                                LengthExtractor, NumUniqueWordsExtractor,
-                               PredefinedDictionaryExtractor, STFTAudioExtractor,
-                               MeanAmplitudeExtractor, BrightnessExtractor,
+                               PredefinedDictionaryExtractor,
+                               STFTAudioExtractor,
+                               MeanAmplitudeExtractor,
+                               RMSEExtractor,
+                               BrightnessExtractor,
                                SharpnessExtractor, VibranceExtractor,
                                SaliencyExtractor, DenseOpticalFlowExtractor,
                                IndicoAPITextExtractor, IndicoAPIImageExtractor,
@@ -156,6 +159,23 @@ def test_mean_amplitude_extractor():
     result = ext.transform(stim).to_df()
     targets = [-0.154661, 0.121521]
     assert np.allclose(result['mean_amplitude'], targets)
+
+
+def test_rmse_extractor():
+    audio = AudioStim(join(get_test_data_path(), 'audio', "barber.wav"))
+    ext = RMSEExtractor()
+    df = ext.transform(audio).to_df()
+    assert df.shape == (4882, 3)
+    assert np.isclose(df['onset'][1], 0.01161)
+    assert np.isclose(df['duration'][0], 0.01161)
+    assert np.isclose(df['RMSE'][0], 0.226572)
+
+    ext2 = RMSEExtractor(frame_length=1024, hop_length=256, center=False)
+    df = ext2.transform(audio).to_df()
+    assert df.shape == (9759, 3)
+    assert np.isclose(df['onset'][1], 0.005805)
+    assert np.isclose(df['duration'][0], 0.005805)
+    assert np.isclose(df['RMSE'][0], 0.22648)
 
 
 def test_part_of_speech_extractor():

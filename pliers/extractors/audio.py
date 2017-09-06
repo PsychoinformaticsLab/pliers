@@ -171,14 +171,18 @@ class RMSEExtractor(LibrosaFeatureExtractor):
                                     frame_length=self.frame_length,
                                     hop_length=self.hop_length,
                                     center=self.center,
-                                    pad_mode=self.pad_mode)
-        print rmse
-        print rmse.shape
-        print stim.data.shape
+                                    pad_mode=self.pad_mode)[0]
+        fl = self.frame_length
+        hl = self.hop_length
+        fps = float(stim.sampling_rate)
+        n_frames = 1 + int((len(stim.data) - fl) / hl)
+        n_frames = n_frames + (fl / hl) if self.center else n_frames
+        onsets = np.arange(n_frames) * hl / fps
+        durations = [hl / fps] * n_frames
         return ExtractorResult(rmse, stim, self,
                                features=['RMSE'],
-                               onsets=None,
-                               durations=None)
+                               onsets=onsets,
+                               durations=durations)
 
 
 class ZeroCrossingRateExtractor(LibrosaFeatureExtractor):
