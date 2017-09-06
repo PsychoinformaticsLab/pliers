@@ -196,6 +196,13 @@ def test_vectorizer_extractor():
     assert ('TextVectorizerExtractor', 'woman') in result.columns
     assert 0.129568189476 in result[('TextVectorizerExtractor', 'woman')]
 
+    ext = TextVectorizerExtractor(vectorizer='CountVectorizer',
+                                  analyzer='char_wb',
+                                  ngram_range=(2, 2))
+    result = ext.transform(stim).to_df()
+    assert 'wo' in result.columns
+    assert result['wo'][0] == 6
+
 
 def test_vader_sentiment_extractor():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))

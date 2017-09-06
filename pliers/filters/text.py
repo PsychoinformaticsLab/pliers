@@ -6,6 +6,8 @@ import string
 from six import string_types
 from nltk import stem
 from nltk.tokenize import word_tokenize
+from nltk.tokenize import * # noqa
+from nltk.tokenize.api import TokenizerI
 from pliers.stimuli.text import TextStim
 from .base import Filter
 
@@ -71,14 +73,20 @@ class TokenizingFilter(TextFilter):
 
     ''' Tokenizes a TextStim into several word TextStims.
     Args:
-        tokenizer (nltk Tokenizer): a nltk Tokenizer to tokenize
-            with. Will use the word_tokenize method if none is specified.
+        tokenizer (nltk Tokenizer or str): a nltk Tokenizer
+            (or the name of one) to tokenize with. Will use
+            the word_tokenize method if None is specified.
     '''
 
     _log_attributes = ('tokenizer',)
 
-    def __init__(self, tokenizer=None):
-        self.tokenizer = tokenizer
+    def __init__(self, tokenizer=None, *args, **kwargs):
+        if isinstance(tokenizer, TokenizerI):
+            self.tokenizer = tokenizer
+        elif isinstance(tokenizer, str):
+            self.tokenizer = eval(tokenizer)(*args, **kwargs)
+        else:
+            self.tokenizer = None
         super(TokenizingFilter, self).__init__()
 
     def _filter(self, stim):

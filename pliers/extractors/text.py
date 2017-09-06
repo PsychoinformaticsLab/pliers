@@ -21,7 +21,10 @@ except ImportError:
     KeyedVectors = None
 
 try:
-    from sklearn.feature_extraction.text import CountVectorizer, VectorizerMixin
+    from sklearn.feature_extraction.text import (CountVectorizer,
+                                                 HashingVectorizer,
+                                                 TfidfVectorizer,
+                                                 VectorizerMixin)
 except ImportError:
     CountVectorizer = None
 
@@ -255,16 +258,19 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
     from text.
 
     Args:
-        vectorizer (sklearn Vectorizer): a scikit-learn Vectorizer to extract
-            with. Will use the CountVectorizer by default.
+        vectorizer (sklearn Vectorizer or str): a scikit-learn Vectorizer
+            (or the name in a string) to extract with. Will use the
+            CountVectorizer by default. Uses supporting *args and **kwargs.
     '''
 
     _log_attributes = ('vectorizer',)
     _batch_size = sys.maxsize
 
-    def __init__(self, vectorizer=None):
-        if vectorizer and isinstance(vectorizer, VectorizerMixin):
+    def __init__(self, vectorizer=None, *args, **kwargs):
+        if isinstance(vectorizer, VectorizerMixin):
             self.vectorizer = vectorizer
+        elif isinstance(vectorizer, str):
+            self.vectorizer = eval(vectorizer)(*args, **kwargs)
         else:
             if CountVectorizer is None:
                 raise ImportError("sklearn is required to create a "
@@ -272,7 +278,7 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
                                   "not provided, but could not be successfully"
                                   " imported. Please make sure it is "
                                   "installed.")
-            self.vectorizer = CountVectorizer()
+            self.vectorizer = CountVectorizer(*args, **kwargs)
         super(TextVectorizerExtractor, self).__init__()
 
     def _extract(self, stims):
