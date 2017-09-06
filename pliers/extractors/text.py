@@ -21,7 +21,7 @@ except ImportError:
     KeyedVectors = None
 
 try:
-    from sklearn.feature_extraction.text import CountVectorizer
+    from sklearn.feature_extraction.text import CountVectorizer, VectorizerMixin
 except ImportError:
     CountVectorizer = None
 
@@ -214,14 +214,17 @@ class WordEmbeddingExtractor(TextExtractor):
     vectors for text.
 
     Args:
-        embedding_file (str): path to a word embedding file
+        embedding_file (str): path to a word embedding file. Assumed to be in
+            word2vec format compatible with gensim.
         binary (bool): flag indicating whether embedding file is saved in a
             binary format
+        prefix (str): prefix for feature names in the ExtractorResult.
     '''
 
-    _log_attributes = ('wvModel',)
+    _log_attributes = ('wvModel', 'prefix')
 
-    def __init__(self, embedding_file, binary=False):
+    def __init__(self, embedding_file, binary=False,
+                 prefix='embedding_dim'):
         if KeyedVectors is None:
             raise ImportError("gensim is required to create a "
                               "WordEmbeddingExtractor, but could not be "
@@ -229,6 +232,7 @@ class WordEmbeddingExtractor(TextExtractor):
                               "installed.")
         self.wvModel = KeyedVectors.load_word2vec_format(embedding_file,
                                                          binary=binary)
+        self.prefix = prefix
         super(WordEmbeddingExtractor, self).__init__()
 
     def _extract(self, stim):
@@ -238,7 +242,7 @@ class WordEmbeddingExtractor(TextExtractor):
         else:
             # UNKs will have zeroed-out vectors
             embedding_vector = np.zeros(num_dims)
-        features = ['embedding_dim%d' % i for i in range(num_dims)]
+        features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
         return ExtractorResult([embedding_vector],
                                stim,
                                self,
@@ -247,8 +251,8 @@ class WordEmbeddingExtractor(TextExtractor):
 
 class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
 
-    ''' Uses a scikit-learn Vectorizer to extract bag-of-words
-    features from text.
+    ''' Uses a scikit-learn Vectorizer to extract bag-of-features
+    from text.
 
     Args:
         vectorizer (sklearn Vectorizer): a scikit-learn Vectorizer to extract
@@ -259,8 +263,7 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
     _batch_size = sys.maxsize
 
     def __init__(self, vectorizer=None):
-        super(TextVectorizerExtractor, self).__init__()
-        if vectorizer:
+        if vectorizer and isinstance(vectorizer, VectorizerMixin):
             self.vectorizer = vectorizer
         else:
             if CountVectorizer is None:
@@ -270,6 +273,7 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
                                   " imported. Please make sure it is "
                                   "installed.")
             self.vectorizer = CountVectorizer()
+        super(TextVectorizerExtractor, self).__init__()
 
     def _extract(self, stims):
         mat = self.vectorizer.fit_transform([s.text for s in stims]).toarray()
