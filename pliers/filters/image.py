@@ -53,7 +53,7 @@ class PillowImageFilter(ImageFilter):
     SMOOTH, SMOOTH_MORE, SHARPEN
 
     Args:
-        filter (str or type or ImageFilter): specific name or type of the
+        image_filter (str or type or ImageFilter): specific name or type of the
             filter to be used, with supporting *args and **kwargs. Also
             accepted to directly pass an instance of PIL's ImageFilter.Filter
     '''
