@@ -9,6 +9,8 @@ from pliers.extractors import (DictionaryExtractor, PartOfSpeechExtractor,
                                SpectralCentroidExtractor,
                                RMSEExtractor,
                                ZeroCrossingRateExtractor,
+                               ChromaSTFTExtractor,
+                               MFCCExtractor,
                                BrightnessExtractor,
                                SharpnessExtractor, VibranceExtractor,
                                SaliencyExtractor, DenseOpticalFlowExtractor,
@@ -187,14 +189,14 @@ def test_rmse_extractor():
     assert df.shape == (4882, 3)
     assert np.isclose(df['onset'][1], 0.01161)
     assert np.isclose(df['duration'][0], 0.01161)
-    assert np.isclose(df['RMSE'][0], 0.226572)
+    assert np.isclose(df['rmse'][0], 0.226572)
 
     ext2 = RMSEExtractor(frame_length=1024, hop_length=256, center=False)
     df = ext2.transform(audio).to_df()
     assert df.shape == (9759, 3)
     assert np.isclose(df['onset'][1], 0.005805)
     assert np.isclose(df['duration'][0], 0.005805)
-    assert np.isclose(df['RMSE'][0], 0.22648)
+    assert np.isclose(df['rmse'][0], 0.22648)
 
 
 def test_zcr_extractor():
@@ -212,6 +214,38 @@ def test_zcr_extractor():
     assert np.isclose(df['onset'][1], 0.005805)
     assert np.isclose(df['duration'][0], 0.005805)
     assert np.isclose(df['zero_crossing_rate'][0], 0.046875)
+
+
+def test_chroma_stft_extractor():
+    audio = AudioStim(join(get_test_data_path(), 'audio', "barber.wav"))
+    ext = ChromaSTFTExtractor()
+    df = ext.transform(audio).to_df()
+    assert df.shape == (4882, 14)
+    assert np.isclose(df['onset'][1], 0.01161)
+    assert np.isclose(df['duration'][0], 0.01161)
+    assert np.isclose(df['chroma_2'][0], 0.417595)
+
+    ext2 = ChromaSTFTExtractor(n_chroma=6, n_fft=1024, hop_length=256)
+    df = ext2.transform(audio).to_df()
+    assert df.shape == (9763, 8)
+    assert np.isclose(df['onset'][1], 0.005805)
+    assert np.isclose(df['duration'][0], 0.005805)
+    assert np.isclose(df['chroma_5'][0], 0.732480)
+
+
+def test_mfcc_extractor():
+    audio = AudioStim(join(get_test_data_path(), 'audio', "barber.wav"))
+    ext = MFCCExtractor()
+    df = ext.transform(audio).to_df()
+    assert df.shape == (4882, 22)
+    assert np.isclose(df['onset'][1], 0.01161)
+    assert np.isclose(df['duration'][0], 0.01161)
+    assert np.isclose(df['mfcc_3'][0], 5.98247)
+
+    ext2 = MFCCExtractor(n_mfcc=15)
+    df = ext2.transform(audio).to_df()
+    assert df.shape == (4882, 17)
+    assert np.isclose(df['mfcc_14'][2], -7.41533)
 
 
 def test_part_of_speech_extractor():
