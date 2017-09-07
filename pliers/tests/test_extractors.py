@@ -7,6 +7,7 @@ from pliers.extractors import (DictionaryExtractor, PartOfSpeechExtractor,
                                STFTAudioExtractor,
                                MeanAmplitudeExtractor,
                                RMSEExtractor,
+                               ZeroCrossingRateExtractor,
                                BrightnessExtractor,
                                SharpnessExtractor, VibranceExtractor,
                                SaliencyExtractor, DenseOpticalFlowExtractor,
@@ -176,6 +177,23 @@ def test_rmse_extractor():
     assert np.isclose(df['onset'][1], 0.005805)
     assert np.isclose(df['duration'][0], 0.005805)
     assert np.isclose(df['RMSE'][0], 0.22648)
+
+
+def test_zcr_extractor():
+    audio = AudioStim(join(get_test_data_path(), 'audio', "barber.wav"))
+    ext = ZeroCrossingRateExtractor()
+    df = ext.transform(audio).to_df()
+    assert df.shape == (4882, 3)
+    assert np.isclose(df['onset'][1], 0.01161)
+    assert np.isclose(df['duration'][0], 0.01161)
+    assert np.isclose(df['zero_crossing_rate'][0], 0.0234375)
+
+    ext2 = ZeroCrossingRateExtractor(frame_length=1024, hop_length=256, center=False)
+    df = ext2.transform(audio).to_df()
+    assert df.shape == (9759, 3)
+    assert np.isclose(df['onset'][1], 0.005805)
+    assert np.isclose(df['duration'][0], 0.005805)
+    assert np.isclose(df['zero_crossing_rate'][0], 0.046875)
 
 
 def test_part_of_speech_extractor():

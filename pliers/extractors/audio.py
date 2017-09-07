@@ -125,7 +125,7 @@ class MeanAmplitudeExtractor(Extractor):
             values.append(mean_amplitude)
 
         return ExtractorResult(values, stim, self, features=['mean_amplitude'],
-                                onsets=onsets, durations=durations)
+                               onsets=onsets, durations=durations)
 
 
 class LibrosaFeatureExtractor(AudioExtractor):
@@ -172,13 +172,11 @@ class RMSEExtractor(LibrosaFeatureExtractor):
                                     hop_length=self.hop_length,
                                     center=self.center,
                                     pad_mode=self.pad_mode)[0]
-        fl = self.frame_length
-        hl = self.hop_length
-        fps = float(stim.sampling_rate)
-        n_frames = 1 + int((len(stim.data) - fl) / hl)
-        n_frames = n_frames + (fl / hl) if self.center else n_frames
-        onsets = np.arange(n_frames) * hl / fps
-        durations = [hl / fps] * n_frames
+        n_frames = len(rmse)
+        onsets = librosa.frames_to_time(range(n_frames),
+                                        sr=stim.sampling_rate,
+                                        hop_length=self.hop_length)
+        durations = [self.hop_length / float(stim.sampling_rate)] * n_frames
         return ExtractorResult(rmse, stim, self,
                                features=['RMSE'],
                                onsets=onsets,
@@ -187,13 +185,30 @@ class RMSEExtractor(LibrosaFeatureExtractor):
 
 class ZeroCrossingRateExtractor(LibrosaFeatureExtractor):
 
-    ''' '''
+    ''' Extracts the zero-crossing rate over time frames of audio. '''
 
-    def __init__(self):
+    _log_attributes = ('frame_length', 'hop_length', 'center')
+
+    def __init__(self, frame_length=2048, hop_length=512, center=True):
+        self.frame_length = frame_length
+        self.hop_length = hop_length
+        self.center = center
         super(ZeroCrossingRateExtractor, self).__init__()
 
     def _extract(self, stim):
-        pass
+        zcr = librosa.feature.zero_crossing_rate(stim.data,
+                                                 frame_length=self.frame_length,
+                                                 hop_length=self.hop_length,
+                                                 center=self.center)[0]
+        n_frames = len(zcr)
+        onsets = librosa.frames_to_time(range(n_frames),
+                                        sr=stim.sampling_rate,
+                                        hop_length=self.hop_length)
+        durations = [self.hop_length / float(stim.sampling_rate)] * n_frames
+        return ExtractorResult(zcr, stim, self,
+                               features=['zero_crossing_rate'],
+                               onsets=onsets,
+                               durations=durations)
 
 
 class ChromaSTFTExtractor(LibrosaFeatureExtractor):
