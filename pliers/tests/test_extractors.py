@@ -6,6 +6,7 @@ from pliers.extractors import (DictionaryExtractor, PartOfSpeechExtractor,
                                PredefinedDictionaryExtractor,
                                STFTAudioExtractor,
                                MeanAmplitudeExtractor,
+                               SpectralCentroidExtractor,
                                RMSEExtractor,
                                ZeroCrossingRateExtractor,
                                BrightnessExtractor,
@@ -160,6 +161,23 @@ def test_mean_amplitude_extractor():
     result = ext.transform(stim).to_df()
     targets = [-0.154661, 0.121521]
     assert np.allclose(result['mean_amplitude'], targets)
+
+
+def test_spectral_centroid_extractor():
+    audio = AudioStim(join(get_test_data_path(), 'audio', "barber.wav"))
+    ext = SpectralCentroidExtractor()
+    df = ext.transform(audio).to_df()
+    assert df.shape == (4882, 3)
+    assert np.isclose(df['onset'][1], 0.01161)
+    assert np.isclose(df['duration'][0], 0.01161)
+    assert np.isclose(df['spectral_centroid'][0], 817.53095)
+
+    ext2 = SpectralCentroidExtractor(n_fft=1024, hop_length=256)
+    df = ext2.transform(audio).to_df()
+    assert df.shape == (9763, 3)
+    assert np.isclose(df['onset'][1], 0.005805)
+    assert np.isclose(df['duration'][0], 0.005805)
+    assert np.isclose(df['spectral_centroid'][0], 1492.00515)
 
 
 def test_rmse_extractor():

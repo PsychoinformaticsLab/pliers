@@ -1,5 +1,6 @@
 ''' Extractors that operate on AudioStim inputs. '''
 
+from abc import abstractmethod
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.text import ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
@@ -141,18 +142,50 @@ class LibrosaFeatureExtractor(AudioExtractor):
         super(LibrosaFeatureExtractor, self).__init__()
 
 
-class SpectralCentroidExtractor(LibrosaFeatureExtractor):
+class LibrosaFramedFeatureExtractor(LibrosaFeatureExtractor):
 
-    ''' '''
+    ''' A generic class for librosa extractors that give features on
+    frames of audio. '''
 
-    def __init__(self):
-        super(SpectralCentroidExtractor, self).__init__()
-
-    def _extract(self, stim):
+    @abstractmethod
+    def _get_values(self, stim):
         pass
 
+    def _extract(self, stim):
+        values, feature_name = self._get_values(stim)
+        n_frames = len(values)
+        onsets = librosa.frames_to_time(range(n_frames),
+                                        sr=stim.sampling_rate,
+                                        hop_length=self.hop_length)
+        durations = [self.hop_length / float(stim.sampling_rate)] * n_frames
+        return ExtractorResult(values, stim, self,
+                               features=[feature_name],
+                               onsets=onsets,
+                               durations=durations)
 
-class RMSEExtractor(LibrosaFeatureExtractor):
+
+class SpectralCentroidExtractor(LibrosaFramedFeatureExtractor):
+
+    ''' Extracts the spectral centroids from audio. '''
+
+    _log_attributes = ('n_fft', 'hop_length', 'freq')
+
+    def __init__(self, n_fft=2048, hop_length=512, freq=None):
+        self.n_fft = n_fft
+        self.hop_length = hop_length
+        self.freq = freq
+        super(SpectralCentroidExtractor, self).__init__()
+
+    def _get_values(self, stim):
+        centroids = librosa.feature.spectral_centroid(y=stim.data,
+                                                      sr=stim.sampling_rate,
+                                                      n_fft=self.n_fft,
+                                                      hop_length=self.hop_length,
+                                                      freq=self.freq)[0]
+        return centroids, 'spectral_centroid'
+
+
+class RMSEExtractor(LibrosaFramedFeatureExtractor):
 
     ''' Extracts root mean square (RMS) energy from audio. '''
 
@@ -166,24 +199,16 @@ class RMSEExtractor(LibrosaFeatureExtractor):
         self.pad_mode = pad_mode
         super(RMSEExtractor, self).__init__()
 
-    def _extract(self, stim):
+    def _get_values(self, stim):
         rmse = librosa.feature.rmse(y=stim.data,
                                     frame_length=self.frame_length,
                                     hop_length=self.hop_length,
                                     center=self.center,
                                     pad_mode=self.pad_mode)[0]
-        n_frames = len(rmse)
-        onsets = librosa.frames_to_time(range(n_frames),
-                                        sr=stim.sampling_rate,
-                                        hop_length=self.hop_length)
-        durations = [self.hop_length / float(stim.sampling_rate)] * n_frames
-        return ExtractorResult(rmse, stim, self,
-                               features=['RMSE'],
-                               onsets=onsets,
-                               durations=durations)
+        return rmse, 'RMSE'
 
 
-class ZeroCrossingRateExtractor(LibrosaFeatureExtractor):
+class ZeroCrossingRateExtractor(LibrosaFramedFeatureExtractor):
 
     ''' Extracts the zero-crossing rate over time frames of audio. '''
 
@@ -195,20 +220,12 @@ class ZeroCrossingRateExtractor(LibrosaFeatureExtractor):
         self.center = center
         super(ZeroCrossingRateExtractor, self).__init__()
 
-    def _extract(self, stim):
+    def _get_values(self, stim):
         zcr = librosa.feature.zero_crossing_rate(stim.data,
                                                  frame_length=self.frame_length,
                                                  hop_length=self.hop_length,
                                                  center=self.center)[0]
-        n_frames = len(zcr)
-        onsets = librosa.frames_to_time(range(n_frames),
-                                        sr=stim.sampling_rate,
-                                        hop_length=self.hop_length)
-        durations = [self.hop_length / float(stim.sampling_rate)] * n_frames
-        return ExtractorResult(zcr, stim, self,
-                               features=['zero_crossing_rate'],
-                               onsets=onsets,
-                               durations=durations)
+        return zcr, 'zero_crossing_rate'
 
 
 class ChromaSTFTExtractor(LibrosaFeatureExtractor):

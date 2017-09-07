@@ -6,6 +6,7 @@ from .api import (IndicoAPITextExtractor,
                   ClarifaiAPIExtractor)
 from .audio import (STFTAudioExtractor,
                     MeanAmplitudeExtractor,
+                    SpectralCentroidExtractor,
                     RMSEExtractor,
                     ZeroCrossingRateExtractor)
 from .google import (GoogleVisionAPIFaceExtractor,
@@ -29,6 +30,7 @@ __all__ = [
     'ClarifaiAPIExtractor',
     'STFTAudioExtractor',
     'MeanAmplitudeExtractor',
+    'SpectralCentroidExtractor',
     'RMSEExtractor',
     'ZeroCrossingRateExtractor',
     'GoogleVisionAPIFaceExtractor',
