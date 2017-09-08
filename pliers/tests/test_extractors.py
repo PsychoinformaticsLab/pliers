@@ -3,13 +3,17 @@ import os
 from .utils import get_test_data_path, DummyExtractor
 from pliers.extractors import (DictionaryExtractor, PartOfSpeechExtractor,
                                LengthExtractor, NumUniqueWordsExtractor,
-                               PredefinedDictionaryExtractor, STFTAudioExtractor,
+                               PredefinedDictionaryExtractor,
+                               STFTAudioExtractor,
                                MeanAmplitudeExtractor, BrightnessExtractor,
                                SharpnessExtractor, VibranceExtractor,
                                SaliencyExtractor, DenseOpticalFlowExtractor,
                                IndicoAPITextExtractor, IndicoAPIImageExtractor,
                                ClarifaiAPIExtractor,
-                               TensorFlowInceptionV3Extractor)
+                               TensorFlowInceptionV3Extractor,
+                               TextVectorizerExtractor,
+                               WordEmbeddingExtractor,
+                               VADERSentimentExtractor)
 from pliers.stimuli import (TextStim, ComplexTextStim, ImageStim, VideoStim,
                             AudioStim, TranscribedAudioCompoundStim)
 from pliers.support.download import download_nltk_data
@@ -165,6 +169,53 @@ def test_part_of_speech_extractor():
     assert 'NN' in result.columns
     assert result['NN'].sum() == 1
     assert result['VBD'][3] == 1
+
+
+def test_word_embedding_extractor():
+    pytest.importorskip('gensim')
+    stims = [TextStim(text='this'), TextStim(text='sentence')]
+    ext = WordEmbeddingExtractor(join(TEXT_DIR, 'simple_vectors.bin'),
+                                 binary=True)
+    result = merge_results(ext.transform(stims))
+    assert ('WordEmbeddingExtractor', 'embedding_dim99') in result.columns
+    assert 0.001091 in result[('WordEmbeddingExtractor', 'embedding_dim0')]
+
+
+def test_vectorizer_extractor():
+    pytest.importorskip('sklearn')
+    stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
+    result = TextVectorizerExtractor().transform(stim).to_df()
+    assert 'woman' in result.columns
+    assert result['woman'][0] == 3
+
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    custom_vectorizer = TfidfVectorizer()
+    ext = TextVectorizerExtractor(vectorizer=custom_vectorizer)
+    stim2 = TextStim(join(TEXT_DIR, 'simple_text.txt'))
+    result = merge_results(ext.transform([stim, stim2]))
+    assert ('TextVectorizerExtractor', 'woman') in result.columns
+    assert 0.129568189476 in result[('TextVectorizerExtractor', 'woman')]
+
+    ext = TextVectorizerExtractor(vectorizer='CountVectorizer',
+                                  analyzer='char_wb',
+                                  ngram_range=(2, 2))
+    result = ext.transform(stim).to_df()
+    assert 'wo' in result.columns
+    assert result['wo'][0] == 6
+
+
+def test_vader_sentiment_extractor():
+    stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
+    ext = VADERSentimentExtractor()
+    result = ext.transform(stim).to_df()
+    assert result['sentiment_neu'][0] == 0.752
+
+    stim2 = TextStim(text='VADER is smart, handsome, and funny!')
+    result2 = ext.transform(stim2).to_df()
+    assert result2['sentiment_pos'][0] == 0.752
+    assert result2['sentiment_neg'][0] == 0.0
+    assert result2['sentiment_neu'][0] == 0.248
+    assert result2['sentiment_compound'][0] == 0.8439
 
 
 def test_brightness_extractor():

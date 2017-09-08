@@ -7,15 +7,26 @@ from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.exceptions import PliersError
 from pliers.support.decorators import requires_nltk_corpus
 from pliers.datasets.text import fetch_dictionary
+from pliers.transformers import BatchTransformerMixin
 import numpy as np
 import pandas as pd
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+import sys
 from six import string_types
 
-# Optional dependencies
 try:
-    import nltk
+    from gensim.models.keyedvectors import KeyedVectors
 except ImportError:
-    nltk is None
+    KeyedVectors = None
+
+try:
+    from sklearn.feature_extraction.text import (CountVectorizer,
+                                                 HashingVectorizer,
+                                                 TfidfVectorizer,
+                                                 VectorizerMixin)
+except ImportError:
+    CountVectorizer = None
 
 
 class TextExtractor(Extractor):
@@ -198,3 +209,102 @@ class PartOfSpeechExtractor(ComplexTextExtractor):
         return ExtractorResult(np.array(list(data.values())).transpose(),
                                stim, self, features=list(data.keys()),
                                onsets=onsets, durations=durations)
+
+
+class WordEmbeddingExtractor(TextExtractor):
+
+    ''' An extractor that uses a word embedding file to look up embedding
+    vectors for text.
+
+    Args:
+        embedding_file (str): path to a word embedding file. Assumed to be in
+            word2vec format compatible with gensim.
+        binary (bool): flag indicating whether embedding file is saved in a
+            binary format
+        prefix (str): prefix for feature names in the ExtractorResult.
+    '''
+
+    _log_attributes = ('wvModel', 'prefix')
+
+    def __init__(self, embedding_file, binary=False,
+                 prefix='embedding_dim'):
+        if KeyedVectors is None:
+            raise ImportError("gensim is required to create a "
+                              "WordEmbeddingExtractor, but could not be "
+                              "successfully imported. Please make sure it is "
+                              "installed.")
+        self.wvModel = KeyedVectors.load_word2vec_format(embedding_file,
+                                                         binary=binary)
+        self.prefix = prefix
+        super(WordEmbeddingExtractor, self).__init__()
+
+    def _extract(self, stim):
+        num_dims = self.wvModel.vector_size
+        if stim.text in self.wvModel:
+            embedding_vector = self.wvModel[stim.text]
+        else:
+            # UNKs will have zeroed-out vectors
+            embedding_vector = np.zeros(num_dims)
+        features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
+        return ExtractorResult([embedding_vector],
+                               stim,
+                               self,
+                               features=features)
+
+
+class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
+
+    ''' Uses a scikit-learn Vectorizer to extract bag-of-features
+    from text.
+
+    Args:
+        vectorizer (sklearn Vectorizer or str): a scikit-learn Vectorizer
+            (or the name in a string) to extract with. Will use the
+            CountVectorizer by default. Uses supporting *args and **kwargs.
+    '''
+
+    _log_attributes = ('vectorizer',)
+    _batch_size = sys.maxsize
+
+    def __init__(self, vectorizer=None, *args, **kwargs):
+        if isinstance(vectorizer, VectorizerMixin):
+            self.vectorizer = vectorizer
+        elif isinstance(vectorizer, str):
+            self.vectorizer = eval(vectorizer)(*args, **kwargs)
+        else:
+            if CountVectorizer is None:
+                raise ImportError("sklearn is required to create a "
+                                  "TextVectorizerExtractor if a vectorizer is "
+                                  "not provided, but could not be successfully"
+                                  " imported. Please make sure it is "
+                                  "installed.")
+            self.vectorizer = CountVectorizer(*args, **kwargs)
+        super(TextVectorizerExtractor, self).__init__()
+
+    def _extract(self, stims):
+        mat = self.vectorizer.fit_transform([s.text for s in stims]).toarray()
+        results = []
+        for i, row in enumerate(mat):
+            results.append(ExtractorResult([row], stims[i], self,
+                           features=self.vectorizer.get_feature_names()))
+        return results
+
+
+class VADERSentimentExtractor(TextExtractor):
+
+    ''' Uses nltk's VADER lexicon to extract (0.0-1.0) values for the positve,
+    neutral, and negative sentiment of a TextStim. Also returns a compound
+    score ranging from -1 (very negative) to +1 (very positive). '''
+
+    _log_attributes = ('analyzer',)
+
+    def __init__(self):
+        self.analyzer = SentimentIntensityAnalyzer()
+        super(VADERSentimentExtractor, self).__init__()
+
+    @requires_nltk_corpus
+    def _extract(self, stim):
+        scores = self.analyzer.polarity_scores(stim.text)
+        features = ['sentiment_' + k for k in scores.keys()]
+        return ExtractorResult([scores.values()], stim, self,
+                               features=features)

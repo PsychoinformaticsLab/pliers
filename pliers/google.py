@@ -1,7 +1,7 @@
 import base64
 import os
-from pliers.transformers import (Transformer, BatchTransformerMixin,
-                                 EnvironmentKeyMixin)
+from pliers.transformers import Transformer, BatchTransformerMixin
+from pliers.utils import EnvironmentKeyMixin
 
 try:
     from googleapiclient import discovery

@@ -9,7 +9,6 @@ import pliers
 from six import with_metaclass, string_types
 from abc import ABCMeta, abstractmethod, abstractproperty
 import importlib
-import os
 try:
     from pathos.multiprocessing import ProcessingPool as Pool
 except:
@@ -180,22 +179,7 @@ class BatchTransformerMixin(Transformer):
             else:
                 return result[0]
         else:
-            return super(BatchTransformerMixin, self)._iterate(stims, *args, **kwargs)
-
-
-class EnvironmentKeyMixin(object):
-
-    @abstractproperty
-    def _env_keys(self):
-        pass
-
-    @property
-    def env_keys(self):
-        return listify(self._env_keys)
-
-    @classproperty
-    def available(cls):
-        return True if all([k in os.environ for k in self.env_keys]) else False
+            return list(super(BatchTransformerMixin, self)._iterate(stims, *args, **kwargs))
 
 
 def get_transformer(name, base=None, *args, **kwargs):
