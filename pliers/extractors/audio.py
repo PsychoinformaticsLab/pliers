@@ -141,12 +141,6 @@ class LibrosaFeatureExtractor(AudioExtractor):
                               "installed.")
         super(LibrosaFeatureExtractor, self).__init__()
 
-
-class LibrosaFramedFeatureExtractor(LibrosaFeatureExtractor):
-
-    ''' A generic class for librosa extractors that give features on
-    frames of audio. '''
-
     @abstractmethod
     def _get_values(self, stim):
         pass
@@ -164,7 +158,7 @@ class LibrosaFramedFeatureExtractor(LibrosaFeatureExtractor):
                                durations=durations)
 
 
-class SpectralCentroidExtractor(LibrosaFramedFeatureExtractor):
+class SpectralCentroidExtractor(LibrosaFeatureExtractor):
 
     ''' Extracts the spectral centroids from audio. '''
 
@@ -185,7 +179,90 @@ class SpectralCentroidExtractor(LibrosaFramedFeatureExtractor):
         return centroids, ['spectral_centroid']
 
 
-class RMSEExtractor(LibrosaFramedFeatureExtractor):
+class SpectralBandwidthExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts the spectral centroids from audio. '''
+
+    _log_attributes = ('n_fft', 'hop_length', 'freq', 'centroid', 'norm', 'p')
+
+    def __init__(self, n_fft=2048, hop_length=512, freq=None, centroid=None,
+                 norm=True, p=2):
+        self.n_fft = n_fft
+        self.hop_length = hop_length
+        self.freq = freq
+        self.centroid = centroid
+        self.norm = norm
+        self.p = p
+        super(SpectralBandwidthExtractor, self).__init__()
+
+    def _get_values(self, stim):
+        bandwidths = librosa.feature.spectral_bandwidth(y=stim.data,
+                                                        sr=stim.sampling_rate,
+                                                        n_fft=self.n_fft,
+                                                        hop_length=self.hop_length,
+                                                        freq=self.freq,
+                                                        centroid=self.centroid,
+                                                        norm=self.norm,
+                                                        p=self.p)[0]
+        return bandwidths, ['spectral_bandwidth']
+
+
+class SpectralContrastExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts the spectral centroids from audio. '''
+
+    _log_attributes = ('n_fft', 'hop_length', 'freq', 'fmin', 'n_bands',
+                       'quantile', 'linear')
+
+    def __init__(self, n_fft=2048, hop_length=512, freq=None, fmin=200.0,
+                 n_bands=6, quantile=0.02, linear=False):
+        self.n_fft = n_fft
+        self.hop_length = hop_length
+        self.freq = freq
+        self.fmin = fmin
+        self.n_bands = n_bands
+        self.quantile = quantile
+        self.linear = linear
+        super(SpectralContrastExtractor, self).__init__()
+
+    def _get_values(self, stim):
+        contrasts = librosa.feature.spectral_contrast(y=stim.data,
+                                                      sr=stim.sampling_rate,
+                                                      n_fft=self.n_fft,
+                                                      hop_length=self.hop_length,
+                                                      freq=self.freq,
+                                                      fmin=self.fmin,
+                                                      n_bands=self.n_bands,
+                                                      quantile=self.quantile,
+                                                      linear=self.linear)
+        return contrasts.T, ['spectral_contrast_band_%d' % i for i in range(self.n_bands+1)]
+
+
+class SpectralRolloffExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts the spectral centroids from audio. '''
+
+    _log_attributes = ('n_fft', 'hop_length', 'freq', 'roll_percent')
+
+    def __init__(self, n_fft=2048, hop_length=512, freq=None,
+                 roll_percent=0.85):
+        self.n_fft = n_fft
+        self.hop_length = hop_length
+        self.freq = freq
+        self.roll_percent = roll_percent
+        super(SpectralRolloffExtractor, self).__init__()
+
+    def _get_values(self, stim):
+        rolloffs = librosa.feature.spectral_rolloff(y=stim.data,
+                                                    sr=stim.sampling_rate,
+                                                    n_fft=self.n_fft,
+                                                    hop_length=self.hop_length,
+                                                    freq=self.freq,
+                                                    roll_percent=self.roll_percent)[0]
+        return rolloffs, ['spectral_rolloff']
+
+
+class RMSEExtractor(LibrosaFeatureExtractor):
 
     ''' Extracts root mean square (RMS) energy from audio. '''
 
@@ -208,7 +285,7 @@ class RMSEExtractor(LibrosaFramedFeatureExtractor):
         return rmse, ['rmse']
 
 
-class ZeroCrossingRateExtractor(LibrosaFramedFeatureExtractor):
+class ZeroCrossingRateExtractor(LibrosaFeatureExtractor):
 
     ''' Extracts the zero-crossing rate over time frames of audio. '''
 
@@ -228,9 +305,9 @@ class ZeroCrossingRateExtractor(LibrosaFramedFeatureExtractor):
         return zcr, ['zero_crossing_rate']
 
 
-class ChromaSTFTExtractor(LibrosaFramedFeatureExtractor):
+class ChromaSTFTExtractor(LibrosaFeatureExtractor):
 
-    ''' Extracts a chromogram from audio. '''
+    ''' Extracts a STFT chromogram from audio. '''
 
     _log_attributes = ('norm', 'n_fft', 'hop_length', 'tuning', 'n_chroma')
 
@@ -254,19 +331,96 @@ class ChromaSTFTExtractor(LibrosaFramedFeatureExtractor):
         return chroma.T, ['chroma_%d' % i for i in range(self.n_chroma)]
 
 
-class MFCCExtractor(LibrosaFramedFeatureExtractor):
+class ChromaCQTExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts a CQT chromogram from audio. '''
+
+    _log_attributes = ('norm', 'hop_length', 'tuning', 'fmin',
+                       'threshold', 'n_chroma', 'n_octaves', 'window',
+                       'bins_per_octave', 'cqt_mode')
+
+    def __init__(self, norm=np.inf, hop_length=512, tuning=None,
+                 fmin=None, threshold=0.0, n_chroma=12, n_octaves=7,
+                 window=None, bins_per_octave=None, cqt_mode='full'):
+        self.norm = norm
+        self.hop_length = hop_length
+        self.tuning = tuning
+        self.fmin = fmin
+        self.threshold = threshold
+        self.n_chroma = n_chroma
+        self.n_octaves = n_octaves
+        self.window = window
+        self.bins_per_octave = bins_per_octave
+        self.cqt_mode = cqt_mode
+        super(ChromaCQTExtractor, self).__init__()
+
+    def _get_values(self, stim):
+        chroma = librosa.feature.chroma_cqt(y=stim.data,
+                                            sr=stim.sampling_rate,
+                                            norm=self.norm,
+                                            hop_length=self.hop_length,
+                                            tuning=self.tuning,
+                                            fmin=self.fmin,
+                                            threshold=self.threshold,
+                                            n_chroma=self.n_chroma,
+                                            n_octaves=self.n_octaves,
+                                            window=self.window,
+                                            bins_per_octave=self.bins_per_octave,
+                                            cqt_mode=self.cqt_mode)
+        return chroma.T, ['chroma_cqt_%d' % i for i in range(self.n_chroma)]
+
+
+class ChromaCENSExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts a CENS chromogram from audio. '''
+
+    _log_attributes = ('norm', 'hop_length', 'tuning', 'n_chroma')
+
+    def __init__(self, hop_length=512, fmin=None, tuning=None,
+                 n_chroma=12, n_octaves=7, window=None, bins_per_octave=None,
+                 cqt_mode='full', norm=2, win_len_smooth=41):
+        self.hop_length = hop_length
+        self.fmin = fmin
+        self.tuning = tuning
+        self.n_chroma = n_chroma
+        self.n_octaves = n_octaves
+        self.window = window
+        self.bins_per_octave = bins_per_octave
+        self.cqt_mode = cqt_mode
+        self.norm = norm
+        self.win_len_smooth = win_len_smooth
+        super(ChromaCENSExtractor, self).__init__()
+
+    def _get_values(self, stim):
+        chroma = librosa.feature.chroma_cens(y=stim.data,
+                                             sr=stim.sampling_rate,
+                                             hop_length=self.hop_length,
+                                             fmin=self.fmin,
+                                             tuning=self.tuning,
+                                             n_chroma=self.n_chroma,
+                                             n_octaves=self.n_octaves,
+                                             window=self.window,
+                                             bins_per_octave=self.bins_per_octave,
+                                             cqt_mode=self.cqt_mode,
+                                             norm=self.norm,
+                                             win_len_smooth=self.win_len_smooth)
+        return chroma.T, ['chroma_cens_%d' % i for i in range(self.n_chroma)]
+
+
+class MFCCExtractor(LibrosaFeatureExtractor):
 
     ''' Extracts Mel Frequency Ceptral Coefficients from audio. '''
 
     _log_attributes = ('n_mfcc',)
 
-    def __init__(self, n_mfcc=20):
+    def __init__(self, n_mfcc=20, hop_length=512):
         self.n_mfcc = n_mfcc
-        self.hop_length = 512
+        self.hop_length = hop_length
         super(MFCCExtractor, self).__init__()
 
     def _get_values(self, stim):
         mfcc = librosa.feature.mfcc(y=stim.data,
                                     sr=stim.sampling_rate,
-                                    n_mfcc=self.n_mfcc)
+                                    n_mfcc=self.n_mfcc,
+                                    hop_length=self.hop_length)
         return mfcc.T, ['mfcc_%d' % i for i in range(self.n_mfcc)]
