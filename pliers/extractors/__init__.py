@@ -1,7 +1,8 @@
 ''' Extractor hierarchy. '''
 
 from .base import Extractor, ExtractorResult, merge_results
-from .api import IndicoAPITextExtractor, IndicoAPIImageExtractor, ClarifaiAPIExtractor
+from .api import (IndicoAPITextExtractor, IndicoAPIImageExtractor,
+                  ClarifaiAPIExtractor)
 from .audio import STFTAudioExtractor, MeanAmplitudeExtractor
 from .google import (GoogleVisionAPIFaceExtractor,
                      GoogleVisionAPILabelExtractor,
@@ -13,7 +14,9 @@ from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
 from .models import TensorFlowInceptionV3Extractor
 from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
-                   NumUniqueWordsExtractor, PartOfSpeechExtractor)
+                   NumUniqueWordsExtractor, PartOfSpeechExtractor,
+                   WordEmbeddingExtractor, TextVectorizerExtractor,
+                   VADERSentimentExtractor)
 from .video import (DenseOpticalFlowExtractor)
 
 __all__ = [
@@ -27,6 +30,7 @@ __all__ = [
     'GoogleVisionAPIFaceExtractor',
     'GoogleVisionAPILabelExtractor',
     'GoogleVisionAPIPropertyExtractor',
+    'GoogleVisionAPISafeSearchExtractor',
     'GoogleVisionAPIWebEntitiesExtractor',
     'BrightnessExtractor',
     'SaliencyExtractor',
@@ -40,5 +44,8 @@ __all__ = [
     'NumUniqueWordsExtractor',
     'PartOfSpeechExtractor',
     'DenseOpticalFlowExtractor',
+    'WordEmbeddingExtractor',
+    'TextVectorizerExtractor',
+    'VADERSentimentExtractor',
     'merge_results'
 ]

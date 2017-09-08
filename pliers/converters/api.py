@@ -5,7 +5,7 @@ import base64
 import json
 from abc import abstractproperty
 from pliers.stimuli.text import TextStim, ComplexTextStim
-from pliers.transformers import EnvironmentKeyMixin
+from pliers.utils import EnvironmentKeyMixin
 from .audio import AudioToTextConverter
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.request import Request, urlopen

@@ -5,7 +5,7 @@ from .compound import CompoundStim
 from .image import ImageStim
 from .text import TextStim
 from .video import VideoStim
-from pliers.transformers import EnvironmentKeyMixin
+from pliers.utils import EnvironmentKeyMixin
 
 try:
     import twitter

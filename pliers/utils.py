@@ -1,4 +1,5 @@
 import collections
+from abc import abstractproperty
 from six import string_types
 from tqdm import tqdm
 from pliers import config
@@ -60,3 +61,18 @@ def progress_bar_wrapper(iterable, **kwargs):
     '''
     return tqdm(iterable, **kwargs) if (config.progress_bar and
         not isinstance(iterable, tqdm)) else iterable
+
+
+class EnvironmentKeyMixin(object):
+
+    @abstractproperty
+    def _env_keys(self):
+        pass
+
+    @property
+    def env_keys(self):
+        return listify(self._env_keys)
+
+    @classproperty
+    def available(cls):
+        return True if all([k in os.environ for k in self.env_keys]) else False
