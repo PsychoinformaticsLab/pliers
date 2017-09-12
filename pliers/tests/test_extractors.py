@@ -203,37 +203,40 @@ def test_spectral_extractors():
 
 
 def test_rmse_extractor():
-    audio = AudioStim(join(get_test_data_path(), 'audio', "barber.wav"))
+    audio = AudioStim(join(get_test_data_path(), 'audio', "barber.wav"),
+                      onset=1.0)
     ext = RMSEExtractor()
     df = ext.transform(audio).to_df()
     assert df.shape == (4882, 3)
-    assert np.isclose(df['onset'][1], 0.01161)
+    assert np.isclose(df['onset'][1], 1.01161)
     assert np.isclose(df['duration'][0], 0.01161)
     assert np.isclose(df['rmse'][0], 0.226572)
 
     ext2 = RMSEExtractor(frame_length=1024, hop_length=256, center=False)
     df = ext2.transform(audio).to_df()
     assert df.shape == (9759, 3)
-    assert np.isclose(df['onset'][1], 0.005805)
+    assert np.isclose(df['onset'][1], 1.005805)
     assert np.isclose(df['duration'][0], 0.005805)
     assert np.isclose(df['rmse'][0], 0.22648)
 
 
 def test_zcr_extractor():
-    audio = AudioStim(join(get_test_data_path(), 'audio', "barber.wav"))
+    audio = AudioStim(join(get_test_data_path(), 'audio', "barber.wav"),
+                      onset=2.0)
     ext = ZeroCrossingRateExtractor()
     df = ext.transform(audio).to_df()
     assert df.shape == (4882, 3)
-    assert np.isclose(df['onset'][1], 0.01161)
+    assert np.isclose(df['onset'][1], 2.01161)
     assert np.isclose(df['duration'][0], 0.01161)
     assert np.isclose(df['zero_crossing_rate'][0], 0.0234375)
 
-    ext2 = ZeroCrossingRateExtractor(frame_length=1024, hop_length=256, center=False)
+    ext2 = ZeroCrossingRateExtractor(frame_length=1024, hop_length=256,
+                                     center=False, pad=True)
     df = ext2.transform(audio).to_df()
     assert df.shape == (9759, 3)
-    assert np.isclose(df['onset'][1], 0.005805)
+    assert np.isclose(df['onset'][1], 2.005805)
     assert np.isclose(df['duration'][0], 0.005805)
-    assert np.isclose(df['zero_crossing_rate'][0], 0.046875)
+    assert np.isclose(df['zero_crossing_rate'][0], 0.047852)
 
 
 def test_chroma_extractors():

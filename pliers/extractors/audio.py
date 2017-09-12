@@ -151,6 +151,7 @@ class LibrosaFeatureExtractor(AudioExtractor):
         onsets = librosa.frames_to_time(range(n_frames),
                                         sr=stim.sampling_rate,
                                         hop_length=self.hop_length)
+        onsets = onsets + stim.onset if stim.onset else onsets
         durations = [self.hop_length / float(stim.sampling_rate)] * n_frames
         return ExtractorResult(values, stim, self,
                                features=feature_names,
@@ -291,17 +292,20 @@ class ZeroCrossingRateExtractor(LibrosaFeatureExtractor):
 
     _log_attributes = ('frame_length', 'hop_length', 'center')
 
-    def __init__(self, frame_length=2048, hop_length=512, center=True):
+    def __init__(self, frame_length=2048, hop_length=512, center=True,
+                 **kwargs):
         self.frame_length = frame_length
         self.hop_length = hop_length
         self.center = center
+        self.kwargs = kwargs
         super(ZeroCrossingRateExtractor, self).__init__()
 
     def _get_values(self, stim):
         zcr = librosa.feature.zero_crossing_rate(stim.data,
                                                  frame_length=self.frame_length,
                                                  hop_length=self.hop_length,
-                                                 center=self.center)[0]
+                                                 center=self.center,
+                                                 **self.kwargs)[0]
         return zcr, ['zero_crossing_rate']
 
 
@@ -312,12 +316,13 @@ class ChromaSTFTExtractor(LibrosaFeatureExtractor):
     _log_attributes = ('norm', 'n_fft', 'hop_length', 'tuning', 'n_chroma')
 
     def __init__(self, norm=np.inf, n_fft=2048, hop_length=512, tuning=None,
-                 n_chroma=12):
+                 n_chroma=12, **kwargs):
         self.norm = norm
         self.n_fft = n_fft
         self.hop_length = hop_length
         self.tuning = tuning
         self.n_chroma = n_chroma
+        self.kwargs = kwargs
         super(ChromaSTFTExtractor, self).__init__()
 
     def _get_values(self, stim):
@@ -327,7 +332,8 @@ class ChromaSTFTExtractor(LibrosaFeatureExtractor):
                                              n_fft=self.n_fft,
                                              hop_length=self.hop_length,
                                              tuning=self.tuning,
-                                             n_chroma=self.n_chroma)
+                                             n_chroma=self.n_chroma,
+                                             **self.kwargs)
         return chroma.T, ['chroma_%d' % i for i in range(self.n_chroma)]
 
 
@@ -413,14 +419,16 @@ class MFCCExtractor(LibrosaFeatureExtractor):
 
     _log_attributes = ('n_mfcc',)
 
-    def __init__(self, n_mfcc=20, hop_length=512):
+    def __init__(self, n_mfcc=20, hop_length=512, **kwargs):
         self.n_mfcc = n_mfcc
         self.hop_length = hop_length
+        self.kwargs = kwargs
         super(MFCCExtractor, self).__init__()
 
     def _get_values(self, stim):
         mfcc = librosa.feature.mfcc(y=stim.data,
                                     sr=stim.sampling_rate,
                                     n_mfcc=self.n_mfcc,
-                                    hop_length=self.hop_length)
+                                    hop_length=self.hop_length,
+                                    **self.kwargs)
         return mfcc.T, ['mfcc_%d' % i for i in range(self.n_mfcc)]
