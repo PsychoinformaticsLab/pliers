@@ -1,13 +1,12 @@
 import base64
 import os
 from pliers.transformers import Transformer, BatchTransformerMixin
-from pliers.utils import EnvironmentKeyMixin
+from pliers.support.decorators import requires_optional_dependency
+from pliers.utils import EnvironmentKeyMixin, attempt_to_import
 
-try:
-    from googleapiclient import discovery
-    from oauth2client.client import GoogleCredentials
-except ImportError:
-    pass
+
+googleapiclient = attempt_to_import('googleapiclient', ['discovery'])
+oauth_client = attempt_to_import('oauth2client.client', ['GoogleCredentials'])
 
 
 DISCOVERY_URL = 'https://{api}.googleapis.com/$discovery/rest?version={apiVersion}'
@@ -18,6 +17,8 @@ class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
     _env_keys = 'GOOGLE_APPLICATION_CREDENTIALS'
     _log_attributes = ('handle_annotations',)
 
+    @requires_optional_dependency('googleapiclient')
+    @requires_optional_dependency('oauth2client')
     def __init__(self, discovery_file=None, api_version='v1', max_results=100,
                  num_retries=3, handle_annotations='prefix'):
 
@@ -30,12 +31,12 @@ class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
                                  "environment variable.")
             discovery_file = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
 
-        self.credentials = GoogleCredentials.from_stream(discovery_file)
+        self.credentials = oauth_client.GoogleCredentials.from_stream(discovery_file)
         self.max_results = max_results
         self.num_retries = num_retries
-        self.service = discovery.build(self.api_name, api_version,
-                                       credentials=self.credentials,
-                                       discoveryServiceUrl=DISCOVERY_URL)
+        self.service = googleapiclient.discovery.build(self.api_name, api_version,
+                                                       credentials=self.credentials,
+                                                       discoveryServiceUrl=DISCOVERY_URL)
         self.handle_annotations = handle_annotations
         super(GoogleAPITransformer, self).__init__()
 

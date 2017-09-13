@@ -17,8 +17,9 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import sys
 from six import string_types
 
-gensim = attempt_to_import('gensim')
-sklearn = attempt_to_import('sklearn')
+keyedvectors = attempt_to_import('gensim.models.keyedvectors', ['KeyedVectors'])
+sklearn_text = attempt_to_import('sklearn.feature_extraction.text', ['VectorizerMixin',
+                                                                     'CountVectorizer'])
 
 
 class TextExtractor(Extractor):
@@ -221,9 +222,8 @@ class WordEmbeddingExtractor(TextExtractor):
     @requires_optional_dependency('gensim')
     def __init__(self, embedding_file, binary=False,
                  prefix='embedding_dim'):
-        wvModule = gensim.models.keyedvectors.KeyedVectors
-        self.wvModel = wvModule.load_word2vec_format(embedding_file,
-                                                     binary=binary)
+        self.wvModel = keyedvectors.KeyedVectors.load_word2vec_format(embedding_file,
+                                                                      binary=binary)
         self.prefix = prefix
         super(WordEmbeddingExtractor, self).__init__()
 
@@ -257,13 +257,12 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
 
     @requires_optional_dependency('sklearn')
     def __init__(self, vectorizer=None, *args, **kwargs):
-        module = sklearn.feature_extraction.text
-        if isinstance(vectorizer, module.VectorizerMixin):
+        if isinstance(vectorizer, sklearn_text.VectorizerMixin):
             self.vectorizer = vectorizer
         elif isinstance(vectorizer, str):
-            self.vectorizer = getattr(module, vectorizer)(*args, **kwargs)
+            self.vectorizer = getattr(sklearn_text, vectorizer)(*args, **kwargs)
         else:
-            self.vectorizer = module.CountVectorizer(*args, **kwargs)
+            self.vectorizer = sklearn_text.CountVectorizer(*args, **kwargs)
         super(TextVectorizerExtractor, self).__init__()
 
     def _extract(self, stims):

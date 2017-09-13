@@ -1,16 +1,14 @@
 from pliers.extractors.base import Extractor, merge_results
 from pliers.transformers import get_transformer
+from pliers.support.decorators import requires_optional_dependency
+from pliers.utils import listify, flatten, isgenerator, attempt_to_import
 from itertools import chain
-from pliers.utils import listify, flatten, isgenerator
 from six import string_types
 from collections import OrderedDict
 
 import json
 
-try:
-    import pygraphviz as pgv
-except:
-    pgv = None
+pgv = attempt_to_import('pygraphviz')
 
 
 class Node(object):
@@ -78,15 +76,12 @@ class Graph(object):
         if return_node:
             return node
 
+    @requires_optional_dependency('pygraphviz')
     def draw(self, filename):
         ''' Render a plot of the graph via pygraphviz.
         Args:
             filename (str): Path to save the generated image to.
         '''
-        if pgv is None:
-            raise ImportError("pygraphviz is required in order to plot graphs,"
-                              " but could not be successfully imported. Please"
-                              " make sure it is installed.")
         if not hasattr(self, '_results'):
             raise RuntimeError("Graph cannot be drawn before it is executed. "
                              "Try calling run() first.")

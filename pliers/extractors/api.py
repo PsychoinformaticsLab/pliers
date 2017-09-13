@@ -14,7 +14,11 @@ from pliers.support.decorators import requires_optional_dependency
 from pliers.transformers import BatchTransformerMixin
 from pliers.utils import listify, EnvironmentKeyMixin, attempt_to_import
 
-clarifai = attempt_to_import('clarifai')
+clarifai_client = attempt_to_import('clarifai.rest.client', ['ClarifaiApp',
+                                                             'Concept',
+                                                             'ModelOutputConfig',
+                                                             'ModelOutputInfo',
+                                                             'Image'])
 indicoio = attempt_to_import('indicoio')
 
 
@@ -142,29 +146,27 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
                                  "must be passed the first time a Clarifai "
                                  "extractor is initialized.")
 
-        from clarifai.rest import client
-        self.api = client.ClarifaiApp(app_id=app_id, app_secret=app_secret)
+        self.api = clarifai_client.ClarifaiApp(app_id=app_id, app_secret=app_secret)
         self.model = self.api.models.get(model)
         self.min_value = min_value
         self.max_concepts = max_concepts
         self.select_concepts = select_concepts
         if select_concepts:
             select_concepts = listify(select_concepts)
-            self.select_concepts = [client.Concept(concept_name=n) for n in select_concepts]
+            self.select_concepts = [clarifai_client.Concept(concept_name=n) for n in select_concepts]
         super(ClarifaiAPIExtractor, self).__init__()
 
     @requires_optional_dependency('clarifai')
     def _extract(self, stims):
-        from clarifai.rest import client
-        output_config = client.ModelOutputConfig(min_value=self.min_value,
-                                                 max_concepts=self.max_concepts,
-                                                 select_concepts=self.select_concepts)
-        model_output_info = client.ModelOutputInfo(output_config=output_config)
+        output_config = clarifai_client.ModelOutputConfig(min_value=self.min_value,
+                                                          max_concepts=self.max_concepts,
+                                                          select_concepts=self.select_concepts)
+        model_output_info = clarifai_client.ModelOutputInfo(output_config=output_config)
 
         # ExitStack lets us use filename context managers simultaneously
         with ExitStack() as stack:
             files = [stack.enter_context(s.get_filename()) for s in stims]
-            imgs = [client.Image(filename=filename) for filename in files]
+            imgs = [clarifai_client.Image(filename=filename) for filename in files]
             tags = self.model.predict(imgs, model_output_info=model_output_info)
 
         extracted = []

@@ -1,5 +1,4 @@
 import collections
-import importlib
 from abc import abstractproperty
 from six import string_types
 from tqdm import tqdm
@@ -64,9 +63,9 @@ def progress_bar_wrapper(iterable, **kwargs):
         not isinstance(iterable, tqdm)) else iterable
 
 
-def attempt_to_import(dependency):
+def attempt_to_import(dependency, fromlist=[]):
     try:
-        return importlib.import_module(dependency)
+        return __import__(dependency, fromlist=fromlist)
     except ImportError:
         return None
 

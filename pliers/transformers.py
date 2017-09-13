@@ -1,19 +1,17 @@
 ''' Core transformer logic. '''
 
+from pliers import config
 from pliers.stimuli.base import Stim, _log_transformation, load_stims
 from pliers.stimuli.compound import CompoundStim
-from pliers import config
 from pliers.utils import (classproperty, progress_bar_wrapper, isiterable,
-                          isgenerator, listify, batch_iterable)
+                          isgenerator, listify, batch_iterable,
+                          attempt_to_import)
 import pliers
 from six import with_metaclass, string_types
 from abc import ABCMeta, abstractmethod, abstractproperty
 import importlib
-try:
-    from pathos.multiprocessing import ProcessingPool as Pool
-except:
-    Pool = None
 
+multiprocessing = attempt_to_import('pathos.multiprocessing', ['ProcessingPool'])
 
 _cache = {}
 
@@ -129,10 +127,10 @@ class Transformer(with_metaclass(ABCMeta)):
 
     def _iterate(self, stims, *args, **kwargs):
 
-        if config.parallelize and Pool is not None:
+        if config.parallelize and multiprocessing is not None:
             def _transform(s):
                 return self.transform(s, *args, **kwargs)
-            return Pool(config.n_jobs).map(_transform, stims)
+            return multiprocessing.ProcessingPool(config.n_jobs).map(_transform, stims)
 
         return (self.transform(s, *args, **kwargs) for s in stims)
 
