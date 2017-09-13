@@ -10,6 +10,7 @@ import pliers
 from six import with_metaclass, string_types
 from abc import ABCMeta, abstractmethod, abstractproperty
 import importlib
+import logging
 
 multiprocessing = attempt_to_import('pathos.multiprocessing', ['ProcessingPool'])
 
@@ -53,7 +54,7 @@ class Transformer(with_metaclass(ABCMeta)):
         return wrapper
 
     @_memoize
-    def transform(self, stims, *args, **kwargs):
+    def transform(self, stims, validation='strict', *args, **kwargs):
 
         if isinstance(stims, string_types):
             stims = load_stims(stims)
@@ -77,7 +78,16 @@ class Transformer(with_metaclass(ABCMeta)):
         # Validate stim, and then either pass it directly to the Transformer
         # or, if a conversion occurred, recurse.
         else:
-            validated_stim = self._validate(stims)
+            try:
+                validated_stim = self._validate(stims)
+            except TypeError as err:
+                if validation == 'strict':
+                    raise err
+                elif validation == 'warn':
+                    logging.warn(err.message)
+                    return
+                elif validation == 'loose':
+                    return
             # If a conversion occurred during validation, we recurse
             if stims is not validated_stim:
                 return self.transform(validated_stim, *args, **kwargs)
@@ -132,7 +142,7 @@ class Transformer(with_metaclass(ABCMeta)):
                 return self.transform(s, *args, **kwargs)
             return multiprocessing.ProcessingPool(config.n_jobs).map(_transform, stims)
 
-        return (self.transform(s, *args, **kwargs) for s in stims)
+        return (t for t in (self.transform(s, *args, **kwargs) for s in stims) if t)
 
     @abstractmethod
     def _transform(self, stim):

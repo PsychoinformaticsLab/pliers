@@ -19,7 +19,7 @@ __all__ = [
     'VideoStim',
     'DerivedVideoStim',
     'VideoFrameStim',
-    'TweetStimFactory'
+    'TweetStimFactory',
     'TweetStim',
     'load_stims'
 ]
