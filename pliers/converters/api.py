@@ -24,13 +24,14 @@ class SpeechRecognitionAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
             the environment variable specified in the _env_keys field.
     '''
 
+    _log_attributes = ('recognize_method',)
+
     @abstractproperty
     def recognize_method(self):
         pass
 
     @requires_optional_dependency('speech_recognition')
     def __init__(self, api_key=None):
-        super(SpeechRecognitionAPIConverter, self).__init__()
         if api_key is None:
             try:
                 api_key = os.environ[self.env_keys[0]]
@@ -39,6 +40,7 @@ class SpeechRecognitionAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
                                  " SpeechRecognitionAPIConverter is initialized.")
         self.recognizer = sr.Recognizer()
         self.api_key = api_key
+        super(SpeechRecognitionAPIConverter, self).__init__()
 
     @requires_optional_dependency('speech_recognition')
     def _convert(self, audio):
@@ -95,7 +97,6 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
 
     @requires_optional_dependency('speech_recognition')
     def __init__(self, username=None, password=None, resolution='words'):
-        super(IBMSpeechAPIConverter, self).__init__()
         if username is None or password is None:
             try:
                 username = os.environ['IBM_USERNAME']
@@ -107,6 +108,7 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
         self.username = username
         self.password = password
         self.resolution = resolution
+        super(IBMSpeechAPIConverter, self).__init__()
 
     @requires_optional_dependency('speech_recognition')
     def _convert(self, audio):

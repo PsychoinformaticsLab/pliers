@@ -43,10 +43,10 @@ class FrameSamplingConverter(VideoToDerivedVideoConverter):
             raise ValueError("When initializing the FrameSamplingConverter, "
                              "one of the 'every', 'hertz', or 'top_n' must "
                              "be specified.")
-        super(FrameSamplingConverter, self).__init__()
         self.every = every
         self.hertz = hertz
         self.top_n = top_n
+        super(FrameSamplingConverter, self).__init__()
 
     def _convert(self, video):
         if not hasattr(video, "frame_index"):
