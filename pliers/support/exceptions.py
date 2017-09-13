@@ -37,5 +37,5 @@ class MissingDependencyError(PliersError):
 
     def __init__(self, message=MISSING_DEPENDENCY_MESSAGE, dependency=None,
                  *args, **kwargs):
-        super(MissingCorpusError, self).__init__(message % dependency,
-                                                 *args, **kwargs)
+        super(MissingDependencyError, self).__init__(message % dependency,
+                                                     *args, **kwargs)

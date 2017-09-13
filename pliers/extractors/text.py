@@ -5,9 +5,11 @@ Extractors that operate primarily or exclusively on Text stimuli.
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.exceptions import PliersError
-from pliers.support.decorators import requires_nltk_corpus
+from pliers.support.decorators import (requires_nltk_corpus,
+                                       requires_optional_dependency)
 from pliers.datasets.text import fetch_dictionary
 from pliers.transformers import BatchTransformerMixin
+from pliers.utils import attempt_to_import
 import numpy as np
 import pandas as pd
 import nltk
@@ -15,18 +17,8 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import sys
 from six import string_types
 
-try:
-    from gensim.models.keyedvectors import KeyedVectors
-except ImportError:
-    KeyedVectors = None
-
-try:
-    from sklearn.feature_extraction.text import (CountVectorizer,
-                                                 HashingVectorizer,
-                                                 TfidfVectorizer,
-                                                 VectorizerMixin)
-except ImportError:
-    CountVectorizer = None
+gensim = attempt_to_import('gensim')
+sklearn = attempt_to_import('sklearn')
 
 
 class TextExtractor(Extractor):
@@ -226,15 +218,12 @@ class WordEmbeddingExtractor(TextExtractor):
 
     _log_attributes = ('wvModel', 'prefix')
 
+    @requires_optional_dependency('gensim')
     def __init__(self, embedding_file, binary=False,
                  prefix='embedding_dim'):
-        if KeyedVectors is None:
-            raise ImportError("gensim is required to create a "
-                              "WordEmbeddingExtractor, but could not be "
-                              "successfully imported. Please make sure it is "
-                              "installed.")
-        self.wvModel = KeyedVectors.load_word2vec_format(embedding_file,
-                                                         binary=binary)
+        wvModule = gensim.models.keyedvectors.KeyedVectors
+        self.wvModel = wvModule.load_word2vec_format(embedding_file,
+                                                     binary=binary)
         self.prefix = prefix
         super(WordEmbeddingExtractor, self).__init__()
 
@@ -266,19 +255,15 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
     _log_attributes = ('vectorizer',)
     _batch_size = sys.maxsize
 
+    @requires_optional_dependency('sklearn')
     def __init__(self, vectorizer=None, *args, **kwargs):
-        if isinstance(vectorizer, VectorizerMixin):
+        module = sklearn.feature_extraction.text
+        if isinstance(vectorizer, module.VectorizerMixin):
             self.vectorizer = vectorizer
         elif isinstance(vectorizer, str):
-            self.vectorizer = eval(vectorizer)(*args, **kwargs)
+            self.vectorizer = getattr(module, vectorizer)(*args, **kwargs)
         else:
-            if CountVectorizer is None:
-                raise ImportError("sklearn is required to create a "
-                                  "TextVectorizerExtractor if a vectorizer is "
-                                  "not provided, but could not be successfully"
-                                  " imported. Please make sure it is "
-                                  "installed.")
-            self.vectorizer = CountVectorizer(*args, **kwargs)
+            self.vectorizer = module.CountVectorizer(*args, **kwargs)
         super(TextVectorizerExtractor, self).__init__()
 
     def _extract(self, stims):

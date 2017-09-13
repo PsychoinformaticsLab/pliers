@@ -10,23 +10,12 @@ except:
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.text import TextExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
+from pliers.support.decorators import requires_optional_dependency
 from pliers.transformers import BatchTransformerMixin
-from pliers.utils import listify, EnvironmentKeyMixin
+from pliers.utils import listify, EnvironmentKeyMixin, attempt_to_import
 
-
-try:
-    from clarifai.rest.client import (ClarifaiApp,
-                                      ModelOutputConfig,
-                                      ModelOutputInfo,
-                                      Image,
-                                      Concept)
-except ImportError:
-    pass
-
-try:
-    import indicoio as ico
-except ImportError:
-    pass
+clarifai = attempt_to_import('clarifai')
+indicoio = attempt_to_import('indicoio')
 
 
 class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
@@ -56,7 +45,7 @@ class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
                                  "extractor is initialized.")
         else:
             self.api_key = api_key
-        ico.config.api_key = self.api_key
+        indicoio.config.api_key = self.api_key
 
         if models is None:
             raise ValueError("Must enter a valid list of models to use. "
@@ -67,7 +56,7 @@ class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
                 "Unsupported model {} specified. "
                 "Valid models: {}".format(model, ", ".join(self.allowed_models)))
 
-        self.models = [getattr(ico, model) for model in models]
+        self.models = [getattr(indicoio, model) for model in models]
         self.names = models
 
     def _extract(self, stims):
@@ -101,7 +90,7 @@ class IndicoAPITextExtractor(TextExtractor, IndicoAPIExtractor):
     '''
 
     def __init__(self, **kwargs):
-        self.allowed_models = ico.TEXT_APIS.keys()
+        self.allowed_models = indicoio.TEXT_APIS.keys()
         super(IndicoAPITextExtractor, self).__init__(**kwargs)
 
 
@@ -112,7 +101,7 @@ class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
     '''
 
     def __init__(self, **kwargs):
-        self.allowed_models = ico.IMAGE_APIS.keys()
+        self.allowed_models = indicoio.IMAGE_APIS.keys()
         super(IndicoAPIImageExtractor, self).__init__(**kwargs)
 
 
@@ -139,11 +128,11 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
     _batch_size = 128
     _env_keys = ('CLARIFAI_APP_ID', 'CLARIFAI_APP_SECRET')
 
+    @requires_optional_dependency('clarifai')
     def __init__(self, app_id=None, app_secret=None, model='general-v1.3',
                  min_value=None,
                  max_concepts=None,
                  select_concepts=None):
-        super(ClarifaiAPIExtractor, self).__init__()
         if app_id is None or app_secret is None:
             try:
                 app_id = os.environ['CLARIFAI_APP_ID']
@@ -153,25 +142,29 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
                                  "must be passed the first time a Clarifai "
                                  "extractor is initialized.")
 
-        self.api = ClarifaiApp(app_id=app_id, app_secret=app_secret)
+        from clarifai.rest import client
+        self.api = client.ClarifaiApp(app_id=app_id, app_secret=app_secret)
         self.model = self.api.models.get(model)
         self.min_value = min_value
         self.max_concepts = max_concepts
         self.select_concepts = select_concepts
         if select_concepts:
             select_concepts = listify(select_concepts)
-            self.select_concepts = [Concept(concept_name=n) for n in select_concepts]
+            self.select_concepts = [client.Concept(concept_name=n) for n in select_concepts]
+        super(ClarifaiAPIExtractor, self).__init__()
 
+    @requires_optional_dependency('clarifai')
     def _extract(self, stims):
-        output_config = ModelOutputConfig(min_value=self.min_value,
-                                          max_concepts=self.max_concepts,
-                                          select_concepts=self.select_concepts)
-        model_output_info = ModelOutputInfo(output_config=output_config)
+        from clarifai.rest import client
+        output_config = client.ModelOutputConfig(min_value=self.min_value,
+                                                 max_concepts=self.max_concepts,
+                                                 select_concepts=self.select_concepts)
+        model_output_info = client.ModelOutputInfo(output_config=output_config)
 
         # ExitStack lets us use filename context managers simultaneously
         with ExitStack() as stack:
             files = [stack.enter_context(s.get_filename()) for s in stims]
-            imgs = [Image(filename=filename) for filename in files]
+            imgs = [client.Image(filename=filename) for filename in files]
             tags = self.model.predict(imgs, model_output_info=model_output_info)
 
         extracted = []

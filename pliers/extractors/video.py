@@ -4,14 +4,12 @@ Extractors that operate primarily or exclusively on Video stimuli.
 
 from pliers.stimuli.video import VideoStim
 from pliers.extractors.base import Extractor, ExtractorResult
+from pliers.support.decorators import requires_optional_dependency
+from pliers.utils import attempt_to_import
 
 import numpy as np
 
-# Optional dependencies
-try:
-    import cv2
-except ImportError:
-    pass
+cv2 = attempt_to_import('cv2')
 
 
 class VideoExtractor(Extractor):
@@ -31,6 +29,7 @@ class DenseOpticalFlowExtractor(VideoExtractor):
         super(DenseOpticalFlowExtractor, self).__init__()
         self.show = show
 
+    @requires_optional_dependency('cv2')
     def _extract(self, stim):
 
         flows = []

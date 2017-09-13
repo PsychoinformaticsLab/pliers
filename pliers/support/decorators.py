@@ -27,7 +27,8 @@ def requires_optional_dependency(dependency):
         def wrapper(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
-            except AttributeError:
+            except AttributeError as err:
+                print(err)
                 raise MissingDependencyError(dependency=dependency)
         return wrapper
     return decorator

@@ -1,4 +1,5 @@
 import collections
+import importlib
 from abc import abstractproperty
 from six import string_types
 from tqdm import tqdm
@@ -65,9 +66,9 @@ def progress_bar_wrapper(iterable, **kwargs):
 
 def attempt_to_import(dependency):
     try:
-        exec('import ' + dependency)
+        return importlib.import_module(dependency)
     except ImportError:
-        exec(dependency + ' = None')
+        return None
 
 
 class EnvironmentKeyMixin(object):
