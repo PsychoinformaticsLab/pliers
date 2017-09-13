@@ -1,5 +1,13 @@
 ''' Filter hierarchy. '''
 
-from .text import WordStemmingFilter
+from .text import (WordStemmingFilter,
+                   TokenizingFilter,
+                   TokenRemovalFilter,
+                   PunctuationRemovalFilter)
 
-__all__ = ['WordStemmingFilter']
+__all__ = [
+    'WordStemmingFilter',
+    'TokenizingFilter',
+    'TokenRemovalFilter',
+    'PunctuationRemovalFilter'
+]
