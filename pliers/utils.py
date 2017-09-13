@@ -63,6 +63,13 @@ def progress_bar_wrapper(iterable, **kwargs):
         not isinstance(iterable, tqdm)) else iterable
 
 
+def attempt_to_import(dependency):
+    try:
+        exec('import ' + dependency)
+    except ImportError:
+        exec(dependency + ' = None')
+
+
 class EnvironmentKeyMixin(object):
 
     @abstractproperty

@@ -2,7 +2,8 @@
 """Custom decorators."""
 from __future__ import absolute_import
 from functools import wraps
-from pliers.support.exceptions import MissingCorpusError
+from pliers.support.exceptions import (MissingCorpusError,
+                                       MissingDependencyError)
 
 
 def requires_nltk_corpus(func):
@@ -19,3 +20,14 @@ def requires_nltk_corpus(func):
             print(err)
             raise MissingCorpusError()
     return decorated
+
+
+def requires_optional_dependency(dependency):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except AttributeError:
+                raise MissingDependencyError(dependency=dependency)
+        return wrapper
+    return decorator
