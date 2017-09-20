@@ -7,7 +7,7 @@ from pliers.extractors import (DictionaryExtractor, PartOfSpeechExtractor,
                                STFTAudioExtractor,
                                MeanAmplitudeExtractor, BrightnessExtractor,
                                SharpnessExtractor, VibranceExtractor,
-                               SaliencyExtractor, DenseOpticalFlowExtractor,
+                               SaliencyExtractor, FarnebackOpticalFlowExtractor,
                                IndicoAPITextExtractor, IndicoAPIImageExtractor,
                                ClarifaiAPIExtractor,
                                TensorFlowInceptionV3Extractor,
@@ -264,7 +264,7 @@ def test_optical_flow_extractor():
     pytest.importorskip('cv2')
     video_dir = join(get_test_data_path(), 'video')
     stim = VideoStim(join(video_dir, 'small.mp4'), onset=4.2)
-    result = DenseOpticalFlowExtractor().transform(stim).to_df()
+    result = FarnebackOpticalFlowExtractor().transform(stim).to_df()
     target = result.query('onset==7.2')['total_flow']
     # Value returned by cv2 seems to change over versions, so use low precision
     assert np.isclose(target, 86248.05, 1e-4)
