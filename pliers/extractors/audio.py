@@ -132,7 +132,7 @@ class MeanAmplitudeExtractor(Extractor):
 
 class LibrosaFeatureExtractor(AudioExtractor):
 
-    ''' A generic class for all audio extractors using the librosa library. '''
+    ''' A generic class for audio extractors using the librosa library. '''
 
     def __init__(self):
         if librosa is None:
@@ -162,7 +162,10 @@ class LibrosaFeatureExtractor(AudioExtractor):
 
 class SpectralCentroidExtractor(LibrosaFeatureExtractor):
 
-    ''' Extracts the spectral centroids from audio. '''
+    ''' Extracts the spectral centroids from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
 
     _log_attributes = ('n_fft', 'hop_length', 'freq')
 
@@ -183,7 +186,10 @@ class SpectralCentroidExtractor(LibrosaFeatureExtractor):
 
 class SpectralBandwidthExtractor(LibrosaFeatureExtractor):
 
-    ''' Extracts the spectral centroids from audio. '''
+    ''' Extracts the p'th-order spectral bandwidth from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
 
     _log_attributes = ('n_fft', 'hop_length', 'freq', 'centroid', 'norm', 'p')
 
@@ -211,7 +217,10 @@ class SpectralBandwidthExtractor(LibrosaFeatureExtractor):
 
 class SpectralContrastExtractor(LibrosaFeatureExtractor):
 
-    ''' Extracts the spectral centroids from audio. '''
+    ''' Extracts the spectral contrast from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
 
     _log_attributes = ('n_fft', 'hop_length', 'freq', 'fmin', 'n_bands',
                        'quantile', 'linear')
@@ -242,7 +251,10 @@ class SpectralContrastExtractor(LibrosaFeatureExtractor):
 
 class SpectralRolloffExtractor(LibrosaFeatureExtractor):
 
-    ''' Extracts the spectral centroids from audio. '''
+    ''' Extracts the roll-off frequency from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
 
     _log_attributes = ('n_fft', 'hop_length', 'freq', 'roll_percent')
 
@@ -267,7 +279,10 @@ class SpectralRolloffExtractor(LibrosaFeatureExtractor):
 class PolyFeaturesExtractor(LibrosaFeatureExtractor):
 
     ''' Extracts the coefficients of fitting an nth-order polynomial to the columns
-    of an audio's spectrogram. '''
+    of an audio's spectrogram.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
 
     _log_attributes = ('n_fft', 'hop_length', 'order', 'freq')
 
@@ -290,7 +305,10 @@ class PolyFeaturesExtractor(LibrosaFeatureExtractor):
 
 class RMSEExtractor(LibrosaFeatureExtractor):
 
-    ''' Extracts root mean square (RMS) energy from audio. '''
+    ''' Extracts root mean square (RMS) energy from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
 
     _log_attributes = ('frame_length', 'hop_length', 'center', 'pad_mode')
 
@@ -313,7 +331,10 @@ class RMSEExtractor(LibrosaFeatureExtractor):
 
 class ZeroCrossingRateExtractor(LibrosaFeatureExtractor):
 
-    ''' Extracts the zero-crossing rate over time frames of audio. '''
+    ''' Extracts the zero-crossing rate of audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
 
     _log_attributes = ('frame_length', 'hop_length', 'center')
 
@@ -336,7 +357,10 @@ class ZeroCrossingRateExtractor(LibrosaFeatureExtractor):
 
 class ChromaSTFTExtractor(LibrosaFeatureExtractor):
 
-    ''' Extracts a STFT chromogram from audio. '''
+    ''' Extracts a chromagram from an audio's waveform.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
 
     _log_attributes = ('norm', 'n_fft', 'hop_length', 'tuning', 'n_chroma')
 
@@ -364,7 +388,10 @@ class ChromaSTFTExtractor(LibrosaFeatureExtractor):
 
 class ChromaCQTExtractor(LibrosaFeatureExtractor):
 
-    ''' Extracts a CQT chromogram from audio. '''
+    ''' Extracts a constant-q chromogram from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
 
     _log_attributes = ('norm', 'hop_length', 'tuning', 'fmin',
                        'threshold', 'n_chroma', 'n_octaves', 'window',
@@ -403,7 +430,11 @@ class ChromaCQTExtractor(LibrosaFeatureExtractor):
 
 class ChromaCENSExtractor(LibrosaFeatureExtractor):
 
-    ''' Extracts a CENS chromogram from audio. '''
+    ''' Extracts a chroma variant "Chroma Energy Normalized" (CENS)
+    chromogram from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
 
     _log_attributes = ('norm', 'hop_length', 'tuning', 'fmin',
                        'n_chroma', 'n_octaves', 'window', 'bins_per_octave',
@@ -442,7 +473,10 @@ class ChromaCENSExtractor(LibrosaFeatureExtractor):
 
 class MelspectrogramExtractor(LibrosaFeatureExtractor):
 
-    ''' Extracts Mel spectrogram from audio. '''
+    ''' Extracts mel-scaled spectrogram from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
 
     _log_attributes = ('n_mels', 'n_fft', 'hop_length', 'power')
 
@@ -468,7 +502,10 @@ class MelspectrogramExtractor(LibrosaFeatureExtractor):
 
 class MFCCExtractor(LibrosaFeatureExtractor):
 
-    ''' Extracts Mel Frequency Ceptral Coefficients from audio. '''
+    ''' Extracts Mel Frequency Ceptral Coefficients from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
 
     _log_attributes = ('n_mfcc', 'hop_length')
 
@@ -489,7 +526,10 @@ class MFCCExtractor(LibrosaFeatureExtractor):
 
 class TonnetzExtractor(LibrosaFeatureExtractor):
 
-    ''' Extracts the tonal centroids (tonnetz) from audio. '''
+    ''' Extracts the tonal centroids (tonnetz) from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
 
     _log_attributes = ('chroma',)
 
@@ -507,7 +547,10 @@ class TonnetzExtractor(LibrosaFeatureExtractor):
 
 class TempogramExtractor(LibrosaFeatureExtractor):
 
-    ''' Extracts a tempogram from audio. '''
+    ''' Extracts a tempogram from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
 
     _log_attributes = ('onset_envelope', 'hop_length', 'win_length', 'center',
                        'window', 'norm')
