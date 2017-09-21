@@ -263,6 +263,30 @@ class SpectralRolloffExtractor(LibrosaFeatureExtractor):
         return rolloffs, ['spectral_rolloff']
 
 
+class PolyFeaturesExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts the coefficients of fitting an nth-order polynomial to the columns
+    of an audio's spectrogram. '''
+
+    _log_attributes = ('n_fft', 'hop_length', 'order', 'freq')
+
+    def __init__(self, n_fft=2048, hop_length=512, order=1, freq=None):
+        self.n_fft = n_fft
+        self.hop_length = hop_length
+        self.order = order
+        self.freq = freq
+        super(PolyFeaturesExtractor, self).__init__()
+
+    def _get_values(self, stim):
+        poly_features = librosa.feature.poly_features(y=stim.data,
+                                                      sr=stim.sampling_rate,
+                                                      n_fft=self.n_fft,
+                                                      hop_length=self.hop_length,
+                                                      order=self.order,
+                                                      freq=self.freq)
+        return poly_features.T, ['coefficient_%d' % i for i in range(self.order+1)]
+
+
 class RMSEExtractor(LibrosaFeatureExtractor):
 
     ''' Extracts root mean square (RMS) energy from audio. '''
@@ -380,7 +404,9 @@ class ChromaCENSExtractor(LibrosaFeatureExtractor):
 
     ''' Extracts a CENS chromogram from audio. '''
 
-    _log_attributes = ('norm', 'hop_length', 'tuning', 'n_chroma')
+    _log_attributes = ('norm', 'hop_length', 'tuning', 'fmin',
+                       'n_chroma', 'n_octaves', 'window', 'bins_per_octave',
+                       'cqt_mode', 'norm', 'win_len_smooth')
 
     def __init__(self, hop_length=512, fmin=None, tuning=None,
                  n_chroma=12, n_octaves=7, window=None, bins_per_octave=None,
@@ -413,11 +439,37 @@ class ChromaCENSExtractor(LibrosaFeatureExtractor):
         return chroma.T, ['chroma_cens_%d' % i for i in range(self.n_chroma)]
 
 
+class MelspectrogramExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts Mel spectrogram from audio. '''
+
+    _log_attributes = ('n_mels', 'n_ftt', 'hop_length', 'power')
+
+    def __init__(self, n_mels=128, n_fft=2048, hop_length=512, power=2.0,
+                 **kwargs):
+        self.n_mels = n_mels
+        self.n_fft = n_fft
+        self.hop_length = hop_length
+        self.power = power
+        self.kwargs = kwargs
+        super(MelspectrogramExtractor, self).__init__()
+
+    def _get_values(self, stim):
+        melspectrogram = librosa.feature.melspectrogram(y=stim.data,
+                                                        sr=stim.sampling_rate,
+                                                        n_mels=self.n_mels,
+                                                        n_fft=self.n_fft,
+                                                        hop_length=self.hop_length,
+                                                        power=self.power,
+                                                        **self.kwargs)
+        return melspectrogram.T, ['mel_%d' % i for i in range(self.n_mels)]
+
+
 class MFCCExtractor(LibrosaFeatureExtractor):
 
     ''' Extracts Mel Frequency Ceptral Coefficients from audio. '''
 
-    _log_attributes = ('n_mfcc',)
+    _log_attributes = ('n_mfcc', 'hop_length')
 
     def __init__(self, n_mfcc=20, hop_length=512, **kwargs):
         self.n_mfcc = n_mfcc
@@ -432,3 +484,49 @@ class MFCCExtractor(LibrosaFeatureExtractor):
                                     hop_length=self.hop_length,
                                     **self.kwargs)
         return mfcc.T, ['mfcc_%d' % i for i in range(self.n_mfcc)]
+
+
+class TempogramExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts a tempogram from audio. '''
+
+    _log_attributes = ('onset_envelope', 'hop_length', 'win_length', 'center',
+                       'window', 'norm')
+
+    def __init__(self, onset_envelope=None, hop_length=512, win_length=384,
+                 center=True, window='hann', norm=np.inf):
+        self.onset_envelope = onset_envelope
+        self.hop_length = hop_length
+        self.win_length = win_length
+        self.center = center
+        self.window = window
+        self.norm = norm
+        super(TempogramExtractor, self).__init__()
+
+    def _get_values(self, stim):
+        tempogram = librosa.feature.tempogram(y=stim.data,
+                                              sr=stim.sampling_rate,
+                                              onset_envelope=self.onset_envelope,
+                                              hop_length=self.hop_length,
+                                              win_length=self.win_length,
+                                              center=self.center,
+                                              window=self.window,
+                                              norm=self.norm)
+        return tempogram.T, ['tempo_%d' % i for i in range(self.win_length)]
+
+
+class TonnetzExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts the tonal centroids (tonnetz) from audio. '''
+
+    _log_attributes = ('chroma',)
+
+    def __init__(self, chroma=None):
+        self.chroma = chroma
+        super(TonnetzExtractor, self).__init__()
+
+    def _get_values(self, stim):
+        tonnetz = librosa.feature.poly_features(y=stim.data,
+                                                sr=stim.sampling_rate,
+                                                chroma=self.chroma)
+        return tonnetz.T, ['tonal_centroi_%d' % i for i in range(6)]
