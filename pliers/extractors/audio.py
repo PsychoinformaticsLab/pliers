@@ -100,6 +100,7 @@ class STFTAudioExtractor(AudioExtractor):
 
 
 class MeanAmplitudeExtractor(Extractor):
+
     ''' Mean amplitude extractor for blocks of audio with transcription. '''
 
     _input_type = (AudioStim, ComplexTextStim)
@@ -443,7 +444,7 @@ class MelspectrogramExtractor(LibrosaFeatureExtractor):
 
     ''' Extracts Mel spectrogram from audio. '''
 
-    _log_attributes = ('n_mels', 'n_ftt', 'hop_length', 'power')
+    _log_attributes = ('n_mels', 'n_fft', 'hop_length', 'power')
 
     def __init__(self, n_mels=128, n_fft=2048, hop_length=512, power=2.0,
                  **kwargs):
@@ -486,6 +487,24 @@ class MFCCExtractor(LibrosaFeatureExtractor):
         return mfcc.T, ['mfcc_%d' % i for i in range(self.n_mfcc)]
 
 
+class TonnetzExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts the tonal centroids (tonnetz) from audio. '''
+
+    _log_attributes = ('chroma',)
+
+    def __init__(self, chroma=None):
+        self.chroma = chroma
+        self.hop_length = 512
+        super(TonnetzExtractor, self).__init__()
+
+    def _get_values(self, stim):
+        tonnetz = librosa.feature.tonnetz(y=stim.data,
+                                          sr=stim.sampling_rate,
+                                          chroma=self.chroma)
+        return tonnetz.T, ['tonal_centroid_%d' % i for i in range(6)]
+
+
 class TempogramExtractor(LibrosaFeatureExtractor):
 
     ''' Extracts a tempogram from audio. '''
@@ -513,20 +532,3 @@ class TempogramExtractor(LibrosaFeatureExtractor):
                                               window=self.window,
                                               norm=self.norm)
         return tempogram.T, ['tempo_%d' % i for i in range(self.win_length)]
-
-
-class TonnetzExtractor(LibrosaFeatureExtractor):
-
-    ''' Extracts the tonal centroids (tonnetz) from audio. '''
-
-    _log_attributes = ('chroma',)
-
-    def __init__(self, chroma=None):
-        self.chroma = chroma
-        super(TonnetzExtractor, self).__init__()
-
-    def _get_values(self, stim):
-        tonnetz = librosa.feature.poly_features(y=stim.data,
-                                                sr=stim.sampling_rate,
-                                                chroma=self.chroma)
-        return tonnetz.T, ['tonal_centroi_%d' % i for i in range(6)]
