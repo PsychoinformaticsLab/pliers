@@ -1,1 +1,2 @@
 thai_people.jpg: "Thai People", by Eric Montfort on flickr. License: CC BY-NC-ND 2.0. Found at https://www.flickr.com/photos/glouk/4493453495
+aspect_ratio_fail.jpg: "Aspect Ratio Fail", by Michael Landers on flickr. License: CC BY-NC-ND 2.0. Found at https://www.flickr.com/photos/ez4u2sai/5749747369
