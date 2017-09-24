@@ -1,6 +1,5 @@
 ''' Extractors that operate on AudioStim inputs. '''
 
-from abc import abstractmethod
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.text import ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
@@ -134,20 +133,33 @@ class LibrosaFeatureExtractor(AudioExtractor):
 
     ''' A generic class for audio extractors using the librosa library. '''
 
-    def __init__(self):
+    _log_attributes = ('hop_length', 'librosa_kwargs')
+
+    def __init__(self, feature=None, hop_length=512, **librosa_kwargs):
         if librosa is None:
             raise ImportError("librosa is required to create a "
                               "LibrosaFeatureExtractor, but could not be "
                               "successfully imported. Please make sure it is "
                               "installed.")
+        if feature:
+            self._feature = feature
+        self.hop_length = hop_length
+        self.librosa_kwargs = librosa_kwargs
         super(LibrosaFeatureExtractor, self).__init__()
 
-    @abstractmethod
+    def _get_feature_names(self):
+        return self._feature
+
     def _get_values(self, stim):
-        pass
+        return getattr(librosa.feature, self._feature)(y=stim.data,
+                                                       sr=stim.sampling_rate,
+                                                       hop_length=self.hop_length,
+                                                       **self.librosa_kwargs)
 
     def _extract(self, stim):
-        values, feature_names = self._get_values(stim)
+        values = self._get_values(stim)
+        values = values.T
+        feature_names = [self._get_feature_names()]
         n_frames = len(values)
         onsets = librosa.frames_to_time(range(n_frames),
                                         sr=stim.sampling_rate,
@@ -167,21 +179,7 @@ class SpectralCentroidExtractor(LibrosaFeatureExtractor):
     For details on argument specification visit:
     https://librosa.github.io/librosa/feature.html.'''
 
-    _log_attributes = ('n_fft', 'hop_length', 'freq')
-
-    def __init__(self, n_fft=2048, hop_length=512, freq=None):
-        self.n_fft = n_fft
-        self.hop_length = hop_length
-        self.freq = freq
-        super(SpectralCentroidExtractor, self).__init__()
-
-    def _get_values(self, stim):
-        centroids = librosa.feature.spectral_centroid(y=stim.data,
-                                                      sr=stim.sampling_rate,
-                                                      n_fft=self.n_fft,
-                                                      hop_length=self.hop_length,
-                                                      freq=self.freq)[0]
-        return centroids, ['spectral_centroid']
+    _feature = 'spectral_centroid'
 
 
 class SpectralBandwidthExtractor(LibrosaFeatureExtractor):
@@ -191,28 +189,7 @@ class SpectralBandwidthExtractor(LibrosaFeatureExtractor):
     For details on argument specification visit:
     https://librosa.github.io/librosa/feature.html.'''
 
-    _log_attributes = ('n_fft', 'hop_length', 'freq', 'centroid', 'norm', 'p')
-
-    def __init__(self, n_fft=2048, hop_length=512, freq=None, centroid=None,
-                 norm=True, p=2):
-        self.n_fft = n_fft
-        self.hop_length = hop_length
-        self.freq = freq
-        self.centroid = centroid
-        self.norm = norm
-        self.p = p
-        super(SpectralBandwidthExtractor, self).__init__()
-
-    def _get_values(self, stim):
-        bandwidths = librosa.feature.spectral_bandwidth(y=stim.data,
-                                                        sr=stim.sampling_rate,
-                                                        n_fft=self.n_fft,
-                                                        hop_length=self.hop_length,
-                                                        freq=self.freq,
-                                                        centroid=self.centroid,
-                                                        norm=self.norm,
-                                                        p=self.p)[0]
-        return bandwidths, ['spectral_bandwidth']
+    _feature = 'spectral_bandwidth'
 
 
 class SpectralContrastExtractor(LibrosaFeatureExtractor):
@@ -222,31 +199,14 @@ class SpectralContrastExtractor(LibrosaFeatureExtractor):
     For details on argument specification visit:
     https://librosa.github.io/librosa/feature.html.'''
 
-    _log_attributes = ('n_fft', 'hop_length', 'freq', 'fmin', 'n_bands',
-                       'quantile', 'linear')
+    _feature = 'spectral_contrast'
 
-    def __init__(self, n_fft=2048, hop_length=512, freq=None, fmin=200.0,
-                 n_bands=6, quantile=0.02, linear=False):
-        self.n_fft = n_fft
-        self.hop_length = hop_length
-        self.freq = freq
-        self.fmin = fmin
+    def __init__(self, n_bands=6, **kwargs):
         self.n_bands = n_bands
-        self.quantile = quantile
-        self.linear = linear
-        super(SpectralContrastExtractor, self).__init__()
+        super(SpectralContrastExtractor, self).__init__(n_bands=n_bands, **kwargs)
 
-    def _get_values(self, stim):
-        contrasts = librosa.feature.spectral_contrast(y=stim.data,
-                                                      sr=stim.sampling_rate,
-                                                      n_fft=self.n_fft,
-                                                      hop_length=self.hop_length,
-                                                      freq=self.freq,
-                                                      fmin=self.fmin,
-                                                      n_bands=self.n_bands,
-                                                      quantile=self.quantile,
-                                                      linear=self.linear)
-        return contrasts.T, ['spectral_contrast_band_%d' % i for i in range(self.n_bands+1)]
+    def _get_feature_names(self):
+        return ['spectral_contrast_band_%d' % i for i in range(self.n_bands+1)]
 
 
 class SpectralRolloffExtractor(LibrosaFeatureExtractor):
@@ -256,24 +216,7 @@ class SpectralRolloffExtractor(LibrosaFeatureExtractor):
     For details on argument specification visit:
     https://librosa.github.io/librosa/feature.html.'''
 
-    _log_attributes = ('n_fft', 'hop_length', 'freq', 'roll_percent')
-
-    def __init__(self, n_fft=2048, hop_length=512, freq=None,
-                 roll_percent=0.85):
-        self.n_fft = n_fft
-        self.hop_length = hop_length
-        self.freq = freq
-        self.roll_percent = roll_percent
-        super(SpectralRolloffExtractor, self).__init__()
-
-    def _get_values(self, stim):
-        rolloffs = librosa.feature.spectral_rolloff(y=stim.data,
-                                                    sr=stim.sampling_rate,
-                                                    n_fft=self.n_fft,
-                                                    hop_length=self.hop_length,
-                                                    freq=self.freq,
-                                                    roll_percent=self.roll_percent)[0]
-        return rolloffs, ['spectral_rolloff']
+    _feature = 'spectral_rolloff'
 
 
 class PolyFeaturesExtractor(LibrosaFeatureExtractor):
@@ -284,23 +227,14 @@ class PolyFeaturesExtractor(LibrosaFeatureExtractor):
     For details on argument specification visit:
     https://librosa.github.io/librosa/feature.html.'''
 
-    _log_attributes = ('n_fft', 'hop_length', 'order', 'freq')
+    _feature = 'poly_features'
 
-    def __init__(self, n_fft=2048, hop_length=512, order=1, freq=None):
-        self.n_fft = n_fft
-        self.hop_length = hop_length
+    def __init__(self, order=1, **kwargs):
         self.order = order
-        self.freq = freq
-        super(PolyFeaturesExtractor, self).__init__()
+        super(PolyFeaturesExtractor, self).__init__(order=order, **kwargs)
 
-    def _get_values(self, stim):
-        poly_features = librosa.feature.poly_features(y=stim.data,
-                                                      sr=stim.sampling_rate,
-                                                      n_fft=self.n_fft,
-                                                      hop_length=self.hop_length,
-                                                      order=self.order,
-                                                      freq=self.freq)
-        return poly_features.T, ['coefficient_%d' % i for i in range(self.order+1)]
+    def _get_feature_names(self):
+        return ['coefficient_%d' % i for i in range(self.order+1)]
 
 
 class RMSEExtractor(LibrosaFeatureExtractor):
@@ -310,23 +244,12 @@ class RMSEExtractor(LibrosaFeatureExtractor):
     For details on argument specification visit:
     https://librosa.github.io/librosa/feature.html.'''
 
-    _log_attributes = ('frame_length', 'hop_length', 'center', 'pad_mode')
-
-    def __init__(self, frame_length=2048, hop_length=512, center=True,
-                 pad_mode='reflect'):
-        self.frame_length = frame_length
-        self.hop_length = hop_length
-        self.center = center
-        self.pad_mode = pad_mode
-        super(RMSEExtractor, self).__init__()
+    _feature = 'rmse'
 
     def _get_values(self, stim):
-        rmse = librosa.feature.rmse(y=stim.data,
-                                    frame_length=self.frame_length,
-                                    hop_length=self.hop_length,
-                                    center=self.center,
-                                    pad_mode=self.pad_mode)[0]
-        return rmse, ['rmse']
+        return getattr(librosa.feature, self._feature)(y=stim.data,
+                                                       hop_length=self.hop_length,
+                                                       **self.librosa_kwargs)
 
 
 class ZeroCrossingRateExtractor(LibrosaFeatureExtractor):
@@ -336,23 +259,12 @@ class ZeroCrossingRateExtractor(LibrosaFeatureExtractor):
     For details on argument specification visit:
     https://librosa.github.io/librosa/feature.html.'''
 
-    _log_attributes = ('frame_length', 'hop_length', 'center')
-
-    def __init__(self, frame_length=2048, hop_length=512, center=True,
-                 **kwargs):
-        self.frame_length = frame_length
-        self.hop_length = hop_length
-        self.center = center
-        self.kwargs = kwargs
-        super(ZeroCrossingRateExtractor, self).__init__()
+    _feature = 'zero_crossing_rate'
 
     def _get_values(self, stim):
-        zcr = librosa.feature.zero_crossing_rate(stim.data,
-                                                 frame_length=self.frame_length,
-                                                 hop_length=self.hop_length,
-                                                 center=self.center,
-                                                 **self.kwargs)[0]
-        return zcr, ['zero_crossing_rate']
+        return getattr(librosa.feature, self._feature)(y=stim.data,
+                                                       hop_length=self.hop_length,
+                                                       **self.librosa_kwargs)
 
 
 class ChromaSTFTExtractor(LibrosaFeatureExtractor):
@@ -362,28 +274,14 @@ class ChromaSTFTExtractor(LibrosaFeatureExtractor):
     For details on argument specification visit:
     https://librosa.github.io/librosa/feature.html.'''
 
-    _log_attributes = ('norm', 'n_fft', 'hop_length', 'tuning', 'n_chroma')
+    _feature = 'chroma_stft'
 
-    def __init__(self, norm=np.inf, n_fft=2048, hop_length=512, tuning=None,
-                 n_chroma=12, **kwargs):
-        self.norm = norm
-        self.n_fft = n_fft
-        self.hop_length = hop_length
-        self.tuning = tuning
+    def __init__(self, n_chroma=12, **kwargs):
         self.n_chroma = n_chroma
-        self.kwargs = kwargs
-        super(ChromaSTFTExtractor, self).__init__()
+        super(ChromaSTFTExtractor, self).__init__(n_chroma=n_chroma, **kwargs)
 
-    def _get_values(self, stim):
-        chroma = librosa.feature.chroma_stft(y=stim.data,
-                                             sr=stim.sampling_rate,
-                                             norm=self.norm,
-                                             n_fft=self.n_fft,
-                                             hop_length=self.hop_length,
-                                             tuning=self.tuning,
-                                             n_chroma=self.n_chroma,
-                                             **self.kwargs)
-        return chroma.T, ['chroma_%d' % i for i in range(self.n_chroma)]
+    def _get_feature_names(self):
+        return ['chroma_%d' % i for i in range(self.n_chroma)]
 
 
 class ChromaCQTExtractor(LibrosaFeatureExtractor):
@@ -393,39 +291,14 @@ class ChromaCQTExtractor(LibrosaFeatureExtractor):
     For details on argument specification visit:
     https://librosa.github.io/librosa/feature.html.'''
 
-    _log_attributes = ('norm', 'hop_length', 'tuning', 'fmin',
-                       'threshold', 'n_chroma', 'n_octaves', 'window',
-                       'bins_per_octave', 'cqt_mode')
+    _feature = 'chroma_cqt'
 
-    def __init__(self, norm=np.inf, hop_length=512, tuning=None,
-                 fmin=None, threshold=0.0, n_chroma=12, n_octaves=7,
-                 window=None, bins_per_octave=None, cqt_mode='full'):
-        self.norm = norm
-        self.hop_length = hop_length
-        self.tuning = tuning
-        self.fmin = fmin
-        self.threshold = threshold
+    def __init__(self, n_chroma=12, **kwargs):
         self.n_chroma = n_chroma
-        self.n_octaves = n_octaves
-        self.window = window
-        self.bins_per_octave = bins_per_octave
-        self.cqt_mode = cqt_mode
-        super(ChromaCQTExtractor, self).__init__()
+        super(ChromaCQTExtractor, self).__init__(n_chroma=n_chroma, **kwargs)
 
-    def _get_values(self, stim):
-        chroma = librosa.feature.chroma_cqt(y=stim.data,
-                                            sr=stim.sampling_rate,
-                                            norm=self.norm,
-                                            hop_length=self.hop_length,
-                                            tuning=self.tuning,
-                                            fmin=self.fmin,
-                                            threshold=self.threshold,
-                                            n_chroma=self.n_chroma,
-                                            n_octaves=self.n_octaves,
-                                            window=self.window,
-                                            bins_per_octave=self.bins_per_octave,
-                                            cqt_mode=self.cqt_mode)
-        return chroma.T, ['chroma_cqt_%d' % i for i in range(self.n_chroma)]
+    def _get_feature_names(self):
+        return ['chroma_cqt_%d' % i for i in range(self.n_chroma)]
 
 
 class ChromaCENSExtractor(LibrosaFeatureExtractor):
@@ -436,39 +309,14 @@ class ChromaCENSExtractor(LibrosaFeatureExtractor):
     For details on argument specification visit:
     https://librosa.github.io/librosa/feature.html.'''
 
-    _log_attributes = ('norm', 'hop_length', 'tuning', 'fmin',
-                       'n_chroma', 'n_octaves', 'window', 'bins_per_octave',
-                       'cqt_mode', 'norm', 'win_len_smooth')
+    _feature = 'chroma_cens'
 
-    def __init__(self, hop_length=512, fmin=None, tuning=None,
-                 n_chroma=12, n_octaves=7, window=None, bins_per_octave=None,
-                 cqt_mode='full', norm=2, win_len_smooth=41):
-        self.hop_length = hop_length
-        self.fmin = fmin
-        self.tuning = tuning
+    def __init__(self, n_chroma=12, **kwargs):
         self.n_chroma = n_chroma
-        self.n_octaves = n_octaves
-        self.window = window
-        self.bins_per_octave = bins_per_octave
-        self.cqt_mode = cqt_mode
-        self.norm = norm
-        self.win_len_smooth = win_len_smooth
-        super(ChromaCENSExtractor, self).__init__()
+        super(ChromaCENSExtractor, self).__init__(n_chroma=n_chroma, **kwargs)
 
-    def _get_values(self, stim):
-        chroma = librosa.feature.chroma_cens(y=stim.data,
-                                             sr=stim.sampling_rate,
-                                             hop_length=self.hop_length,
-                                             fmin=self.fmin,
-                                             tuning=self.tuning,
-                                             n_chroma=self.n_chroma,
-                                             n_octaves=self.n_octaves,
-                                             window=self.window,
-                                             bins_per_octave=self.bins_per_octave,
-                                             cqt_mode=self.cqt_mode,
-                                             norm=self.norm,
-                                             win_len_smooth=self.win_len_smooth)
-        return chroma.T, ['chroma_cens_%d' % i for i in range(self.n_chroma)]
+    def _get_feature_names(self):
+        return ['chroma_cens_%d' % i for i in range(self.n_chroma)]
 
 
 class MelspectrogramExtractor(LibrosaFeatureExtractor):
@@ -478,26 +326,14 @@ class MelspectrogramExtractor(LibrosaFeatureExtractor):
     For details on argument specification visit:
     https://librosa.github.io/librosa/feature.html.'''
 
-    _log_attributes = ('n_mels', 'n_fft', 'hop_length', 'power')
+    _feature = 'melspectrogram'
 
-    def __init__(self, n_mels=128, n_fft=2048, hop_length=512, power=2.0,
-                 **kwargs):
+    def __init__(self, n_mels=128, **kwargs):
         self.n_mels = n_mels
-        self.n_fft = n_fft
-        self.hop_length = hop_length
-        self.power = power
-        self.kwargs = kwargs
-        super(MelspectrogramExtractor, self).__init__()
+        super(MelspectrogramExtractor, self).__init__(n_mels=n_mels, **kwargs)
 
-    def _get_values(self, stim):
-        melspectrogram = librosa.feature.melspectrogram(y=stim.data,
-                                                        sr=stim.sampling_rate,
-                                                        n_mels=self.n_mels,
-                                                        n_fft=self.n_fft,
-                                                        hop_length=self.hop_length,
-                                                        power=self.power,
-                                                        **self.kwargs)
-        return melspectrogram.T, ['mel_%d' % i for i in range(self.n_mels)]
+    def _get_feature_names(self):
+        return ['mel_%d' % i for i in range(self.n_mels)]
 
 
 class MFCCExtractor(LibrosaFeatureExtractor):
@@ -507,21 +343,14 @@ class MFCCExtractor(LibrosaFeatureExtractor):
     For details on argument specification visit:
     https://librosa.github.io/librosa/feature.html.'''
 
-    _log_attributes = ('n_mfcc', 'hop_length')
+    _feature = 'mfcc'
 
-    def __init__(self, n_mfcc=20, hop_length=512, **kwargs):
+    def __init__(self, n_mfcc=20, **kwargs):
         self.n_mfcc = n_mfcc
-        self.hop_length = hop_length
-        self.kwargs = kwargs
-        super(MFCCExtractor, self).__init__()
+        super(MFCCExtractor, self).__init__(n_mfcc=n_mfcc, **kwargs)
 
-    def _get_values(self, stim):
-        mfcc = librosa.feature.mfcc(y=stim.data,
-                                    sr=stim.sampling_rate,
-                                    n_mfcc=self.n_mfcc,
-                                    hop_length=self.hop_length,
-                                    **self.kwargs)
-        return mfcc.T, ['mfcc_%d' % i for i in range(self.n_mfcc)]
+    def _get_feature_names(self):
+        return ['mfcc_%d' % i for i in range(self.n_mfcc)]
 
 
 class TonnetzExtractor(LibrosaFeatureExtractor):
@@ -531,18 +360,15 @@ class TonnetzExtractor(LibrosaFeatureExtractor):
     For details on argument specification visit:
     https://librosa.github.io/librosa/feature.html.'''
 
-    _log_attributes = ('chroma',)
+    _feature = 'tonnetz'
 
-    def __init__(self, chroma=None):
-        self.chroma = chroma
-        self.hop_length = 512
-        super(TonnetzExtractor, self).__init__()
+    def _get_feature_names(self):
+        return ['tonal_centroid_%d' % i for i in range(6)]
 
     def _get_values(self, stim):
-        tonnetz = librosa.feature.tonnetz(y=stim.data,
-                                          sr=stim.sampling_rate,
-                                          chroma=self.chroma)
-        return tonnetz.T, ['tonal_centroid_%d' % i for i in range(6)]
+        return getattr(librosa.feature, self._feature)(y=stim.data,
+                                                       sr=stim.sampling_rate,
+                                                       **self.librosa_kwargs)
 
 
 class TempogramExtractor(LibrosaFeatureExtractor):
@@ -552,26 +378,11 @@ class TempogramExtractor(LibrosaFeatureExtractor):
     For details on argument specification visit:
     https://librosa.github.io/librosa/feature.html.'''
 
-    _log_attributes = ('onset_envelope', 'hop_length', 'win_length', 'center',
-                       'window', 'norm')
+    _feature = 'tempogram'
 
-    def __init__(self, onset_envelope=None, hop_length=512, win_length=384,
-                 center=True, window='hann', norm=np.inf):
-        self.onset_envelope = onset_envelope
-        self.hop_length = hop_length
+    def __init__(self, win_length=384, **kwargs):
         self.win_length = win_length
-        self.center = center
-        self.window = window
-        self.norm = norm
-        super(TempogramExtractor, self).__init__()
+        super(TempogramExtractor, self).__init__(win_length=win_length, **kwargs)
 
-    def _get_values(self, stim):
-        tempogram = librosa.feature.tempogram(y=stim.data,
-                                              sr=stim.sampling_rate,
-                                              onset_envelope=self.onset_envelope,
-                                              hop_length=self.hop_length,
-                                              win_length=self.win_length,
-                                              center=self.center,
-                                              window=self.window,
-                                              norm=self.norm)
-        return tempogram.T, ['tempo_%d' % i for i in range(self.win_length)]
+    def _get_feature_names(self):
+        return ['tempo_%d' % i for i in range(self.win_length)]
