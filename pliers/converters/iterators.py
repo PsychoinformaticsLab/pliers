@@ -1,7 +1,7 @@
 ''' Converter classes that take StimCollection classes and return their
 constituent elements as iterables. '''
 
-from pliers.stimuli.video import VideoStim, DerivedVideoStim
+from pliers.stimuli.video import VideoStim, VideoFrameCollectionStim
 from pliers.stimuli.image import ImageStim
 from pliers.stimuli.text import ComplexTextStim, TextStim
 from .base import Converter
@@ -22,7 +22,7 @@ class VideoFrameIterator(StimCollectionIterator):
     _output_type = ImageStim
 
 
-class DerivedVideoFrameIterator(StimCollectionIterator):
+class VideoFrameCollectionIterator(StimCollectionIterator):
 
     ''' Iterates frames in a DerivedVideoStim as ImageStims. '''
 
@@ -31,7 +31,7 @@ class DerivedVideoFrameIterator(StimCollectionIterator):
     # than the current conjunction, or making the get_converter() code walk
     # up the hierarchy and use superclass iterators.
 
-    _input_type = DerivedVideoStim
+    _input_type = VideoFrameCollectionStim
     _output_type = ImageStim
 
 

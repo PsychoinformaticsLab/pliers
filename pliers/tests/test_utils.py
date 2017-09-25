@@ -1,5 +1,5 @@
 from pliers.stimuli import VideoStim
-from pliers.converters import FrameSamplingConverter
+from pliers.filters import FrameSamplingFilter
 from pliers.utils import batch_iterable
 from pliers import config
 from types import GeneratorType
@@ -14,7 +14,7 @@ def test_progress_bar(capfd):
 
     video_dir = join(get_test_data_path(), 'video')
     video = VideoStim(join(video_dir, 'obama_speech.mp4'))
-    conv = FrameSamplingConverter(hertz=2)
+    conv = FrameSamplingFilter(hertz=2)
 
     old_val = config.progress_bar
     config.progress_bar = True

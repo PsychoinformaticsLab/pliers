@@ -1,4 +1,4 @@
-from pliers.converters import FrameSamplingConverter
+from pliers.filters import FrameSamplingFilter
 from pliers.extractors import (GoogleVisionAPIFaceExtractor,
                                GoogleVisionAPILabelExtractor,
                                GoogleVisionAPIPropertyExtractor,
@@ -80,7 +80,7 @@ def test_google_vision_face_batch():
     assert result['joyLikelihood'][1] == 'VERY_LIKELY'
 
     video = VideoStim(join(get_test_data_path(), 'video', 'obama_speech.mp4'))
-    conv = FrameSamplingConverter(every=10)
+    conv = FrameSamplingFilter(every=10)
     video = conv.transform(video)
     result = ext.transform(video)
     result = ExtractorResult.merge_stims(result)
