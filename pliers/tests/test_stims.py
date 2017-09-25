@@ -63,8 +63,9 @@ def test_video_stim():
     filename = join(get_test_data_path(), 'video', 'small.mp4')
     video = VideoStim(filename, onset=4.2)
     assert video.fps == 30
-    assert video.n_frames in (167, 168)
+    assert video.n_frames == 168
     assert video.width == 560
+    assert video.duration == 5.57
 
     # Test frame iterator
     frames = [f for f in video]
@@ -72,6 +73,7 @@ def test_video_stim():
     f1 = frames[100]
     assert isinstance(f1, VideoFrameStim)
     assert isinstance(f1.onset, float)
+    assert np.isclose(f1.duration, 1 / 30.0, 1e-5)
     f1.data.shape == (320, 560, 3)
 
     # Test getting of specific frame
@@ -80,6 +82,19 @@ def test_video_stim():
     assert isinstance(f2.onset, float)
     assert f2.onset > 4.2
     f2.data.shape == (320, 560, 3)
+
+    # Try another video
+    filename = join(get_test_data_path(), 'video', 'obama_speech.mp4')
+    video = VideoStim(filename)
+    assert video.fps == 12
+    assert video.n_frames == 105
+    assert video.width == 320
+    assert video.duration == 8.71
+    f3 = video.get_frame(index=104)
+    assert isinstance(f3, VideoFrameStim)
+    assert isinstance(f3.onset, float)
+    assert f3.duration > 0.0
+    assert f3.data.shape == (240, 320, 3)
 
 
 def test_audio_stim(dummy_iter_extractor):
