@@ -3,6 +3,7 @@ from abc import abstractproperty
 from six import string_types
 from tqdm import tqdm
 from pliers import config
+from pliers.support.exceptions import MissingDependencyError
 from types import GeneratorType
 from itertools import islice
 
@@ -63,11 +64,28 @@ def progress_bar_wrapper(iterable, **kwargs):
         not isinstance(iterable, tqdm)) else iterable
 
 
-def attempt_to_import(dependency, fromlist=[]):
+module_names = {}
+Dependency = collections.namedtuple('Dependency', 'package value')
+
+
+def attempt_to_import(dependency, name=None, fromlist=None):
+    if name is None:
+        name = dependency
     try:
-        return __import__(dependency, fromlist=fromlist)
+        mod = __import__(dependency, fromlist=fromlist)
     except ImportError:
-        return None
+        mod = None
+    module_names[name] = Dependency(dependency, mod)
+    return mod
+
+
+def verify_dependencies(dependencies):
+    missing = []
+    for dep in dependencies:
+        if module_names[dep].value is None:
+            missing.append(module_names[dep].package)
+    if missing:
+        raise MissingDependencyError(missing)
 
 
 class EnvironmentKeyMixin(object):

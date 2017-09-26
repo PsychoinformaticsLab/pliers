@@ -5,8 +5,8 @@ from .compound import CompoundStim
 from .image import ImageStim
 from .text import TextStim
 from .video import VideoStim
-from pliers.support.decorators import requires_optional_dependency
-from pliers.utils import EnvironmentKeyMixin, attempt_to_import
+from pliers.utils import (EnvironmentKeyMixin, attempt_to_import,
+                          verify_dependencies)
 
 twitter = attempt_to_import('twitter')
 
@@ -30,9 +30,9 @@ class TweetStimFactory(EnvironmentKeyMixin):
     _env_keys = ('TWITTER_CONSUMER_KEY', 'TWITTER_CONSUMER_SECRET',
                  'TWITTER_ACCESS_TOKEN_KEY', 'TWITTER_ACCESS_TOKEN_SECRET')
 
-    @requires_optional_dependency('twitter')
     def __init__(self, consumer_key=None, consumer_secret=None,
                  access_token_key=None, access_token_secret=None):
+        verify_dependencies(['twitter'])
         if consumer_key is None or consumer_secret is None or \
            access_token_key is None or access_token_secret is None:
             try:

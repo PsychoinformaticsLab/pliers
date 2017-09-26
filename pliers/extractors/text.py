@@ -5,11 +5,10 @@ Extractors that operate primarily or exclusively on Text stimuli.
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.exceptions import PliersError
-from pliers.support.decorators import (requires_nltk_corpus,
-                                       requires_optional_dependency)
+from pliers.support.decorators import requires_nltk_corpus
 from pliers.datasets.text import fetch_dictionary
 from pliers.transformers import BatchTransformerMixin
-from pliers.utils import attempt_to_import
+from pliers.utils import attempt_to_import, verify_dependencies
 import numpy as np
 import pandas as pd
 import nltk
@@ -17,9 +16,10 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import sys
 from six import string_types
 
-keyedvectors = attempt_to_import('gensim.models.keyedvectors', ['KeyedVectors'])
-sklearn_text = attempt_to_import('sklearn.feature_extraction.text', ['VectorizerMixin',
-                                                                     'CountVectorizer'])
+keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
+                                 ['KeyedVectors'])
+sklearn_text = attempt_to_import('sklearn.feature_extraction.text', 'sklearn_text',
+                                 ['VectorizerMixin', 'CountVectorizer'])
 
 
 class TextExtractor(Extractor):
@@ -219,9 +219,9 @@ class WordEmbeddingExtractor(TextExtractor):
 
     _log_attributes = ('wvModel', 'prefix')
 
-    @requires_optional_dependency('gensim')
     def __init__(self, embedding_file, binary=False,
                  prefix='embedding_dim'):
+        verify_dependencies(['keyedvectors'])
         self.wvModel = keyedvectors.KeyedVectors.load_word2vec_format(embedding_file,
                                                                       binary=binary)
         self.prefix = prefix
@@ -255,8 +255,8 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
     _log_attributes = ('vectorizer',)
     _batch_size = sys.maxsize
 
-    @requires_optional_dependency('sklearn')
     def __init__(self, vectorizer=None, *args, **kwargs):
+        verify_dependencies(['sklearn_text'])
         if isinstance(vectorizer, sklearn_text.VectorizerMixin):
             self.vectorizer = vectorizer
         elif isinstance(vectorizer, str):

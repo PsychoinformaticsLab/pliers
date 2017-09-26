@@ -1,12 +1,13 @@
 import base64
 import os
 from pliers.transformers import Transformer, BatchTransformerMixin
-from pliers.support.decorators import requires_optional_dependency
-from pliers.utils import EnvironmentKeyMixin, attempt_to_import
+from pliers.utils import (EnvironmentKeyMixin, attempt_to_import,
+                          verify_dependencies)
 
 
-googleapiclient = attempt_to_import('googleapiclient', ['discovery'])
-oauth_client = attempt_to_import('oauth2client.client', ['GoogleCredentials'])
+googleapiclient = attempt_to_import('googleapiclient', fromlist=['discovery'])
+oauth_client = attempt_to_import('oauth2client.client', 'oauth_client',
+                                 ['GoogleCredentials'])
 
 
 DISCOVERY_URL = 'https://{api}.googleapis.com/$discovery/rest?version={apiVersion}'
@@ -17,11 +18,9 @@ class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
     _env_keys = 'GOOGLE_APPLICATION_CREDENTIALS'
     _log_attributes = ('handle_annotations',)
 
-    @requires_optional_dependency('googleapiclient')
-    @requires_optional_dependency('oauth2client')
     def __init__(self, discovery_file=None, api_version='v1', max_results=100,
                  num_retries=3, handle_annotations='prefix'):
-
+        verify_dependencies(['googleapiclient', 'oauth_client'])
         if discovery_file is None:
             if 'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ:
                 raise ValueError("No Google application credentials found. "

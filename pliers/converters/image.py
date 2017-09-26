@@ -4,8 +4,7 @@ from PIL import Image
 from .base import Converter
 from pliers.stimuli.image import ImageStim
 from pliers.stimuli.text import TextStim
-from pliers.support.decorators import requires_optional_dependency
-from pliers.utils import attempt_to_import
+from pliers.utils import attempt_to_import, verify_dependencies
 
 pytesseract = attempt_to_import('pytesseract')
 
@@ -22,7 +21,7 @@ class TesseractConverter(ImageToTextConverter):
 
     ''' Uses the Tesseract library to extract text from images. '''
 
-    @requires_optional_dependency('pytesseract')
     def _convert(self, stim):
+        verify_dependencies(['pytesseract'])
         text = pytesseract.image_to_string(Image.fromarray(stim.data))
         return TextStim(text=text, onset=stim.onset, duration=stim.duration)

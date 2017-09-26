@@ -12,7 +12,8 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 import importlib
 import logging
 
-multiprocessing = attempt_to_import('pathos.multiprocessing', ['ProcessingPool'])
+multiprocessing = attempt_to_import('pathos.multiprocessing',
+                                    'multiprocessing', ['ProcessingPool'])
 
 _cache = {}
 

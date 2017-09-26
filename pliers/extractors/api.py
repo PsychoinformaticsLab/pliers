@@ -10,15 +10,16 @@ except:
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.text import TextExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
-from pliers.support.decorators import requires_optional_dependency
 from pliers.transformers import BatchTransformerMixin
-from pliers.utils import listify, EnvironmentKeyMixin, attempt_to_import
+from pliers.utils import (listify, EnvironmentKeyMixin, attempt_to_import,
+                          verify_dependencies)
 
-clarifai_client = attempt_to_import('clarifai.rest.client', ['ClarifaiApp',
-                                                             'Concept',
-                                                             'ModelOutputConfig',
-                                                             'ModelOutputInfo',
-                                                             'Image'])
+clarifai_client = attempt_to_import('clarifai.rest.client', 'clarifai_client',
+                                    ['ClarifaiApp',
+                                     'Concept',
+                                     'ModelOutputConfig',
+                                     'ModelOutputInfo',
+                                     'Image'])
 indicoio = attempt_to_import('indicoio')
 
 
@@ -39,7 +40,7 @@ class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
     _env_keys = 'INDICO_APP_KEY'
 
     def __init__(self, api_key=None, models=None):
-        super(IndicoAPIExtractor, self).__init__()
+        verify_dependencies(['indicoio'])
         if api_key is None:
             try:
                 self.api_key = os.environ['INDICO_APP_KEY']
@@ -56,12 +57,12 @@ class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
                              "Valid models: {}".format(", ".join(self.allowed_models)))
         for model in models:
             if model not in self.allowed_models:
-                raise ValueError(
-                "Unsupported model {} specified. "
-                "Valid models: {}".format(model, ", ".join(self.allowed_models)))
+                raise ValueError("Unsupported model {} specified. "
+                                 "Valid models: {}".format(model, ", ".join(self.allowed_models)))
 
         self.models = [getattr(indicoio, model) for model in models]
         self.names = models
+        super(IndicoAPIExtractor, self).__init__()
 
     def _extract(self, stims):
         tokens = [stim.data for stim in stims if stim.data is not None]
@@ -132,11 +133,11 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
     _batch_size = 128
     _env_keys = ('CLARIFAI_APP_ID', 'CLARIFAI_APP_SECRET')
 
-    @requires_optional_dependency('clarifai')
     def __init__(self, app_id=None, app_secret=None, model='general-v1.3',
                  min_value=None,
                  max_concepts=None,
                  select_concepts=None):
+        verify_dependencies(['clarifai_client'])
         if app_id is None or app_secret is None:
             try:
                 app_id = os.environ['CLARIFAI_APP_ID']
@@ -156,8 +157,8 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
             self.select_concepts = [clarifai_client.Concept(concept_name=n) for n in select_concepts]
         super(ClarifaiAPIExtractor, self).__init__()
 
-    @requires_optional_dependency('clarifai')
     def _extract(self, stims):
+        verify_dependencies(['clarifai_client'])
         output_config = clarifai_client.ModelOutputConfig(min_value=self.min_value,
                                                           max_concepts=self.max_concepts,
                                                           select_concepts=self.select_concepts)

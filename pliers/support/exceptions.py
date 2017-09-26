@@ -8,8 +8,8 @@ To download the missing data, run:
 """
 
 MISSING_DEPENDENCY_MESSAGE = """
-%s is required to create this transformer, but could not be
-successfully imported. Please make sure it is installed.
+%s required to use this transformer, but could not be
+successfully imported. Please make sure they are installed.
 """
 
 
@@ -35,7 +35,7 @@ class MissingDependencyError(PliersError):
     dataset or model that the user does not have on their system.
     """
 
-    def __init__(self, message=MISSING_DEPENDENCY_MESSAGE, dependency=None,
+    def __init__(self, dependencies, message=MISSING_DEPENDENCY_MESSAGE,
                  *args, **kwargs):
-        super(MissingDependencyError, self).__init__(message % dependency,
+        super(MissingDependencyError, self).__init__(message % ', '.join(dependencies),
                                                      *args, **kwargs)
