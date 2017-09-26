@@ -35,10 +35,6 @@ class Transformer(with_metaclass(ABCMeta)):
             name = self.__class__.__name__
         self.name = name
 
-    @classproperty
-    def available(cls):
-        return True
-
     def _memoize(transform):
         def wrapper(self, stim, *args, **kwargs):
             use_cache = config.cache_transformers and isinstance(stim, Stim)

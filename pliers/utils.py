@@ -1,4 +1,5 @@
 import collections
+import os
 from abc import abstractproperty
 from six import string_types
 from tqdm import tqdm
@@ -90,14 +91,14 @@ def verify_dependencies(dependencies):
 
 class EnvironmentKeyMixin(object):
 
-    @abstractproperty
-    def _env_keys(self):
+    @classproperty
+    def _env_keys(cls):
         pass
 
-    @property
-    def env_keys(self):
-        return listify(self._env_keys)
+    @classproperty
+    def env_keys(cls):
+        return listify(cls._env_keys)
 
     @classproperty
     def available(cls):
-        return True if all([k in os.environ for k in self.env_keys]) else False
+        return all([k in os.environ for k in cls.env_keys])
