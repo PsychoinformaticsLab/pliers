@@ -4,7 +4,10 @@ Extractors that operate primarily or exclusively on Image stimuli.
 
 from pliers.stimuli.image import ImageStim
 from pliers.extractors.base import Extractor, ExtractorResult
+from pliers.utils import attempt_to_import, verify_dependencies
 import numpy as np
+
+cv2 = attempt_to_import('cv2')
 
 
 class ImageExtractor(Extractor):
@@ -31,7 +34,7 @@ class SharpnessExtractor(ImageExtractor):
     ''' Gets the degree of blur/sharpness of the image '''
 
     def _extract(self, stim):
-        import cv2
+        verify_dependencies(['cv2'])
         # Taken from
         # http://stackoverflow.com/questions/7765810/is-there-a-way-to-detect-if-an-image-is-blurry?lq=1
         data = stim.data

@@ -17,7 +17,7 @@ from .text import (ComplexTextExtractor, DictionaryExtractor,
                    NumUniqueWordsExtractor, PartOfSpeechExtractor,
                    WordEmbeddingExtractor, TextVectorizerExtractor,
                    VADERSentimentExtractor)
-from .video import (DenseOpticalFlowExtractor)
+from .video import (FarnebackOpticalFlowExtractor)
 
 __all__ = [
     'Extractor',
@@ -43,7 +43,7 @@ __all__ = [
     'LengthExtractor',
     'NumUniqueWordsExtractor',
     'PartOfSpeechExtractor',
-    'DenseOpticalFlowExtractor',
+    'FarnebackOpticalFlowExtractor',
     'WordEmbeddingExtractor',
     'TextVectorizerExtractor',
     'VADERSentimentExtractor',

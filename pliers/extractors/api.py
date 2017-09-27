@@ -11,22 +11,16 @@ from pliers.extractors.image import ImageExtractor
 from pliers.extractors.text import TextExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.transformers import BatchTransformerMixin
-from pliers.utils import listify, EnvironmentKeyMixin
+from pliers.utils import (listify, EnvironmentKeyMixin, attempt_to_import,
+                          verify_dependencies)
 
-
-try:
-    from clarifai.rest.client import (ClarifaiApp,
-                                      ModelOutputConfig,
-                                      ModelOutputInfo,
-                                      Image,
-                                      Concept)
-except ImportError:
-    pass
-
-try:
-    import indicoio as ico
-except ImportError:
-    pass
+clarifai_client = attempt_to_import('clarifai.rest.client', 'clarifai_client',
+                                    ['ClarifaiApp',
+                                     'Concept',
+                                     'ModelOutputConfig',
+                                     'ModelOutputInfo',
+                                     'Image'])
+indicoio = attempt_to_import('indicoio')
 
 
 class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
@@ -46,7 +40,7 @@ class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
     _env_keys = 'INDICO_APP_KEY'
 
     def __init__(self, api_key=None, models=None):
-        super(IndicoAPIExtractor, self).__init__()
+        verify_dependencies(['indicoio'])
         if api_key is None:
             try:
                 self.api_key = os.environ['INDICO_APP_KEY']
@@ -56,19 +50,19 @@ class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
                                  "extractor is initialized.")
         else:
             self.api_key = api_key
-        ico.config.api_key = self.api_key
+        indicoio.config.api_key = self.api_key
 
         if models is None:
             raise ValueError("Must enter a valid list of models to use. "
                              "Valid models: {}".format(", ".join(self.allowed_models)))
         for model in models:
             if model not in self.allowed_models:
-                raise ValueError(
-                "Unsupported model {} specified. "
-                "Valid models: {}".format(model, ", ".join(self.allowed_models)))
+                raise ValueError("Unsupported model {} specified. "
+                                 "Valid models: {}".format(model, ", ".join(self.allowed_models)))
 
-        self.models = [getattr(ico, model) for model in models]
+        self.models = [getattr(indicoio, model) for model in models]
         self.names = models
+        super(IndicoAPIExtractor, self).__init__()
 
     def _extract(self, stims):
         tokens = [stim.data for stim in stims if stim.data is not None]
@@ -101,7 +95,7 @@ class IndicoAPITextExtractor(TextExtractor, IndicoAPIExtractor):
     '''
 
     def __init__(self, **kwargs):
-        self.allowed_models = ico.TEXT_APIS.keys()
+        self.allowed_models = indicoio.TEXT_APIS.keys()
         super(IndicoAPITextExtractor, self).__init__(**kwargs)
 
 
@@ -112,7 +106,7 @@ class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
     '''
 
     def __init__(self, **kwargs):
-        self.allowed_models = ico.IMAGE_APIS.keys()
+        self.allowed_models = indicoio.IMAGE_APIS.keys()
         super(IndicoAPIImageExtractor, self).__init__(**kwargs)
 
 
@@ -143,7 +137,7 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
                  min_value=None,
                  max_concepts=None,
                  select_concepts=None):
-        super(ClarifaiAPIExtractor, self).__init__()
+        verify_dependencies(['clarifai_client'])
         if app_id is None or app_secret is None:
             try:
                 app_id = os.environ['CLARIFAI_APP_ID']
@@ -153,25 +147,27 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
                                  "must be passed the first time a Clarifai "
                                  "extractor is initialized.")
 
-        self.api = ClarifaiApp(app_id=app_id, app_secret=app_secret)
+        self.api = clarifai_client.ClarifaiApp(app_id=app_id, app_secret=app_secret)
         self.model = self.api.models.get(model)
         self.min_value = min_value
         self.max_concepts = max_concepts
         self.select_concepts = select_concepts
         if select_concepts:
             select_concepts = listify(select_concepts)
-            self.select_concepts = [Concept(concept_name=n) for n in select_concepts]
+            self.select_concepts = [clarifai_client.Concept(concept_name=n) for n in select_concepts]
+        super(ClarifaiAPIExtractor, self).__init__()
 
     def _extract(self, stims):
-        output_config = ModelOutputConfig(min_value=self.min_value,
-                                          max_concepts=self.max_concepts,
-                                          select_concepts=self.select_concepts)
-        model_output_info = ModelOutputInfo(output_config=output_config)
+        verify_dependencies(['clarifai_client'])
+        output_config = clarifai_client.ModelOutputConfig(min_value=self.min_value,
+                                                          max_concepts=self.max_concepts,
+                                                          select_concepts=self.select_concepts)
+        model_output_info = clarifai_client.ModelOutputInfo(output_config=output_config)
 
         # ExitStack lets us use filename context managers simultaneously
         with ExitStack() as stack:
             files = [stack.enter_context(s.get_filename()) for s in stims]
-            imgs = [Image(filename=filename) for filename in files]
+            imgs = [clarifai_client.Image(filename=filename) for filename in files]
             tags = self.model.predict(imgs, model_output_info=model_output_info)
 
         extracted = []

@@ -29,10 +29,10 @@ class FrameSamplingFilter(VideoFilter):
             raise ValueError("When initializing the FrameSamplingFilter, "
                              "one of the 'every', 'hertz', or 'top_n' must "
                              "be specified.")
-        super(FrameSamplingFilter, self).__init__()
         self.every = every
         self.hertz = hertz
         self.top_n = top_n
+        super(FrameSamplingFilter, self).__init__()
 
     def _filter(self, video):
         if self.every is not None:

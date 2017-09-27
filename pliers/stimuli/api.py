@@ -5,12 +5,10 @@ from .compound import CompoundStim
 from .image import ImageStim
 from .text import TextStim
 from .video import VideoStim
-from pliers.utils import EnvironmentKeyMixin
+from pliers.utils import (EnvironmentKeyMixin, attempt_to_import,
+                          verify_dependencies)
 
-try:
-    import twitter
-except ImportError:
-    twitter = None
+twitter = attempt_to_import('twitter')
 
 
 class TweetStimFactory(EnvironmentKeyMixin):
@@ -34,10 +32,7 @@ class TweetStimFactory(EnvironmentKeyMixin):
 
     def __init__(self, consumer_key=None, consumer_secret=None,
                  access_token_key=None, access_token_secret=None):
-        if twitter is None:
-            raise ImportError("python-twitter is required to create a "
-                              "TweetStimFactory, but could not be successfully"
-                              " imported. Please make sure it is installed.")
+        verify_dependencies(['twitter'])
         if consumer_key is None or consumer_secret is None or \
            access_token_key is None or access_token_secret is None:
             try:

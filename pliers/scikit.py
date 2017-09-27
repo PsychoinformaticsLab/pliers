@@ -1,13 +1,13 @@
 from pliers.extractors import Extractor, merge_results
 from pliers.transformers import get_transformer
+from pliers.utils import attempt_to_import
 from six import string_types
 
-try:
-    from sklearn.base import TransformerMixin, BaseEstimator
-
-    class SklearnBase(TransformerMixin, BaseEstimator):
+sklearn = attempt_to_import('sklearn')
+if sklearn:
+    class SklearnBase(sklearn.base.TransformerMixin, sklearn.base.BaseEstimator):
         pass
-except:
+else:
     class SklearnBase():
         pass
 
