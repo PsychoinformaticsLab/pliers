@@ -3,7 +3,7 @@
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.text import ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
-from pliers.utils import attempt_to_import, verify_dependencies
+from pliers.utils import attempt_to_import, verify_dependencies, listify
 import numpy as np
 from scipy import fft
 
@@ -141,7 +141,7 @@ class LibrosaFeatureExtractor(AudioExtractor):
         self.librosa_kwargs = librosa_kwargs
         super(LibrosaFeatureExtractor, self).__init__()
 
-    def _get_feature_names(self):
+    def get_feature_names(self):
         return self._feature
 
     def _get_values(self, stim):
@@ -153,7 +153,7 @@ class LibrosaFeatureExtractor(AudioExtractor):
     def _extract(self, stim):
         values = self._get_values(stim)
         values = values.T
-        feature_names = [self._get_feature_names()]
+        feature_names = listify(self.get_feature_names())
         n_frames = len(values)
         onsets = librosa.frames_to_time(range(n_frames),
                                         sr=stim.sampling_rate,
@@ -199,7 +199,7 @@ class SpectralContrastExtractor(LibrosaFeatureExtractor):
         self.n_bands = n_bands
         super(SpectralContrastExtractor, self).__init__(n_bands=n_bands, **kwargs)
 
-    def _get_feature_names(self):
+    def get_feature_names(self):
         return ['spectral_contrast_band_%d' % i for i in range(self.n_bands+1)]
 
 
@@ -227,7 +227,7 @@ class PolyFeaturesExtractor(LibrosaFeatureExtractor):
         self.order = order
         super(PolyFeaturesExtractor, self).__init__(order=order, **kwargs)
 
-    def _get_feature_names(self):
+    def get_feature_names(self):
         return ['coefficient_%d' % i for i in range(self.order+1)]
 
 
@@ -274,7 +274,7 @@ class ChromaSTFTExtractor(LibrosaFeatureExtractor):
         self.n_chroma = n_chroma
         super(ChromaSTFTExtractor, self).__init__(n_chroma=n_chroma, **kwargs)
 
-    def _get_feature_names(self):
+    def get_feature_names(self):
         return ['chroma_%d' % i for i in range(self.n_chroma)]
 
 
@@ -291,7 +291,7 @@ class ChromaCQTExtractor(LibrosaFeatureExtractor):
         self.n_chroma = n_chroma
         super(ChromaCQTExtractor, self).__init__(n_chroma=n_chroma, **kwargs)
 
-    def _get_feature_names(self):
+    def get_feature_names(self):
         return ['chroma_cqt_%d' % i for i in range(self.n_chroma)]
 
 
@@ -309,7 +309,7 @@ class ChromaCENSExtractor(LibrosaFeatureExtractor):
         self.n_chroma = n_chroma
         super(ChromaCENSExtractor, self).__init__(n_chroma=n_chroma, **kwargs)
 
-    def _get_feature_names(self):
+    def get_feature_names(self):
         return ['chroma_cens_%d' % i for i in range(self.n_chroma)]
 
 
@@ -326,7 +326,7 @@ class MelspectrogramExtractor(LibrosaFeatureExtractor):
         self.n_mels = n_mels
         super(MelspectrogramExtractor, self).__init__(n_mels=n_mels, **kwargs)
 
-    def _get_feature_names(self):
+    def get_feature_names(self):
         return ['mel_%d' % i for i in range(self.n_mels)]
 
 
@@ -343,7 +343,7 @@ class MFCCExtractor(LibrosaFeatureExtractor):
         self.n_mfcc = n_mfcc
         super(MFCCExtractor, self).__init__(n_mfcc=n_mfcc, **kwargs)
 
-    def _get_feature_names(self):
+    def get_feature_names(self):
         return ['mfcc_%d' % i for i in range(self.n_mfcc)]
 
 
@@ -356,7 +356,7 @@ class TonnetzExtractor(LibrosaFeatureExtractor):
 
     _feature = 'tonnetz'
 
-    def _get_feature_names(self):
+    def get_feature_names(self):
         return ['tonal_centroid_%d' % i for i in range(6)]
 
     def _get_values(self, stim):
@@ -378,5 +378,5 @@ class TempogramExtractor(LibrosaFeatureExtractor):
         self.win_length = win_length
         super(TempogramExtractor, self).__init__(win_length=win_length, **kwargs)
 
-    def _get_feature_names(self):
+    def get_feature_names(self):
         return ['tempo_%d' % i for i in range(self.win_length)]
