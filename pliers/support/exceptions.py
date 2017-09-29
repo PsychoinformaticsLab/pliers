@@ -7,6 +7,11 @@ To download the missing data, run:
     python -m pliers.support.download
 """
 
+MISSING_DEPENDENCY_MESSAGE = """
+%s required to use this transformer, but could not be
+successfully imported. Please make sure they are installed.
+"""
+
 
 class PliersError(Exception):
 
@@ -22,3 +27,15 @@ class MissingCorpusError(PliersError):
 
     def __init__(self, message=MISSING_CORPUS_MESSAGE, *args, **kwargs):
         super(MissingCorpusError, self).__init__(message, *args, **kwargs)
+
+
+class MissingDependencyError(PliersError):
+
+    """Exception thrown when a user tries to use a feature that requires a
+    dataset or model that the user does not have on their system.
+    """
+
+    def __init__(self, dependencies, message=MISSING_DEPENDENCY_MESSAGE,
+                 *args, **kwargs):
+        super(MissingDependencyError, self).__init__(message % ', '.join(dependencies),
+                                                     *args, **kwargs)

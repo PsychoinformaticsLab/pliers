@@ -8,6 +8,7 @@ from pliers.support.exceptions import PliersError
 from pliers.support.decorators import requires_nltk_corpus
 from pliers.datasets.text import fetch_dictionary
 from pliers.transformers import BatchTransformerMixin
+from pliers.utils import attempt_to_import, verify_dependencies
 import numpy as np
 import pandas as pd
 import nltk
@@ -15,18 +16,10 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import sys
 from six import string_types
 
-try:
-    from gensim.models.keyedvectors import KeyedVectors
-except ImportError:
-    KeyedVectors = None
-
-try:
-    from sklearn.feature_extraction.text import (CountVectorizer,
-                                                 HashingVectorizer,
-                                                 TfidfVectorizer,
-                                                 VectorizerMixin)
-except ImportError:
-    CountVectorizer = None
+keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
+                                 ['KeyedVectors'])
+sklearn_text = attempt_to_import('sklearn.feature_extraction.text', 'sklearn_text',
+                                 ['VectorizerMixin', 'CountVectorizer'])
 
 
 class TextExtractor(Extractor):
@@ -228,13 +221,9 @@ class WordEmbeddingExtractor(TextExtractor):
 
     def __init__(self, embedding_file, binary=False,
                  prefix='embedding_dim'):
-        if KeyedVectors is None:
-            raise ImportError("gensim is required to create a "
-                              "WordEmbeddingExtractor, but could not be "
-                              "successfully imported. Please make sure it is "
-                              "installed.")
-        self.wvModel = KeyedVectors.load_word2vec_format(embedding_file,
-                                                         binary=binary)
+        verify_dependencies(['keyedvectors'])
+        self.wvModel = keyedvectors.KeyedVectors.load_word2vec_format(embedding_file,
+                                                                      binary=binary)
         self.prefix = prefix
         super(WordEmbeddingExtractor, self).__init__()
 
@@ -267,18 +256,13 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
     _batch_size = sys.maxsize
 
     def __init__(self, vectorizer=None, *args, **kwargs):
-        if isinstance(vectorizer, VectorizerMixin):
+        verify_dependencies(['sklearn_text'])
+        if isinstance(vectorizer, sklearn_text.VectorizerMixin):
             self.vectorizer = vectorizer
         elif isinstance(vectorizer, str):
-            self.vectorizer = eval(vectorizer)(*args, **kwargs)
+            self.vectorizer = getattr(sklearn_text, vectorizer)(*args, **kwargs)
         else:
-            if CountVectorizer is None:
-                raise ImportError("sklearn is required to create a "
-                                  "TextVectorizerExtractor if a vectorizer is "
-                                  "not provided, but could not be successfully"
-                                  " imported. Please make sure it is "
-                                  "installed.")
-            self.vectorizer = CountVectorizer(*args, **kwargs)
+            self.vectorizer = sklearn_text.CountVectorizer(*args, **kwargs)
         super(TextVectorizerExtractor, self).__init__()
 
     def _extract(self, stims):
