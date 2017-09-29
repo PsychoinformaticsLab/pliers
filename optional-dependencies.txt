@@ -13,3 +13,4 @@ tensorflow>=1.0.0
 scikit-learn
 python-twitter
 gensim
+librosa
