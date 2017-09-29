@@ -3,13 +3,11 @@
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.text import ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
+from pliers.utils import attempt_to_import, verify_dependencies
 import numpy as np
 from scipy import fft
 
-try:
-    import librosa
-except ImportError:
-    librosa = None
+librosa = attempt_to_import('librosa')
 
 
 class AudioExtractor(Extractor):
@@ -136,11 +134,7 @@ class LibrosaFeatureExtractor(AudioExtractor):
     _log_attributes = ('hop_length', 'librosa_kwargs')
 
     def __init__(self, feature=None, hop_length=512, **librosa_kwargs):
-        if librosa is None:
-            raise ImportError("librosa is required to create a "
-                              "LibrosaFeatureExtractor, but could not be "
-                              "successfully imported. Please make sure it is "
-                              "installed.")
+        verify_dependencies(['librosa'])
         if feature:
             self._feature = feature
         self.hop_length = hop_length
