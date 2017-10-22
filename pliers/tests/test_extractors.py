@@ -345,9 +345,8 @@ def test_tempogram_extractor():
 
 def test_part_of_speech_extractor():
     stim = ComplexTextStim(join(TEXT_DIR, 'complex_stim_with_header.txt'))
-    result = PartOfSpeechExtractor().transform(stim).to_df()
-    assert result.shape == (4, 6)
-    assert 'NN' in result.columns
+    result = merge_results(PartOfSpeechExtractor().transform(stim), extractor_names=False)
+    assert result.shape == (4, 52)
     assert result['NN'].sum() == 1
     assert result['VBD'][3] == 1
 
