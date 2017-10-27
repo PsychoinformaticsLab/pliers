@@ -11,6 +11,8 @@ class StimCollectionIterator(Converter):
 
     ''' Base class for all StimCollectionIterators. '''
 
+    VERSION = '1.0'
+
     def _convert(self, stim):
         return stim.__iter__()
 

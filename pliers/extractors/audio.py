@@ -40,6 +40,7 @@ class STFTAudioExtractor(AudioExtractor):
     '''
 
     _log_attributes = ('frame_size', 'hop_size', 'freq_bins')
+    VERSION = '1.0'
 
     def __init__(self, frame_size=0.5, hop_size=0.1, freq_bins=5,
                  spectrogram=False):

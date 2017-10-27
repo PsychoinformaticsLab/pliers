@@ -23,6 +23,7 @@ class FrameSamplingFilter(VideoFilter):
     '''
 
     _log_attributes = ('every', 'hertz', 'top_n')
+    VERSION = '1.0'
 
     def __init__(self, every=None, hertz=None, top_n=None):
         if every is None and hertz is None and top_n is None:

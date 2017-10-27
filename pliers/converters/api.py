@@ -25,6 +25,7 @@ class SpeechRecognitionAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
     '''
 
     _log_attributes = ('recognize_method',)
+    VERSION = '1.0'
 
     @abstractproperty
     def recognize_method(self):
@@ -94,6 +95,7 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
 
     _env_keys = ('IBM_USERNAME', 'IBM_PASSWORD')
     _log_attributes = ('resolution',)
+    VERSION = '1.0'
 
     def __init__(self, username=None, password=None, resolution='words'):
         verify_dependencies(['sr'])

@@ -90,3 +90,10 @@ def test_validation_levels(capsys):
     res = ext.transform([stim, stim2], validation='loose')
     assert len(res) == 1
     assert np.isclose(res[0].to_df()['brightness'][0], 0.88784294, 1e-5)
+
+
+def test_versioning():
+    ext = DummyBatchExtractor()
+    assert ext.VERSION == '0.1'
+    ext = BrightnessExtractor()
+    assert ext.VERSION >= '1.0'
