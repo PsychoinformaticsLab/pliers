@@ -179,36 +179,31 @@ class NumUniqueWordsExtractor(TextExtractor):
                                features=['num_unique_words'])
 
 
-class PartOfSpeechExtractor(ComplexTextExtractor):
+class PartOfSpeechExtractor(BatchTransformerMixin, TextExtractor):
 
     ''' Tags parts of speech in text with nltk. '''
 
+    _batch_size = sys.maxsize
     VERSION = '1.0'
 
     @requires_nltk_corpus
-    def _extract(self, stim):
-        words = [w.text for w in stim]
+    def _extract(self, stims):
+        words = [w.text for w in stims]
         pos = nltk.pos_tag(words)
         if len(words) != len(pos):
             raise PliersError(
-                "The number of words in the ComplexTextStim does not match "
-                "the number of tagged words returned by nltk's part-of-speech"
-                " tagger.")
+                "The number of words does not match the number of tagged words"
+                "returned by nltk's part-of-speech tagger.")
 
-        data = {}
-        onsets = []
-        durations = []
-        for i, w in enumerate(stim):
-            p = pos[i][1]
-            if p not in data:
-                data[p] = [0] * len(words)
-            data[p][i] += 1
-            onsets.append(w.onset)
-            durations.append(w.duration)
+        results = []
+        tagset = nltk.data.load('help/tagsets/upenn_tagset.pickle').keys()
+        for i, s in enumerate(stims):
+            pos_vector = dict.fromkeys(tagset, 0)
+            pos_vector[pos[i][1]] = 1
+            results.append(ExtractorResult([pos_vector.values()], s, self,
+                                           features=list(pos_vector.keys())))
 
-        return ExtractorResult(np.array(list(data.values())).transpose(),
-                               stim, self, features=list(data.keys()),
-                               onsets=onsets, durations=durations)
+        return results
 
 
 class WordEmbeddingExtractor(TextExtractor):
