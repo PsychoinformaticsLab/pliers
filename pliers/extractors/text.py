@@ -195,7 +195,7 @@ class PartOfSpeechExtractor(BatchTransformerMixin, TextExtractor):
             pos_vector = dict.fromkeys(tagset, 0)
             pos_vector[pos[i][1]] = 1
             results.append(ExtractorResult([pos_vector.values()], s, self,
-                                           features=pos_vector.keys()))
+                                           features=list(pos_vector.keys())))
 
         return results
 
