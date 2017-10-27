@@ -192,10 +192,10 @@ class PartOfSpeechExtractor(BatchTransformerMixin, TextExtractor):
         results = []
         tagset = nltk.data.load('help/tagsets/upenn_tagset.pickle').keys()
         for i, s in enumerate(stims):
-            pos_vector = [0] * len(tagset)
-            pos_vector[tagset.index(pos[i][1])] = 1
-            results.append(ExtractorResult([pos_vector], s, self,
-                                           features=tagset))
+            pos_vector = dict.fromkeys(tagset, 0)
+            pos_vector[pos[i][1]] = 1
+            results.append(ExtractorResult([pos_vector.values()], s, self,
+                                           features=pos_vector.keys()))
 
         return results
 

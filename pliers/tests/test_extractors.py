@@ -344,6 +344,8 @@ def test_tempogram_extractor():
 
 
 def test_part_of_speech_extractor():
+    import nltk
+    nltk.download('tagsets')
     stim = ComplexTextStim(join(TEXT_DIR, 'complex_stim_with_header.txt'))
     result = merge_results(PartOfSpeechExtractor().transform(stim), extractor_names=False)
     assert result.shape == (4, 52)
