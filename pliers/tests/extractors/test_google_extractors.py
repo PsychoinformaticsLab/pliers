@@ -10,7 +10,7 @@ from pliers.stimuli import ImageStim, VideoStim
 import pytest
 import json
 from os.path import join
-from .utils import get_test_data_path
+from ..utils import get_test_data_path
 import numpy as np
 
 

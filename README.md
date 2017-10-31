@@ -113,7 +113,7 @@ Note that extracting these features requires a series of implicit transformation
 ```python
 from pliers.stimuli import VideoStim
 from pliers.extractors import (STFTAudioExtractor, PredefinedDictionaryExtractor, ComplexTextExtractor, ClarifaiAPIExtractor, IndicoAPIExtractor)
-from pliers.converters import FrameSamplingConverter
+from pliers.filters import FrameSamplingFilter
 from pliers.graph import Graph
 
 # Initialize the video clips from files as new VideoStims. Note that the
@@ -122,15 +122,15 @@ from pliers.graph import Graph
 clips = ['../pliers/tests/data/video/obama_speech.mp4']
 clips = [VideoStim(f) for f in clips]
 
-# Initialize graph--note that we don't need to include any Stim conversion
+# Initialize graph--note that we don't need to include any Stim type manipulation
 # nodes, as they will be injected automatically. We make an exception for
-# the FrameSamplingConverter, because we don't want to analyze every
+# the FrameSamplingFilter, because we don't want to analyze every
 # single video frame--that would just waste resources. Also note that each
 # element in the node list can be either a string or an Extractor instance.
 # We don't need to bother initializing Extractors unless we need to pass
 # arguments.
 nodes = [
-    (FrameSamplingConverter(hertz=1),
+    (FrameSamplingFilter(hertz=1),
          ['ClarifaiAPIExtractor', 'TensorFlowInceptionV3Extractor']),
     STFTAudioExtractor(hop_size=1, freq_bins=[(100, 300), (300, 3000), (3000, 20000)]),
     PredefinedDictionaryExtractor(['SUBTLEXusfrequencyabove1/Lg10WF']),
@@ -165,7 +165,7 @@ TensorFlowInceptionV3Extractor|label_1|Windsor tie
 ||score_1|0.52688
 |...|...|...
 class||VideoFrameStim
-history||VideoStim->FrameSamplingConverter/DerivedVideo...
+history||VideoStim->FrameSamplingFilter/VideoFrameCollection...
 onset||0
 stim||frame[0]
 
@@ -456,17 +456,18 @@ The code to do this, with all transformations made explicit:
 
 ```python
 from pliers.stimuli import VideoStim
-from pliers.converters import FrameSamplingConverter, GoogleVisionAPITextConverter
+from pliers.converters import GoogleVisionAPITextConverter
 from pliers.extractors import (IndicoAPIExtractor, TensorFlowInceptionV3Extractor, merge_results)
+from pliers.filters import FrameSamplingFilter
 
 # The input files
 segments = ['segment1.mp4', 'segment2.mp4', 'segment3.mp4']
 segments = [VideoStim(s) for s in segments]
 
-### Initialize and chain converters ###
+### Initialize and chain transformers ###
 # Sample 2 video frames / second
-frame_conv = FrameSamplingConverter(hertz=2)
-frames = frame_conv.transform(segments)
+frame_filt = FrameSamplingFilter(hertz=2)
+frames = frame_filt.transform(segments)
 
 # Run each image through Google's text detection API
 text_conv = GoogleVisionAPITextConverter()
@@ -487,10 +488,10 @@ The above code listing is already pretty terse, and has the advantage of being e
 
 ```
 from pliers.graph import Graph
-from pliers.converters import FrameSamplingConverter
+from pliers.filters import FrameSamplingFilter
 
 nodes = [
-    (FrameSamplingConverter(hertz=2), [
+    (FrameSamplingFilter(hertz=2), [
         'TensorFlowInceptionV3Extractor',
         ('GoogleVisionAPITextConverter', ['IndicoAPIExtractor'])
     ])
@@ -500,9 +501,9 @@ results = g.extract(segments)
 ```
 At first glance, it may look like there's a lot of confusing nesting going on in the node definition, but it's actually not so bad. The key thing to recognize is that each node in the above graph is represented as a tuple with 2 elements. The first element is the `Transformer` to apply at that node, and the second contains any children nodes—i.e., nodes to which the output of the current node is passed. So, if we walk through the above example step by step, what we're saying is the following:
 
-1. Define a root node that applies a `FrameSamplingConverter` to the input `Stim`(s), and passes the output to two children.
+1. Define a root node that applies a `FrameSamplingFilter` to the input `Stim`(s), and passes the output to two children.
 2. The first child node is simply specified as '`TensorFlowInceptionV3Extractor'`. Notice that because this node has no children of its own, we don't need to specify it as a tuple (but we could have equivalently written `('TensorFlowInceptionV3Extractor', [])`). This simply says that the node takes the input `Stim`, uses the Inception V3 model to label the input image(s), and returns the output.
-3. The second child node applies the `GoogleVisionAPITextConverter` to the input received from the `FrameSamplingConverter`, and passes it along to its one child—a node containing an `IndicoAPIExtractor`.
+3. The second child node applies the `GoogleVisionAPITextConverter` to the input received from the `FrameSamplingFilter`, and passes it along to its one child—a node containing an `IndicoAPIExtractor`.
 
 Using this simple syntax, we can quickly construct `Graph`s with arbitrarily deep nestings. Note, once again, that we don't necessarily need to explicitly specify `Stim` conversion steps, as these will generally be detected and injected automatically (though, laziness aside, it's a good idea to be explicit, for reasons discussed earlier).
 
