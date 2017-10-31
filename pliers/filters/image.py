@@ -25,6 +25,7 @@ class ImageCroppingFilter(ImageFilter):
     '''
 
     _log_attributes = ('box',)
+    VERSION = '1.0'
 
     def __init__(self, box=None):
         self.box = box

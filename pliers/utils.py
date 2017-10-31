@@ -1,6 +1,5 @@
 import collections
 import os
-from abc import abstractproperty
 from six import string_types
 from tqdm import tqdm
 from pliers import config

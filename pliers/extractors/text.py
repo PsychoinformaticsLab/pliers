@@ -60,6 +60,7 @@ class DictionaryExtractor(TextExtractor):
     '''
 
     _log_attributes = ('dictionary', 'variables', 'missing')
+    VERSION = '1.0'
 
     def __init__(self, dictionary, variables=None, missing=np.nan):
         if isinstance(dictionary, string_types):
@@ -110,6 +111,7 @@ class PredefinedDictionaryExtractor(DictionaryExtractor):
     '''
 
     _log_attributes = ('variables', 'missing', 'case_sensitive')
+    VERSION = '1.0'
 
     def __init__(self, variables, missing=np.nan, case_sensitive=True):
 
@@ -144,6 +146,8 @@ class LengthExtractor(TextExtractor):
 
     ''' Extracts the length of the text in characters. '''
 
+    VERSION = '1.0'
+
     def _extract(self, stim):
         return ExtractorResult(np.array([[len(stim.text.strip())]]), stim,
                                self, features=['text_length'])
@@ -154,6 +158,7 @@ class NumUniqueWordsExtractor(TextExtractor):
     ''' Extracts the number of unique words used in the text. '''
 
     _log_attributes = ('tokenizer',)
+    VERSION = '1.0'
 
     def __init__(self, tokenizer=None):
         super(NumUniqueWordsExtractor, self).__init__()
@@ -179,6 +184,7 @@ class PartOfSpeechExtractor(BatchTransformerMixin, TextExtractor):
     ''' Tags parts of speech in text with nltk. '''
 
     _batch_size = sys.maxsize
+    VERSION = '1.0'
 
     @requires_nltk_corpus
     def _extract(self, stims):
@@ -277,6 +283,7 @@ class VADERSentimentExtractor(TextExtractor):
     score ranging from -1 (very negative) to +1 (very positive). '''
 
     _log_attributes = ('analyzer',)
+    VERSION = '1.0'
 
     def __init__(self):
         self.analyzer = SentimentIntensityAnalyzer()

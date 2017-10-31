@@ -25,6 +25,7 @@ class TensorFlowInceptionV3Extractor(ImageExtractor):
      '''
 
     _log_attributes = ('model_dir', 'data_url', 'num_predictions')
+    VERSION = '1.0'
 
     def __init__(self, model_dir=None, data_url=None, num_predictions=5):
 

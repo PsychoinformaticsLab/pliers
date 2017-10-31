@@ -3,7 +3,7 @@
 from pliers import config
 from pliers.stimuli.base import Stim, _log_transformation, load_stims
 from pliers.stimuli.compound import CompoundStim
-from pliers.utils import (classproperty, progress_bar_wrapper, isiterable,
+from pliers.utils import (progress_bar_wrapper, isiterable,
                           isgenerator, listify, batch_iterable,
                           attempt_to_import)
 import pliers
@@ -22,6 +22,7 @@ class Transformer(with_metaclass(ABCMeta)):
 
     _log_attributes = ()
     _loggable = True
+    VERSION = '0.1'
 
     # Stim types that *can* be passed as input, but aren't mandatory. This
     # allows for disjunctive specification; e.g., if _input_type is empty

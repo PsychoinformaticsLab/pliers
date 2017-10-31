@@ -38,6 +38,7 @@ class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
     _input_type = ()
     _batch_size = 20
     _env_keys = 'INDICO_APP_KEY'
+    VERSION = '1.0'
 
     def __init__(self, api_key=None, models=None):
         verify_dependencies(['indicoio'])
@@ -132,6 +133,7 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
     _log_attributes = ('model', 'min_value', 'max_concepts', 'select_concepts')
     _batch_size = 128
     _env_keys = ('CLARIFAI_APP_ID', 'CLARIFAI_APP_SECRET')
+    VERSION = '1.0'
 
     def __init__(self, app_id=None, app_secret=None, model='general-v1.3',
                  min_value=None,

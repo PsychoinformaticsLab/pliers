@@ -11,6 +11,7 @@ class VideoToAudioConverter(Converter):
     using moviepy. '''
     _input_type = VideoStim
     _output_type = AudioStim
+    VERSION = '1.0'
 
     def _convert(self, video):
         return AudioStim(clip=video.clip.audio, onset=video.onset)

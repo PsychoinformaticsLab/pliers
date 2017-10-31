@@ -21,6 +21,8 @@ class BrightnessExtractor(ImageExtractor):
 
     ''' Gets the average luminosity of the pixels in the image '''
 
+    VERSION = '1.0'
+
     def _extract(self, stim):
         data = stim.data
         brightness = np.amax(data, 2).mean() / 255.0
@@ -32,6 +34,8 @@ class BrightnessExtractor(ImageExtractor):
 class SharpnessExtractor(ImageExtractor):
 
     ''' Gets the degree of blur/sharpness of the image '''
+
+    VERSION = '1.0'
 
     def _extract(self, stim):
         verify_dependencies(['cv2'])
@@ -49,6 +53,8 @@ class SharpnessExtractor(ImageExtractor):
 class VibranceExtractor(ImageExtractor):
 
     ''' Gets the variance of color channels of the image '''
+
+    VERSION = '1.0'
 
     def _extract(self, stim):
         data = stim.data
