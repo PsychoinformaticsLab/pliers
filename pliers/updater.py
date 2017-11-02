@@ -1,7 +1,9 @@
 """ Utility to check if results have changed in foreign APIs """
 import glob
 import datetime
+import warnings
 import pandas as pd
+import numpy as np
 from os.path import realpath, join, dirname, exists
 
 from pliers.stimuli import load_stims
@@ -28,10 +30,13 @@ def check_updates(graph_spec, datastore, stimuli=None):
             dirname(
                 realpath(__file__)), 'tests/data/image/CC0/*'))
 
+    # Load stimuli and extract new features
     stimuli = load_stims(stimuli)
     graph = Graph(spec=graph_spec)
+    # assert 0
     results = graph.run(stimuli).drop(
-        ['source_file', 'filename', 'history', 'class', 'onset', 'duration'], axis=1)
+        ['source_file', 'filename', 'history', 'class', 'onset', 'duration'],
+        axis=1, level=0)
     results['time_extracted'] = datetime.datetime.now()
 
     # Flatten columns and make into one row
@@ -40,11 +45,12 @@ def check_updates(graph_spec, datastore, stimuli=None):
      if col[1] is not '' else col[0] for col in results.columns.values]
     results = results.reset_index()
 
+    # If new, record data
+    mismatches = []
     if prior_data is None:
         results.to_csv(datastore, index=False)
-        return "File created"
-    else:
-        mismatches = []
+        warnings.warn("Datastore not found. Initiated new.")
+    else: # Otherwise look for mistmatches
         last = prior_data[
             prior_data.time_extracted == prior_data.time_extracted.max()].\
             iloc[0]
@@ -52,8 +58,15 @@ def check_updates(graph_spec, datastore, stimuli=None):
         for label, value in results.iteritems():
             if label != 'time_extracted':
                 old_value = last.get(label)
-                if (old_value is not None) and (old_value != value.values[0]):
-                    assert 0
+                new_value = value.values[0]
+
+                # This this value was recorded last time
+                if old_value is not None and not np.isclose(old_value, new_value):
                     mismatches.append(label)
 
-        return mismatches
+        new_data = prior_data.append(results)
+        new_data.to_csv(datastore, index=False)
+
+    extractors = set([m.split('.')[0] for m in mismatches])
+
+    return {'changed_extractors' : extractors, 'mismatches' : mismatches}
