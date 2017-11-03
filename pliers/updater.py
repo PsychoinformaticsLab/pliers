@@ -8,6 +8,36 @@ from os.path import realpath, join, dirname, exists
 
 from pliers.stimuli import load_stims
 from pliers.graph import Graph
+from pliers.extractors import merge_results
+
+from copy import deepcopy
+
+def flatten_mixed_list(mixed):
+    flat_list = []
+    for subitem in mixed:
+        if isinstance(subitem, list):
+            for item in subitem:
+                flat_list.append(item)
+        else:
+            flat_list.append(subitem)
+    return flat_list
+
+def filter_incompatible_nodes(nodes, stimulus):
+    """ Recursively filter nodes against stimulus type """
+    filtered_nodes = []
+    if nodes:
+        for node in nodes:
+            children = filter_incompatible_nodes(node.children, stimulus)
+            if not node.transformer._stim_matches_input_types(stimulus):
+                warnings.warn("Node {} incompatible, removed.".format(node.transformer.name))
+                node = deepcopy(children)
+            else:
+                node.children = deepcopy(children)
+            filtered_nodes.append(node)
+
+    return flatten_mixed_list(filtered_nodes) or None
+
+
 
 def check_updates(graph_spec, datastore, stimuli=None):
     """ Run graph_spec on set of stimuli, and store results in datastore csv.
@@ -33,8 +63,16 @@ def check_updates(graph_spec, datastore, stimuli=None):
     # Load stimuli and extract new features
     stimuli = load_stims(stimuli)
     graph = Graph(spec=graph_spec)
+
+    results = []
+    for stim in stimuli:
+        stim_graph = Graph(nodes=filter_incompatible_nodes(graph.roots, stim))
+        results.append(stim_graph.run(stim, merge=False))
+
+    ## Merge results
+    results = merge_results(results)
     # assert 0
-    results = graph.run(stimuli).drop(
+    results = results.drop(
         ['source_file', 'filename', 'history', 'class', 'onset', 'duration'],
         axis=1, level=0)
     results['time_extracted'] = datetime.datetime.now()
