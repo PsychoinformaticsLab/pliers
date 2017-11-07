@@ -13,6 +13,7 @@ from pliers.extractors import merge_results
 from copy import deepcopy
 
 def flatten_mixed_list(mixed):
+    """ Flattens a list of objects and list of objects """
     flat_list = []
     for subitem in mixed:
         if isinstance(subitem, list):
@@ -66,8 +67,8 @@ def check_updates(graph_spec, datastore, stimuli=None):
 
     results = []
     for stim in stimuli:
-        stim_graph = Graph(nodes=filter_incompatible_nodes(graph.roots, stim))
-        results.append(stim_graph.run(stim, merge=False))
+        stim_graph = Graph(nodes=[n.transformer for n in filter_incompatible_nodes(graph.roots, stim)])
+        results += stim_graph.run(stim, merge=False)
 
     ## Merge results
     results = merge_results(results)
@@ -107,4 +108,5 @@ def check_updates(graph_spec, datastore, stimuli=None):
 
     extractors = set([m.split('.')[0] for m in mismatches])
 
-    return {'changed_extractors' : extractors, 'mismatches' : mismatches}
+    return {'changed_extractors' : extractors or None,
+            'mismatches' : mismatches or None}
