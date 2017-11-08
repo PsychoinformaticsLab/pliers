@@ -84,8 +84,7 @@ def check_updates(graph_spec, datastore, stimuli=None):
     results = []
     for stim in stimuli:
         stim_graph = Graph(
-            nodes=[n.transformer for n in filter_nodes_stimuli(
-                graph.roots, stim)])
+            nodes=filter_nodes_stimuli(graph.roots, stim))
         results += stim_graph.run(stim, merge=False)
 
     ## Merge results
