@@ -4,6 +4,7 @@ import datetime
 import warnings
 import pandas as pd
 import numpy as np
+import json
 from os.path import realpath, join, dirname, exists
 
 from pliers.stimuli import load_stims
@@ -13,22 +14,23 @@ from pliers.extractors import merge_results
 from copy import deepcopy
 
 def flatten_mixed_list(mixed):
-    """ Flattens a list of objects and list of objects """
+    """ Flattens a list of objects and lists """
     flat_list = []
-    for subitem in mixed:
-        if isinstance(subitem, list):
-            for item in subitem:
-                flat_list.append(item)
-        else:
-            flat_list.append(subitem)
+    for item in mixed:
+        flat_list += item if isinstance(item, list) else [item]
     return flat_list
 
-def filter_incompatible_nodes(nodes, stimulus):
-    """ Recursively filter nodes against stimulus type """
+def filter_nodes_stimuli(nodes, stimulus):
+    """ Recursively filter nodes against stimulus type.
+    If node does not match input type, remove and replace with children.
+    Args:
+        nodes - A list of nodes
+        stimulus - A stimulus to match against
+    """
     filtered_nodes = []
     if nodes:
         for node in nodes:
-            children = filter_incompatible_nodes(node.children, stimulus)
+            children = filter_nodes_stimuli(node.children, stimulus)
             if not node.transformer._stim_matches_input_types(stimulus):
                 warnings.warn("Node {} incompatible, removed.".format(node.transformer.name))
                 node = deepcopy(children)
@@ -38,7 +40,21 @@ def filter_incompatible_nodes(nodes, stimulus):
 
     return flatten_mixed_list(filtered_nodes) or None
 
+def filter_nodes_extractor(nodes, extractors):
+    """ Recursively search nodes to find extractors.
+    Keep nodes with matching children.
+    Args:
+        nodes - A list of nodes in dictonary (JSON) format
+        extractors - List of extractors to match against
+    """
+    filtered_nodes = []
+    for node in nodes:
+        if 'children' in node:
+            node['children'] = filter_nodes_extractor(node['children'], extractors)
+        if node.get('children') or node['transformer'] in extractors:
+            filtered_nodes.append(node)
 
+    return filtered_nodes
 
 def check_updates(graph_spec, datastore, stimuli=None):
     """ Run graph_spec on set of stimuli, and store results in datastore csv.
@@ -67,13 +83,13 @@ def check_updates(graph_spec, datastore, stimuli=None):
 
     results = []
     for stim in stimuli:
-        stim_graph = Graph(nodes=[n.transformer for n in filter_incompatible_nodes(graph.roots, stim)])
+        stim_graph = Graph(
+            nodes=[n.transformer for n in filter_nodes_stimuli(
+                graph.roots, stim)])
         results += stim_graph.run(stim, merge=False)
 
     ## Merge results
-    results = merge_results(results)
-    # assert 0
-    results = results.drop(
+    results = merge_results(results).drop(
         ['source_file', 'filename', 'history', 'class', 'onset', 'duration'],
         axis=1, level=0)
     results['time_extracted'] = datetime.datetime.now()
@@ -96,11 +112,10 @@ def check_updates(graph_spec, datastore, stimuli=None):
 
         for label, value in results.iteritems():
             if label != 'time_extracted':
-                old_value = last.get(label)
-                new_value = value.values[0]
+                old = last.get(label)
+                new = value.values[0]
 
-                # This this value was recorded last time
-                if old_value is not None and not np.isclose(old_value, new_value):
+                if old is not None and not np.isclose(old, new):
                     mismatches.append(label)
 
         new_data = prior_data.append(results)
@@ -108,5 +123,14 @@ def check_updates(graph_spec, datastore, stimuli=None):
 
     extractors = set([m.split('.')[0] for m in mismatches])
 
-    return {'changed_extractors' : extractors or None,
+    # Filter original graph on extractors
+    if extractors:
+        graph_json = json.load(open(graph_spec, 'r'))
+        graph_json['roots'] = filter_nodes_extractor(
+            graph_json['roots'], extractors)
+    else:
+        graph_json = None
+
+    return {'difference_graph': graph_json,
+            'changed_extractors' : extractors or None,
             'mismatches' : mismatches or None}
