@@ -1,20 +1,19 @@
 ''' Core transformer logic. '''
 
+from pliers import config
 from pliers.stimuli.base import Stim, _log_transformation, load_stims
 from pliers.stimuli.compound import CompoundStim
-from pliers import config
-from pliers.utils import (classproperty, progress_bar_wrapper, isiterable,
-                          isgenerator, listify, batch_iterable)
+from pliers.utils import (progress_bar_wrapper, isiterable,
+                          isgenerator, listify, batch_iterable,
+                          attempt_to_import)
 import pliers
 from six import with_metaclass, string_types
 from abc import ABCMeta, abstractmethod, abstractproperty
 import importlib
-import os
-try:
-    from pathos.multiprocessing import ProcessingPool as Pool
-except:
-    Pool = None
+import logging
 
+multiprocessing = attempt_to_import('pathos.multiprocessing',
+                                    'multiprocessing', ['ProcessingPool'])
 
 _cache = {}
 
@@ -23,6 +22,7 @@ class Transformer(with_metaclass(ABCMeta)):
 
     _log_attributes = ()
     _loggable = True
+    VERSION = '0.1'
 
     # Stim types that *can* be passed as input, but aren't mandatory. This
     # allows for disjunctive specification; e.g., if _input_type is empty
@@ -35,10 +35,6 @@ class Transformer(with_metaclass(ABCMeta)):
         if name is None:
             name = self.__class__.__name__
         self.name = name
-
-    @classproperty
-    def available(cls):
-        return True
 
     def _memoize(transform):
         def wrapper(self, stim, *args, **kwargs):
@@ -56,7 +52,7 @@ class Transformer(with_metaclass(ABCMeta)):
         return wrapper
 
     @_memoize
-    def transform(self, stims, *args, **kwargs):
+    def transform(self, stims, validation='strict', *args, **kwargs):
 
         if isinstance(stims, string_types):
             stims = load_stims(stims)
@@ -80,7 +76,16 @@ class Transformer(with_metaclass(ABCMeta)):
         # Validate stim, and then either pass it directly to the Transformer
         # or, if a conversion occurred, recurse.
         else:
-            validated_stim = self._validate(stims)
+            try:
+                validated_stim = self._validate(stims)
+            except TypeError as err:
+                if validation == 'strict':
+                    raise err
+                elif validation == 'warn':
+                    logging.warn(str(err))
+                    return
+                elif validation == 'loose':
+                    return
             # If a conversion occurred during validation, we recurse
             if stims is not validated_stim:
                 return self.transform(validated_stim, *args, **kwargs)
@@ -130,12 +135,12 @@ class Transformer(with_metaclass(ABCMeta)):
 
     def _iterate(self, stims, *args, **kwargs):
 
-        if config.parallelize and Pool is not None:
+        if config.parallelize and multiprocessing is not None:
             def _transform(s):
                 return self.transform(s, *args, **kwargs)
-            return Pool(config.n_jobs).map(_transform, stims)
+            return multiprocessing.ProcessingPool(config.n_jobs).map(_transform, stims)
 
-        return (self.transform(s, *args, **kwargs) for s in stims)
+        return (t for t in (self.transform(s, *args, **kwargs) for s in stims) if t)
 
     @abstractmethod
     def _transform(self, stim):
@@ -180,22 +185,7 @@ class BatchTransformerMixin(Transformer):
             else:
                 return result[0]
         else:
-            return super(BatchTransformerMixin, self)._iterate(stims, *args, **kwargs)
-
-
-class EnvironmentKeyMixin(object):
-
-    @abstractproperty
-    def _env_keys(self):
-        pass
-
-    @property
-    def env_keys(self):
-        return listify(self._env_keys)
-
-    @classproperty
-    def available(cls):
-        return True if all([k in os.environ for k in self.env_keys]) else False
+            return list(super(BatchTransformerMixin, self)._iterate(stims, *args, **kwargs))
 
 
 def get_transformer(name, base=None, *args, **kwargs):

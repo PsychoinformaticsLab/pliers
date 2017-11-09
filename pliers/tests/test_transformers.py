@@ -1,11 +1,12 @@
 from pliers.transformers import get_transformer
 from pliers.extractors import (STFTAudioExtractor, BrightnessExtractor, ExtractorResult)
 from pliers.stimuli.base import TransformationLog
-from pliers.stimuli import ImageStim, VideoStim
+from pliers.stimuli import ImageStim, VideoStim, TextStim
 from pliers import config
 from os.path import join
 from .utils import get_test_data_path, DummyExtractor, DummyBatchExtractor
 import numpy as np
+import pytest
 
 
 def test_get_transformer_by_name():
@@ -30,7 +31,6 @@ def test_transformation_history():
 
 
 def test_transform_with_string_input():
-
     ext = BrightnessExtractor()
     res = ext.transform(join(get_test_data_path(), 'image', 'apple.jpg'))
     np.testing.assert_almost_equal(res.to_df()['brightness'].values[0], 0.887842942)
@@ -70,3 +70,30 @@ def test_batch_transformer():
     res2 = ExtractorResult.merge_stims(ext.transform([img1, img2, img3]))
     assert ext.num_calls == 3
     assert res.equals(res2)
+
+
+def test_validation_levels(capsys):
+    ext = BrightnessExtractor()
+    stim = TextStim(text='hello world')
+    with pytest.raises(TypeError):
+        ext.transform(stim)
+    res = ext.transform(stim, validation='warn')
+    assert not res
+    out, err = capsys.readouterr()
+    assert err == "WARNING:root:Transformers of type BrightnessExtractor can "\
+                  "only be applied to stimuli  of type(s) <class 'pliers"\
+                  ".stimuli.image.ImageStim'> (not type TextStim), and no "\
+                  "applicable Converter was found.\n"
+    res = ext.transform(stim, validation='loose')
+    assert not res
+    stim2 = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
+    res = ext.transform([stim, stim2], validation='loose')
+    assert len(res) == 1
+    assert np.isclose(res[0].to_df()['brightness'][0], 0.88784294, 1e-5)
+
+
+def test_versioning():
+    ext = DummyBatchExtractor()
+    assert ext.VERSION == '0.1'
+    ext = BrightnessExtractor()
+    assert ext.VERSION >= '1.0'

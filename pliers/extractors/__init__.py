@@ -1,8 +1,25 @@
 ''' Extractor hierarchy. '''
 
 from .base import Extractor, ExtractorResult, merge_results
-from .api import IndicoAPITextExtractor, IndicoAPIImageExtractor, ClarifaiAPIExtractor
-from .audio import STFTAudioExtractor, MeanAmplitudeExtractor
+from .api import (IndicoAPITextExtractor,
+                  IndicoAPIImageExtractor,
+                  ClarifaiAPIExtractor)
+from .audio import (STFTAudioExtractor,
+                    MeanAmplitudeExtractor,
+                    SpectralCentroidExtractor,
+                    SpectralBandwidthExtractor,
+                    SpectralContrastExtractor,
+                    SpectralRolloffExtractor,
+                    PolyFeaturesExtractor,
+                    RMSEExtractor,
+                    ZeroCrossingRateExtractor,
+                    ChromaSTFTExtractor,
+                    ChromaCQTExtractor,
+                    ChromaCENSExtractor,
+                    MelspectrogramExtractor,
+                    MFCCExtractor,
+                    TonnetzExtractor,
+                    TempogramExtractor)
 from .google import (GoogleVisionAPIFaceExtractor,
                      GoogleVisionAPILabelExtractor,
                      GoogleVisionAPIPropertyExtractor,
@@ -13,8 +30,10 @@ from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
 from .models import TensorFlowInceptionV3Extractor
 from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
-                   NumUniqueWordsExtractor, PartOfSpeechExtractor)
-from .video import (DenseOpticalFlowExtractor)
+                   NumUniqueWordsExtractor, PartOfSpeechExtractor,
+                   WordEmbeddingExtractor, TextVectorizerExtractor,
+                   VADERSentimentExtractor)
+from .video import (FarnebackOpticalFlowExtractor)
 
 __all__ = [
     'Extractor',
@@ -24,9 +43,24 @@ __all__ = [
     'ClarifaiAPIExtractor',
     'STFTAudioExtractor',
     'MeanAmplitudeExtractor',
+    'SpectralCentroidExtractor',
+    'SpectralBandwidthExtractor',
+    'SpectralContrastExtractor',
+    'SpectralRolloffExtractor',
+    'PolyFeaturesExtractor',
+    'RMSEExtractor',
+    'ZeroCrossingRateExtractor',
+    'ChromaSTFTExtractor',
+    'ChromaCQTExtractor',
+    'ChromaCENSExtractor',
+    'MelspectrogramExtractor',
+    'MFCCExtractor',
+    'TonnetzExtractor',
+    'TempogramExtractor',
     'GoogleVisionAPIFaceExtractor',
     'GoogleVisionAPILabelExtractor',
     'GoogleVisionAPIPropertyExtractor',
+    'GoogleVisionAPISafeSearchExtractor',
     'GoogleVisionAPIWebEntitiesExtractor',
     'BrightnessExtractor',
     'SaliencyExtractor',
@@ -39,6 +73,9 @@ __all__ = [
     'LengthExtractor',
     'NumUniqueWordsExtractor',
     'PartOfSpeechExtractor',
-    'DenseOpticalFlowExtractor',
+    'FarnebackOpticalFlowExtractor',
+    'WordEmbeddingExtractor',
+    'TextVectorizerExtractor',
+    'VADERSentimentExtractor',
     'merge_results'
 ]

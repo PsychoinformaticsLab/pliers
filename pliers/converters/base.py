@@ -3,7 +3,7 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 from pliers.transformers import Transformer
 from six import with_metaclass
-from pliers.utils import listify
+from pliers.utils import listify, EnvironmentKeyMixin
 from pliers import config
 import pliers
 
@@ -51,12 +51,9 @@ def get_converter(in_type, out_type, *args, **kwargs):
         if not issubclass(cls, Converter):
             continue
 
-        if cls._input_type == in_type and cls._output_type in out_type and cls.available:
-            try:
-                conv = cls(*args, **kwargs)
-                return conv
-            except ValueError:
-                # Important for API converters
-                pass
+        available = cls.available if issubclass(cls, EnvironmentKeyMixin) else True
+        if cls._input_type == in_type and cls._output_type in out_type and available:
+            conv = cls(*args, **kwargs)
+            return conv
 
     return None

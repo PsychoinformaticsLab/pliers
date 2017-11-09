@@ -10,6 +10,8 @@ class GoogleVisionAPIExtractor(GoogleVisionAPITransformer, ImageExtractor):
 
     ''' Base class for all Extractors that use the Google Vision API. '''
 
+    VERSION = '1.0'
+
     def _extract(self, stims):
         request = self._build_request(stims)
         responses = self._query_api(request)

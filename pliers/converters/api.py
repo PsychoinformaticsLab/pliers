@@ -5,11 +5,14 @@ import base64
 import json
 from abc import abstractproperty
 from pliers.stimuli.text import TextStim, ComplexTextStim
-from pliers.transformers import EnvironmentKeyMixin
+from pliers.utils import (EnvironmentKeyMixin, attempt_to_import,
+                          verify_dependencies)
 from .audio import AudioToTextConverter
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.request import Request, urlopen
 from six.moves.urllib.error import URLError, HTTPError
+
+sr = attempt_to_import('speech_recognition', 'sr')
 
 
 class SpeechRecognitionAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
@@ -21,13 +24,15 @@ class SpeechRecognitionAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
             the environment variable specified in the _env_keys field.
     '''
 
+    _log_attributes = ('recognize_method',)
+    VERSION = '1.0'
+
     @abstractproperty
     def recognize_method(self):
         pass
 
     def __init__(self, api_key=None):
-        super(SpeechRecognitionAPIConverter, self).__init__()
-        import speech_recognition as sr
+        verify_dependencies(['sr'])
         if api_key is None:
             try:
                 api_key = os.environ[self.env_keys[0]]
@@ -36,10 +41,10 @@ class SpeechRecognitionAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
                                  " SpeechRecognitionAPIConverter is initialized.")
         self.recognizer = sr.Recognizer()
         self.api_key = api_key
+        super(SpeechRecognitionAPIConverter, self).__init__()
 
     def _convert(self, audio):
-        import speech_recognition as sr
-
+        verify_dependencies(['sr'])
         with audio.get_filename() as filename:
             with sr.AudioFile(filename) as source:
                 clip = self.recognizer.record(source)
@@ -90,10 +95,10 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
 
     _env_keys = ('IBM_USERNAME', 'IBM_PASSWORD')
     _log_attributes = ('resolution',)
+    VERSION = '1.0'
 
     def __init__(self, username=None, password=None, resolution='words'):
-        super(IBMSpeechAPIConverter, self).__init__()
-        import speech_recognition as sr
+        verify_dependencies(['sr'])
         if username is None or password is None:
             try:
                 username = os.environ['IBM_USERNAME']
@@ -105,11 +110,11 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
         self.username = username
         self.password = password
         self.resolution = resolution
+        super(IBMSpeechAPIConverter, self).__init__()
 
     def _convert(self, audio):
+        verify_dependencies(['sr'])
         offset = 0.0 if audio.onset is None else audio.onset
-
-        import speech_recognition as sr
 
         with audio.get_filename() as filename:
             with sr.AudioFile(filename) as source:

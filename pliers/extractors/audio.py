@@ -3,8 +3,11 @@
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.text import ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
+from pliers.utils import attempt_to_import, verify_dependencies, listify
 import numpy as np
 from scipy import fft
+
+librosa = attempt_to_import('librosa')
 
 
 class AudioExtractor(Extractor):
@@ -32,10 +35,12 @@ class STFTAudioExtractor(AudioExtractor):
             between 0 and 300Hz, and one between 300Hz and 3KHz.
         spectrogram (bool): If True, plots a spectrogram of the results.
 
-    Notes: code adapted from http://stackoverflow.com/questions/2459295/invertible-stft-and-istft-in-python
+    Notes: code adapted from
+    http://stackoverflow.com/questions/2459295/invertible-stft-and-istft-in-python
     '''
 
     _log_attributes = ('frame_size', 'hop_size', 'freq_bins')
+    VERSION = '1.0'
 
     def __init__(self, frame_size=0.5, hop_size=0.1, freq_bins=5,
                  spectrogram=False):
@@ -93,6 +98,7 @@ class STFTAudioExtractor(AudioExtractor):
 
 
 class MeanAmplitudeExtractor(Extractor):
+
     ''' Mean amplitude extractor for blocks of audio with transcription. '''
 
     _input_type = (AudioStim, ComplexTextStim)
@@ -119,4 +125,259 @@ class MeanAmplitudeExtractor(Extractor):
             values.append(mean_amplitude)
 
         return ExtractorResult(values, stim, self, features=['mean_amplitude'],
-                                onsets=onsets, durations=durations)
+                               onsets=onsets, durations=durations)
+
+
+class LibrosaFeatureExtractor(AudioExtractor):
+
+    ''' A generic class for audio extractors using the librosa library. '''
+
+    _log_attributes = ('hop_length', 'librosa_kwargs')
+
+    def __init__(self, feature=None, hop_length=512, **librosa_kwargs):
+        verify_dependencies(['librosa'])
+        if feature:
+            self._feature = feature
+        self.hop_length = hop_length
+        self.librosa_kwargs = librosa_kwargs
+        super(LibrosaFeatureExtractor, self).__init__()
+
+    def get_feature_names(self):
+        return self._feature
+
+    def _get_values(self, stim):
+        return getattr(librosa.feature, self._feature)(y=stim.data,
+                                                       sr=stim.sampling_rate,
+                                                       hop_length=self.hop_length,
+                                                       **self.librosa_kwargs)
+
+    def _extract(self, stim):
+        values = self._get_values(stim)
+        values = values.T
+        feature_names = listify(self.get_feature_names())
+        n_frames = len(values)
+        onsets = librosa.frames_to_time(range(n_frames),
+                                        sr=stim.sampling_rate,
+                                        hop_length=self.hop_length)
+        onsets = onsets + stim.onset if stim.onset else onsets
+        durations = [self.hop_length / float(stim.sampling_rate)] * n_frames
+        return ExtractorResult(values, stim, self,
+                               features=feature_names,
+                               onsets=onsets,
+                               durations=durations)
+
+
+class SpectralCentroidExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts the spectral centroids from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
+
+    _feature = 'spectral_centroid'
+
+
+class SpectralBandwidthExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts the p'th-order spectral bandwidth from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
+
+    _feature = 'spectral_bandwidth'
+
+
+class SpectralContrastExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts the spectral contrast from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
+
+    _feature = 'spectral_contrast'
+
+    def __init__(self, n_bands=6, **kwargs):
+        self.n_bands = n_bands
+        super(SpectralContrastExtractor, self).__init__(n_bands=n_bands, **kwargs)
+
+    def get_feature_names(self):
+        return ['spectral_contrast_band_%d' % i for i in range(self.n_bands+1)]
+
+
+class SpectralRolloffExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts the roll-off frequency from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
+
+    _feature = 'spectral_rolloff'
+
+
+class PolyFeaturesExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts the coefficients of fitting an nth-order polynomial to the columns
+    of an audio's spectrogram.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
+
+    _feature = 'poly_features'
+
+    def __init__(self, order=1, **kwargs):
+        self.order = order
+        super(PolyFeaturesExtractor, self).__init__(order=order, **kwargs)
+
+    def get_feature_names(self):
+        return ['coefficient_%d' % i for i in range(self.order+1)]
+
+
+class RMSEExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts root mean square (RMS) energy from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
+
+    _feature = 'rmse'
+
+    def _get_values(self, stim):
+        return getattr(librosa.feature, self._feature)(y=stim.data,
+                                                       hop_length=self.hop_length,
+                                                       **self.librosa_kwargs)
+
+
+class ZeroCrossingRateExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts the zero-crossing rate of audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
+
+    _feature = 'zero_crossing_rate'
+
+    def _get_values(self, stim):
+        return getattr(librosa.feature, self._feature)(y=stim.data,
+                                                       hop_length=self.hop_length,
+                                                       **self.librosa_kwargs)
+
+
+class ChromaSTFTExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts a chromagram from an audio's waveform.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
+
+    _feature = 'chroma_stft'
+
+    def __init__(self, n_chroma=12, **kwargs):
+        self.n_chroma = n_chroma
+        super(ChromaSTFTExtractor, self).__init__(n_chroma=n_chroma, **kwargs)
+
+    def get_feature_names(self):
+        return ['chroma_%d' % i for i in range(self.n_chroma)]
+
+
+class ChromaCQTExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts a constant-q chromogram from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
+
+    _feature = 'chroma_cqt'
+
+    def __init__(self, n_chroma=12, **kwargs):
+        self.n_chroma = n_chroma
+        super(ChromaCQTExtractor, self).__init__(n_chroma=n_chroma, **kwargs)
+
+    def get_feature_names(self):
+        return ['chroma_cqt_%d' % i for i in range(self.n_chroma)]
+
+
+class ChromaCENSExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts a chroma variant "Chroma Energy Normalized" (CENS)
+    chromogram from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
+
+    _feature = 'chroma_cens'
+
+    def __init__(self, n_chroma=12, **kwargs):
+        self.n_chroma = n_chroma
+        super(ChromaCENSExtractor, self).__init__(n_chroma=n_chroma, **kwargs)
+
+    def get_feature_names(self):
+        return ['chroma_cens_%d' % i for i in range(self.n_chroma)]
+
+
+class MelspectrogramExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts mel-scaled spectrogram from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
+
+    _feature = 'melspectrogram'
+
+    def __init__(self, n_mels=128, **kwargs):
+        self.n_mels = n_mels
+        super(MelspectrogramExtractor, self).__init__(n_mels=n_mels, **kwargs)
+
+    def get_feature_names(self):
+        return ['mel_%d' % i for i in range(self.n_mels)]
+
+
+class MFCCExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts Mel Frequency Ceptral Coefficients from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
+
+    _feature = 'mfcc'
+
+    def __init__(self, n_mfcc=20, **kwargs):
+        self.n_mfcc = n_mfcc
+        super(MFCCExtractor, self).__init__(n_mfcc=n_mfcc, **kwargs)
+
+    def get_feature_names(self):
+        return ['mfcc_%d' % i for i in range(self.n_mfcc)]
+
+
+class TonnetzExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts the tonal centroids (tonnetz) from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
+
+    _feature = 'tonnetz'
+
+    def get_feature_names(self):
+        return ['tonal_centroid_%d' % i for i in range(6)]
+
+    def _get_values(self, stim):
+        return getattr(librosa.feature, self._feature)(y=stim.data,
+                                                       sr=stim.sampling_rate,
+                                                       **self.librosa_kwargs)
+
+
+class TempogramExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts a tempogram from audio.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
+
+    _feature = 'tempogram'
+
+    def __init__(self, win_length=384, **kwargs):
+        self.win_length = win_length
+        super(TempogramExtractor, self).__init__(win_length=win_length, **kwargs)
+
+    def get_feature_names(self):
+        return ['tempo_%d' % i for i in range(self.win_length)]

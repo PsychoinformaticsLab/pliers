@@ -21,8 +21,8 @@ class MultiStepConverter(Converter):
     _loggable = False
 
     def __init__(self, steps=None):
-        super(MultiStepConverter, self).__init__()
         self.steps = self._steps if steps is None else steps
+        super(MultiStepConverter, self).__init__()
 
     def _convert(self, stim):
         for i, step in enumerate(self.steps):
@@ -42,8 +42,8 @@ class MultiStepConverter(Converter):
 # Current approach requires explicit naming of every possible path. This is
 # not ideal and could get big in a hurry. We should probably switch to
 # walking the inheritance hierarchy of each Stim instance and using the first
-# MultiStepConverter that matches (e.g., a DerivedVideoStim that needs to be
-# converted to a TextStim should be able to use the VideoToTextConverter).
+# MultiStepConverter that matches (e.g., a VideoFrameCollectionStim that needs
+# to be converted to a TextStim should use the VideoToTextConverter).
 
 
 class VideoToTextConverter(MultiStepConverter):

@@ -7,15 +7,19 @@ from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.exceptions import PliersError
 from pliers.support.decorators import requires_nltk_corpus
 from pliers.datasets.text import fetch_dictionary
+from pliers.transformers import BatchTransformerMixin
+from pliers.utils import attempt_to_import, verify_dependencies
 import numpy as np
 import pandas as pd
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+import sys
 from six import string_types
 
-# Optional dependencies
-try:
-    import nltk
-except ImportError:
-    nltk is None
+keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
+                                 ['KeyedVectors'])
+sklearn_text = attempt_to_import('sklearn.feature_extraction.text', 'sklearn_text',
+                                 ['VectorizerMixin', 'CountVectorizer'])
 
 
 class TextExtractor(Extractor):
@@ -56,6 +60,7 @@ class DictionaryExtractor(TextExtractor):
     '''
 
     _log_attributes = ('dictionary', 'variables', 'missing')
+    VERSION = '1.0'
 
     def __init__(self, dictionary, variables=None, missing=np.nan):
         if isinstance(dictionary, string_types):
@@ -106,6 +111,7 @@ class PredefinedDictionaryExtractor(DictionaryExtractor):
     '''
 
     _log_attributes = ('variables', 'missing', 'case_sensitive')
+    VERSION = '1.0'
 
     def __init__(self, variables, missing=np.nan, case_sensitive=True):
 
@@ -140,6 +146,8 @@ class LengthExtractor(TextExtractor):
 
     ''' Extracts the length of the text in characters. '''
 
+    VERSION = '1.0'
+
     def _extract(self, stim):
         return ExtractorResult(np.array([[len(stim.text.strip())]]), stim,
                                self, features=['text_length'])
@@ -150,6 +158,7 @@ class NumUniqueWordsExtractor(TextExtractor):
     ''' Extracts the number of unique words used in the text. '''
 
     _log_attributes = ('tokenizer',)
+    VERSION = '1.0'
 
     def __init__(self, tokenizer=None):
         super(NumUniqueWordsExtractor, self).__init__()
@@ -170,31 +179,119 @@ class NumUniqueWordsExtractor(TextExtractor):
                                features=['num_unique_words'])
 
 
-class PartOfSpeechExtractor(ComplexTextExtractor):
+class PartOfSpeechExtractor(BatchTransformerMixin, TextExtractor):
 
     ''' Tags parts of speech in text with nltk. '''
 
+    _batch_size = sys.maxsize
+    VERSION = '1.0'
+
     @requires_nltk_corpus
-    def _extract(self, stim):
-        words = [w.text for w in stim]
+    def _extract(self, stims):
+        words = [w.text for w in stims]
         pos = nltk.pos_tag(words)
         if len(words) != len(pos):
             raise PliersError(
-                "The number of words in the ComplexTextStim does not match "
-                "the number of tagged words returned by nltk's part-of-speech"
-                " tagger.")
+                "The number of words does not match the number of tagged words"
+                "returned by nltk's part-of-speech tagger.")
 
-        data = {}
-        onsets = []
-        durations = []
-        for i, w in enumerate(stim):
-            p = pos[i][1]
-            if p not in data:
-                data[p] = [0] * len(words)
-            data[p][i] += 1
-            onsets.append(w.onset)
-            durations.append(w.duration)
+        results = []
+        tagset = nltk.data.load('help/tagsets/upenn_tagset.pickle').keys()
+        for i, s in enumerate(stims):
+            pos_vector = dict.fromkeys(tagset, 0)
+            pos_vector[pos[i][1]] = 1
+            results.append(ExtractorResult([pos_vector.values()], s, self,
+                                           features=list(pos_vector.keys())))
 
-        return ExtractorResult(np.array(list(data.values())).transpose(),
-                               stim, self, features=list(data.keys()),
-                               onsets=onsets, durations=durations)
+        return results
+
+
+class WordEmbeddingExtractor(TextExtractor):
+
+    ''' An extractor that uses a word embedding file to look up embedding
+    vectors for text.
+
+    Args:
+        embedding_file (str): path to a word embedding file. Assumed to be in
+            word2vec format compatible with gensim.
+        binary (bool): flag indicating whether embedding file is saved in a
+            binary format
+        prefix (str): prefix for feature names in the ExtractorResult.
+    '''
+
+    _log_attributes = ('wvModel', 'prefix')
+
+    def __init__(self, embedding_file, binary=False,
+                 prefix='embedding_dim'):
+        verify_dependencies(['keyedvectors'])
+        self.wvModel = keyedvectors.KeyedVectors.load_word2vec_format(embedding_file,
+                                                                      binary=binary)
+        self.prefix = prefix
+        super(WordEmbeddingExtractor, self).__init__()
+
+    def _extract(self, stim):
+        num_dims = self.wvModel.vector_size
+        if stim.text in self.wvModel:
+            embedding_vector = self.wvModel[stim.text]
+        else:
+            # UNKs will have zeroed-out vectors
+            embedding_vector = np.zeros(num_dims)
+        features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
+        return ExtractorResult([embedding_vector],
+                               stim,
+                               self,
+                               features=features)
+
+
+class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
+
+    ''' Uses a scikit-learn Vectorizer to extract bag-of-features
+    from text.
+
+    Args:
+        vectorizer (sklearn Vectorizer or str): a scikit-learn Vectorizer
+            (or the name in a string) to extract with. Will use the
+            CountVectorizer by default. Uses supporting *args and **kwargs.
+    '''
+
+    _log_attributes = ('vectorizer',)
+    _batch_size = sys.maxsize
+
+    def __init__(self, vectorizer=None, *args, **kwargs):
+        verify_dependencies(['sklearn_text'])
+        if isinstance(vectorizer, sklearn_text.VectorizerMixin):
+            self.vectorizer = vectorizer
+        elif isinstance(vectorizer, str):
+            self.vectorizer = getattr(sklearn_text, vectorizer)(*args, **kwargs)
+        else:
+            self.vectorizer = sklearn_text.CountVectorizer(*args, **kwargs)
+        super(TextVectorizerExtractor, self).__init__()
+
+    def _extract(self, stims):
+        mat = self.vectorizer.fit_transform([s.text for s in stims]).toarray()
+        results = []
+        for i, row in enumerate(mat):
+            results.append(ExtractorResult([row], stims[i], self,
+                           features=self.vectorizer.get_feature_names()))
+        return results
+
+
+class VADERSentimentExtractor(TextExtractor):
+
+    ''' Uses nltk's VADER lexicon to extract (0.0-1.0) values for the positve,
+    neutral, and negative sentiment of a TextStim. Also returns a compound
+    score ranging from -1 (very negative) to +1 (very positive). '''
+
+    _log_attributes = ('analyzer',)
+    VERSION = '1.0'
+
+    def __init__(self):
+        self.analyzer = SentimentIntensityAnalyzer()
+        super(VADERSentimentExtractor, self).__init__()
+
+    @requires_nltk_corpus
+    def _extract(self, stim):
+        scores = self.analyzer.polarity_scores(stim.text)
+        features = ['sentiment_' + k for k in scores.keys()]
+        return ExtractorResult([scores.values()], stim, self,
+                               features=features)

@@ -53,7 +53,16 @@ class ExtractorResult(object):
     def to_df(self, metadata=False):
         df = pd.DataFrame(self.data)
         if self.features is not None:
-            df.columns = self.features
+            # Handle duplicate features
+            counts = defaultdict(int)
+            features = []
+            for f in self.features:
+                if self.features.count(f) > 1:
+                    counts[f] += 1
+                    features.append(f + '_%d' % counts[f])
+                else:
+                    features.append(f)
+            df.columns = features
         df.insert(0, 'duration', self.durations)
         df.insert(0, 'onset', self.onsets)
         if metadata:

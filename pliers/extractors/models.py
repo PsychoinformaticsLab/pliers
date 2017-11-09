@@ -24,6 +24,9 @@ class TensorFlowInceptionV3Extractor(ImageExtractor):
             each image.
      '''
 
+    _log_attributes = ('model_dir', 'data_url', 'num_predictions')
+    VERSION = '1.0'
+
     def __init__(self, model_dir=None, data_url=None, num_predictions=5):
 
         super(TensorFlowInceptionV3Extractor, self).__init__()
@@ -75,8 +78,8 @@ class TensorFlowInceptionV3Extractor(ImageExtractor):
         values, features = [], []
         for i, h in enumerate(hits):
             m = re.search('(.*?)\s\(score\s\=\s([0-9\.]+)\)', h.strip())
-            values.extend(m.groups())
-            ind = i + 1
-            features.extend(['label_%d' % ind, 'score_%d' % ind])
+            extraction = m.groups()
+            features.append(extraction[0])
+            values.append(float(extraction[1]))
 
         return ExtractorResult([values], stim, self, features=features)

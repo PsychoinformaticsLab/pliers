@@ -1,6 +1,7 @@
 ''' Classes that represent video clips. '''
 
 from __future__ import division
+from math import ceil
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from .base import Stim
 from .image import ImageStim
@@ -32,19 +33,23 @@ class VideoFrameStim(ImageStim):
         self.name += 'frame[%s]' % frame_num
 
 
-class VideoStim(Stim):
+class VideoFrameCollectionStim(Stim):
 
-    ''' A video.
+    ''' A collection of video frames.
     Args:
         filename (str): Path to input file, if one exists.
+        frame_index (list): List of indices of frames retained from the
+            original video. Uses every frame by default
+            (i.e. for normal VideoStims).
         onset (float): Optional onset of the video file (in seconds) with
             respect to some more general context or timeline the user wishes
             to keep track of.
+        url (str): Optional url source for a video.
     '''
 
     _default_file_extension = '.mp4'
 
-    def __init__(self, filename=None, onset=None, url=None):
+    def __init__(self, filename=None, frame_index=None, onset=None, url=None):
         if url is not None:
             filename = url
         self.filename = filename
@@ -52,18 +57,46 @@ class VideoStim(Stim):
         self.fps = self.clip.fps
         self.width = self.clip.w
         self.height = self.clip.h
-        self.n_frames = int(self.fps * self.clip.duration)
+        if frame_index:
+            self.frame_index = frame_index
+        else:
+            self.frame_index = range(int(ceil(self.fps * self.clip.duration)))
+        self.n_frames = len(self.frame_index)
         duration = self.clip.duration
-
-        super(VideoStim, self).__init__(filename, onset, duration)
+        super(VideoFrameCollectionStim, self).__init__(filename,
+                                                       onset=onset,
+                                                       duration=duration)
 
     def _load_clip(self):
         self.clip = VideoFileClip(self.filename)
 
     def __iter__(self):
         """ Frame iteration. """
-        for i, f in enumerate(self.clip.iter_frames()):
-            yield VideoFrameStim(self, i, data=f)
+        for i, f in enumerate(self.frame_index):
+            yield self.get_frame(i)
+
+    @property
+    def frames(self):
+        return (f for f in self)
+
+    def get_frame(self, index=None, onset=None):
+        if onset:
+            index = int(onset * self.fps)
+
+        frame_num = self.frame_index[index]
+        onset = float(frame_num) / self.fps
+
+        if index < self.n_frames - 2:
+            next_frame_num = self.frame_index[index+1]
+            end = float(next_frame_num) / self.fps
+        else:
+            end = float(self.duration)
+
+        duration = end - onset if end > onset else 0.0
+
+        return VideoFrameStim(self, frame_num,
+                              data=self.clip.get_frame(onset),
+                              duration=duration)
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -74,42 +107,23 @@ class VideoStim(Stim):
         self.__dict__ = d
         self._load_clip()
 
-    @property
-    def frames(self):
-        return (f for f in self.clip.iter_frames())
-
-    def get_frame(self, index=None, onset=None):
-        if index is not None:
-            onset = float(index) / self.fps
-        else:
-            index = int(onset * self.fps)
-        return VideoFrameStim(self, index, data=self.clip.get_frame(onset))
-
     def save(self, path):
+        # IMPORTANT WARNING: saves entire source video
         self.clip.write_videofile(path)
 
 
-class DerivedVideoStim(VideoStim):
+class VideoStim(VideoFrameCollectionStim):
 
-    """
-    VideoStim containing keyframes (for API calls). Each keyframe is associated
-    with a duration reflecting the length of its "scene."
+    ''' A video.
     Args:
         filename (str): Path to input file, if one exists.
-        frames (iterable): iterable of frames retained from original VideoStim.
-        frame_index (list): List of indices of frames retained from the
-            original VideoStim.
-    """
+        onset (float): Optional onset of the video file (in seconds) with
+            respect to some more general context or timeline the user wishes
+            to keep track of.
+        url (str): Optional url source for a video.
+    '''
 
-    def __init__(self, filename, frames, frame_index=None, onset=None):
-        super(DerivedVideoStim, self).__init__(filename, onset=onset)
-        self._frames = frames
-        self.frame_index = frame_index
-        self.name += '_derived'
-
-    @property
-    def frames(self):
-        return (f for f in self._frames)
-
-    def __iter__(self):
-        return self.frames
+    def __init__(self, filename=None, onset=None, url=None):
+        super(VideoStim, self).__init__(filename=filename,
+                                        onset=onset,
+                                        url=url)

@@ -3,10 +3,10 @@ from .api import (WitTranscriptionConverter, GoogleSpeechAPIConverter,
 from .base import Converter, get_converter
 from .google import GoogleVisionAPITextConverter
 from .image import TesseractConverter
-from .iterators import (VideoFrameIterator, DerivedVideoFrameIterator,
+from .iterators import (VideoFrameIterator, VideoFrameCollectionIterator,
                         ComplexTextIterator)
 from .multistep import VideoToTextConverter, VideoToComplexTextConverter
-from .video import VideoToAudioConverter, FrameSamplingConverter
+from .video import VideoToAudioConverter
 
 __all__ = [
     'WitTranscriptionConverter',
@@ -15,12 +15,11 @@ __all__ = [
     'GoogleVisionAPITextConverter',
     'TesseractConverter',
     'VideoFrameIterator',
-    'DerivedVideoFrameIterator',
+    'VideoFrameCollectionIterator',
     'ComplexTextIterator',
     'VideoToTextConverter',
     'VideoToComplexTextConverter',
     'VideoToAudioConverter',
-    'FrameSamplingConverter',
     'Converter',
     'get_converter'
 ]
