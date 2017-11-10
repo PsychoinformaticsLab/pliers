@@ -116,10 +116,8 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
 
     ''' Uses the Clarifai API to extract tags of images.
     Args:
-        app_id (str): A valid APP_ID for the Clarifai API. Only needs to be
+        api_key (str): A valid API_KEY for the Clarifai API. Only needs to be
             passed the first time the extractor is initialized.
-        app_secret (str): A valid APP_SECRET for the Clarifai API. Only needs
-            to be passed the first time the extractor is initialized.
         model (str): The name of the Clarifai model to use. If None, defaults
             to the general image tagger.
         min_value (float): A value between 0.0 and 1.0 indicating the minimum
@@ -132,24 +130,21 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
 
     _log_attributes = ('model', 'min_value', 'max_concepts', 'select_concepts')
     _batch_size = 128
-    _env_keys = ('CLARIFAI_APP_ID', 'CLARIFAI_APP_SECRET')
+    _env_keys = ('CLARIFAI_API_KEY',)
     VERSION = '1.0'
 
-    def __init__(self, app_id=None, app_secret=None, model='general-v1.3',
-                 min_value=None,
-                 max_concepts=None,
-                 select_concepts=None):
+    def __init__(self, api_key=None, model='general-v1.3', min_value=None,
+                 max_concepts=None, select_concepts=None):
         verify_dependencies(['clarifai_client'])
-        if app_id is None or app_secret is None:
+        if api_key is None:
             try:
-                app_id = os.environ['CLARIFAI_APP_ID']
-                app_secret = os.environ['CLARIFAI_APP_SECRET']
+                api_key = os.environ['CLARIFAI_API_KEY']
             except KeyError:
-                raise ValueError("A valid Clarifai API APP_ID and APP_SECRET "
+                raise ValueError("A valid Clarifai API API_KEY "
                                  "must be passed the first time a Clarifai "
                                  "extractor is initialized.")
 
-        self.api = clarifai_client.ClarifaiApp(app_id=app_id, app_secret=app_secret)
+        self.api = clarifai_client.ClarifaiApp(api_key=api_key)
         self.model = self.api.models.get(model)
         self.min_value = min_value
         self.max_concepts = max_concepts
