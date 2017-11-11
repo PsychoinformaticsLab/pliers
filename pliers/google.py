@@ -39,17 +39,15 @@ class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
         self.handle_annotations = handle_annotations
         super(GoogleAPITransformer, self).__init__()
 
-    def _query_api(self, request):
-        resource = getattr(self.service, self.resource)()
-        request = resource.annotate(body={'requests': request})
-        return request.execute(num_retries=self.num_retries)['responses']
-
 
 class GoogleVisionAPITransformer(BatchTransformerMixin, GoogleAPITransformer):
 
     api_name = 'vision'
-    resource = 'images'
     _batch_size = 10
+
+    def _query_api(self, request):
+        request_obj = self.service.images().annotate(body={'requests': request})
+        return request_obj.execute(num_retries=self.num_retries)['responses']
 
     def _build_request(self, stims):
         request = []

@@ -1,7 +1,6 @@
 from os.path import join
 from ..utils import get_test_data_path
 from pliers.converters import (WitTranscriptionConverter,
-                               GoogleSpeechAPIConverter,
                                IBMSpeechAPIConverter)
 from pliers.stimuli import AudioStim, TextStim, ComplexTextStim
 import pytest
@@ -20,16 +19,6 @@ def test_witaiAPI_converter():
     assert first_word.onset == 4.2
     second_word = [w for w in out_stim][1]
     assert second_word.onset == 4.2
-    text = [elem.text for elem in out_stim]
-    assert 'thermodynamics' in text or 'obey' in text
-
-
-@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
-def test_googleAPI_converter():
-    stim = AudioStim(join(AUDIO_DIR, 'homer.wav'))
-    conv = GoogleSpeechAPIConverter()
-    out_stim = conv.transform(stim)
-    assert type(out_stim) == ComplexTextStim
     text = [elem.text for elem in out_stim]
     assert 'thermodynamics' in text or 'obey' in text
 

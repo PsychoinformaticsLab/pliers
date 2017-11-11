@@ -1,7 +1,7 @@
-from .api import (WitTranscriptionConverter, GoogleSpeechAPIConverter,
+from .api import (WitTranscriptionConverter,
                   IBMSpeechAPIConverter)
 from .base import Converter, get_converter
-from .google import GoogleVisionAPITextConverter
+from .google import GoogleVisionAPITextConverter, GoogleSpeechAPIConverter
 from .image import TesseractConverter
 from .iterators import (VideoFrameIterator, VideoFrameCollectionIterator,
                         ComplexTextIterator)

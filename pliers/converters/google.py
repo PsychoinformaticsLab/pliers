@@ -1,8 +1,88 @@
 ''' Google-based Converter classes. '''
 
+import base64
+from .audio import AudioToTextConverter
 from .image import ImageToTextConverter
-from pliers.stimuli.text import TextStim
-from pliers.google import GoogleVisionAPITransformer
+from pliers.stimuli.text import TextStim, ComplexTextStim
+from pliers.google import GoogleVisionAPITransformer, GoogleAPITransformer
+
+
+class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
+
+    ''' Uses the Google Speech API to do speech-to-text transcription
+
+    Args:
+        language_code (str): The language of the supplied AudioStim.
+        profanity_filter (bool): If set to True, will ask Google to try and
+            filter out profanity from the resulting Text.
+        speech_contexts (list): A list of a list of favored phrases or words
+            to assist the API. The inner list is a sequence of word tokens,
+            each outer element is a potential context.
+    '''
+
+    api_name = 'speech'
+    resource = 'speech'
+    _log_attributes = ('language_code', 'profanity_filter', 'speech_contexts',
+                       'handle_annotations')
+
+    def __init__(self, language_code='en-US', profanity_filter=False,
+                 speech_contexts=None, *args, **kwargs):
+        self.language_code = language_code
+        self.profanity_filter = profanity_filter
+        self.speech_contexts = speech_contexts
+        super(GoogleSpeechAPIConverter, self).__init__(*args, **kwargs)
+
+    def _query_api(self, request):
+        request_obj = self.service.speech().recognize(body=request)
+        return request_obj.execute(num_retries=self.num_retries)['responses']
+
+    def _build_request(self, stim):
+        with stim.get_filename() as filename:
+            with open(filename, 'rb') as f:
+                data = f.read()
+
+        content = base64.b64encode(data).decode()
+        if self.speech_contexts:
+            speech_contexts = [{'phrases': c} for c in self.speech_contexts]
+        else:
+            speech_contexts = []
+        request = {
+            'audio': {
+                'content': content
+            },
+            'config': {
+                'encoding': 'FLAC',
+                'sampleRateHertz': stim.sampling_rate,
+                'languageCode': self.language_code,
+                'maxAlternatives': 1,
+                'profanityFilter': self.profanity_filter,
+                'speechContexts': speech_contexts,
+                'enableWordTimeOffsets': True
+            }
+        }
+
+        return request
+
+    def _convert(self, stim):
+        request = self._build_request(stim)
+        response = self._query_api(request)
+
+        if 'error' in response:
+            raise Exception(response['error']['message'])
+
+        texts = []
+        for result in response['results']:
+            transcription = result['alternatives'][0]
+            words = []
+            for w in transcription['words']:
+                onset = float(w['startTime'][:-1])
+                duration = float(w['endTime'][:-1]) - onset
+                words.append(TextStim(text=w['word'],
+                                      onset=stim.onset + onset,
+                                      duration=duration))
+            texts.append(ComplexTextStim(elements=words, onset=stim.onset))
+
+        return texts
 
 
 class GoogleVisionAPITextConverter(GoogleVisionAPITransformer, ImageToTextConverter):
