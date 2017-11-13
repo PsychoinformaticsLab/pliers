@@ -84,7 +84,7 @@ class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
             results.append(ExtractorResult([data], stim, self,
                                            features=features,
                                            onsets=stim.onset,
-                                           durations=stim.onset))
+                                           durations=stim.duration))
 
         return results
 
@@ -96,6 +96,7 @@ class IndicoAPITextExtractor(TextExtractor, IndicoAPIExtractor):
     '''
 
     def __init__(self, **kwargs):
+        verify_dependencies(['indicoio'])
         self.allowed_models = indicoio.TEXT_APIS.keys()
         super(IndicoAPITextExtractor, self).__init__(**kwargs)
 
@@ -107,6 +108,7 @@ class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
     '''
 
     def __init__(self, **kwargs):
+        verify_dependencies(['indicoio'])
         self.allowed_models = indicoio.IMAGE_APIS.keys()
         super(IndicoAPIImageExtractor, self).__init__(**kwargs)
 
