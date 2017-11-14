@@ -11,12 +11,13 @@ AUDIO_DIR = join(get_test_data_path(), 'audio')
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_googleAPI_converter():
-    stim = AudioStim(join(AUDIO_DIR, 'homer.wav'))
+    stim = AudioStim(join(AUDIO_DIR, 'obama_speech.wav'))
     conv = GoogleSpeechAPIConverter()
     out_stim = conv.transform(stim)
     assert type(out_stim) == ComplexTextStim
     text = [elem.text for elem in out_stim]
-    assert 'thermodynamics' in text or 'obey' in text
+    assert 'today' in text
+    assert 'United' in text
 
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")

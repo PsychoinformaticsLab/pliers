@@ -1,6 +1,9 @@
 ''' Google-based Converter classes. '''
 
 import base64
+import os
+import tempfile
+
 from .audio import AudioToTextConverter
 from .image import ImageToTextConverter
 from pliers.stimuli.text import TextStim, ComplexTextStim
@@ -34,12 +37,16 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
 
     def _query_api(self, request):
         request_obj = self.service.speech().recognize(body=request)
-        return request_obj.execute(num_retries=self.num_retries)['responses']
+        return request_obj.execute(num_retries=self.num_retries)
 
     def _build_request(self, stim):
-        with stim.get_filename() as filename:
-            with open(filename, 'rb') as f:
-                data = f.read()
+        tmp = tempfile.mktemp() + '.flac'
+        stim.clip.write_audiofile(tmp, fps=stim.sampling_rate, codec='flac',
+                                  ffmpeg_params=['-ac', '1'])
+
+        with open(tmp, 'rb') as f:
+            data = f.read()
+        os.remove(tmp)
 
         content = base64.b64encode(data).decode()
         if self.speech_contexts:
@@ -66,23 +73,24 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
     def _convert(self, stim):
         request = self._build_request(stim)
         response = self._query_api(request)
+        print(response)
 
         if 'error' in response:
             raise Exception(response['error']['message'])
 
-        texts = []
-        for result in response['results']:
-            transcription = result['alternatives'][0]
-            words = []
-            for w in transcription['words']:
-                onset = float(w['startTime'][:-1])
-                duration = float(w['endTime'][:-1]) - onset
-                words.append(TextStim(text=w['word'],
-                                      onset=stim.onset + onset,
-                                      duration=duration))
-            texts.append(ComplexTextStim(elements=words, onset=stim.onset))
+        offset = 0.0 if stim.onset is None else stim.onset
+        if 'results' in response:
+            for result in response['results']:
+                transcription = result['alternatives'][0]
+                words = []
+                for w in transcription['words']:
+                    onset = float(w['startTime'][:-1])
+                    duration = float(w['endTime'][:-1]) - onset
+                    words.append(TextStim(text=w['word'],
+                                          onset=offset + onset,
+                                          duration=duration))
 
-        return texts
+        return ComplexTextStim(elements=words, onset=stim.onset)
 
 
 class GoogleVisionAPITextConverter(GoogleVisionAPITransformer, ImageToTextConverter):
