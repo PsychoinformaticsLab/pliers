@@ -112,7 +112,7 @@ Note that extracting these features requires a series of implicit transformation
 
 ```python
 from pliers.stimuli import VideoStim
-from pliers.extractors import (STFTAudioExtractor, PredefinedDictionaryExtractor, ComplexTextExtractor, ClarifaiAPIExtractor, IndicoAPIExtractor)
+from pliers.extractors import (STFTAudioExtractor, PredefinedDictionaryExtractor, ComplexTextExtractor, ClarifaiAPIExtractor, IndicoAPITextExtractor)
 from pliers.filters import FrameSamplingFilter
 from pliers.graph import Graph
 
@@ -133,8 +133,8 @@ nodes = [
     (FrameSamplingFilter(hertz=1),
          ['ClarifaiAPIExtractor', 'TensorFlowInceptionV3Extractor']),
     STFTAudioExtractor(hop_size=1, freq_bins=[(100, 300), (300, 3000), (3000, 20000)]),
-    PredefinedDictionaryExtractor(['SUBTLEXusfrequencyabove1/Lg10WF']),
-    IndicoAPIExtractor(models=['sentiment'])
+    PredefinedDictionaryExtractor(['subtlexusfrequency/Lg10WF']),
+    IndicoAPITextExtractor(models=['sentiment'])
 ]
 g = Graph(nodes)
 
