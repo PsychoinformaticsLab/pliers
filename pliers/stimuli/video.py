@@ -86,7 +86,7 @@ class VideoFrameCollectionStim(Stim):
         frame_num = self.frame_index[index]
         onset = float(frame_num) / self.fps
 
-        if index < self.n_frames - 2:
+        if index < self.n_frames - 1:
             next_frame_num = self.frame_index[index+1]
             end = float(next_frame_num) / self.fps
         else:
