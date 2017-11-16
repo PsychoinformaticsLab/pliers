@@ -35,10 +35,10 @@ def test_google_vision_api_face_extractor_inits():
     response = json.load(open(filename, 'r'))
     features, data = ext._parse_annotations(response['faceAnnotations'])
     assert len(features) == len(data)
-    assert data[features.index('angerLikelihood')] == 'VERY_UNLIKELY'
+    assert data[features.index('face1_angerLikelihood')] == 'VERY_UNLIKELY'
     assert data[
-        features.index('landmark_LEFT_EYE_BOTTOM_BOUNDARY_y')] == 257.023
-    assert np.isnan(data[features.index('boundingPoly_vertex2_y')])
+        features.index('face1_landmark_LEFT_EYE_BOTTOM_BOUNDARY_y')] == 257.023
+    assert np.isnan(data[features.index('face1_boundingPoly_vertex2_y')])
 
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
@@ -47,9 +47,9 @@ def test_google_vision_api_face_extractor():
     filename = join(get_test_data_path(), 'image', 'obama.jpg')
     stim = ImageStim(filename)
     result = ext.transform(stim).to_df()
-    assert 'joyLikelihood' in result.columns
-    assert result['joyLikelihood'][0] == 'VERY_LIKELY'
-    assert result['face_detectionConfidence'][0] > 0.7
+    assert 'face1_joyLikelihood' in result.columns
+    assert result['face1_joyLikelihood'][0] == 'VERY_LIKELY'
+    assert result['face1_face_detectionConfidence'][0] > 0.7
 
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
@@ -59,9 +59,9 @@ def test_google_vision_multiple_face_extraction():
     # Only first record
     ext = GoogleVisionAPIFaceExtractor(handle_annotations='first')
     result1 = ext.transform(stim).to_df()
-    assert 'joyLikelihood' in result1.columns
+    assert 'face1_joyLikelihood' in result1.columns
     # All records
-    ext = GoogleVisionAPIFaceExtractor(handle_annotations='prefix')
+    ext = GoogleVisionAPIFaceExtractor()
     result2 = ext.transform(stim).to_df()
     assert 'face2_joyLikelihood' in result2.columns
     assert result2.shape[1] > result1.shape[1]
@@ -75,23 +75,23 @@ def test_google_vision_face_batch():
     ext = GoogleVisionAPIFaceExtractor(handle_annotations='first')
     result = ext.transform(stims)
     result = ExtractorResult.merge_stims(result)
-    assert 'joyLikelihood' in result.columns
-    assert result['joyLikelihood'][0] == 'VERY_LIKELY'
-    assert result['joyLikelihood'][1] == 'VERY_LIKELY'
+    assert 'face1_joyLikelihood' in result.columns
+    assert result['face1_joyLikelihood'][0] == 'VERY_LIKELY'
+    assert result['face1_joyLikelihood'][1] == 'VERY_LIKELY'
 
     video = VideoStim(join(get_test_data_path(), 'video', 'obama_speech.mp4'))
     conv = FrameSamplingFilter(every=10)
     video = conv.transform(video)
     result = ext.transform(video)
     result = ExtractorResult.merge_stims(result)
-    assert 'joyLikelihood' in result.columns
+    assert 'face1_joyLikelihood' in result.columns
     assert result.shape == (11, 137)
 
     video = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
     video = conv.transform(video)
     result = ext.transform(video)
     result = ExtractorResult.merge_stims(result)
-    assert 'joyLikelihood' not in result.columns
+    assert 'face1_joyLikelihood' not in result.columns
     assert result.shape == (17, 7)
 
 

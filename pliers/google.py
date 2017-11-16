@@ -19,7 +19,7 @@ class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
     _log_attributes = ('handle_annotations',)
 
     def __init__(self, discovery_file=None, api_version='v1', max_results=100,
-                 num_retries=3, handle_annotations='prefix'):
+                 num_retries=3, handle_annotations=None):
         verify_dependencies(['googleapiclient', 'oauth_client'])
         if discovery_file is None:
             if 'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ:

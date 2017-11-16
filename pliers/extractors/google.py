@@ -68,9 +68,7 @@ class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
                 else:
                     data_dict[field] = val
 
-            names = list(data_dict.keys())
-            if self.handle_annotations == 'prefix' and len(annotations) > 1:
-                names = ['face%d_%s' % (i+1, n) for n in names]
+            names = ['face%d_%s' % (i+1, n) for n in data_dict.keys()]
             features += names
             values += list(data_dict.values())
 
