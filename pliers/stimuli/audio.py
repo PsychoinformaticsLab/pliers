@@ -1,7 +1,5 @@
 ''' Classes that represent audio clips. '''
 
-import sndhdr
-
 from .base import Stim
 from moviepy.audio.io.AudioFileClip import AudioFileClip
 
@@ -20,14 +18,11 @@ class AudioStim(Stim):
 
     _default_file_extension = '.wav'
 
-    def __init__(self, filename=None, onset=None, sampling_rate=None, url=None, clip=None):
+    def __init__(self, filename=None, onset=None, sampling_rate=44100, url=None, clip=None):
         if url is not None:
             filename = url
         self.filename = filename
-        if sampling_rate:
-            self.sampling_rate = sampling_rate
-        else:
-            self.sampling_rate = sndhdr.what(self.filename)[1]
+        self.sampling_rate = sampling_rate
         self.clip = clip
 
         if self.clip is None:
