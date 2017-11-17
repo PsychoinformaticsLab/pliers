@@ -73,7 +73,6 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
     def _convert(self, stim):
         request = self._build_request(stim)
         response = self._query_api(request)
-        print(response)
 
         if 'error' in response:
             raise Exception(response['error']['message'])
