@@ -1,8 +1,8 @@
 """ Utilities """
 
 from .base import (listify, flatten, batch_iterable, classproperty, isiterable,
-                   isgenerator, progress_bar_wrapper, attempt_to_import)
-from .updater import check_updates
+                   isgenerator, progress_bar_wrapper, attempt_to_import,
+                   EnvironmentKeyMixin, verify_dependencies)
 
 __all__ = [
     'listify',
@@ -13,5 +13,6 @@ __all__ = [
     'isgenerator',
     'progress_bar_wrapper',
     'attempt_to_import',
-    'check_updates'                       
+    'EnvironmentKeyMixin',
+    'verify_dependencies',
 ]
