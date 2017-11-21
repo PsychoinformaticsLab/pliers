@@ -34,6 +34,17 @@ class DummyExtractor(Extractor):
         onsets = np.random.choice(self.n_rows*2, self.n_rows, False)
         return ExtractorResult(data, stim, deepcopy(self), onsets=onsets)
 
+class DummyExactExtractor(Extractor):
+    ''' A dummy Extractor that returns the value you give it on init '''
+    _input_type = ImageStim
+    _log_attributes = ('value', )
+
+    def __init__(self, value):
+        super(DummyExactExtractor, self).__init__()
+        self.value = value
+
+    def _extract(self, stim):
+        return ExtractorResult([self.value], stim, deepcopy(self), features=['dummy'])
 
 class DummyBatchExtractor(BatchTransformerMixin, Extractor):
 
