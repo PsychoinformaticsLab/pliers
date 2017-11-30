@@ -4,6 +4,7 @@ from __future__ import division
 from math import ceil
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from .base import Stim
+from .audio import AudioStim
 from .image import ImageStim
 
 
@@ -68,7 +69,8 @@ class VideoFrameCollectionStim(Stim):
                                                        duration=duration)
 
     def _load_clip(self):
-        self.clip = VideoFileClip(self.filename)
+        audio_fps = AudioStim.get_sampling_rate(self.filename)
+        self.clip = VideoFileClip(self.filename, audio_fps=audio_fps)
 
     def __iter__(self):
         """ Frame iteration. """
