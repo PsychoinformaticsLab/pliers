@@ -80,10 +80,7 @@ def test_validation_levels(capsys):
     res = ext.transform(stim, validation='warn')
     assert not res
     out, err = capsys.readouterr()
-    assert err == "WARNING:root:Transformers of type BrightnessExtractor can "\
-                  "only be applied to stimuli  of type(s) <class 'pliers"\
-                  ".stimuli.image.ImageStim'> (not type TextStim), and no "\
-                  "applicable Converter was found.\n"
+    assert 'WARNING' in err
     res = ext.transform(stim, validation='loose')
     assert not res
     stim2 = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
