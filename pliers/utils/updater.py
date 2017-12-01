@@ -12,6 +12,7 @@ from pliers.filters.base import Filter
 import pliers.extractors
 import pliers.converters
 import pliers.filters
+from pliers.transformers import get_transformer
 
 import hashlib
 
@@ -48,16 +49,9 @@ def check_updates(transformers, datastore=None, stimuli=None):
         join(dirname(realpath(__file__)), '../tests/data/image/CC0/*'))
     stimuli = load_stims(stimuli)
 
-    # Instantiate transformers
-    loaded_transformers = {}
-    for name, parameters in transformers:
-        for source in [pliers.converters, pliers.filters, pliers.extractors]:
-            if hasattr(source, name):
-                trans = getattr(source, name)(**parameters)
-                loaded_transformers[trans] = (name, parameters)
-                break
-        else:
-            raise ValueError("Transformer name could not be found")
+    # Get transformers
+    loaded_transformers = {get_transformer(name, **params): (name, params)
+                           for name, params in transformers}
 
     # Transform stimuli
     results = pd.DataFrame({'time_extracted':[datetime.datetime.now()]})
@@ -69,9 +63,7 @@ def check_updates(transformers, datastore=None, stimuli=None):
                 try: # Add iterable
                     res = [res.data for r in res]
                 except TypeError:
-                    res = [r.data for r in res.elements] \
-                          if hasattr(res, 'elements') \
-                          else res.data
+                    res = res.data
 
                 res = hash_data(res) if isinstance(trans, (Converter, Filter)) \
                       else res[0][0]
