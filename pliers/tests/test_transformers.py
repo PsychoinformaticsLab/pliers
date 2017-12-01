@@ -8,7 +8,6 @@ from .utils import get_test_data_path, DummyExtractor, DummyBatchExtractor
 import numpy as np
 import pytest
 
-
 def test_get_transformer_by_name():
     tda = get_transformer('stFtAudioeXtrActOr', base='extractors')
     assert isinstance(tda, STFTAudioExtractor)
@@ -77,13 +76,15 @@ def test_validation_levels(capsys):
     stim = TextStim(text='hello world')
     with pytest.raises(TypeError):
         ext.transform(stim)
+        capres = capsys.readouterr()
+        assert capres.err == "WARNING:root:Transformers of type BrightnessExtractor can "\
+                      "only be applied to stimuli  of type(s) <class 'pliers"\
+                      ".stimuli.image.ImageStim'> (not type TextStim), and no "\
+                      "applicable Converter was found.\n"
+                      
     res = ext.transform(stim, validation='warn')
     assert not res
-    out, err = capsys.readouterr()
-    assert err == "WARNING:root:Transformers of type BrightnessExtractor can "\
-                  "only be applied to stimuli  of type(s) <class 'pliers"\
-                  ".stimuli.image.ImageStim'> (not type TextStim), and no "\
-                  "applicable Converter was found.\n"
+
     res = ext.transform(stim, validation='loose')
     assert not res
     stim2 = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
