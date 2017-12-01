@@ -71,18 +71,18 @@ def test_batch_transformer():
     assert res.equals(res2)
 
 
-def test_validation_levels(capsys):
+def test_validation_levels(caplog):
     ext = BrightnessExtractor()
     stim = TextStim(text='hello world')
     with pytest.raises(TypeError):
         ext.transform(stim)
-        capres = capsys.readouterr()
-        assert capres.err == "WARNING:root:Transformers of type BrightnessExtractor can "\
-                      "only be applied to stimuli  of type(s) <class 'pliers"\
-                      ".stimuli.image.ImageStim'> (not type TextStim), and no "\
-                      "applicable Converter was found.\n"
-                      
     res = ext.transform(stim, validation='warn')
+
+    log_message = caplog.records[0].message
+    assert log_message == "Transformers of type BrightnessExtractor can "\
+                  "only be applied to stimuli  of type(s) <class 'pliers"\
+                  ".stimuli.image.ImageStim'> (not type TextStim), and no "\
+                  "applicable Converter was found."
     assert not res
 
     res = ext.transform(stim, validation='loose')
