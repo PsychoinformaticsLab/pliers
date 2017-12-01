@@ -172,6 +172,9 @@ def test_compound_stim():
         stim.nonexistent_type
     assert stim.video_frame is None
 
+    # Test iteration
+    len([e for e in stim]) == 5
+
     imgs = stim.get_stim(ImageStim, return_all=True)
     assert len(imgs) == 2
     assert all([isinstance(im, ImageStim) for im in imgs])
