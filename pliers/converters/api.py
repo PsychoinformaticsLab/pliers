@@ -62,19 +62,6 @@ class WitTranscriptionConverter(SpeechRecognitionAPIConverter):
     recognize_method = 'recognize_wit'
 
 
-class GoogleSpeechAPIConverter(SpeechRecognitionAPIConverter):
-
-    ''' Speech-to-text transcription via the Google Cloud Speech API. '''
-
-    _env_keys = 'GOOGLE_APPLICATION_CREDENTIALS'
-    recognize_method = 'recognize_google_cloud'
-
-    def _convert(self, audio):
-        with open(self.api_key) as json_data:
-            self.api_key = json_data.read()
-        return super(GoogleSpeechAPIConverter, self)._convert(audio)
-
-
 class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
 
     ''' Uses the IBM Watson Text to Speech API to run speech-to-text
