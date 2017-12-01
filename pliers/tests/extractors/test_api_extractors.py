@@ -80,7 +80,7 @@ def test_indico_api_image_extractor():
     assert result2['fer_Happy'][0] > 0.7
 
 
-@pytest.mark.skipif("'CLARIFAI_APP_ID' not in os.environ")
+@pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
 def test_clarifai_api_extractor():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
@@ -101,7 +101,7 @@ def test_clarifai_api_extractor():
     assert 'cat' in result.columns and 'dog' in result.columns
 
 
-@pytest.mark.skipif("'CLARIFAI_APP_ID' not in os.environ")
+@pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
 def test_clarifai_api_extractor_batch():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))

@@ -12,7 +12,7 @@ setup(
     maintainer='Tal Yarkoni',
     maintainer_email='tyarkoni@gmail.com',
     url='http://github.com/tyarkoni/pliers',
-    install_requires=['numpy<=1.12.0', 'scipy', 'moviepy', 'pandas', 'six',
+    install_requires=['numpy', 'scipy', 'moviepy', 'pandas', 'six',
                       'pillow', 'python-magic', 'requests', 'nltk'],
     packages=find_packages(exclude=['pliers/tests']),
     license='MIT',
