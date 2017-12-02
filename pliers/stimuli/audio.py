@@ -3,6 +3,10 @@
 from .base import Stim
 from moviepy.audio.io.AudioFileClip import AudioFileClip
 
+import os
+import re
+import subprocess
+
 
 class AudioStim(Stim):
 
@@ -18,14 +22,17 @@ class AudioStim(Stim):
 
     _default_file_extension = '.wav'
 
-    def __init__(self, filename=None, onset=None, sampling_rate=44100, url=None, clip=None):
+    def __init__(self, filename=None, onset=None, sampling_rate=None, url=None, clip=None):
         if url is not None:
             filename = url
         self.filename = filename
-        self.sampling_rate = sampling_rate
-        self.clip = clip
 
-        if self.clip is None:
+        self.sampling_rate = sampling_rate
+        if not self.sampling_rate:
+            self.sampling_rate = self.get_sampling_rate(self.filename)
+
+        self.clip = clip
+        if not self.clip:
             self._load_clip()
 
         # Small default buffer isn't ideal, but moviepy has persistent issues
@@ -41,6 +48,42 @@ class AudioStim(Stim):
         super(AudioStim, self).__init__(
             filename, onset=onset, duration=duration)
 
+    @staticmethod
+    def get_sampling_rate(filename):
+        ''' Use FFMPEG to get the sampling rate, most of this code was
+        adapted from the moviepy codebase '''
+        cmd = ['ffmpeg', '-i', filename]
+
+        with open(os.devnull, 'rb') as devnull:
+            creationflags = 0x08000000 if os.name == 'nt' else 0
+            p = subprocess.Popen(cmd,
+                                 stdin=devnull,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 creationflags=creationflags)
+
+        _, p_err = p.communicate()
+        del p
+
+        lines = p_err.decode('utf8').splitlines()
+        if 'No such file or directory' in lines[-1]:
+            raise IOError(('Error: the file %s could not be found.\n'
+                           'Please check that you entered the correct '
+                           'path.') % filename)
+
+        lines_audio = [l for l in lines if ' Audio: ' in l]
+
+        if lines_audio:
+            line = lines_audio[0]
+            try:
+                match = re.search(' [0-9]* Hz', line)
+                return int(line[match.start()+1:match.end()-3])
+            except:
+                pass
+
+        # Return a sensible default
+        return 44100
+
     def _load_clip(self):
         self.clip = AudioFileClip(self.filename, fps=self.sampling_rate)
 
@@ -54,4 +97,4 @@ class AudioStim(Stim):
         self._load_clip()
 
     def save(self, path):
-        self.clip.write_audiofile(path)
+        self.clip.write_audiofile(path, fps=self.sampling_rate)

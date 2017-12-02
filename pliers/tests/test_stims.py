@@ -97,10 +97,14 @@ def test_video_stim():
     assert f3.data.shape == (240, 320, 3)
 
 
-def test_audio_stim(dummy_iter_extractor):
+def test_audio_stim():
     audio_dir = join(get_test_data_path(), 'audio')
-    stim = AudioStim(join(audio_dir, 'barber.wav'), sampling_rate=11025)
+    stim = AudioStim(join(audio_dir, 'barber.wav'))
     assert round(stim.duration) == 57
+    assert stim.sampling_rate == 11025
+
+    stim = AudioStim(join(audio_dir, 'homer.wav'))
+    assert round(stim.duration) == 3
     assert stim.sampling_rate == 11025
 
 
