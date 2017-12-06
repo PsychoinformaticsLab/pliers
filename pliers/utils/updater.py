@@ -9,9 +9,6 @@ from pliers.stimuli import load_stims
 from pliers.converters import Converter
 from pliers.filters.base import Filter
 
-import pliers.extractors
-import pliers.converters
-import pliers.filters
 from pliers.transformers import get_transformer
 
 import hashlib
