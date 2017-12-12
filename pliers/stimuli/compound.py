@@ -48,6 +48,11 @@ class CompoundStim(object):
             self.name = '&'.join([s.name for s in self.elements])[:255]
             self.filename = None
 
+    def __iter__(self):
+        """ Element iteration. """
+        for e in self.elements:
+            yield e
+
     def get_stim(self, type_, return_all=False):
         ''' Returns component elements of the specified type.
         Args:

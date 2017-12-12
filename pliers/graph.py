@@ -158,6 +158,10 @@ class Graph(object):
                 kwargs['children'] = node[1]
             if len(node) > 2:
                 kwargs['name'] = node[2]
+        elif isinstance(node, Node):
+            kwargs['transformer'] = node.transformer
+            kwargs['children'] = node.children
+            kwargs['name'] = node.name
         else:
             kwargs['transformer'] = node
 
