@@ -1,5 +1,5 @@
 clarifai
-cv2
+opencv-python
 google-api-python-client
 matplotlib
 pathos
