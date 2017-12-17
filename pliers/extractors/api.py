@@ -34,7 +34,7 @@ class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
         models (list): The names of the Indico models to use.
     '''
 
-    _log_attributes = ('models',)
+    _log_attributes = ('models', 'model_names')
     _input_type = ()
     _batch_size = 20
     _env_keys = 'INDICO_APP_KEY'
@@ -61,6 +61,7 @@ class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
                 raise ValueError("Unsupported model {} specified. "
                                  "Valid models: {}".format(model, ", ".join(self.allowed_models)))
 
+        self.model_names = models
         self.models = [getattr(indicoio, model) for model in models]
         self.names = models
         super(IndicoAPIExtractor, self).__init__()
@@ -130,7 +131,8 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
             API. For example, ['food', 'animal'].
     '''
 
-    _log_attributes = ('model', 'min_value', 'max_concepts', 'select_concepts')
+    _log_attributes = ('model', 'model_name', 'min_value', 'max_concepts',
+                       'select_concepts')
     _batch_size = 128
     _env_keys = ('CLARIFAI_API_KEY',)
     VERSION = '1.0'
@@ -147,6 +149,7 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
                                  "extractor is initialized.")
 
         self.api = clarifai_client.ClarifaiApp(api_key=api_key)
+        self.model_name = model
         self.model = self.api.models.get(model)
         self.min_value = min_value
         self.max_concepts = max_concepts
