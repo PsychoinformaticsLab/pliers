@@ -72,7 +72,7 @@ def test_indico_api_image_extractor():
                     'filename'}
 
     assert set(result1.columns) - set(['stim_name']) == outdfKeysCheck | meta_columns
-    assert result1['content_filtering'][0] < 0.1
+    assert result1['content_filtering'][0] < 0.2
 
     stim2 = ImageStim(join(image_dir, 'obama.jpg'))
     result2 = ext.transform(stim2).to_df()
