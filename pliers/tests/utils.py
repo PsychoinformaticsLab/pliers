@@ -34,7 +34,6 @@ class DummyExtractor(Extractor):
         onsets = np.random.choice(self.n_rows*2, self.n_rows, False)
         return ExtractorResult(data, stim, deepcopy(self), onsets=onsets)
 
-
 class DummyBatchExtractor(BatchTransformerMixin, Extractor):
 
     _input_type = ImageStim
