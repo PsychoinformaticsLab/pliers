@@ -169,7 +169,7 @@ class BatchTransformerMixin(Transformer):
     def _iterate(self, stims, *args, **kwargs):
         batches = batch_iterable(stims, self._batch_size)
         results = []
-        for batch in batches:
+        for batch in progress_bar_wrapper(batches):
             res = self._transform(batch, *args, **kwargs)
             for i, stim in enumerate(batch):
                 res[i] = _log_transformation(stim, res[i], self)
