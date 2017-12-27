@@ -38,33 +38,3 @@ def to_long_format(df):
     converted.columns = [
         c[0] if isinstance(c, tuple) else c for c in converted.columns]
     return converted
-
-
-class FSLExporter(Exporter):
-
-    ''' Exports a Timeline as tsv files with onset, duration, and value
-    columns. A separate file is created for each variable or 'condition'. '''
-
-    def export(self, timeline, path=None):
-        '''
-        Args:
-            timeline (Timeline): the Timeline instance to export.
-            path (str): the directory to write files to.
-        Returns: if path is None, returns a dictionary, where keys are variable
-            names and values are pandas DataFrames. Otherwise, None.
-        '''
-        data = to_long_format(timeline)
-        results = {}
-        for var in data['stim'].unique():
-            results[var] = data[data['stim'] == var][['onset', 'duration',
-                                                      'value']]
-
-        if path is not None:
-            if not exists(path) or not isdir(path):
-                raise IOError("The path %s does not exist or is not a "
-                              "directory" % path)
-            for var, d in results.items():
-                filename = join(path, var + '.txt')
-                d.to_csv(filename, sep='\t', index=False, header=False)
-        else:
-            return results
