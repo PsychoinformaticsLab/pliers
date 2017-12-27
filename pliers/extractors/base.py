@@ -34,9 +34,24 @@ class Extractor(with_metaclass(ABCMeta, Transformer)):
 
 class ExtractorResult(object):
 
+    ''' Stores feature data produced by an Extractor.
+    Args:
+        data (ndarray, iterable): Extracted feature values. Either an ndarray
+            or an iterable. Can be either 1-d or 2-d.
+        stim (Stim): The input Stim object from which features were extracted.
+        extractor (Extractor): The Extractor object used in extraction.
+        features (list, ndarray): Optional names of extracted features. If
+            passed, must have as many elements as there are columns in data.
+        onsets (list, ndarray): Optional iterable giving the onsets of the
+            rows in data. Length must match the input data.
+        durations (list, ndarray): Optional iterable giving the durations
+            associated with the rows in data.
+
+    '''
+
     def __init__(self, data, stim, extractor, features=None, onsets=None,
                  durations=None):
-        self.data = data
+        self.data = np.array(data)
         self.extractor = extractor
         self.features = features
         self._history = None
@@ -51,6 +66,14 @@ class ExtractorResult(object):
         self.durations = durations if durations is not None else np.nan
 
     def to_df(self, metadata=False):
+        ''' Convert current instance to a pandas DatasFrame.
+        Args:
+            metadata (bool): If True, adds columns for key metadata (including
+                the name, filename, class, history, and source file of the
+                Stim).
+        Returns:
+            A pandas DataFrame.
+        '''
         df = pd.DataFrame(self.data)
         if self.features is not None:
             # Handle duplicate features
@@ -75,6 +98,7 @@ class ExtractorResult(object):
 
     @property
     def history(self):
+        ''' Returns the transformation history for the input Stim. '''
         return self._history
 
     @history.setter

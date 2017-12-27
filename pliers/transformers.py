@@ -19,6 +19,7 @@ _cache = {}
 
 
 class Transformer(with_metaclass(ABCMeta)):
+    ''' Base class for all pliers Transformers. '''
 
     _log_attributes = ()
     _loggable = True
@@ -53,6 +54,19 @@ class Transformer(with_metaclass(ABCMeta)):
 
     @_memoize
     def transform(self, stims, validation='strict', *args, **kwargs):
+        ''' Executes the transformation on the passed stim(s).
+        Args:
+            stims (Stim, list): Stim or list of Stims to process.
+            validation (str): String specifying how validation errors should
+                be handled. Must be one of:
+                    * 'strict': Raise an exception on any validation error
+                    * 'warn': Issue a warning for all validation errors
+                    * 'loose': Silently ignore all validation errors
+            args: Optional positional arguments to pass onto the internal
+                _transform call.
+            kwargs: Optional positional arguments to pass onto the internal
+                _transform call.
+        '''
 
         if isinstance(stims, string_types):
             stims = load_stims(stims)
@@ -97,20 +111,23 @@ class Transformer(with_metaclass(ABCMeta)):
                 return result
 
     def _validate(self, stim):
+        # Checks whether the current Transformer can handle the passed Stim.
+        # If not, attempts a dynamic conversion before failing.
         if not self._stim_matches_input_types(stim):
             from pliers.converters.base import get_converter
-            in_type = self._input_type if self._input_type else self._optional_input_type
+            in_type = self._input_type if self._input_type \
+                else self._optional_input_type
             converter = get_converter(type(stim), in_type)
             if converter:
                 _old_stim = stim
                 stim = converter.transform(stim)
                 stim = _log_transformation(_old_stim, stim, converter)
             else:
-                msg = "Transformers of type %s can only be applied to stimuli " \
-                      " of type(s) %s (not type %s), and no applicable " \
-                      "Converter was found."
+                msg = ("Transformers of type %s can only be applied to stimuli"
+                       " of type(s) %s (not type %s), and no applicable "
+                       "Converter was found.")
                 msg = msg % (self.__class__.__name__, in_type,
-                        stim.__class__.__name__)
+                             stim.__class__.__name__)
                 raise TypeError(msg)
         return stim
 
@@ -122,7 +139,8 @@ class Transformer(with_metaclass(ABCMeta)):
         optional = tuple(listify(self._optional_input_type))
 
         if isinstance(stim, CompoundStim):
-            return stim.has_types(mandatory) or (not mandatory and stim.has_types(optional, False))
+            return stim.has_types(mandatory) or \
+                (not mandatory and stim.has_types(optional, False))
 
         if len(mandatory) > 1:
             msg = "Transformer of class %s requires multiple mandatory " + \
@@ -138,9 +156,11 @@ class Transformer(with_metaclass(ABCMeta)):
         if config.parallelize and multiprocessing is not None:
             def _transform(s):
                 return self.transform(s, *args, **kwargs)
-            return multiprocessing.ProcessingPool(config.n_jobs).map(_transform, stims)
+            return multiprocessing.ProcessingPool(config.n_jobs) \
+                .map(_transform, stims)
 
-        return (t for t in (self.transform(s, *args, **kwargs) for s in stims) if t)
+        return (t for t in (self.transform(s, *args, **kwargs)
+                            for s in stims) if t)
 
     @abstractmethod
     def _transform(self, stim):
@@ -159,7 +179,12 @@ class BatchTransformerMixin(Transformer):
     ''' A mixin that overrides the default implicit iteration behavior. Use
     whenever batch processing of multiple stimuli should be handled within the
     _transform method rather than applying a naive loop--e.g., for API
-    Extractors that can handle list inputs. '''
+    Extractors that can handle list inputs.
+    Args:
+        batch_size (int): Number of Stims to process in each batch.
+        args, kwargs: Optional positional and keyword arguments to pass onto
+            the base Transformer initializer.
+    '''
 
     def __init__(self, batch_size=None, *args, **kwargs):
         if batch_size:

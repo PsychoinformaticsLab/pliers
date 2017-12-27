@@ -22,7 +22,8 @@ class AudioStim(Stim):
 
     _default_file_extension = '.wav'
 
-    def __init__(self, filename=None, onset=None, sampling_rate=None, url=None, clip=None):
+    def __init__(self, filename=None, onset=None, sampling_rate=None, url=None,
+                 clip=None):
         if url is not None:
             filename = url
         self.filename = filename
@@ -77,8 +78,8 @@ class AudioStim(Stim):
             line = lines_audio[0]
             try:
                 match = re.search(' [0-9]* Hz', line)
-                return int(line[match.start()+1:match.end()-3])
-            except:
+                return int(line[match.start() + 1:match.end() - 3])
+            except Exception as e:
                 pass
 
         # Return a sensible default
@@ -97,4 +98,8 @@ class AudioStim(Stim):
         self._load_clip()
 
     def save(self, path):
+        ''' Save clip data to file.
+        Args:
+            path (str): Filename to save audio data to.
+        '''
         self.clip.write_audiofile(path, fps=self.sampling_rate)

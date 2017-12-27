@@ -14,6 +14,18 @@ DISCOVERY_URL = 'https://{api}.googleapis.com/$discovery/rest?version={apiVersio
 
 
 class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
+    ''' Base GoogleAPITransformer class.
+    Args:
+      discovery_file (str): path to discovery file containing Google
+        application credentials.
+      api_version (str): API version to use.
+      max_results (int): Max number of results per page.
+      num_retries (int): Number of times to retry query on failure.
+      handle_annotations (str): How returned annotations should be handled in
+        cases where there are multiple values for a single stim. Valid values
+        depend on Transformer, but are always one of 'first', 'list', 'prefix',
+        or 'concatenate'.
+    '''
 
     _env_keys = 'GOOGLE_APPLICATION_CREDENTIALS'
     _log_attributes = ('handle_annotations',)
@@ -30,12 +42,13 @@ class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
                                  "environment variable.")
             discovery_file = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
 
-        self.credentials = oauth_client.GoogleCredentials.from_stream(discovery_file)
+        self.credentials = oauth_client.GoogleCredentials.from_stream(
+            discovery_file)
         self.max_results = max_results
         self.num_retries = num_retries
-        self.service = googleapiclient.discovery.build(self.api_name, api_version,
-                                                       credentials=self.credentials,
-                                                       discoveryServiceUrl=DISCOVERY_URL)
+        self.service = googleapiclient.discovery.build(
+            self.api_name, api_version, credentials=self.credentials,
+            discoveryServiceUrl=DISCOVERY_URL)
         self.handle_annotations = handle_annotations
         super(GoogleAPITransformer, self).__init__()
 
@@ -46,7 +59,8 @@ class GoogleVisionAPITransformer(BatchTransformerMixin, GoogleAPITransformer):
     _batch_size = 10
 
     def _query_api(self, request):
-        request_obj = self.service.images().annotate(body={'requests': request})
+        request_obj = self.service.images() \
+            .annotate(body={'requests': request})
         return request_obj.execute(num_retries=self.num_retries)['responses']
 
     def _build_request(self, stims):
