@@ -25,7 +25,8 @@ class ImageStim(Stim):
 
     _default_file_extension = '.png'
 
-    def __init__(self, filename=None, onset=None, duration=None, data=None, url=None):
+    def __init__(self, filename=None, onset=None, duration=None, data=None,
+                 url=None):
         if data is None and isinstance(filename, six.string_types):
             data = imread(filename, mode='RGB')
         if url is not None:
@@ -34,7 +35,8 @@ class ImageStim(Stim):
             data = np.array(img)
             filename = url
         self.data = data
-        super(ImageStim, self).__init__(filename, onset=onset, duration=duration)
+        super(ImageStim, self).__init__(filename, onset=onset,
+                                        duration=duration)
 
     def save(self, path):
         imsave(path, self.data)

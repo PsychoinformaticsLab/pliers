@@ -5,7 +5,7 @@ Extractors that interact with external (e.g., deep learning) services.
 import os
 try:
     from contextlib import ExitStack
-except:
+except Exception as e:
     from contextlib2 import ExitStack
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.text import TextExtractor
@@ -156,14 +156,16 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
         self.select_concepts = select_concepts
         if select_concepts:
             select_concepts = listify(select_concepts)
-            self.select_concepts = [clarifai_client.Concept(concept_name=n) for n in select_concepts]
+            self.select_concepts = [clarifai_client.Concept(concept_name=n)
+                                    for n in select_concepts]
         super(ClarifaiAPIExtractor, self).__init__()
 
     def _extract(self, stims):
         verify_dependencies(['clarifai_client'])
-        output_config = clarifai_client.ModelOutputConfig(min_value=self.min_value,
-                                                          max_concepts=self.max_concepts,
-                                                          select_concepts=self.select_concepts)
+        moc = clarifai_client.ModelOutputConfig(min_value=self.min_value,
+                                                max_concepts=self.max_concepts,
+                                                select_concepts=self.select_concepts)
+        output_config = moc
         model_output_info = clarifai_client.ModelOutputInfo(output_config=output_config)
 
         # ExitStack lets us use filename context managers simultaneously

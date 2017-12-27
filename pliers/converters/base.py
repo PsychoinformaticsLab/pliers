@@ -51,8 +51,10 @@ def get_converter(in_type, out_type, *args, **kwargs):
         if not issubclass(cls, Converter):
             continue
 
-        available = cls.available if issubclass(cls, EnvironmentKeyMixin) else True
-        if cls._input_type == in_type and cls._output_type in out_type and available:
+        available = cls.available if issubclass(cls, EnvironmentKeyMixin) \
+            else True
+        if cls._input_type == in_type and cls._output_type in out_type \
+                and available:
             conv = cls(*args, **kwargs)
             return conv
 

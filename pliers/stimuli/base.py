@@ -47,6 +47,7 @@ class Stim(with_metaclass(ABCMeta)):
 
     @contextmanager
     def get_filename(self):
+        ''' Return the source filename of the current Stim. '''
         if self.filename is None or not os.path.exists(self.filename):
             tf = tempfile.mktemp() + self._default_file_extension
             self.save(tf)
@@ -57,6 +58,7 @@ class Stim(with_metaclass(ABCMeta)):
 
     @property
     def history(self):
+        ''' Return stimulus history. '''
         return self._history
 
     @history.setter

@@ -37,5 +37,5 @@ class MissingDependencyError(PliersError):
 
     def __init__(self, dependencies, message=MISSING_DEPENDENCY_MESSAGE,
                  *args, **kwargs):
-        super(MissingDependencyError, self).__init__(message % ', '.join(dependencies),
-                                                     *args, **kwargs)
+        msg = message % ', '.join(dependencies)
+        super(MissingDependencyError, self).__init__(msg, *args, **kwargs)

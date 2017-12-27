@@ -224,8 +224,7 @@ class WordEmbeddingExtractor(TextExtractor):
     def __init__(self, embedding_file, binary=False,
                  prefix='embedding_dim'):
         verify_dependencies(['keyedvectors'])
-        self.wvModel = keyedvectors.KeyedVectors.load_word2vec_format(embedding_file,
-                                                                      binary=binary)
+        self.wvModel = keyedvectors.KeyedVectors.load_word2vec_format(embedding_file, binary=binary)
         self.prefix = prefix
         super(WordEmbeddingExtractor, self).__init__()
 
@@ -262,7 +261,8 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
         if isinstance(vectorizer, sklearn_text.VectorizerMixin):
             self.vectorizer = vectorizer
         elif isinstance(vectorizer, str):
-            self.vectorizer = getattr(sklearn_text, vectorizer)(*args, **kwargs)
+            vec = getattr(sklearn_text, vectorizer)
+            self.vectorizer = vec(*args, **kwargs)
         else:
             self.vectorizer = sklearn_text.CountVectorizer(*args, **kwargs)
         super(TextVectorizerExtractor, self).__init__()
@@ -271,8 +271,9 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
         mat = self.vectorizer.fit_transform([s.text for s in stims]).toarray()
         results = []
         for i, row in enumerate(mat):
-            results.append(ExtractorResult([row], stims[i], self,
-                           features=self.vectorizer.get_feature_names()))
+            results.append(
+                ExtractorResult([row], stims[i], self,
+                                features=self.vectorizer.get_feature_names()))
         return results
 
 
