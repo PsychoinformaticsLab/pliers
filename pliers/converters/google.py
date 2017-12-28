@@ -95,6 +95,7 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
 class GoogleVisionAPITextConverter(GoogleVisionAPITransformer, ImageToTextConverter):
 
     ''' Detects text within images using the Google Cloud Vision API.
+
     Args:
         handle_annotations (str): How to handle cases where there are multiple
             detected text labels. Valid values are 'first' (only return the

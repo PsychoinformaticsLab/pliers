@@ -11,6 +11,7 @@ from six import with_metaclass, string_types
 from abc import ABCMeta, abstractmethod, abstractproperty
 import importlib
 import logging
+from functools import wraps
 
 multiprocessing = attempt_to_import('pathos.multiprocessing',
                                     'multiprocessing', ['ProcessingPool'])
@@ -36,7 +37,8 @@ class Transformer(with_metaclass(ABCMeta)):
             name = self.__class__.__name__
         self.name = name
 
-    def _memoize(transform):
+    def memoize(transform):
+        @wraps(transform)
         def wrapper(self, stim, *args, **kwargs):
             use_cache = config.cache_transformers and isinstance(stim, Stim)
             if use_cache:
@@ -51,7 +53,7 @@ class Transformer(with_metaclass(ABCMeta)):
             return result
         return wrapper
 
-    @_memoize
+    @memoize
     def transform(self, stims, validation='strict', *args, **kwargs):
 
         if isinstance(stims, string_types):

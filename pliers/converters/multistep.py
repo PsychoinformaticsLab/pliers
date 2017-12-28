@@ -10,6 +10,7 @@ from .base import Converter, get_converter
 class MultiStepConverter(Converter):
 
     ''' Base class for Converters doing more than one step.
+
     Args:
         steps (list): Ordered list describing the sequence of desired
             conversions. Each element in the list can be either a Converter or

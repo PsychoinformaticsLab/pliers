@@ -30,6 +30,7 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
 def get_converter(in_type, out_type, *args, **kwargs):
     ''' Scans the list of available Converters and returns an instantiation
     of the first one whose input and output types match those passed in.
+
     Args:
         in_type (type): The type of input the converter must have.
         out_type (type): The type of output the converter must have.
