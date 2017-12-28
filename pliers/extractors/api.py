@@ -118,6 +118,7 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
                            EnvironmentKeyMixin):
 
     ''' Uses the Clarifai API to extract tags of images.
+
     Args:
         api_key (str): A valid API_KEY for the Clarifai API. Only needs to be
             passed the first time the extractor is initialized.

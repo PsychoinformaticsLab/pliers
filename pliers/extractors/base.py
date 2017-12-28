@@ -35,6 +35,7 @@ class Extractor(with_metaclass(ABCMeta, Transformer)):
 class ExtractorResult(object):
 
     ''' Stores feature data produced by an Extractor.
+
     Args:
         data (ndarray, iterable): Extracted feature values. Either an ndarray
             or an iterable. Can be either 1-d or 2-d.
@@ -67,6 +68,7 @@ class ExtractorResult(object):
 
     def to_df(self, metadata=False):
         ''' Convert current instance to a pandas DatasFrame.
+
         Args:
             metadata (bool): If True, adds columns for key metadata (including
                 the name, filename, class, history, and source file of the
@@ -174,6 +176,7 @@ class ExtractorResult(object):
 
 def merge_results(results, **merge_feature_args):
     ''' Merges a list of ExtractorResults instances and returns a pandas DF.
+
     Args:
         results (list, tuple): A list of ExtractorResult instances to merge.
         merge_feature_args (kwargs): Additional argument settings to use

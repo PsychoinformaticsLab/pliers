@@ -11,6 +11,7 @@ import subprocess
 class AudioStim(Stim):
 
     ''' Represents an audio clip.
+
     Args:
         filename (str): Path to audio file.
         onset (float): Optional onset of the audio file (in seconds) with
@@ -99,6 +100,7 @@ class AudioStim(Stim):
 
     def save(self, path):
         ''' Save clip data to file.
+
         Args:
             path (str): Filename to save audio data to.
         '''

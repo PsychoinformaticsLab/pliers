@@ -18,6 +18,7 @@ class ImageFilter(Filter):
 class ImageCroppingFilter(ImageFilter):
 
     ''' Crops an image.
+
     Args:
         box (tuple): a 4-length tuple containing the left, upper, right, and
             lower coordinates for the desired region of the image. If none is

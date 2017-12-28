@@ -47,6 +47,7 @@ class DictionaryExtractor(TextExtractor):
 
     ''' A generic dictionary-based extractor that supports extraction of
     arbitrary features contained in a lookup table.
+
     Args:
         dictionary (str, DataFrame): The dictionary containing the feature
             values. Either a string giving the path to the dictionary file,
@@ -92,6 +93,7 @@ class PredefinedDictionaryExtractor(DictionaryExtractor):
 
     ''' A generic Extractor that maps words onto values via one or more
     pre-defined dictionaries accessed via the web.
+
     Args:
         variables (list or dict): A specification of the dictionaries and
             column names to map the input TextStims onto. If a list, each
@@ -294,5 +296,5 @@ class VADERSentimentExtractor(TextExtractor):
     def _extract(self, stim):
         scores = self.analyzer.polarity_scores(stim.text)
         features = ['sentiment_' + k for k in scores.keys()]
-        return ExtractorResult([scores.values()], stim, self,
+        return ExtractorResult([list(scores.values())], stim, self,
                                features=features)

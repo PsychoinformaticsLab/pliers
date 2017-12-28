@@ -4,14 +4,12 @@ import datetime
 import pandas as pd
 import numpy as np
 from os.path import realpath, join, dirname, exists, expanduser
-
 from pliers.stimuli import load_stims
 from pliers.converters import Converter
 from pliers.filters.base import Filter
-
 from pliers.transformers import get_transformer
-
 import hashlib
+
 
 def hash_data(data, blocksize=65536):
     """" Hashes list of data, strings or data """
@@ -26,16 +24,18 @@ def hash_data(data, blocksize=65536):
 
     return hasher.hexdigest()
 
+
 def check_updates(transformers, datastore=None, stimuli=None):
     """ Run transformers through a battery of stimuli, and check if output has
     changed. Store results in csv file for comparison.
+
     Args:
-        transformers - A list of tuples of transformer names and dictionary of
-                       parameters to instantiate with (or empty dict)
-        datastore - filepath of CSV file with results. Stored in home dir
-                    by default
-        stimuli - list of stimuli file paths to extract from.
-                  if None, use test data.
+        transformers (list): A list of tuples of transformer names and
+            dictionary of parameters to instantiate with (or empty dict).
+        datastore (str): Filepath of CSV file with results. Stored in home dir
+            by default.
+        stimuli (list): List of stimuli file paths to extract from. If None,
+            use test data.
     """
     # Find datastore file
     datastore = datastore or expanduser('~/.pliers_updates')
@@ -51,7 +51,7 @@ def check_updates(transformers, datastore=None, stimuli=None):
                            for name, params in transformers}
 
     # Transform stimuli
-    results = pd.DataFrame({'time_extracted':[datetime.datetime.now()]})
+    results = pd.DataFrame({'time_extracted': [datetime.datetime.now()]})
     for trans in loaded_transformers.keys():
         for stim in stimuli:
             if trans._stim_matches_input_types(stim):
@@ -62,16 +62,16 @@ def check_updates(transformers, datastore=None, stimuli=None):
                 except TypeError:
                     res = res.data
 
-                res = hash_data(res) if isinstance(trans, (Converter, Filter)) \
-                      else res[0][0]
+                res = hash_data(res) if isinstance(
+                    trans, (Converter, Filter)) else res[0][0]
 
                 results["{}.{}".format(trans.__hash__(), stim.name)] = [res]
 
-    # Check for mistmatches
+    # Check for mismatches
     mismatches = []
     if prior_data is not None:
         last = prior_data[
-            prior_data.time_extracted == prior_data.time_extracted.max()].\
+            prior_data.time_extracted == prior_data.time_extracted.max()]. \
             iloc[0].drop('time_extracted')
 
         for label, value in results.iteritems():

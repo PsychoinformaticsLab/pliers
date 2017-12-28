@@ -19,6 +19,7 @@ import tempfile
 class Stim(with_metaclass(ABCMeta)):
 
     ''' Base class for all classes in the Stim hierarchy.
+
     Args:
         filename (str): Path to input file, if one exists.
         onset (float): Optional onset of the Stim (in seconds) with
@@ -89,6 +90,7 @@ def _get_stim_class(name):
 def load_stims(source, dtype=None, fail_silently=False):
     """ Load one or more stimuli directly from file, inferring/extracting
     metadata as needed.
+
     Args:
         source (str or list): The location to load the stim(s) from. Can be
             the path to a directory, to a single file, or a list of filenames.
@@ -97,6 +99,7 @@ def load_stims(source, dtype=None, fail_silently=False):
             one of 'video', 'image', 'audio', or 'text'.
         fail_silently (bool): If True do not raise error when trying to load a
             missing stimulus from a list of sources.
+
     Returns: A list of Stims.
     """
     from .video import VideoStim, ImageStim

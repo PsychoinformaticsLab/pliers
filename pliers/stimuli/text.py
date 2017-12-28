@@ -11,6 +11,7 @@ from .base import Stim
 class TextStim(Stim):
 
     ''' Any simple text stimulus--most commonly a single word.
+
     Args:
         filename (str): Path to input file, if one exists.
         text (str): Text value to store. If none is provided, value is read
@@ -46,6 +47,7 @@ class ComplexTextStim(Stim):
 
     ''' A collection of text stims (e.g., a story), typically ordered and with
     onsets and/or durations associated with each element.
+
     Args:
         filename (str): The filename to read from. Must be tab-delimited text.
             Files must always contain a column containing the text of each

@@ -15,6 +15,7 @@ class Node(object):
 
     ''' A graph node/vertex. Represents a single transformer, optionally with
     references to children.
+
     Args:
         name (str): Name of the node
         transformer (Transformer): the Transformer instance at this node
@@ -41,6 +42,7 @@ class Node(object):
 
 class Graph(object):
     ''' Graph-like structure that represents an entire pliers workflow.
+
     Args:
         nodes (list, dict): Optional nodes to add to the Graph at construction.
             If a dict, must have a 'roots' key. If a list, each element must be
@@ -63,6 +65,7 @@ class Graph(object):
 
     def add_nodes(self, nodes, parent=None):
         ''' Adds one or more nodes to the current graph.
+
         Args:
             nodes (list): A list of nodes to add. Each element must be one of
                 the following:
@@ -86,6 +89,7 @@ class Graph(object):
     def add_node(self, transformer, name=None, children=None, parent=None,
                  parameters={}, return_node=False):
         ''' Adds a node to the current graph.
+
         Args:
             transformer (str, Transformer): The pliers Transformer to use at
                 the to-be-added node. Either a case-insensitive string giving
@@ -101,6 +105,7 @@ class Graph(object):
                 the 'transformer' argument. Ignored if an already-initialized
                 Transformer is passed.
             return_node (bool): If True, returns the initialized Node instance.
+
         Returns:
             The initialized Node instance if return_node is True,
                 None otherwise.
@@ -123,6 +128,7 @@ class Graph(object):
 
     def draw(self, filename):
         ''' Render a plot of the graph via pygraphviz.
+
         Args:
             filename (str): Path to save the generated image to.
         '''
@@ -167,6 +173,7 @@ class Graph(object):
 
     def run(self, stim, merge=True):
         ''' Executes the graph by calling all Transformers in sequence.
+
         Args:
             stim (str, Stim, list): One or more valid inputs to any
                 Transformer's 'transform' call.
@@ -184,6 +191,7 @@ class Graph(object):
 
     def run_node(self, node, stim):
         ''' Executes the Transformer at a specific node.
+
         Args:
             node (str, Node): If a string, the name of the Node in the current
                 Graph. Otherwise the Node instance to execute.

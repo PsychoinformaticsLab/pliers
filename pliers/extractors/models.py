@@ -14,6 +14,7 @@ class TensorFlowInceptionV3Extractor(ImageExtractor):
 
     ''' Labels objects in images using a pretrained Inception V3 architecture
      implemented in TensorFlow.
+
     Args:
         model_dir (str): path to save model file to. If None (default), creates
             and uses a temporary folder.

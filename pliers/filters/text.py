@@ -22,6 +22,7 @@ class TextFilter(Filter):
 class WordStemmingFilter(TextFilter):
 
     ''' Nltk-based word stemming Filter.
+
     Args:
         stemmer (str, Stemmer): If a string, must be the name of one of the
             stemming modules available in nltk.stem. Valid values are
@@ -72,6 +73,7 @@ class WordStemmingFilter(TextFilter):
 class TokenizingFilter(TextFilter):
 
     ''' Tokenizes a TextStim into several word TextStims.
+
     Args:
         tokenizer (nltk Tokenizer or str): a nltk Tokenizer
             (or the name of one) to tokenize with. Will use

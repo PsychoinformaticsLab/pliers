@@ -7,12 +7,13 @@ import tempfile
 from .audio import AudioToTextConverter
 from .image import ImageToTextConverter
 from pliers.stimuli.text import TextStim, ComplexTextStim
-from pliers.google import GoogleVisionAPITransformer, GoogleAPITransformer
+from pliers.transformers import (GoogleVisionAPITransformer,
+                                 GoogleAPITransformer)
 
 
 class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
 
-    ''' Uses the Google Speech API to do speech-to-text transcription
+    ''' Uses the Google Speech API to do speech-to-text transcription.
 
     Args:
         language_code (str): The language of the supplied AudioStim.
@@ -92,7 +93,8 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
         return ComplexTextStim(elements=words, onset=stim.onset)
 
 
-class GoogleVisionAPITextConverter(GoogleVisionAPITransformer, ImageToTextConverter):
+class GoogleVisionAPITextConverter(GoogleVisionAPITransformer,
+                                   ImageToTextConverter):
 
     ''' Detects text within images using the Google Cloud Vision API.
 

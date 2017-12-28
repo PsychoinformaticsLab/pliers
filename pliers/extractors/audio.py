@@ -20,6 +20,7 @@ class AudioExtractor(Extractor):
 class STFTAudioExtractor(AudioExtractor):
 
     ''' Short-time Fourier Transform extractor.
+
     Args:
         frame_size (float): The width of the frame/window to apply an FFT to,
             in seconds.

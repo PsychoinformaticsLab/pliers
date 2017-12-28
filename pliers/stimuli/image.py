@@ -13,6 +13,7 @@ import numpy as np
 class ImageStim(Stim):
 
     ''' Represents a static image.
+
     Args:
         filename (str): Path to input file, if one exists.
         onset (float): Optional onset of the image (in seconds) with
