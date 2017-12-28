@@ -1,3 +1,6 @@
+''' The `graph` module contains tools for constructing and executing graphs
+of pliers Transformers. '''
+
 from pliers.extractors.base import Extractor, merge_results
 from pliers.transformers import get_transformer
 from pliers.utils import (listify, flatten, isgenerator, attempt_to_import,

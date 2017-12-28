@@ -1,4 +1,5 @@
-''' Diagnostics utilities. '''
+''' The `diagnostics` module contains functions for computing basic metrics
+that may be of use in determining the quality of `Extractor` results. '''
 
 from .diagnostics import Diagnostics
 from .diagnostics import correlation_matrix

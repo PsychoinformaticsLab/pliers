@@ -1,4 +1,5 @@
-""" Utility to check if results have changed in foreign APIs """
+""" Utility to check if results have changed in foreign APIs. """
+
 import glob
 import datetime
 import pandas as pd

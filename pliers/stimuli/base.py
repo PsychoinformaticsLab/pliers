@@ -1,4 +1,4 @@
-''' Base class for all Stimuli and associated functionality. '''
+''' Base class for all Stims and associated functionality. '''
 
 
 from abc import ABCMeta, abstractmethod

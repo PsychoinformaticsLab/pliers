@@ -1,4 +1,7 @@
-''' Extractor hierarchy. '''
+''' The `Extractor` hierarchy contains Transformer classes that take a `Stim`
+of any type as input and return extracted feature information (rather than
+another `Stim` instance).
+'''
 
 from .base import Extractor, ExtractorResult, merge_results
 from .api import (IndicoAPITextExtractor,

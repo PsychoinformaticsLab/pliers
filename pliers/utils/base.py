@@ -1,3 +1,5 @@
+''' Miscellaneous internal utilities. '''
+
 import collections
 import os
 from six import string_types
