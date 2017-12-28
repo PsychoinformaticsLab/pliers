@@ -127,13 +127,13 @@ class GoogleVisionAPITextConverter(GoogleVisionAPITransformer, ImageToTextConver
                 if self.handle_annotations == 'first':
                     text = annotations[0]['description']
                     texts.append(TextStim(text=text, onset=stim.onset,
-                                 duration=stim.duration))
+                                          duration=stim.duration))
                 elif self.handle_annotations == 'concatenate':
                     text = ''
                     for annotation in annotations:
                         text = ' '.join([text, annotation['description']])
                     texts.append(TextStim(text=text, onset=stim.onset,
-                                 duration=stim.duration))
+                                          duration=stim.duration))
                 elif self.handle_annotations == 'list':
                     for annotation in annotations:
                         texts.append(TextStim(text=annotation['description'],
@@ -142,6 +142,7 @@ class GoogleVisionAPITextConverter(GoogleVisionAPITransformer, ImageToTextConver
             elif 'error' in response:
                 raise Exception(response['error']['message'])
             else:
-                texts.append(TextStim(text='', onset=stim.onset, duration=stim.duration))
+                texts.append(TextStim(text='', onset=stim.onset,
+                                      duration=stim.duration))
 
         return texts

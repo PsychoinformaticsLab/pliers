@@ -82,6 +82,11 @@ class VideoFrameCollectionStim(Stim):
         return (f for f in self)
 
     def get_frame(self, index=None, onset=None):
+        ''' Get video frame at the specified index.
+        Args:
+            index (int): Positional index of the desired frame.
+            onset (float): Onset (in seconds) of the desired frame.
+        '''
         if onset:
             index = int(onset * self.fps)
 
@@ -89,7 +94,7 @@ class VideoFrameCollectionStim(Stim):
         onset = float(frame_num) / self.fps
 
         if index < self.n_frames - 1:
-            next_frame_num = self.frame_index[index+1]
+            next_frame_num = self.frame_index[index + 1]
             end = float(next_frame_num) / self.fps
         else:
             end = float(self.duration)
@@ -110,6 +115,12 @@ class VideoFrameCollectionStim(Stim):
         self._load_clip()
 
     def save(self, path):
+        ''' Save source video to file.
+        Args:
+            path (str): Filename to save to.
+        Notes: Saves entire source video to file, not just currently selected
+            frames.
+        '''
         # IMPORTANT WARNING: saves entire source video
         self.clip.write_videofile(path)
 
