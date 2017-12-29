@@ -102,8 +102,7 @@ class TokenizingFilter(TextFilter):
 
 
 class TokenRemovalFilter(TextFilter):
-
-    ''' Removes tokens (e.g. stopwords, common words, punctuation) from a
+    ''' Removes tokens (e.g., stopwords, common words, punctuation) from a
     TextStim.
 
     Args:

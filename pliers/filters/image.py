@@ -58,6 +58,8 @@ class PillowImageFilter(ImageFilter):
         image_filter (str or type or ImageFilter): specific name or type of the
             filter to be used, with supporting *args and **kwargs. Also
             accepted to directly pass an instance of PIL's ImageFilter.Filter
+        args, kwargs: Optional positional and keyword arguments passed onto
+            the pillow ImageFilter initializer.
     '''
 
     _log_attributes = ('filter',)

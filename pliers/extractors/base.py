@@ -11,7 +11,7 @@ from pliers.utils import isgenerator
 
 class Extractor(with_metaclass(ABCMeta, Transformer)):
 
-    ''' Base class for Converters.'''
+    ''' Base class for all pliers Extractors.'''
 
     def __init__(self):
         super(Extractor, self).__init__()

@@ -67,11 +67,14 @@ class Stim(with_metaclass(ABCMeta)):
         self._history = history
 
     def __hash__(self):
-        return hash((self.filename, self.name, self.onset, self.duration, self.history))
+        return hash((self.filename, self.name, self.onset, self.duration,
+                     self.history))
 
 
 def _get_stim_class(name):
-
+    # Takes a lowercase variable name (e.g., 'video' or 'complex_text') and
+    # attempts to map it to a valid pliers Stim class (e.g., VideoStim or
+    # ComplexTextStim).
     name = name.lower().replace('_', '')
 
     if not name.endswith('stim'):

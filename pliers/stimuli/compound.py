@@ -14,7 +14,7 @@ class CompoundStim(object):
 
     Args:
         elements (Stim or list): a single Stim (of any type) or a list of
-        elements.
+            elements.
     '''
 
     _allowed_types = None
