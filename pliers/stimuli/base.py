@@ -155,7 +155,7 @@ def load_stims(source, dtype=None, fail_silently=False):
 
 def _log_transformation(source, result, trans=None):
 
-    if result is None or not config.log_transformations or \
+    if result is None or not config.get_option('log_transformations') or \
             (trans is not None and not trans._loggable):
         return result
 
