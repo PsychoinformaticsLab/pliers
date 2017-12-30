@@ -34,6 +34,23 @@ def batch_iterable(l, n):
         piece = list(islice(i, n))
 
 
+def set_iterable_type(obj):
+    ''' Returns either a generator or a list depending on config-level
+    settings. Should be used to wrap almost every internal iterable return.
+    Also inspects elements recursively in the case of list returns, to
+    ensure that there are no nested generators. '''
+    if not isiterable(obj):
+        print("Not iterable--returning ", obj)
+        return obj
+
+    if config.use_generators:
+        print("Generators enabled! We shouldn't be here!")
+        return obj if isgenerator(obj) else (i for i in obj)
+    else:
+        print("No generators allowed! Returning a list!")
+        return [set_iterable_type(i) for i in obj]
+
+
 class classproperty(object):
     ''' Implements a @classproperty decorator analogous to @classmethod.
     Solution from: http://stackoverflow.com/questions/128573/using-property-on-classmethodss
