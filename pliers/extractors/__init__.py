@@ -26,7 +26,9 @@ from .google import (GoogleVisionAPIFaceExtractor,
                      GoogleVisionAPISafeSearchExtractor,
                      GoogleVisionAPIWebEntitiesExtractor)
 from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
-                    VibranceExtractor)
+                    VibranceExtractor, FaceRecognitionFaceEncodingsExtractor,
+                    FaceRecognitionFaceLandmarksExtractor,
+                    FaceRecognitionFaceLocationsExtractor)
 from .models import TensorFlowInceptionV3Extractor
 from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
@@ -66,6 +68,9 @@ __all__ = [
     'SaliencyExtractor',
     'SharpnessExtractor',
     'VibranceExtractor',
+    'FaceRecognitionFaceEncodingExtractor',
+    'FaceRecognitionFaceLandmarksExtractor',
+    'FaceRecognitionFaceLocationsExtractor',
     'TensorFlowInceptionV3Extractor',
     'ComplexTextExtractor',
     'DictionaryExtractor',

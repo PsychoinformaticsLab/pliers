@@ -4,10 +4,14 @@ Extractors that operate primarily or exclusively on Image stimuli.
 
 from pliers.stimuli.image import ImageStim
 from pliers.extractors.base import Extractor, ExtractorResult
-from pliers.utils import attempt_to_import, verify_dependencies
+from pliers.utils import attempt_to_import, verify_dependencies, listify
 import numpy as np
+import pandas as pd
+from functools import partial
+
 
 cv2 = attempt_to_import('cv2')
+face_recognition = attempt_to_import('face_recognition')
 
 
 class ImageExtractor(Extractor):
@@ -91,3 +95,53 @@ class SaliencyExtractor(ImageExtractor):
 
         return ExtractorResult(np.array([list(output.values())]), stim, self,
                                features=list(output.keys()))
+
+
+class FaceRecognitionFeatureExtractor(ImageExtractor):
+
+    _log_attributes = ('face_recognition_kwargs',)
+
+    def __init__(self, **face_recognition_kwargs):
+        verify_dependencies(['face_recognition'])
+
+        self.face_recognition_kwargs = face_recognition_kwargs
+        func = getattr(face_recognition.api, self._feature)
+        self.func = partial(func, **face_recognition_kwargs)
+
+        super(FaceRecognitionFeatureExtractor, self).__init__()
+
+    def get_feature_names(self):
+        return self._feature
+
+    def _extract(self, stim):
+        values = self.func(stim.data)
+        # Needed in order to make sure that the ExtractorResult's to_df()
+        # method doesn't expand each list element (an array) into multiple
+        # columns.
+        values = [[v] for v in values]
+        feature_names = listify(self.get_feature_names())
+        return ExtractorResult(values, stim, self, features=feature_names)
+
+
+class FaceRecognitionFaceEncodingsExtractor(FaceRecognitionFeatureExtractor):
+    ''' Uses the face_recognition package to extract a 128-dimensional encoding
+    for every face detected in an image. For details, see documentation for
+    face_recognition.api.face_encodings. '''
+
+    _feature = 'face_encodings'
+
+
+class FaceRecognitionFaceLandmarksExtractor(FaceRecognitionFeatureExtractor):
+    ''' Uses the face_recognition package to extract the locations of named
+    features of faces in the image. For details, see documentation for
+    face_recognition.api.face_landmarks.'''
+
+    _feature = 'face_landmarks'
+
+
+class FaceRecognitionFaceLocationsExtractor(FaceRecognitionFeatureExtractor):
+    ''' Uses the face_recognition package to extract bounding boxes for all
+    faces in an image. For details, see documentation for
+    face_recognition.api.face_locations. '''
+
+    _feature = 'face_locations'

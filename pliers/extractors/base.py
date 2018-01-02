@@ -50,7 +50,7 @@ class ExtractorResult(object):
             durations = stim.duration
         self.durations = durations if durations is not None else np.nan
 
-    def to_df(self, metadata=False):
+    def to_df(self, timing=True, metadata=False):
         df = pd.DataFrame(self.data)
         if self.features is not None:
             # Handle duplicate features
@@ -63,8 +63,9 @@ class ExtractorResult(object):
                 else:
                     features.append(f)
             df.columns = features
-        df.insert(0, 'duration', self.durations)
-        df.insert(0, 'onset', self.onsets)
+        if timing:
+            df.insert(0, 'duration', self.durations)
+            df.insert(0, 'onset', self.onsets)
         if metadata:
             df['stim_name'] = self.stim.name
             df['class'] = self.stim.__class__.__name__
