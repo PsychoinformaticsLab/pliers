@@ -1,3 +1,5 @@
+from .graph import Graph
+
 __all__ = [
     'config',
     'graph',
@@ -10,5 +12,6 @@ __all__ = [
     'extractors',
     'filters',
     'stimuli',
-    'support'
+    'support',
+    'Graph'
 ]

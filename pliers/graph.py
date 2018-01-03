@@ -72,15 +72,17 @@ class Graph(object):
         Args:
             nodes (list): A list of nodes to add. Each element must be one of
                 the following:
+
                 * A dict containing keyword args to pass onto to the Node init.
                 * An iterable containing 1 - 3 elements. The first element is
-                    mandatory, and specifies the Transformer at that node. The
-                    second element (optional) is an iterable of child nodes
-                    (specified in the same format). The third element
-                    (optional) is a string giving the (unique) name of the
-                    node.
+                  mandatory, and specifies the Transformer at that node. The
+                  second element (optional) is an iterable of child nodes
+                  (specified in the same format). The third element
+                  (optional) is a string giving the (unique) name of the
+                  node.
                 * A Node instance.
                 * A Transformer instance.
+
             parent (Node): Optional parent node (i.e., the node containing the
                 pliers Transformer from which the to-be-created nodes receive
                 their inputs).
