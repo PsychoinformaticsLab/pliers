@@ -25,7 +25,6 @@ before_install:
 - sudo apt-get -qq update
 - sudo apt-get install ffmpeg tesseract-ocr graphviz
 
-
 - export MINICONDA=$HOME/miniconda
 - export PATH="$MINICONDA/bin:$PATH"
 - wget $MINICONDA_URL -O miniconda.sh;
@@ -47,6 +46,7 @@ install:
 - pip install SpeechRecognition IndicoIo pygraphviz sklearn python-twitter gensim google-compute-engine librosa
 
 before_script:
+  - sudo apt-get install libboost-all-dev
   - python -m pliers.support.download
 
 script:

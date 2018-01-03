@@ -109,8 +109,9 @@ class ExtractorResult(object):
                 else:
                     features.append(f)
             df.columns = features
-        df.insert(0, 'duration', self.durations)
-        df.insert(0, 'onset', self.onsets)
+        if timing:
+            df.insert(0, 'duration', self.durations)
+            df.insert(0, 'onset', self.onsets)
         if metadata:
             df['stim_name'] = self.stim.name
             df['class'] = self.stim.__class__.__name__
