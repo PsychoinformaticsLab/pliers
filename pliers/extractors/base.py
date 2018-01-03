@@ -6,7 +6,7 @@ from six import with_metaclass
 import pandas as pd
 import numpy as np
 from pliers.transformers import Transformer
-from pliers.utils import isgenerator
+from pliers.utils import isgenerator, flatten
 
 
 class Extractor(with_metaclass(ABCMeta, Transformer)):
@@ -185,6 +185,9 @@ def merge_results(results, **merge_feature_args):
     Returns: a pandas DataFrame with features concatenated along the column
         axis and stims concatenated along the row axis.
     '''
+
+    # Flatten list recursively
+    results = flatten(results)
 
     stims = defaultdict(list)
 
