@@ -47,16 +47,32 @@ class ExtractorResult(object):
             rows in data. Length must match the input data.
         durations (list, ndarray): Optional iterable giving the durations
             associated with the rows in data.
-
+        payload: The raw result (net of any containers or overhead) returned by
+            the underlying feature extraction tool. Can be an object of any
+            type.
     '''
 
     def __init__(self, data, stim, extractor, features=None, onsets=None,
-                 durations=None):
-        self.data = np.array(data)
+                 durations=None, payload=None):
+
+        if data is None and payload is None:
+            raise ValueError("At least one of 'data' and 'payload' must be a "
+                             "value other than None.")
+
+        self.stim = stim
         self.extractor = extractor
         self.features = features
+        self.payload = payload
         self._history = None
-        self.stim = stim
+
+        # Eventually, the goal is to make payload mandatory, and always
+        # generate the .data property via calls to to_array() or to_df()
+        # implemented in the Extractor. But to avoid breaking the API without
+        # warning, we provide a backward-compatible version for the time being.
+        if self.payload is not None and hasattr(self.extractor, 'to_array'):
+            self.data = self.extractor.to_array(self.payload)
+        else:
+            self.data = np.array(self.data)
 
         if onsets is None:
             onsets = stim.onset
@@ -76,7 +92,12 @@ class ExtractorResult(object):
         Returns:
             A pandas DataFrame.
         '''
-        df = pd.DataFrame(self.data)
+
+        if hasattr(self.extractor, 'to_df'):
+            df = self.extractor.to_df(self.data)
+        else:
+            df = pd.DataFrame(self.data)
+
         if self.features is not None:
             # Handle duplicate features
             counts = defaultdict(int)
