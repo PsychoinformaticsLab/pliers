@@ -4,7 +4,10 @@ from pliers.extractors import (BrightnessExtractor,
                                SharpnessExtractor,
                                VibranceExtractor,
                                SaliencyExtractor,
-                               TensorFlowInceptionV3Extractor)
+                               TensorFlowInceptionV3Extractor,
+                               FaceRecognitionFaceLandmarksExtractor,
+                               FaceRecognitionFaceLocationsExtractor,
+                               FaceRecognitionFaceEncodingsExtractor)
 from pliers.stimuli import ImageStim
 from pliers.extractors.base import merge_results
 import numpy as np
@@ -63,3 +66,44 @@ def test_tensor_flow_inception_v3_extractor():
         ('TensorFlowInceptionV3Extractor', 'Windsor tie')].values
     assert 4.2 in df[('onset', '')].values
     assert 1 in df[('duration', '')].values
+
+
+def test_face_recognition_landmarks_extractor():
+    ext = FaceRecognitionFaceLandmarksExtractor()
+    imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'thai_people.jpg',
+                                         'obama.jpg']]
+    result = ext.transform(imgs)
+    dfs = [r.to_df(timing=False) for r in result]
+    assert dfs[0].empty
+    assert dfs[1].shape == (1, 36)
+    assert dfs[2].shape == (1, 9)
+    assert 'face_landmarks_nose_tip' in dfs[2].columns
+    assert 'face_landmarks_nose_tip_3' in dfs[1].columns
+    assert dfs[1].loc[0, 'face_landmarks_left_eyebrow_4'] == result[1].raw[3]['left_eyebrow']
+
+
+def test_face_recognition_encodings_extractor():
+    ext = FaceRecognitionFaceEncodingsExtractor()
+    imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'thai_people.jpg',
+                                         'obama.jpg']]
+    result = ext.transform(imgs)
+    dfs = [r.to_df(timing=False) for r in result]
+    assert dfs[0].empty
+    assert dfs[1].iloc[0, 0].shape == (128,)
+    assert dfs[2].iloc[0, 0].shape == (128,)
+    assert 'face_encodings_2' in dfs[1].columns
+    assert 'face_encodings' in dfs[2].columns
+
+
+def test_face_recognition_locations_extractor():
+    ext = FaceRecognitionFaceLocationsExtractor()
+    imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'thai_people.jpg',
+                                         'obama.jpg']]
+    result = ext.transform(imgs)
+    dfs = [r.to_df(timing=False) for r in result]
+    assert dfs[0].empty
+    assert isinstance(dfs[1].iloc[0, 0], tuple)
+    assert len(dfs[1].iloc[0, 0]) == 4
+    assert len(dfs[2].iloc[0, 0]) == 4
+    assert 'face_locations_2' in dfs[1].columns
+    assert 'face_locations' in dfs[2].columns
