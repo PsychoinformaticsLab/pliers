@@ -5,7 +5,7 @@ from pliers.stimuli.base import Stim, _log_transformation, load_stims
 from pliers.stimuli.compound import CompoundStim
 from pliers.utils import (progress_bar_wrapper, isiterable,
                           isgenerator, listify, batch_iterable,
-                          attempt_to_import)
+                          attempt_to_import, set_iterable_type)
 import pliers
 from six import with_metaclass, string_types
 from abc import ABCMeta, abstractmethod, abstractproperty
@@ -104,7 +104,8 @@ class Transformer(with_metaclass(ABCMeta)):
             iters = self._iterate(stims, *args, **kwargs)
             if config.get_option('drop_bad_extractor_results'):
                 iters = (i for i in iters if i is not None)
-            return progress_bar_wrapper(iters, desc='Stim')
+            iters = progress_bar_wrapper(iters, desc='Stim')
+            return set_iterable_type(iters)
 
         # Validate stim, and then either pass it directly to the Transformer
         # or, if a conversion occurred, recurse.
