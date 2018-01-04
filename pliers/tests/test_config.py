@@ -45,12 +45,12 @@ def test_set_option():
     reset_options(False)
     opts = pliers.config._settings
 
-    pliers.config.set_option(n_jobs=100, progress_bar=True)
+    pliers.config.set_options(n_jobs=100, progress_bar=True)
     assert opts['n_jobs'] == 100
     assert opts['progress_bar']
 
     with pytest.raises(ValueError):
-        pliers.config.set_option(bad_key=False)
+        pliers.config.set_option('bad_key', False)
 
     reset_options(False)
 

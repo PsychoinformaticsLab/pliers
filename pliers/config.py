@@ -27,11 +27,15 @@ _default_settings = {
 }
 
 
-def set_option(**kwargs):
+def set_option(key, value):
+    if key not in _settings:
+        raise ValueError("Invalid pliers setting: '%s'" % key)
+    _settings[key] = value
+
+
+def set_options(**kwargs):
     for k, v in kwargs.items():
-        if k not in _settings:
-            raise ValueError("Invalid pliers setting: '%s'" % k)
-        _settings[k] = v
+        set_option(k, v)
 
 
 def get_option(key):
