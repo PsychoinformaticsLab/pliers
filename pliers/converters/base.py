@@ -41,18 +41,22 @@ def get_converter(in_type, out_type, *args, **kwargs):
     # If config includes default converters for this combination, try them
     # first
     out_type = listify(out_type)[::-1]
+    default_convs = config.get_option('default_converters')
+
     for ot in out_type:
         conv_str = '%s->%s' % (in_type.__name__, ot.__name__)
-        if conv_str in config.default_converters:
-            convs = list(config.default_converters[conv_str]) + convs
+        if conv_str in default_convs:
+            convs = list(default_convs[conv_str]) + convs
 
     for name in convs:
         cls = getattr(pliers.converters, name)
         if not issubclass(cls, Converter):
             continue
 
-        available = cls.available if issubclass(cls, EnvironmentKeyMixin) else True
-        if cls._input_type == in_type and cls._output_type in out_type and available:
+        available = cls.available if issubclass(
+            cls, EnvironmentKeyMixin) else True
+        if cls._input_type == in_type and cls._output_type in out_type \
+                and available:
             conv = cls(*args, **kwargs)
             return conv
 

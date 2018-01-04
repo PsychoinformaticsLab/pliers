@@ -1,6 +1,10 @@
+from .config import set_option, get_option
+
 
 __all__ = [
-    'config',
+    'config'
+    'set_option',
+    'get_option',
     'export',
     'google',
     'graph',
