@@ -42,14 +42,11 @@ def set_iterable_type(obj):
     Also inspects elements recursively in the case of list returns, to
     ensure that there are no nested generators. '''
     if not isiterable(obj):
-        print("Not iterable--returning ", obj)
         return obj
 
-    if config.use_generators:
-        print("Generators enabled! We shouldn't be here!")
+    if config.get_option('use_generators'):
         return obj if isgenerator(obj) else (i for i in obj)
     else:
-        print("No generators allowed! Returning a list!")
         return [set_iterable_type(i) for i in obj]
 
 
