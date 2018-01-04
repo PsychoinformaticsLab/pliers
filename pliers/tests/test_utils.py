@@ -17,18 +17,18 @@ def test_progress_bar(capfd):
     conv = FrameSamplingFilter(hertz=2)
 
     old_val = config.get_option('progress_bar')
-    config.set_option(progress_bar=True)
+    config.set_option('progress_bar', True)
 
     derived = conv.transform(video)
     out, err = capfd.readouterr()
     assert 'Video frame:' in err and '100%' in err
 
-    config.set_option(progress_bar=False)
+    config.set_option('progress_bar', False)
     derived = conv.transform(video)
     out, err = capfd.readouterr()
     assert 'Video frame:' not in err and '100%' not in err
 
-    config.set_option(progress_bar=old_val)
+    config.set_option('progress_bar', old_val)
 
 
 def test_batch_iterable():

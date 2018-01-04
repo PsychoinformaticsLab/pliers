@@ -46,15 +46,15 @@ def test_parallelization():
     ext = BrightnessExtractor()
 
     # With parallelization
-    config.set_option(parallelize=True)
+    config.set_option('parallelize', True)
     result1 = ext.transform(video)
 
     # Without parallelization
-    config.set_option(parallelize=False)
+    config.set_option('parallelize', False)
     result2 = ext.transform(video)
 
     assert result1 == result2
-    config.set_option(parallelize=default)
+    config.set_option('parallelize', default)
 
 
 def test_batch_transformer():

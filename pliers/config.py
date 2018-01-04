@@ -6,6 +6,7 @@ from os.path import join, expanduser, exists
 import os
 from six import string_types
 
+__all__ = ['set_option', 'set_options', 'get_option']
 
 _config_name = 'pliers_config.json'
 
