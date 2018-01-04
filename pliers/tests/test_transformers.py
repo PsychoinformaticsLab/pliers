@@ -39,22 +39,22 @@ def test_parallelization():
     # TODO: test that parallelization actually happened (this will likely
     # require some new logging functionality, or introspection). For now we
     # just make sure the parallelized version produces the same result.
-    default = config.parallelize
+    default = config.get_option('parallelize')
 
     filename = join(get_test_data_path(), 'video', 'small.mp4')
     video = VideoStim(filename)
     ext = BrightnessExtractor()
 
     # With parallelization
-    config.parallelize = True
+    config.set_option('parallelize', True)
     result1 = ext.transform(video)
 
     # Without parallelization
-    config.parallelize = False
+    config.set_option('parallelize', False)
     result2 = ext.transform(video)
 
     assert result1 == result2
-    config.parallelize = default
+    config.set_option('parallelize', default)
 
 
 def test_batch_transformer():

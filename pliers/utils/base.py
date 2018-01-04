@@ -79,8 +79,8 @@ def isgenerator(obj):
 def progress_bar_wrapper(iterable, **kwargs):
     ''' Wrapper that applies tqdm progress bar conditional on config settings.
     '''
-    return tqdm(iterable, **kwargs) if (config.progress_bar and
-        not isinstance(iterable, tqdm)) else iterable
+    return tqdm(iterable, **kwargs) if (config.get_option('progress_bar')
+        and not isinstance(iterable, tqdm)) else iterable
 
 
 module_names = {}

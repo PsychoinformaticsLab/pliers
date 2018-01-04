@@ -16,19 +16,19 @@ def test_progress_bar(capfd):
     video = VideoStim(join(video_dir, 'obama_speech.mp4'))
     conv = FrameSamplingFilter(hertz=2)
 
-    old_val = config.progress_bar
-    config.progress_bar = True
+    old_val = config.get_option('progress_bar')
+    config.set_option('progress_bar', True)
 
     derived = conv.transform(video)
     out, err = capfd.readouterr()
     assert 'Video frame:' in err and '100%' in err
 
-    config.progress_bar = False
+    config.set_option('progress_bar', False)
     derived = conv.transform(video)
     out, err = capfd.readouterr()
     assert 'Video frame:' not in err and '100%' not in err
 
-    config.progress_bar = old_val
+    config.set_option('progress_bar', old_val)
 
 
 def test_batch_iterable():

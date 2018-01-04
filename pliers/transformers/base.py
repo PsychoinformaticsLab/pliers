@@ -46,7 +46,8 @@ class Transformer(with_metaclass(ABCMeta)):
     def _memoize(transform):
         @wraps(transform)
         def wrapper(self, stim, *args, **kwargs):
-            use_cache = config.cache_transformers and isinstance(stim, Stim)
+            use_cache = config.get_option('cache_transformers') \
+                and isinstance(stim, Stim)
             if use_cache:
                 key = hash((hash(self), hash(stim)))
                 if key in _cache:
@@ -101,7 +102,7 @@ class Transformer(with_metaclass(ABCMeta)):
         # invalid results if needed
         if isiterable(stims):
             iters = self._iterate(stims, *args, **kwargs)
-            if config.drop_bad_extractor_results:
+            if config.get_option('drop_bad_extractor_results'):
                 iters = (i for i in iters if i is not None)
             return progress_bar_wrapper(iters, desc='Stim')
 
@@ -171,10 +172,13 @@ class Transformer(with_metaclass(ABCMeta)):
 
     def _iterate(self, stims, *args, **kwargs):
 
-        if config.parallelize and multiprocessing is not None:
+        if config.get_option('parallelize') and multiprocessing is not None:
+
             def _transform(s):
                 return self.transform(s, *args, **kwargs)
-            return multiprocessing.ProcessingPool(config.n_jobs) \
+
+            n_jobs = config.get_option('n_jobs')
+            return multiprocessing.ProcessingPool(n_jobs) \
                 .map(_transform, stims)
 
         return (t for t in (self.transform(s, *args, **kwargs)
