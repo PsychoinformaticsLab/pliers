@@ -115,12 +115,15 @@ class FaceRecognitionFeatureExtractor(ImageExtractor):
 
     def _extract(self, stim):
         values = self.func(stim.data)
-        # Needed in order to make sure that the ExtractorResult's to_df()
-        # method doesn't expand each list element (an array) into multiple
-        # columns.
-        values = [[v] for v in values]
         feature_names = listify(self.get_feature_names())
-        return ExtractorResult(values, stim, self, features=feature_names)
+        return ExtractorResult(values, stim, self, features=feature_names,
+                               raw=values)
+
+    def to_df(self, result):
+        n_faces = len(result.raw)
+        cols = [self._feature] if n_faces == 1 else \
+            ['%s_%d' % (self._feature, i) for i in range(1, n_faces + 1)]
+        return pd.Series(result.raw, index=cols).to_frame().T
 
 
 class FaceRecognitionFaceEncodingsExtractor(FaceRecognitionFeatureExtractor):
@@ -137,6 +140,18 @@ class FaceRecognitionFaceLandmarksExtractor(FaceRecognitionFeatureExtractor):
     face_recognition.api.face_landmarks.'''
 
     _feature = 'face_landmarks'
+
+    def to_df(self, result):
+        n_faces = len(result.raw)
+        columns = [self._feature + '_%s'] if n_faces == 1 else \
+            ['%s_%%s_%d' % (self._feature, i) for i in range(1, n_faces + 1)]
+        data = []
+        index = []
+        for i, face in enumerate(result.raw):
+            for k, v in face.items():
+                data.append(v)
+                index.append(columns[i] % k)
+        return pd.Series(data, index=index).to_frame().T
 
 
 class FaceRecognitionFaceLocationsExtractor(FaceRecognitionFeatureExtractor):
