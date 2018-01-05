@@ -51,15 +51,16 @@ If the above is placed in a ``pliers_config.json`` file in one's home directory,
 
 At run-time
 ~~~~~~~~~~~
-Package options can also be changed dynamically, via the ``.get_option()`` and ``.set_option()`` accessors:
+Package options can also be changed dynamically, via the ``.get_option()`` and ``.set_option()`` (or, for multiple options, ``.set_options()``) accessors:
 
 ::
 
 	>>> import pliers as pl
 	>>> pl.get_option('use_generators')
 	'False'
-
-	>>> pl.set_option(use_generators=True, progress_bar=False)
+	>>> pl.set_option('use_generators', True)
+	# Or...
+	>>> pl.set_options(use_generators=True, progress_bar=False)
 
 Option details
 --------------

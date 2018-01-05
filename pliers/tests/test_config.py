@@ -5,6 +5,7 @@ import json
 import pytest
 from pliers.config import reset_options
 
+
 def test_load_from_standard_paths():
 
     # Verify defaults
@@ -27,9 +28,7 @@ def test_load_from_standard_paths():
     json.dump(cwd_config, open(target, 'w'))
 
     reset_options(True)
-
     os.unlink(target)
-
     opts = pliers.config._settings
 
     assert opts['n_jobs'] == 200
@@ -40,7 +39,6 @@ def test_load_from_standard_paths():
 
 
 def test_set_option():
-
 
     reset_options(False)
     opts = pliers.config._settings
@@ -56,6 +54,5 @@ def test_set_option():
 
 
 def test_get_option():
-
     reset_options(False)
     assert not pliers.config.get_option('parallelize')
