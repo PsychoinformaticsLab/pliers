@@ -59,7 +59,7 @@ At present, pliers implements several dozen |Extractor| classes that span a wide
   SpectralRolloffExtractor
   STFTAudioExtractor
   TempogramExtractor
-	TonnetzExtractor
+  TonnetzExtractor
   ZeroCrossingRateExtractor
 
 
@@ -71,6 +71,9 @@ At present, pliers implements several dozen |Extractor| classes that span a wide
 
   BrightnessExtractor
   ClarifaiAPIExtractor
+  FaceRecognitionFaceEncodingsExtractor
+  FaceRecognitionFaceLandmarksExtractor
+  FaceRecognitionFaceLocationsExtractor
   GoogleVisionAPIFaceExtractor
   GoogleVisionAPILabelExtractor
   GoogleVisionAPIPropertyExtractor

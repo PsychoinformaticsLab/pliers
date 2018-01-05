@@ -146,6 +146,9 @@ Extractors (:mod:`pliers.extractors`)
 
   BrightnessExtractor
   ClarifaiAPIExtractor
+  FaceRecognitionFaceEncodingsExtractor
+  FaceRecognitionFaceLandmarksExtractor
+  FaceRecognitionFaceLocationsExtractor
   GoogleVisionAPIFaceExtractor
   GoogleVisionAPILabelExtractor
   GoogleVisionAPIPropertyExtractor
