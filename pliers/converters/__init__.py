@@ -1,3 +1,7 @@
+''' The `Converter` hierarchy contains Transformer classes that take a `Stim`
+of one type as input and return a `Stim` of a different type as output.
+'''
+
 from .api import (WitTranscriptionConverter,
                   IBMSpeechAPIConverter)
 from .base import Converter, get_converter

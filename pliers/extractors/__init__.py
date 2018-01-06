@@ -1,4 +1,7 @@
-''' Extractor hierarchy. '''
+''' The `Extractor` hierarchy contains Transformer classes that take a `Stim`
+of any type as input and return extracted feature information (rather than
+another `Stim` instance).
+'''
 
 from .base import Extractor, ExtractorResult, merge_results
 from .api import (IndicoAPITextExtractor,
@@ -26,7 +29,9 @@ from .google import (GoogleVisionAPIFaceExtractor,
                      GoogleVisionAPISafeSearchExtractor,
                      GoogleVisionAPIWebEntitiesExtractor)
 from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
-                    VibranceExtractor)
+                    VibranceExtractor, FaceRecognitionFaceEncodingsExtractor,
+                    FaceRecognitionFaceLandmarksExtractor,
+                    FaceRecognitionFaceLocationsExtractor)
 from .models import TensorFlowInceptionV3Extractor
 from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
@@ -66,6 +71,9 @@ __all__ = [
     'SaliencyExtractor',
     'SharpnessExtractor',
     'VibranceExtractor',
+    'FaceRecognitionFaceEncodingExtractor',
+    'FaceRecognitionFaceLandmarksExtractor',
+    'FaceRecognitionFaceLocationsExtractor',
     'TensorFlowInceptionV3Extractor',
     'ComplexTextExtractor',
     'DictionaryExtractor',

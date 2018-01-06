@@ -18,6 +18,7 @@ class ImageFilter(Filter):
 class ImageCroppingFilter(ImageFilter):
 
     ''' Crops an image.
+
     Args:
         box (tuple): a 4-length tuple containing the left, upper, right, and
             lower coordinates for the desired region of the image. If none is
@@ -57,6 +58,8 @@ class PillowImageFilter(ImageFilter):
         image_filter (str or type or ImageFilter): specific name or type of the
             filter to be used, with supporting *args and **kwargs. Also
             accepted to directly pass an instance of PIL's ImageFilter.Filter
+        args, kwargs: Optional positional and keyword arguments passed onto
+            the pillow ImageFilter initializer.
     '''
 
     _log_attributes = ('filter',)

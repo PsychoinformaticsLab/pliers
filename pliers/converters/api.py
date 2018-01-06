@@ -19,6 +19,7 @@ class SpeechRecognitionAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
 
     ''' Uses the SpeechRecognition API, which interacts with several APIs,
     like Google and Wit, to run speech-to-text transcription on an audio file.
+
     Args:
         api_key (str): API key. Must be passed explicitly or stored in
             the environment variable specified in the _env_keys field.

@@ -6,7 +6,7 @@ import numpy as np
 from os.path import join
 from pliers.extractors import BrightnessExtractor, SharpnessExtractor
 from pliers.graph import Graph
-from pliers.scikit import PliersTransformer
+from pliers.utils.scikit import PliersTransformer
 from pliers.stimuli import ImageStim
 
 

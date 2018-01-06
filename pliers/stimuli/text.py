@@ -11,6 +11,7 @@ from .base import Stim
 class TextStim(Stim):
 
     ''' Any simple text stimulus--most commonly a single word.
+
     Args:
         filename (str): Path to input file, if one exists.
         text (str): Text value to store. If none is provided, value is read
@@ -23,7 +24,8 @@ class TextStim(Stim):
 
     _default_file_extension = '.txt'
 
-    def __init__(self, filename=None, text=None, onset=None, duration=None, url=None):
+    def __init__(self, filename=None, text=None, onset=None, duration=None,
+                 url=None):
         if filename is not None and text is None:
             text = open(filename).read()
         if url is not None:
@@ -45,6 +47,7 @@ class ComplexTextStim(Stim):
 
     ''' A collection of text stims (e.g., a story), typically ordered and with
     onsets and/or durations associated with each element.
+
     Args:
         filename (str): The filename to read from. Must be tab-delimited text.
             Files must always contain a column containing the text of each
@@ -73,7 +76,8 @@ class ComplexTextStim(Stim):
             ComplexTextStim. If both the filename and elements arguments are
             passed, the TextStims in elements will be appended to the ones
             extracted from the file.
-        text (str): Optional multi-token string to convert to a ComplexTextStim.
+        text (str): Optional multi-token string to convert to a
+            ComplexTextStim.
         unit (str): The unit of segmentation. Either 'word' or 'sentence'.
             Ignored if text is None.
         tokenizer: Optional tokenizer to use if initializing from text. If

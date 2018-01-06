@@ -1,3 +1,5 @@
+''' Stimuli that are inherently associated with remote resources. '''
+
 import os
 
 from .base import load_stims

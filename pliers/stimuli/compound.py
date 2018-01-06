@@ -11,9 +11,10 @@ from .text import ComplexTextStim
 class CompoundStim(object):
 
     ''' A container for an arbitrary set of Stim elements.
+
     Args:
         elements (Stim or list): a single Stim (of any type) or a list of
-        elements.
+            elements.
     '''
 
     _allowed_types = None
@@ -55,11 +56,13 @@ class CompoundStim(object):
 
     def get_stim(self, type_, return_all=False):
         ''' Returns component elements of the specified type.
+
         Args:
             type_ (str or Stim class): the desired Stim subclass to return.
             return_all (bool): when True, returns all elements that matched the
                 specified type as a list. When False (default), returns only
                 the first matching Stim.
+
         Returns:
             If return_all is True, a list of matching elements (or an empty
             list if no elements match). If return_all is False, returns the
@@ -84,11 +87,13 @@ class CompoundStim(object):
     def has_types(self, types, all_=True):
         ''' Check whether the current component list matches all Stim types
         in the types argument.
+
         Args:
             types (Stim, list): a Stim class or iterable of Stim classes.
             all_ (bool): if True, all input types must match; if False, at
                 least one input type must match.
-        Return:
+
+        Returns:
             True if all passed types match at least one Stim in the component
             list, otherwise False.
         '''
@@ -106,6 +111,7 @@ class CompoundStim(object):
 class TranscribedAudioCompoundStim(CompoundStim):
 
     ''' An AudioStim with an associated text transcription.
+
     Args:
         filename (str): The path to the audio clip.
         audio (AudioStim): An AudioStim containing the audio content.
