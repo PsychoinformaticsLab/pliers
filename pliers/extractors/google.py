@@ -1,7 +1,7 @@
 ''' Google API-based feature extraction classes. '''
 
 from pliers.extractors.image import ImageExtractor
-from pliers.google import GoogleVisionAPITransformer
+from pliers.transformers import GoogleVisionAPITransformer
 from pliers.extractors.base import ExtractorResult
 import numpy as np
 

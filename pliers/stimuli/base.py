@@ -1,4 +1,4 @@
-''' Base class for all Stimuli and associated functionality. '''
+''' Base class for all Stims and associated functionality. '''
 
 
 from abc import ABCMeta, abstractmethod
@@ -19,6 +19,7 @@ import tempfile
 class Stim(with_metaclass(ABCMeta)):
 
     ''' Base class for all classes in the Stim hierarchy.
+
     Args:
         filename (str): Path to input file, if one exists.
         onset (float): Optional onset of the Stim (in seconds) with
@@ -47,6 +48,7 @@ class Stim(with_metaclass(ABCMeta)):
 
     @contextmanager
     def get_filename(self):
+        ''' Return the source filename of the current Stim. '''
         if self.filename is None or not os.path.exists(self.filename):
             tf = tempfile.mktemp() + self._default_file_extension
             self.save(tf)
@@ -57,6 +59,7 @@ class Stim(with_metaclass(ABCMeta)):
 
     @property
     def history(self):
+        ''' Return stimulus history. '''
         return self._history
 
     @history.setter
@@ -64,11 +67,14 @@ class Stim(with_metaclass(ABCMeta)):
         self._history = history
 
     def __hash__(self):
-        return hash((self.filename, self.name, self.onset, self.duration, self.history))
+        return hash((self.filename, self.name, self.onset, self.duration,
+                     self.history))
 
 
 def _get_stim_class(name):
-
+    # Takes a lowercase variable name (e.g., 'video' or 'complex_text') and
+    # attempts to map it to a valid pliers Stim class (e.g., VideoStim or
+    # ComplexTextStim).
     name = name.lower().replace('_', '')
 
     if not name.endswith('stim'):
@@ -87,6 +93,7 @@ def _get_stim_class(name):
 def load_stims(source, dtype=None, fail_silently=False):
     """ Load one or more stimuli directly from file, inferring/extracting
     metadata as needed.
+
     Args:
         source (str or list): The location to load the stim(s) from. Can be
             the path to a directory, to a single file, or a list of filenames.
@@ -95,6 +102,7 @@ def load_stims(source, dtype=None, fail_silently=False):
             one of 'video', 'image', 'audio', or 'text'.
         fail_silently (bool): If True do not raise error when trying to load a
             missing stimulus from a list of sources.
+
     Returns: A list of Stims.
     """
     from .video import VideoStim, ImageStim
@@ -155,7 +163,7 @@ def load_stims(source, dtype=None, fail_silently=False):
 
 def _log_transformation(source, result, trans=None):
 
-    if result is None or not config.log_transformations or \
+    if result is None or not config.get_option('log_transformations') or \
             (trans is not None and not trans._loggable):
         return result
 

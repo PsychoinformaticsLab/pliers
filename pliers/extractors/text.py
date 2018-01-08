@@ -47,6 +47,7 @@ class DictionaryExtractor(TextExtractor):
 
     ''' A generic dictionary-based extractor that supports extraction of
     arbitrary features contained in a lookup table.
+
     Args:
         dictionary (str, DataFrame): The dictionary containing the feature
             values. Either a string giving the path to the dictionary file,
@@ -92,6 +93,7 @@ class PredefinedDictionaryExtractor(DictionaryExtractor):
 
     ''' A generic Extractor that maps words onto values via one or more
     pre-defined dictionaries accessed via the web.
+
     Args:
         variables (list or dict): A specification of the dictionaries and
             column names to map the input TextStims onto. If a list, each
@@ -200,7 +202,8 @@ class PartOfSpeechExtractor(BatchTransformerMixin, TextExtractor):
         for i, s in enumerate(stims):
             pos_vector = dict.fromkeys(tagset, 0)
             pos_vector[pos[i][1]] = 1
-            results.append(ExtractorResult([pos_vector.values()], s, self,
+            values = [list(pos_vector.values())]
+            results.append(ExtractorResult(values, s, self,
                                            features=list(pos_vector.keys())))
 
         return results
@@ -224,8 +227,7 @@ class WordEmbeddingExtractor(TextExtractor):
     def __init__(self, embedding_file, binary=False,
                  prefix='embedding_dim'):
         verify_dependencies(['keyedvectors'])
-        self.wvModel = keyedvectors.KeyedVectors.load_word2vec_format(embedding_file,
-                                                                      binary=binary)
+        self.wvModel = keyedvectors.KeyedVectors.load_word2vec_format(embedding_file, binary=binary)
         self.prefix = prefix
         super(WordEmbeddingExtractor, self).__init__()
 
@@ -262,7 +264,8 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
         if isinstance(vectorizer, sklearn_text.VectorizerMixin):
             self.vectorizer = vectorizer
         elif isinstance(vectorizer, str):
-            self.vectorizer = getattr(sklearn_text, vectorizer)(*args, **kwargs)
+            vec = getattr(sklearn_text, vectorizer)
+            self.vectorizer = vec(*args, **kwargs)
         else:
             self.vectorizer = sklearn_text.CountVectorizer(*args, **kwargs)
         super(TextVectorizerExtractor, self).__init__()
@@ -271,8 +274,9 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
         mat = self.vectorizer.fit_transform([s.text for s in stims]).toarray()
         results = []
         for i, row in enumerate(mat):
-            results.append(ExtractorResult([row], stims[i], self,
-                           features=self.vectorizer.get_feature_names()))
+            results.append(
+                ExtractorResult([row], stims[i], self,
+                                features=self.vectorizer.get_feature_names()))
         return results
 
 
@@ -293,5 +297,5 @@ class VADERSentimentExtractor(TextExtractor):
     def _extract(self, stim):
         scores = self.analyzer.polarity_scores(stim.text)
         features = ['sentiment_' + k for k in scores.keys()]
-        return ExtractorResult([scores.values()], stim, self,
+        return ExtractorResult([list(scores.values())], stim, self,
                                features=features)

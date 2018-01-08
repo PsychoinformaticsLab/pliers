@@ -1,3 +1,5 @@
+''' Contains sklearn-compatible wrappers for pliers. '''
+
 from pliers.extractors import Extractor, merge_results
 from pliers.transformers import get_transformer
 from pliers.utils import attempt_to_import
@@ -5,7 +7,8 @@ from six import string_types
 
 sklearn = attempt_to_import('sklearn')
 if sklearn:
-    class SklearnBase(sklearn.base.TransformerMixin, sklearn.base.BaseEstimator):
+    class SklearnBase(sklearn.base.TransformerMixin,
+                      sklearn.base.BaseEstimator):
         pass
 else:
     class SklearnBase():
@@ -15,6 +18,7 @@ else:
 class PliersTransformer(SklearnBase):
 
     ''' Simple wrapper for using pliers within a sklearn workflow.
+
     Args:
         transformer (Graph or Transformer): Pliers object to execute. Can
             either be a Graph with several transformers chained or a single

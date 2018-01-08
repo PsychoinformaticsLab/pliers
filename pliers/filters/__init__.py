@@ -1,4 +1,7 @@
-''' Filter hierarchy. '''
+''' The `Filter` hierarchy contains Transformer classes that take a `Stim`
+of one type as input and return a `Stim` of the same type as output (but with
+some changes to its data).
+'''
 
 from .image import (ImageCroppingFilter,
                     PillowImageFilter)

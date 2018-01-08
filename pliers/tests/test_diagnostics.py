@@ -1,12 +1,12 @@
 import pandas as pd
 import numpy as np
 from pliers.diagnostics import Diagnostics
-from pliers.diagnostics.collinearity import correlation_matrix
-from pliers.diagnostics.collinearity import eigenvalues
-from pliers.diagnostics.collinearity import condition_indices
-from pliers.diagnostics.collinearity import variance_inflation_factors
-from pliers.diagnostics.outliers import mahalanobis_distances
-from pliers.diagnostics.validity import variances
+from pliers.diagnostics import correlation_matrix
+from pliers.diagnostics import eigenvalues
+from pliers.diagnostics import condition_indices
+from pliers.diagnostics import variance_inflation_factors
+from pliers.diagnostics import mahalanobis_distances
+from pliers.diagnostics import variances
 
 
 def test_diagnostics(capfd):

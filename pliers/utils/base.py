@@ -1,3 +1,5 @@
+''' Miscellaneous internal utilities. '''
+
 import collections
 import os
 from six import string_types
@@ -34,6 +36,20 @@ def batch_iterable(l, n):
         piece = list(islice(i, n))
 
 
+def set_iterable_type(obj):
+    ''' Returns either a generator or a list depending on config-level
+    settings. Should be used to wrap almost every internal iterable return.
+    Also inspects elements recursively in the case of list returns, to
+    ensure that there are no nested generators. '''
+    if not isiterable(obj):
+        return obj
+
+    if config.get_option('use_generators'):
+        return obj if isgenerator(obj) else (i for i in obj)
+    else:
+        return [set_iterable_type(i) for i in obj]
+
+
 class classproperty(object):
     ''' Implements a @classproperty decorator analogous to @classmethod.
     Solution from: http://stackoverflow.com/questions/128573/using-property-on-classmethodss
@@ -60,8 +76,8 @@ def isgenerator(obj):
 def progress_bar_wrapper(iterable, **kwargs):
     ''' Wrapper that applies tqdm progress bar conditional on config settings.
     '''
-    return tqdm(iterable, **kwargs) if (config.progress_bar and
-        not isinstance(iterable, tqdm)) else iterable
+    return tqdm(iterable, **kwargs) if (config.get_option('progress_bar')
+        and not isinstance(iterable, tqdm)) else iterable
 
 
 module_names = {}

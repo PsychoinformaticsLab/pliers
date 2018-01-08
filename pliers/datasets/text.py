@@ -57,6 +57,7 @@ def _download_dictionary(url, format, rename):
 def fetch_dictionary(name, url=None, format=None, index=0, rename=None,
                      save=True):
     ''' Retrieve a dictionary of text norms from the web or local storage.
+
     Args:
         name (str): The name of the dictionary. If no url is passed, this must
             match either one of the keys in the predefined dictionary file (see

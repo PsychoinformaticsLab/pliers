@@ -1,4 +1,5 @@
-''' Stim hierarchy. '''
+''' The Stim hierarchy contains pliers representations of any object from
+which features can potentially be extracted. '''
 
 from .base import load_stims
 from .api import TweetStim, TweetStimFactory
