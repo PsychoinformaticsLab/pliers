@@ -7,6 +7,8 @@ from pliers.extractors.image import ImageExtractor
 from pliers.transformers import MicrosoftAPITransformer
 from pliers.utils import attempt_to_import, verify_dependencies
 
+import pandas as pd
+
 
 CF = attempt_to_import('cognitive_face', 'CF')
 
@@ -26,4 +28,22 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
         with stim.get_filename() as filename:
             result = CF.face.detect(filename)
 
-        return ExtractorResult([[len(result)]], stim, self, features=['num_faces'])
+        return ExtractorResult(result, stim, self, raw=result)
+
+    def to_df(self, result):
+        n_faces = len(result.raw)
+        cols = ['faceId', 'faceRectangleTop', 'faceRectangleLeft',
+                'faceRectangleWidth', 'faceRectangleHeight']
+        if n_faces > 1:
+            new_cols = []
+            for i in range(1, n_faces + 1):
+                new_cols.extend(['%s_%d' % (c, i) for c in cols])
+            cols = new_cols
+        data = []
+        for i, face in enumerate(result.raw):
+            data.extend([face['faceId'],
+                         face['faceRectangle']['top'],
+                         face['faceRectangle']['left'],
+                         face['faceRectangle']['width'],
+                         face['faceRectangle']['height']])
+        return pd.DataFrame([data], columns=cols)
