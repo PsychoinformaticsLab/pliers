@@ -1,9 +1,11 @@
 import os
+import requests
 from pliers.transformers import Transformer
 from pliers.utils import EnvironmentKeyMixin
 
 
-BASE_URL = 'https://{location}.api.cognitive.microsoft.com/{api}/{version}/'
+BASE_URL = 'https://{location}.api.cognitive.microsoft.com/{api}/{version}'\
+           '/{method}'
 
 
 class MicrosoftAPITransformer(Transformer):
@@ -33,19 +35,36 @@ class MicrosoftAPITransformer(Transformer):
         self.subscription_key = subscription_key
         self.location = location
         self.api_version = api_version
-        self.base_url = BASE_URL.format(location=location,
-                                        api=self.api_name,
-                                        version=api_version)
         super(MicrosoftAPITransformer, self).__init__()
+
+    def _query_api(self, data, params):
+        headers = {
+            'Content-Type': 'application/octet-stream',
+            'Ocp-Apim-Subscription-Key': self.subscription_key,
+        }
+
+        url = BASE_URL.format(location=self.location,
+                              api=self.api_name,
+                              version=self.api_version,
+                              method=self.api_method)
+
+        try:
+            response = requests.post(url=url,
+                                     headers=headers,
+                                     params=params,
+                                     data=data)
+            response = response.json()
+        except Exception as e:
+            print("[Errno {0}] {1}".format(e.errno, e.strerror))
+
+        return response
 
 
 class MicrosoftVisionAPITransformer(MicrosoftAPITransformer, EnvironmentKeyMixin):
 
     api_name = 'vision'
+    api_method = 'analyze'
     _env_keys = 'MICROSOFT_VISION_SUBSCRIPTION_KEY'
-
-    def _query_api(self, request):
-        pass
 
     def _build_request(self, stims):
         pass
