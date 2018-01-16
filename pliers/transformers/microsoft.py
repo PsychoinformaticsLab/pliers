@@ -55,7 +55,8 @@ class MicrosoftAPITransformer(Transformer):
                                      data=data)
             response = response.json()
         except Exception as e:
-            print("[Errno {0}] {1}".format(e.errno, e.strerror))
+            print('Error:')
+            print(e)
 
         return response
 
@@ -65,6 +66,3 @@ class MicrosoftVisionAPITransformer(MicrosoftAPITransformer, EnvironmentKeyMixin
     api_name = 'vision'
     api_method = 'analyze'
     _env_keys = 'MICROSOFT_VISION_SUBSCRIPTION_KEY'
-
-    def _build_request(self, stims):
-        pass

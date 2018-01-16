@@ -4,7 +4,8 @@ Extractors that interact with Microsoft Azure Cognitive Services API.
 
 from pliers.extractors.base import ExtractorResult
 from pliers.extractors.image import ImageExtractor
-from pliers.transformers import MicrosoftAPITransformer
+from pliers.transformers import (MicrosoftAPITransformer,
+                                 MicrosoftVisionAPITransformer)
 
 import pandas as pd
 
@@ -14,15 +15,13 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
 
     Args:
         face_id (bool): return faceIds of the detected faces or not. The
-            default value is true.
+            default value is False.
         landmarks (str): return face landmarks of the detected faces or
-            not. The default value is false.
-        attributes (str): analyze and return the one or more specified
-            face attributes in the comma-separated string like
-            "age,gender". Supported face attributes include age, gender,
-            headPose, smile, facialHair, glasses and emotion.
-            Note that each face attribute analysis has additional
-            computational and time cost.
+            not. The default value is False.
+        attributes (list): one or more specified face attributes as strings.
+            Supported face attributes include age, gender, headPose, smile,
+            facialHair, glasses and emotion. Note that each attribute has
+            additional computational and time cost.
     '''
 
     api_name = 'face'
@@ -30,7 +29,7 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
     _env_keys = 'MICROSOFT_FACE_SUBSCRIPTION_KEY'
     _log_attributes = ('api_version', 'face_id', 'landmarks', 'attributes')
 
-    def __init__(self, face_id=True, landmarks=False, attributes='', **kwargs):
+    def __init__(self, face_id=False, landmarks=False, attributes=None, **kwargs):
         self.face_id = face_id
         self.landmarks = landmarks
         self.attributes = attributes
@@ -40,10 +39,13 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
         with stim.get_filename() as filename:
             data = open(filename, 'rb').read()
 
+        if self.attributes:
+            attributes = ','.join(self.attributes)
+
         params = {
             'returnFaceId': self.face_id,
             'returnFaceLandmarks': self.landmarks,
-            'returnFaceAttributes': self.attributes
+            'returnFaceAttributes': attributes
         }
         raw = self._query_api(data, params)
         return ExtractorResult(raw, stim, self, raw=raw)
@@ -51,20 +53,44 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
     def to_df(self, result):
         cols = []
         data = []
+
+        def update_with_prefix(primary_dict, updating_dict, prefix):
+            update_dict = {prefix + k: v for (k, v) in updating_dict.items()}
+            primary_dict.update(update_dict)
+
         for i, face in enumerate(result.raw):
             data_dict = {}
             for field, val in face.items():
                 if field == 'faceRectangle':
-                    lm_pos = 'rectangle_%s'
-                    lm_pos = {lm_pos %
-                              k: v for (k, v) in val.items()}
-                    data_dict.update(lm_pos)
+                    update_with_prefix(data_dict,
+                                       val,
+                                       'rectangle_')
                 elif field == 'faceLandmarks':
                     for name, pos in val.items():
-                        lm_pos = 'landmark_' + name + '_%s'
-                        lm_pos = {lm_pos %
-                                  k: v for (k, v) in pos.items()}
-                        data_dict.update(lm_pos)
+                        update_with_prefix(data_dict,
+                                           pos,
+                                           'landmark_%s_' % (name))
+                elif field == 'faceAttributes':
+                    attributes = val.items()
+                    for k, v in attributes:
+                        if k == 'accessories':
+                            for accessory in v:
+                                name = 'accessory_' + accessory['type']
+                                data_dict[name] = accessory['confidence']
+                        elif k == 'hair':
+                            update_with_prefix(data_dict,
+                                               {'bald': v['bald'],
+                                                'invisible': v['invisible']},
+                                               'hair_')
+                            for color in v['hairColor']:
+                                feature_name = 'hairColor_%s' % color['color']
+                                data_dict[feature_name] = color['confidence']
+                        elif isinstance(v, dict):
+                            update_with_prefix(data_dict,
+                                               v,
+                                               '%s_' % (k))
+                        else:
+                            data_dict[k] = v
                 else:
                     data_dict[field] = val
 
@@ -72,3 +98,10 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
             cols += names
             data += list(data_dict.values())
         return pd.DataFrame([data], columns=cols)
+
+
+class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
+                                  ImageExtractor):
+
+    def _extract(self, stim):
+        pass
