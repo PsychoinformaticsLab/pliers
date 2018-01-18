@@ -119,7 +119,7 @@ class FaceRecognitionFeatureExtractor(ImageExtractor):
         return ExtractorResult(values, stim, self, features=feature_names,
                                raw=values)
 
-    def to_df(self, result):
+    def _to_df(self, result):
         n_faces = len(result.raw)
         cols = [self._feature] if n_faces == 1 else \
             ['%s_%d' % (self._feature, i) for i in range(1, n_faces + 1)]
@@ -141,7 +141,7 @@ class FaceRecognitionFaceLandmarksExtractor(FaceRecognitionFeatureExtractor):
 
     _feature = 'face_landmarks'
 
-    def to_df(self, result):
+    def _to_df(self, result):
         n_faces = len(result.raw)
         columns = [self._feature + '_%s'] if n_faces == 1 else \
             ['%s_%%s_%d' % (self._feature, i) for i in range(1, n_faces + 1)]

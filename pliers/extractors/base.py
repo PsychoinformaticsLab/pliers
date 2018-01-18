@@ -96,25 +96,23 @@ class ExtractorResult(object):
             A pandas DataFrame.
         '''
 
-        if hasattr(self.extractor, 'to_df'):
-            df = self.extractor.to_df(self)
+        if hasattr(self.extractor, '_to_df'):
+            df = self.extractor._to_df(self)
         else:
-            df = pd.DataFrame(self.data)
-            if self.features is not None:
-                # Handle duplicate features
-                counts = defaultdict(int)
-                features = []
-                for f in self.features:
-                    if self.features.count(f) > 1:
-                        counts[f] += 1
-                        features.append(f + '_%d' % counts[f])
-                    else:
-                        features.append(f)
-                df.columns = features
+            features = self.features
+            if features is None:
+                features = ['feature_%d' % (i + 1)
+                            for i in range(self.data.shape[1])]
+            df = pd.DataFrame(self.data, columns=features)
+
+        # For results with more than one object (e.g., multiple faces in a
+        # single image), add an object_id column.
+        ???
 
         if timing:
-            df.insert(0, 'duration', self.durations)
-            df.insert(0, 'onset', self.onsets)
+            n = len(df)
+            df.insert(0, 'duration', np.repeat(self.durations, n))
+            df.insert(0, 'onset', np.repeat(self.onsets, n))
         if metadata:
             df['stim_name'] = self.stim.name
             df['class'] = self.stim.__class__.__name__
@@ -199,31 +197,80 @@ class ExtractorResult(object):
         return pd.concat(results, axis=0).sort_values('onset').reset_index(drop=True)
 
 
-def merge_results(results, **merge_feature_args):
+# def merge_results(results, format='long', **merge_feature_args):
+#     ''' Merges a list of ExtractorResults instances and returns a pandas DF.
+
+#     Args:
+#         results (list, tuple): A list of ExtractorResult instances to merge.
+#         format (str): Format to return the data in. Can be either 'wide' or
+#             'long'. In the wide case, every extracted feature is a column,
+#             and every Stim is a row. In the long case, every row contains a
+#             single Stim/Extractor/feature combination.
+#         merge_feature_args (kwargs): Additional argument settings to use
+#             when merging across features.
+
+#     Returns: a pandas DataFrame with features concatenated along the column
+#         axis and stims concatenated along the row axis.
+#     '''
+
+#     # Flatten list recursively
+#     results = flatten(results)
+
+#     stims = defaultdict(list)
+
+#     for r in results:
+#         stims[hash(r.stim)].append(r)
+
+#     # First concatenate all features separately for each Stim
+#     for k, v in stims.items():
+#         stims[k] = ExtractorResult.merge_features(v, **merge_feature_args)
+
+#     # Now concatenate all Stims
+#     stims = list(stims.values())
+#     return stims[0] if len(stims) == 1 else \
+#         ExtractorResult.merge_stims(stims)
+
+
+def merge_results(results, format='long', timing='auto', metadata=True,
+                  extractor_names=True, flatten_columns=False):
     ''' Merges a list of ExtractorResults instances and returns a pandas DF.
 
     Args:
         results (list, tuple): A list of ExtractorResult instances to merge.
-        merge_feature_args (kwargs): Additional argument settings to use
-            when merging across features.
+        format (str): Format to return the data in. Can be either 'wide' or
+            'long'. In the wide case, every extracted feature is a column,
+            and every Stim is a row. In the long case, every row contains a
+            single Stim/Extractor/feature combination.
+        timing (bool, str): Whether or not to include columns for onset and
+            duration.
+        extractor_names (bool): if True, stores the associated Extractor
+            names as a variable.
+        metadata (bool): if True, stores all ExtractorResult metadata
+        flatten_columns (bool): if True, flattens the resultant column
+            MultiIndex such that feature columns are in the format
+            <extractor class>_<feature name>
 
-    Returns: a pandas DataFrame with features concatenated along the column
-        axis and stims concatenated along the row axis.
+    Returns: a pandas DataFrame. For format details, see 'format' argument.
     '''
 
-    # Flatten list recursively
-    results = flatten(results)
+    _timing = True if timing == 'auto' else timing
+    dfs = [r.to_df(timing=_timing, metadata=metadata) for r in results]
 
-    stims = defaultdict(list)
+    extra_columns = ['class', 'filename', 'history', 'stim_name',
+                     'source_file']
 
-    for r in results:
-        stims[hash(r.stim)].append(r)
+    data = pd.concat(dfs, axis=0)
 
-    # First concatenate all features separately for each Stim
-    for k, v in stims.items():
-        stims[k] = ExtractorResult.merge_features(v, **merge_feature_args)
+    if timing == 'auto':
+        if data['onset'].isnull().all():
+            data = data.drop(['onset', 'duration'], axis=1)
 
-    # Now concatenate all Stims
-    stims = list(stims.values())
-    return stims[0] if len(stims) == 1 else \
-        ExtractorResult.merge_stims(stims)
+    extra_columns.remove('onset')
+    for col in extra_columns:
+        result.insert(0, col, dfs[0][col][0])
+
+    result = result.sort_values(['onset']).reset_index(drop=True)
+    if flatten_columns:
+        result.columns = ['_'.join(str(lvl) for lvl in col).strip('_') for col in result.columns.values]
+    return result
+
