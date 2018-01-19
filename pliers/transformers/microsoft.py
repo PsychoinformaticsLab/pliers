@@ -48,15 +48,15 @@ class MicrosoftAPITransformer(Transformer):
                               version=self.api_version,
                               method=self.api_method)
 
-        try:
-            response = requests.post(url=url,
-                                     headers=headers,
-                                     params=params,
-                                     data=data)
-            response = response.json()
-        except Exception as e:
-            print('Error:')
-            print(e)
+        response = requests.post(url=url,
+                                 headers=headers,
+                                 params=params,
+                                 data=data)
+        response = response.json()
+        if 'error' in response:
+            raise Exception(response['error']['message'])
+        elif 'statusCode' in response and response['statusCode'] in [401, 429]:
+            raise Exception(response['message'])
 
         return response
 
