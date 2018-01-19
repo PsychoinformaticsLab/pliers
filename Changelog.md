@@ -1,9 +1,9 @@
 # Changelog
 
 ## 0.2 (January 8, 2018)
-This is the second major release that adds several new features and transformers. Changes include:
+This is a major release that adds many new features and transformers. Changes include:
 * Sphinx [documentation](http://tyarkoni.github.io/pliers/)!
-* New package features
+* New package features:
     * Ability to create transformer Graphs via a JSON specification
     * Scitkit-learn integration: ability to use pliers Graphs or Extractors as sklearn Transformers that can be plugged into full Pipelines
     * Batch transformation: added ability to transform stimuli in batches when the transformer inherits `BatchTransformerMixin`, but a batch size must be given
@@ -11,8 +11,8 @@ This is the second major release that adds several new features and transformers
     * Added `TweetStim`, that can be initialized using Twitter's API, to the stimuli hierarchy
     * A update checker utility (in `pliers.utils`) that allows users to track changes to the output of different transformers for user-provided stimuli or a hand-selected battery of stimuli from the pliers test module
     * A revamped and improved `config` module with exposed accessor methods 
-* New transformers
-    * NLP Transformers
+* New Transformers:
+    * NLP Transformers:
         * TextVectorizerExtractor uses sklearn Vectorizers to extract bag-of-X features from a batch of text documents
         * WordEmbeddingExtractor uses gensim to extract word embeddings using a user-provided word2vec file
         * VADERSentimentExtractor uses nltk's VADER sentiment analysis tool to do sentiment analysis (w/o needing an API)
@@ -24,7 +24,7 @@ This is the second major release that adds several new features and transformers
         * PillowImageFilter uses common simple filters from PIL to filter an image. Examples: edge, blur, contour, min filters
     * Google Vision API image web entity extraction
     * Face recognition extractor using the `face_recognition` package
-* Fixes or enhancements to existing features
+* Fixes or enhancements to existing features:
     * Better identifying of stimulus uniqueness (for hashing purposes), to prevent strange merges when using `merge_results`
     * Temporary file management for transformers that require on-disk file names
     * Better support for exporting to vertically long Pandas dataframes
