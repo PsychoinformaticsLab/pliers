@@ -96,6 +96,9 @@ class ExtractorResult(object):
             A pandas DataFrame.
         '''
 
+        # Ideally, Extractors should implement their own _to_df() class method
+        # that produces a DataFrame in standardized format. Failing that, we
+        # assume self.data is already array-like and can be wrapped in a DF.
         if hasattr(self.extractor, '_to_df'):
             df = self.extractor._to_df(self)
         else:
@@ -104,10 +107,6 @@ class ExtractorResult(object):
                 features = ['feature_%d' % (i + 1)
                             for i in range(self.data.shape[1])]
             df = pd.DataFrame(self.data, columns=features)
-
-        # For results with more than one object (e.g., multiple faces in a
-        # single image), add an object_id column.
-        ???
 
         if timing:
             n = len(df)
