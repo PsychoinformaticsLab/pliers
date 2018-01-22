@@ -122,11 +122,12 @@ class ExtractorResult(object):
         # from other rows by onset and duration.
         if add_object_id and 'object_id' not in df.columns:
             index = pd.Series(self.onsets).astype(str) + '_' + \
-                pd.Series(self.onsets).astype(str)
-            obj_id = df.groupby(index).cumcount()
-            # obj_ids = list(range(1, len(df) + 1))
-            df.insert(0, 'object_id', obj_id)
-            index_cols = ['object_id']
+                pd.Series(self.durations).astype(str)
+            ids = np.arange(len(df)) if len(index) == 1 \
+                else df.groupby(index).cumcount()
+            df.insert(0, 'object_id', ids)
+
+        index_cols = ['object_id']
 
         if timing:
             df.insert(0, 'duration', self.durations)
@@ -237,6 +238,7 @@ def merge_results(results, format='long', timing='auto', metadata=True,
         # pivoting.
         dtypes = data[ind_cols].dtypes
         data[ind_cols] = data[ind_cols].fillna('PlAcEholdER')
+        print("\n\n\nDATA HERE", data, "\n\n\n")
         data = data.pivot_table(index=ind_cols, columns='feature',
                                 values='value', aggfunc=aggfunc).reset_index()
         data[ind_cols] = data[ind_cols].replace('PlAcEholdER', np.nan)

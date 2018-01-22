@@ -47,7 +47,7 @@ def test_graph_smoke_test():
     stim = ImageStim(filename)
     nodes = [(BrightnessExtractor(), [], 'brightness_node')]
     graph = Graph(nodes)
-    result = graph.run(stim)
+    result = graph.run(stim, format='wide', extractor_names='multi')
     brightness = result[('brightness_node', 'brightness')].values[0]
     assert_almost_equal(brightness, 0.556134, 5)
 
@@ -79,10 +79,10 @@ def test_small_pipeline():
     history = result[0].history.to_df()
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
-    result = merge_results(result)
+    result = merge_results(result, format='wide', extractor_names='prepend')
     assert (0, 'text[Exit]') in result['stim_name'].values
-    assert ('LengthExtractor', 'text_length') in result.columns
-    assert result[('LengthExtractor', 'text_length')].values[0] == 4
+    assert 'LengthExtractor#text_length' in result.columns
+    assert result['LengthExtractor#text_length'].values[0] == 4
 
 
 def test_small_pipeline2():
@@ -92,7 +92,7 @@ def test_small_pipeline2():
     result = list(graph.run([filename], merge=False))
     history = result[0].history.to_df()
     assert history.shape == (1, 8)
-    result = merge_results(result)
+    result = merge_results(result, format='wide', extractor_names='multi')
     assert ('BrightnessExtractor', 'brightness') in result.columns
     brightness = result[('BrightnessExtractor', 'brightness')].values[0]
     vibrance = result[('VibranceExtractor', 'vibrance')].values[0]
@@ -123,7 +123,7 @@ def test_small_pipeline_json_spec():
     history = result[0].history.to_df()
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
-    result = merge_results(result)
+    result = merge_results(result, format='wide', extractor_names='multi')
     assert (0, 'text[Exit]') in result['stim_name'].values
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
@@ -139,7 +139,7 @@ def test_small_pipeline_json_spec2():
     history = result[0].history.to_df()
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
-    result = merge_results(result)
+    result = merge_results(result, format='wide', extractor_names='multi')
     assert (0, 'text[Exit]') in result['stim_name'].values
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
@@ -171,7 +171,7 @@ def test_small_pipeline_json_spec3():
     history = result[0].history.to_df()
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
-    result = merge_results(result)
+    result = merge_results(result, format='wide', extractor_names='multi')
     assert (0, 'text[Exit\n]') in result['stim_name'].values
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4

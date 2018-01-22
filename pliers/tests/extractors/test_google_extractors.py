@@ -4,7 +4,7 @@ from pliers.extractors import (GoogleVisionAPIFaceExtractor,
                                GoogleVisionAPIPropertyExtractor,
                                GoogleVisionAPISafeSearchExtractor,
                                GoogleVisionAPIWebEntitiesExtractor,
-                               ExtractorResult)
+                               ExtractorResult, merge_results)
 from pliers.extractors.google import GoogleVisionAPIExtractor
 from pliers.stimuli import ImageStim, VideoStim
 import pytest
@@ -49,7 +49,7 @@ def test_google_vision_api_face_extractor():
     result = ext.transform(stim).to_df()
     assert 'face1_joyLikelihood' in result.columns
     assert result['face1_joyLikelihood'][0] == 'VERY_LIKELY'
-    assert result['face1_face_detectionConfidence'][0] > 0.7
+    assert result['face1_face_detectionConfidence'][0] > float(0.7)
 
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
@@ -74,23 +74,24 @@ def test_google_vision_face_batch():
     stims = [ImageStim(obama_file), ImageStim(people_file)]
     ext = GoogleVisionAPIFaceExtractor(handle_annotations='first')
     result = ext.transform(stims)
-    result = ExtractorResult.merge_stims(result)
-    assert 'face1_joyLikelihood' in result.columns
-    assert result['face1_joyLikelihood'][0] == 'VERY_LIKELY'
-    assert result['face1_joyLikelihood'][1] == 'VERY_LIKELY'
+    result = merge_results(result, format='wide', extractor_names=False)
+    print(result)
+    assert 'joyLikelihood' in result.columns
+    assert result['joyLikelihood'][0] == 'VERY_LIKELY'
+    assert result['joyLikelihood'][1] == 'VERY_LIKELY'
 
     video = VideoStim(join(get_test_data_path(), 'video', 'obama_speech.mp4'))
     conv = FrameSamplingFilter(every=10)
     video = conv.transform(video)
     result = ext.transform(video)
-    result = ExtractorResult.merge_stims(result)
+    result = merge_results(result)
     assert 'face1_joyLikelihood' in result.columns
     assert result.shape == (11, 137)
 
     video = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
     video = conv.transform(video)
     result = ext.transform(video)
-    result = ExtractorResult.merge_stims(result)
+    result = merge_results(result)
     assert 'face1_joyLikelihood' not in result.columns
     assert result.shape == (17, 7)
 

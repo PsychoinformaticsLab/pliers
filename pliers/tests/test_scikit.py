@@ -61,5 +61,5 @@ def test_within_pipeline():
     assert np.isclose(res[0][0], 0.66393, 1e-5)
     assert np.isclose(res[0][1], 0.74780, 1e-5)
     meta = trans.metadata_
-    assert np.isnan(meta['onset'][0])
+    assert 'onset' not in meta.columns
     assert meta['class'][0] == 'ImageStim'
