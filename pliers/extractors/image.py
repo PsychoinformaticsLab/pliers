@@ -120,12 +120,8 @@ class FaceRecognitionFeatureExtractor(ImageExtractor):
                                raw=values)
 
     def _to_df(self, result):
-        n_faces = len(result.raw)
         cols = listify(self._feature)
-        data = pd.DataFrame([[r] for r in result.raw], columns=cols)
-        face_ids = ['face%d' % i for i in range(1, n_faces + 1)]
-        data.insert(0, 'object_id', face_ids)
-        return data
+        return pd.DataFrame([[r] for r in result.raw], columns=cols)
 
 
 class FaceRecognitionFaceEncodingsExtractor(FaceRecognitionFeatureExtractor):
@@ -144,11 +140,8 @@ class FaceRecognitionFaceLandmarksExtractor(FaceRecognitionFeatureExtractor):
     _feature = 'face_landmarks'
 
     def _to_df(self, result):
-        n_faces = len(result.raw)
         data = pd.DataFrame.from_records(result.raw)
         data.columns = ['%s_%s' % (self._feature, c) for c in data.columns]
-        face_ids = ['face%d' % i for i in range(1, n_faces + 1)]
-        data.insert(0, 'object_id', face_ids)
         return data
 
 
