@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from pliers.transformers import Transformer
 from pliers.utils import isgenerator
+from pandas.api.types import is_numeric_dtype
 
 
 class Extractor(with_metaclass(ABCMeta, Transformer)):
@@ -163,7 +164,7 @@ class ExtractorResult(object):
 
 
 def merge_results(results, format='long', timing='auto', metadata=True,
-                  extractor_names=True, aggfunc='mean'):
+                  extractor_names=True, aggfunc=None):
     ''' Merges a list of ExtractorResults instances and returns a pandas DF.
 
     Args:
@@ -206,7 +207,8 @@ def merge_results(results, format='long', timing='auto', metadata=True,
             cases, the aggfunc argument is passed onto pandas' pivot_table
             function, and specifies how to aggregate multiple values for the
             same index. Can be a callable or any string value recognized by
-            pandas.
+            pandas. By default (None), 'mean' will be used for numeric columns
+            and 'first' will be used for object/categorical columns.
 
     Returns: a pandas DataFrame. For format details, see 'format' argument.
     '''
@@ -238,7 +240,11 @@ def merge_results(results, format='long', timing='auto', metadata=True,
         # pivoting.
         dtypes = data[ind_cols].dtypes
         data[ind_cols] = data[ind_cols].fillna('PlAcEholdER')
-        print("\n\n\nDATA HERE", data, "\n\n\n")
+
+        # Set default aggfunc based on column type, otherwise bad things happen
+        if aggfunc is None:
+            aggfunc = 'mean' if is_numeric_dtype(data['value']) else 'first'
+
         data = data.pivot_table(index=ind_cols, columns='feature',
                                 values='value', aggfunc=aggfunc).reset_index()
         data[ind_cols] = data[ind_cols].replace('PlAcEholdER', np.nan)
