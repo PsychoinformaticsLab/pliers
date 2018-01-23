@@ -99,6 +99,13 @@ class ExtractorResult(object):
                 row contains a single record/feature combination.
             extractor_name (bool): If True, includes the Extractor name as
                 a column (in 'long' format) or index level (in 'wide' format).
+            add_object_id (bool): If True, attempts to intelligently add an
+                'object_id' column that differentiates between multiple objects
+                in the results that may share onsets and durations (and would
+                otherwise be impossible to distinguish). This frequently occurs
+                for ImageExtractors that identify multiple target objects
+                (e.g., faces) within a single ImageStim.
+
         Returns:
             A pandas DataFrame.
         '''
@@ -140,8 +147,9 @@ class ExtractorResult(object):
 
         if extractor_name:
             name = self.extractor.name
-            df['extractor'] = name
-            if format == 'wide':
+            if format == 'long':
+                df['extractor'] = name
+            else:
                 df.columns = pd.MultiIndex.from_product([[name], df.columns])
 
         if metadata:
