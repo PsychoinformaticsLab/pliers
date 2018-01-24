@@ -124,7 +124,7 @@ class ExtractorResult(object):
 
         # Generally we leave it to Extractors to properly track the number of
         # objects returned in the result DF, using the 'object_id' column.
-        # But for Extractors that set the _insert_object_id flag to True, we
+        # But in cases where the Extractor punt on this and_object_id=True, we
         # take our best guess. The logic is that we increment the object
         # counter for any row in the DF that cannot be uniquely distinguished
         # from other rows by onset and duration.
@@ -171,7 +171,7 @@ class ExtractorResult(object):
         self._history = history
 
 
-def merge_results(results, format='long', timing='auto', metadata=True,
+def merge_results(results, format='wide', timing='auto', metadata=True,
                   extractor_names=True, aggfunc=None):
     ''' Merges a list of ExtractorResults instances and returns a pandas DF.
 
