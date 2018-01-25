@@ -192,7 +192,8 @@ def test_big_pipeline():
     graph = Graph()
     graph.add_nodes(visual_nodes)
     graph.add_nodes(audio_nodes)
-    result = graph.run(video)
+    results = graph.run(video, merge=False)
+    result = merge_results(results, format='wide', extractor_names='multi')
     # Test that pygraphviz outputs a file
     drawfile = next(tempfile._get_candidate_names())
     graph.draw(drawfile)
@@ -250,7 +251,8 @@ def test_big_pipeline_json():
         ]
     }
     graph = Graph(nodes)
-    result = graph.run(video)
+    results = graph.run(video, merge=False)
+    result = merge_results(results, format='wide', extractor_names='multi')
     # Test that pygraphviz outputs a file
     drawfile = next(tempfile._get_candidate_names())
     graph.draw(drawfile)

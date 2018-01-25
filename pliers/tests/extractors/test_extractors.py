@@ -110,7 +110,7 @@ def test_merge_extractor_results():
     assert not set(_cols) - set(df.columns)
     row = df.iloc[523, :]
     assert row['feature'] == 'feature_3'
-    assert row['value'] == 204
+    assert row['value'] == 934
     assert row['extractor'] == 'Extractor2'
 
     df = merge_results(results, format='long', extractor_names='drop')

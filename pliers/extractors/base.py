@@ -262,6 +262,13 @@ def merge_results(results, format='wide', timing='auto', metadata=True,
         if data['onset'].isnull().all():
             data = data.drop(['onset', 'duration'], axis=1)
 
+    if 'onset' in data.columns:
+        if isinstance(data.columns, pd.MultiIndex):
+            if ('onset', '') in data.columns:
+                data = data.sort_values(('onset', '')).reset_index(drop=True)
+        else:
+            data = data.sort_values('onset').reset_index(drop=True)
+
     if extractor_names == 'multi':
         if format == 'long':
             raise ValueError("Invalid extractor_names value 'multi'. When "

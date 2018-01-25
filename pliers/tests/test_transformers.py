@@ -16,7 +16,6 @@ def test_get_transformer_by_name():
 
 
 def test_transformation_history():
-
     img = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
     ext = DummyExtractor('giraffe')
     res = ext.transform(img).history
@@ -66,7 +65,7 @@ def test_batch_transformer():
     ext = DummyBatchExtractor()
     res = merge_results(ext.transform([img1, img2, img3]))
     assert ext.num_calls == 1
-    assert res.shape == (3, 9)
+    assert res.shape == (3, 7)
     ext = DummyBatchExtractor(batch_size=1)
     res2 = merge_results(ext.transform([img1, img2, img3]))
     assert ext.num_calls == 3
