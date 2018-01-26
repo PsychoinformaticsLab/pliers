@@ -1,6 +1,6 @@
 from os.path import join
 from ..utils import get_test_data_path
-from pliers.filters import FrameSamplingFilter
+from pliers.filters import FrameSamplingFilter, VideoTrimmingFilter
 from pliers.stimuli import VideoStim, VideoFrameStim
 import pytest
 import math
@@ -47,3 +47,16 @@ def test_frame_sampling_cv2():
     derived = conv.transform(video)
     assert derived.n_frames == 5
     assert type(next(f for f in derived)) == VideoFrameStim
+
+
+def test_video_trimming_filter():
+    video = VideoStim(join(VIDEO_DIR, 'small.mp4'))
+    filt = VideoTrimmingFilter(end=4.0)
+    short_video = filt.transform(video)
+    assert short_video.fps == 30
+    assert short_video.duration == 4.0
+
+    frame_filt = VideoTrimmingFilter(end=100, frames=True)
+    short_video = frame_filt.transform(video)
+    assert short_video.fps == 30
+    assert short_video.n_frames == 100

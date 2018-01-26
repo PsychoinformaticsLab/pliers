@@ -1,6 +1,6 @@
 ''' Filters that operate on TextStim inputs. '''
 
-from pliers.stimuli.video import VideoFrameCollectionStim
+from pliers.stimuli.video import VideoFrameCollectionStim, VideoStim
 from .base import Filter
 
 
@@ -59,3 +59,31 @@ class FrameSamplingFilter(VideoFilter):
         return VideoFrameCollectionStim(filename=video.filename,
                                         frame_index=frame_index,
                                         onset=video.onset)
+
+
+class VideoTrimmingFilter(VideoFilter):
+
+    ''' Temporally trims the contents of the video stimulus using the provided
+    start and end points.
+
+    Args:
+        start (float): New start point for the trimmed video.
+        end (float): New end point for the trimmed video.
+        frames (bool): If True, treat the provided start and end values as
+            frame indices, otherwise, treat them as time in terms of seconds.
+            If True, start and end must both be integers.
+    '''
+
+    _log_attributes = ('start', 'end', 'frames')
+
+    def __init__(self, start=0, end=None, frames=False):
+        self.start = start
+        self.end = end
+        self.frames = frames
+        super(VideoTrimmingFilter, self).__init__()
+
+    def _filter(self, video):
+        start = self.start / video.fps if self.frames else self.start
+        end = self.end / video.fps if self.frames else self.end
+        subclip = video.clip.subclip(start, end)
+        return VideoStim(onset=video.onset, filename=video.filename, clip=subclip)
