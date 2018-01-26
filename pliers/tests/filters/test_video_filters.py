@@ -60,3 +60,7 @@ def test_video_trimming_filter():
     short_video = frame_filt.transform(video)
     assert short_video.fps == 30
     assert short_video.n_frames == 100
+
+    error_filt = VideoTrimmingFilter(end=10.0, validation='strict')
+    with pytest.raises(ValueError):
+        short_video = error_filt.transform(video)
