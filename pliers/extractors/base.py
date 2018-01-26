@@ -172,7 +172,7 @@ class ExtractorResult(object):
 
 
 def merge_results(results, format='wide', timing='auto', metadata=True,
-                  extractor_names=True, aggfunc=None):
+                  extractor_names=True, add_object_id='auto', aggfunc=None):
     ''' Merges a list of ExtractorResults instances and returns a pandas DF.
 
     Args:
@@ -210,6 +210,13 @@ def merge_results(results, format='wide', timing='auto', metadata=True,
                 - True: When format='long', behaves like 'column'. When
                   format='wide', behaves like 'prepend'.
 
+        add_object_id (bool): If True, attempts to intelligently add an
+            'object_id' column that differentiates between multiple objects in
+            the results that may share onsets and durations (and would
+            otherwise be impossible to distinguish). This frequently occurs for
+            ImageExtractors that identify multiple target objects (e.g., faces)
+            within a single ImageStim. Default is 'auto', which includes the
+            'object_id' column if and only if it has a non-constant value.
         aggfunc (str, Callable): If format='wide' and extractor_names='drop',
             it's possible for name clashes between features to occur. In such
             cases, the aggfunc argument is passed onto pandas' pivot_table
@@ -222,15 +229,19 @@ def merge_results(results, format='wide', timing='auto', metadata=True,
     '''
 
     _timing = True if timing == 'auto' else timing
+    _add_object_id = True if add_object_id == 'auto' else add_object_id
 
     if extractor_names is True:
         extractor_names = 'prepend' if format == 'wide' else 'column'
 
     dfs = [r.to_df(timing=_timing, metadata=metadata, format='long',
-                   extractor_name=True, add_object_id=True)
+                   extractor_name=True, add_object_id=_add_object_id)
            for r in results]
 
     data = pd.concat(dfs, axis=0).reset_index(drop=True)
+
+    if add_object_id == 'auto' and data['object_id'].nunique() == 1:
+        data = data.drop('object_id', axis=1)
 
     if extractor_names in ['prepend', 'multi']:
         data['feature'] = data['extractor'] + '#' + data['feature'].astype(str)
