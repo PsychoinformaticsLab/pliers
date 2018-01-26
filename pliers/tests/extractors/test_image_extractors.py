@@ -73,7 +73,7 @@ def test_face_recognition_landmarks_extractor():
     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'thai_people.jpg',
                                          'obama.jpg']]
     result = ext.transform(imgs)
-    dfs = [r.to_df(timing=False, add_object_id=True) for r in result]
+    dfs = [r.to_df(timing=False) for r in result]
     assert dfs[0].empty
     assert dfs[1].shape == (4, 10)
     assert dfs[2].shape == (1, 10)
@@ -88,7 +88,7 @@ def test_face_recognition_encodings_extractor():
     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'thai_people.jpg',
                                          'obama.jpg']]
     result = ext.transform(imgs)
-    dfs = [r.to_df(timing=False, add_object_id=True) for r in result]
+    dfs = [r.to_df(timing=False) for r in result]
     assert dfs[0].empty
     assert dfs[1].iloc[0, 1].shape == (128,)
     assert dfs[2].iloc[0, 1].shape == (128,)
@@ -103,7 +103,7 @@ def test_face_recognition_locations_extractor():
     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'thai_people.jpg',
                                          'obama.jpg']]
     result = ext.transform(imgs)
-    dfs = [r.to_df(timing=False, add_object_id=True) for r in result]
+    dfs = [r.to_df(timing=False) for r in result]
     assert dfs[0].empty
     assert isinstance(dfs[1].iloc[0, 1], tuple)
     assert len(dfs[1].iloc[0, 1]) == 4

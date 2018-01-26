@@ -63,11 +63,11 @@ def test_batch_transformer():
     img2 = ImageStim(join(get_test_data_path(), 'image', 'button.jpg'))
     img3 = ImageStim(join(get_test_data_path(), 'image', 'obama.jpg'))
     ext = DummyBatchExtractor()
-    res = merge_results(ext.transform([img1, img2, img3]), add_object_id=True)
+    res = merge_results(ext.transform([img1, img2, img3]))
     assert ext.num_calls == 1
-    assert res.shape == (3, 7)
+    assert res.shape == (3, 9)
     ext = DummyBatchExtractor(batch_size=1)
-    res2 = merge_results(ext.transform([img1, img2, img3]), add_object_id=True)
+    res2 = merge_results(ext.transform([img1, img2, img3]))
     assert ext.num_calls == 3
     assert res.equals(res2)
 

@@ -42,7 +42,7 @@ def test_indico_api_text_extractor():
 
     # With TextStim input
     ts = TextStim(text="It's a wonderful life.")
-    result = ext.transform(ts).to_df(add_object_id=True)
+    result = ext.transform(ts).to_df(object_id=True)
     assert set(result.columns) == outdfKeysCheck
     assert len(result) == 1
 
@@ -68,13 +68,15 @@ def test_indico_api_image_extractor():
     meta_columns = {'source_file',
                     'history',
                     'class',
-                    'filename'}
+                    'filename',
+                    'onset',
+                    'duration'}
 
     assert set(result1.columns) - set(['stim_name']) == outdfKeysCheck | meta_columns
     assert result1['content_filtering'][0] < 0.2
 
     stim2 = ImageStim(join(image_dir, 'obama.jpg'))
-    result2 = ext.transform(stim2).to_df(timing=False, add_object_id=True)
+    result2 = ext.transform(stim2).to_df(timing=False, object_id=True)
     assert set(result2.columns) == outdfKeysCheck
     assert result2['fer_Happy'][0] > 0.7
 
@@ -88,15 +90,15 @@ def test_clarifai_api_extractor():
     assert result.ix[:, 5][0] > 0.0
 
     result = ClarifaiAPIExtractor(max_concepts=5).transform(stim).to_df()
-    assert result.shape == (1, 7)
+    assert result.shape == (1, 8)
 
     result = ClarifaiAPIExtractor(min_value=0.9).transform(stim).to_df()
-    assert all(np.isnan(d) or d > 0.9 for d in result.values[0])
+    assert all(np.isnan(d) or d > 0.9 for d in result.values[0, 3:])
 
     concepts = ['cat', 'dog']
     result = ClarifaiAPIExtractor(select_concepts=concepts).transform(stim)
     result = result.to_df()
-    assert result.shape == (1, 4)
+    assert result.shape == (1, 5)
     assert 'cat' in result.columns and 'dog' in result.columns
 
 
@@ -108,7 +110,6 @@ def test_clarifai_api_extractor_batch():
     ext = ClarifaiAPIExtractor()
     results = ext.transform([stim, stim2])
     results = merge_results(results)
-    print(results)
     assert results['ClarifaiAPIExtractor#apple'][0] > 0.5 or \
         results['ClarifaiAPIExtractor#apple'][1] > 0.5
 

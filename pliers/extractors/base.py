@@ -83,13 +83,15 @@ class ExtractorResult(object):
         self.durations = durations if durations is not None else np.nan
 
     def to_df(self, timing=True, metadata=False, format='wide',
-              extractor_name=False, add_object_id=False):
+              extractor_name=False, object_id=True):
         ''' Convert current instance to a pandas DatasFrame.
 
         Args:
             timing (bool): If True, adds columns for event onset and duration.
                 Note that these columns will be added even if there are no
                 valid values in the current object (NaNs will be inserted).
+                If 'auto', timing columns are only inserted if there's at least
+                one valid (i.e., non-NaN) onset/duration.
             metadata (bool): If True, adds columns for key metadata (including
                 the name, filename, class, history, and source file of the
                 Stim).
@@ -99,12 +101,15 @@ class ExtractorResult(object):
                 row contains a single record/feature combination.
             extractor_name (bool): If True, includes the Extractor name as
                 a column (in 'long' format) or index level (in 'wide' format).
-            add_object_id (bool): If True, attempts to intelligently add an
+            object_id (bool): If True, attempts to intelligently add an
                 'object_id' column that differentiates between multiple objects
                 in the results that may share onsets and durations (and would
                 otherwise be impossible to distinguish). This frequently occurs
                 for ImageExtractors that identify multiple target objects
-                (e.g., faces) within a single ImageStim.
+                (e.g., faces) within a single ImageStim. In addition to boolean
+                values, the special value 'auto' can be passed, in which case
+                the object_id column will only be inserted if the resulting
+                constant would be non-constant.
 
         Returns:
             A pandas DataFrame.
@@ -128,16 +133,19 @@ class ExtractorResult(object):
         # take our best guess. The logic is that we increment the object
         # counter for any row in the DF that cannot be uniquely distinguished
         # from other rows by onset and duration.
-        if add_object_id and 'object_id' not in df.columns:
+        if object_id and 'object_id' not in df.columns:
             index = pd.Series(self.onsets).astype(str) + '_' + \
                 pd.Series(self.durations).astype(str)
-            ids = np.arange(len(df)) if len(index) == 1 \
-                else df.groupby(index).cumcount()
-            df.insert(0, 'object_id', ids)
+            if object_id is True or (object_id == 'auto' and
+                                     len(set(index)) > 1):
+                ids = np.arange(len(df)) if len(index) == 1 \
+                    else df.groupby(index).cumcount()
+                df.insert(0, 'object_id', ids)
 
         index_cols = ['object_id']
 
-        if timing:
+        if timing is True or (timing == 'auto' and not
+                              np.isnan(self.durations).any()):
             df.insert(0, 'duration', self.durations)
             df.insert(0, 'onset', self.onsets)
             index_cols.extend(['duration', 'onset'])
@@ -171,8 +179,8 @@ class ExtractorResult(object):
         self._history = history
 
 
-def merge_results(results, format='wide', timing='auto', metadata=True,
-                  extractor_names=True, add_object_id='auto', aggfunc=None):
+def merge_results(results, format='wide', timing=True, metadata=True,
+                  extractor_names=True, object_id=True, aggfunc=None):
     ''' Merges a list of ExtractorResults instances and returns a pandas DF.
 
     Args:
@@ -210,7 +218,7 @@ def merge_results(results, format='wide', timing='auto', metadata=True,
                 - True: When format='long', behaves like 'column'. When
                   format='wide', behaves like 'prepend'.
 
-        add_object_id (bool): If True, attempts to intelligently add an
+        object_id (bool): If True, attempts to intelligently add an
             'object_id' column that differentiates between multiple objects in
             the results that may share onsets and durations (and would
             otherwise be impossible to distinguish). This frequently occurs for
@@ -229,18 +237,18 @@ def merge_results(results, format='wide', timing='auto', metadata=True,
     '''
 
     _timing = True if timing == 'auto' else timing
-    _add_object_id = True if add_object_id == 'auto' else add_object_id
+    _object_id = True if object_id == 'auto' else object_id
 
     if extractor_names is True:
         extractor_names = 'prepend' if format == 'wide' else 'column'
 
     dfs = [r.to_df(timing=_timing, metadata=metadata, format='long',
-                   extractor_name=True, add_object_id=_add_object_id)
+                   extractor_name=True, object_id=_object_id)
            for r in results]
 
     data = pd.concat(dfs, axis=0).reset_index(drop=True)
 
-    if add_object_id == 'auto' and data['object_id'].nunique() == 1:
+    if object_id == 'auto' and data['object_id'].nunique() == 1:
         data = data.drop('object_id', axis=1)
 
     if extractor_names in ['prepend', 'multi']:

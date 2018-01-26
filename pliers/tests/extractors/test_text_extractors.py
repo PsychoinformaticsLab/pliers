@@ -25,7 +25,7 @@ def test_text_extractor():
     assert td.data.shape == (7, 2)
     result = td.transform(stim)[2].to_df()
     assert result.iloc[0, 1] == 1
-    assert result.shape == (1, 4)
+    assert result.shape == (1, 5)
     assert np.isclose(result['frequency'][0], 11.729, 1e-5)
 
 
@@ -69,7 +69,7 @@ def test_predefined_dictionary_extractor():
     stim = TextStim(text='enormous')
     td = PredefinedDictionaryExtractor(['aoa/Freq_pm'])
     result = td.transform(stim).to_df()
-    assert result.shape == (1, 3)
+    assert result.shape == (1, 4)
     assert 'aoa_Freq_pm' in result.columns
     assert np.isclose(result['aoa_Freq_pm'][0], 10.313725, 1e-5)
 
@@ -79,8 +79,7 @@ def test_part_of_speech_extractor():
     nltk.download('tagsets')
     stim = ComplexTextStim(join(TEXT_DIR, 'complex_stim_with_header.txt'))
     result = merge_results(PartOfSpeechExtractor().transform(stim),
-                           format='wide', extractor_names=False,
-                           add_object_id=True)
+                           format='wide', extractor_names=False)
     assert result.shape == (4, 53)
     assert result['NN'].sum() == 1
     result = result.sort_values('onset')

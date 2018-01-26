@@ -76,7 +76,7 @@ def test_google_vision_face_batch():
     ext = GoogleVisionAPIFaceExtractor(handle_annotations='first')
     result = ext.transform(stims)
     result = merge_results(result, format='wide', extractor_names=False)
-    assert result.shape == (2, 136)
+    assert result.shape == (2, 138)
     assert 'face1_joyLikelihood' in result.columns
     assert result['face1_joyLikelihood'][0] == 'VERY_LIKELY'
     assert result['face1_joyLikelihood'][1] == 'VERY_LIKELY'
