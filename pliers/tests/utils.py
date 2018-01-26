@@ -31,8 +31,9 @@ class DummyExtractor(Extractor):
 
     def _extract(self, stim):
         data = np.random.randint(0, 1000, (self.n_rows, self.n_cols))
-        onsets = np.random.choice(self.n_rows*2, self.n_rows, False)
+        onsets = np.arange(self.n_rows)
         return ExtractorResult(data, stim, deepcopy(self), onsets=onsets)
+
 
 class DummyBatchExtractor(BatchTransformerMixin, Extractor):
 

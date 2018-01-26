@@ -1,9 +1,12 @@
 import pandas as pd
 import numpy as np
-import seaborn as sns
+from pliers.utils import attempt_to_import, verify_dependencies
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import mahalanobis
 from numpy.linalg import LinAlgError
+
+
+sns = attempt_to_import('seaborn')
 
 
 def correlation_matrix(df):
@@ -146,6 +149,7 @@ class Diagnostics(object):
             print(self.results['Variances'])
 
         if plot:
+            verify_dependencies('seaborn')
             for key, result in self.results.items():
                 if key == 'CorrelationMatrix':
                     ax = plt.axes()
