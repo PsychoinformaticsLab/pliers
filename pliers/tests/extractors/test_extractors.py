@@ -73,41 +73,6 @@ def test_implicit_stim_conversion3():
     assert first_word['onset'][0] >= 4.2
 
 
-def test_merge_extractor_results_by_features():
-    np.random.seed(100)
-    image_dir = join(get_test_data_path(), 'image')
-    stim = ImageStim(join(image_dir, 'apple.jpg'))
-
-    # Merge results for static Stims (no onsets)
-    extractors = [BrightnessExtractor(), VibranceExtractor()]
-    results = [e.transform(stim) for e in extractors]
-    df = ExtractorResult.merge_features(results)
-
-    de_names = ['Extractor1', 'Extractor2', 'Extractor3']
-    des = [DummyExtractor(name=name) for name in de_names]
-    results = [de.transform(stim) for de in des]
-    df = ExtractorResult.merge_features(results)
-    assert df.shape == (177, 16)
-    assert df.columns.levels[1].unique().tolist() == [0, 1, 2, '']
-    cols = ['onset', 'duration', 'class', 'filename', 'history', 'stim_name',
-            'source_file']
-    assert df.columns.levels[0].unique().tolist() == de_names + cols
-
-
-def test_merge_extractor_results_by_stims():
-    image_dir = join(get_test_data_path(), 'image')
-    stim1 = ImageStim(join(image_dir, 'apple.jpg'))
-    stim2 = ImageStim(join(image_dir, 'obama.jpg'))
-    de = DummyExtractor()
-    results = [de.transform(stim1), de.transform(stim2)]
-    df = ExtractorResult.merge_stims(results)
-    assert df.shape == (200, 10)
-    assert set(df.columns.tolist()) == set(
-        ['onset', 'duration', 0, 1, 2, 'stim_name', 'class', 'filename',
-         'history', 'source_file'])
-    assert set(df['stim_name'].unique()) == set(['obama.jpg', 'apple.jpg'])
-
-
 def test_merge_extractor_results():
     np.random.seed(100)
     image_dir = join(get_test_data_path(), 'image')
@@ -117,29 +82,42 @@ def test_merge_extractor_results():
     des = [DummyExtractor(name=name) for name in de_names]
     results = [de.transform(stim1) for de in des]
     results += [de.transform(stim2) for de in des]
-    df = merge_results(results)
-    assert df.shape == (354, 16)
+
+    df = merge_results(results, format='wide')
+    assert df.shape == (200, 17)
     cols = ['onset', 'duration', 'class', 'filename', 'history', 'stim_name',
             'source_file']
-    assert df.columns.levels[0].unique().tolist() == de_names + cols
-    assert df.columns.levels[1].unique().tolist() == [0, 1, 2, '']
-    assert set(df['stim_name'].unique()) == set(['obama.jpg', 'apple.jpg'])
+    assert not set(cols) - set(df.columns)
+    assert 'Extractor2#feature_3' in df.columns
 
+    df = merge_results(results, format='wide', extractor_names='drop')
+    assert df.shape == (200, 11)
+    assert not set(cols) - set(df.columns)
+    assert 'feature_3' in df.columns
 
-def test_merge_extractor_results_flattened():
-    np.random.seed(100)
-    image_dir = join(get_test_data_path(), 'image')
-    stim1 = ImageStim(join(image_dir, 'apple.jpg'))
-    stim2 = ImageStim(join(image_dir, 'obama.jpg'))
-    de_names = ['Extractor1', 'Extractor2', 'Extractor3']
-    des = [DummyExtractor(name=name) for name in de_names]
-    results = [de.transform(stim1) for de in des]
-    results += [de.transform(stim2) for de in des]
-    df = merge_results(results, flatten_columns=True)
-    de_cols = ['Extractor1_0', 'Extractor1_1', 'Extractor1_2',
-               'Extractor2_0', 'Extractor2_1', 'Extractor2_2',
-               'Extractor3_0', 'Extractor3_1', 'Extractor3_2']
-    assert df.shape == (354, 16)
-    cols = ['onset', 'class', 'filename', 'history', 'stim_name', 'duration',
-            'source_file']
-    assert set(df.columns.unique().tolist()) == set(cols + de_cols)
+    df = merge_results(results, format='wide', extractor_names='multi')
+    assert df.shape == (200, 17)
+    _cols = [(c, np.nan) for c in cols]
+    assert not set(_cols) - set(df.columns)
+    assert ('Extractor2', 'feature_3') in df.columns
+
+    with pytest.raises(ValueError):
+        merge_results(results, format='long', extractor_names='multi')
+
+    df = merge_results(results, format='long')
+    assert df.shape == (1800, 11)
+    _cols = cols + ['feature', 'extractor', 'value']
+    assert not set(_cols) - set(df.columns)
+    row = df.iloc[523, :]
+    assert row['feature'] == 'feature_3'
+    assert row['value'] == 934
+    assert row['extractor'] == 'Extractor2'
+
+    df = merge_results(results, format='long', extractor_names='drop')
+    assert df.shape == (1800, 10)
+    assert set(_cols) - set(df.columns) == {'extractor'}
+
+    df = merge_results(results, format='long', extractor_names='prepend')
+    assert df.shape == (1800, 10)
+    row = df.iloc[523, :]
+    assert row['feature'] == 'Extractor2#feature_3'

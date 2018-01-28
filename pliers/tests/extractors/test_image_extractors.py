@@ -59,13 +59,13 @@ def test_tensor_flow_inception_v3_extractor():
     imgs = [ImageStim(im, onset=4.2, duration=1) for im in imgs]
     ext = TensorFlowInceptionV3Extractor()
     results = ext.transform(imgs)
-    df = merge_results(results)
+    df = merge_results(results, format='wide', extractor_names='multi')
     assert len(df) == 2
     assert ('TensorFlowInceptionV3Extractor', 'Granny Smith') in df.columns
     assert 0.22610 in df[
         ('TensorFlowInceptionV3Extractor', 'Windsor tie')].values
-    assert 4.2 in df[('onset', '')].values
-    assert 1 in df[('duration', '')].values
+    assert 4.2 in df[('onset', np.nan)].values
+    assert 1 in df[('duration', np.nan)].values
 
 
 def test_face_recognition_landmarks_extractor():
@@ -75,11 +75,12 @@ def test_face_recognition_landmarks_extractor():
     result = ext.transform(imgs)
     dfs = [r.to_df(timing=False) for r in result]
     assert dfs[0].empty
-    assert dfs[1].shape == (1, 36)
-    assert dfs[2].shape == (1, 9)
+    assert dfs[1].shape == (4, 10)
+    assert dfs[2].shape == (1, 10)
+    assert 'face_landmarks_nose_tip' in dfs[1].columns
     assert 'face_landmarks_nose_tip' in dfs[2].columns
-    assert 'face_landmarks_nose_tip_3' in dfs[1].columns
-    assert dfs[1].loc[0, 'face_landmarks_left_eyebrow_4'] == result[1].raw[3]['left_eyebrow']
+    assert dfs[1].loc[3, 'face_landmarks_left_eyebrow'] == \
+        result[1].raw[3]['left_eyebrow']
 
 
 def test_face_recognition_encodings_extractor():
@@ -89,9 +90,11 @@ def test_face_recognition_encodings_extractor():
     result = ext.transform(imgs)
     dfs = [r.to_df(timing=False) for r in result]
     assert dfs[0].empty
-    assert dfs[1].iloc[0, 0].shape == (128,)
-    assert dfs[2].iloc[0, 0].shape == (128,)
-    assert 'face_encodings_2' in dfs[1].columns
+    assert dfs[1].iloc[0, 1].shape == (128,)
+    assert dfs[2].iloc[0, 1].shape == (128,)
+    assert 'object_id' in dfs[1].columns
+    assert dfs[1]['object_id'][1] == 1
+    assert 'face_encodings' in dfs[1].columns
     assert 'face_encodings' in dfs[2].columns
 
 
@@ -102,8 +105,9 @@ def test_face_recognition_locations_extractor():
     result = ext.transform(imgs)
     dfs = [r.to_df(timing=False) for r in result]
     assert dfs[0].empty
-    assert isinstance(dfs[1].iloc[0, 0], tuple)
-    assert len(dfs[1].iloc[0, 0]) == 4
-    assert len(dfs[2].iloc[0, 0]) == 4
-    assert 'face_locations_2' in dfs[1].columns
+    assert isinstance(dfs[1].iloc[0, 1], tuple)
+    assert len(dfs[1].iloc[0, 1]) == 4
+    assert len(dfs[2].iloc[0, 1]) == 4
+    assert dfs[1]['object_id'][1] == 1
+    assert 'face_locations' in dfs[1].columns
     assert 'face_locations' in dfs[2].columns

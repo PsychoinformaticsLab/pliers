@@ -117,7 +117,7 @@ class GoogleVisionAPISafeSearchExtractor(GoogleVisionAPIExtractor):
     response_object = 'safeSearchAnnotation'
 
     def _parse_annotations(self, annotation):
-        return list(annotation.keys()), annotation.values()
+        return list(annotation.keys()), list(annotation.values())
 
 
 class GoogleVisionAPIWebEntitiesExtractor(GoogleVisionAPIExtractor):

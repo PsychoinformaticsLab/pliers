@@ -4,7 +4,7 @@ from pliers.extractors import (GoogleVisionAPIFaceExtractor,
                                GoogleVisionAPIPropertyExtractor,
                                GoogleVisionAPISafeSearchExtractor,
                                GoogleVisionAPIWebEntitiesExtractor,
-                               ExtractorResult)
+                               ExtractorResult, merge_results)
 from pliers.extractors.google import GoogleVisionAPIExtractor
 from pliers.stimuli import ImageStim, VideoStim
 import pytest
@@ -49,7 +49,7 @@ def test_google_vision_api_face_extractor():
     result = ext.transform(stim).to_df()
     assert 'face1_joyLikelihood' in result.columns
     assert result['face1_joyLikelihood'][0] == 'VERY_LIKELY'
-    assert result['face1_face_detectionConfidence'][0] > 0.7
+    assert float(result['face1_face_detectionConfidence'][0]) > 0.7
 
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
@@ -69,12 +69,14 @@ def test_google_vision_multiple_face_extraction():
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_face_batch():
-    obama_file = join(get_test_data_path(), 'image', 'obama.jpg')
-    people_file = join(get_test_data_path(), 'image', 'thai_people.jpg')
-    stims = [ImageStim(obama_file), ImageStim(people_file)]
+    stims = ['apple', 'obama', 'thai_people']
+    stim_files = [join(get_test_data_path(), 'image', '%s.jpg' % s)
+                  for s in stims]
+    stims = [ImageStim(s) for s in stim_files]
     ext = GoogleVisionAPIFaceExtractor(handle_annotations='first')
     result = ext.transform(stims)
-    result = ExtractorResult.merge_stims(result)
+    result = merge_results(result, format='wide', extractor_names=False)
+    assert result.shape == (2, 138)
     assert 'face1_joyLikelihood' in result.columns
     assert result['face1_joyLikelihood'][0] == 'VERY_LIKELY'
     assert result['face1_joyLikelihood'][1] == 'VERY_LIKELY'
@@ -83,16 +85,16 @@ def test_google_vision_face_batch():
     conv = FrameSamplingFilter(every=10)
     video = conv.transform(video)
     result = ext.transform(video)
-    result = ExtractorResult.merge_stims(result)
+    result = merge_results(result, format='wide', extractor_names=False)
     assert 'face1_joyLikelihood' in result.columns
-    assert result.shape == (11, 137)
+    assert result.shape == (11, 138)
 
     video = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
     video = conv.transform(video)
     result = ext.transform(video)
-    result = ExtractorResult.merge_stims(result)
+    result = merge_results(result, format='wide', extractor_names=False)
     assert 'face1_joyLikelihood' not in result.columns
-    assert result.shape == (17, 7)
+    assert len(result) == 0
 
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")

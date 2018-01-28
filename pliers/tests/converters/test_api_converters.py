@@ -9,7 +9,7 @@ AUDIO_DIR = join(get_test_data_path(), 'audio')
 
 
 @pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
-def test_witaiAPI_converter():
+def test_WitTranscriptionConverter():
     stim = AudioStim(join(AUDIO_DIR, 'homer.wav'), onset=4.2)
     conv = WitTranscriptionConverter()
     out_stim = conv.transform(stim)
@@ -25,7 +25,7 @@ def test_witaiAPI_converter():
 
 @pytest.mark.skipif("'IBM_USERNAME' not in os.environ or "
                     "'IBM_PASSWORD' not in os.environ")
-def test_ibmAPI_converter():
+def test_IBMSpeechAPIConverter():
     stim = AudioStim(join(AUDIO_DIR, 'homer.wav'), onset=4.2)
     conv = IBMSpeechAPIConverter()
     out_stim = conv.transform(stim)
