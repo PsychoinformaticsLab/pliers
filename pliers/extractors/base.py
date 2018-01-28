@@ -127,6 +127,8 @@ class ExtractorResult(object):
                             for i in range(self.data.shape[1])]
             df = pd.DataFrame(self.data, columns=features)
 
+        index_cols = []
+
         # Generally we leave it to Extractors to properly track the number of
         # objects returned in the result DF, using the 'object_id' column.
         # But in cases where the Extractor punt on this and_object_id=True, we
@@ -141,8 +143,7 @@ class ExtractorResult(object):
                 ids = np.arange(len(df)) if len(index) == 1 \
                     else df.groupby(index).cumcount()
                 df.insert(0, 'object_id', ids)
-
-        index_cols = ['object_id']
+                index_cols = ['object_id']
 
         if timing is True or (timing == 'auto' and not
                               np.isnan(self.durations).any()):
