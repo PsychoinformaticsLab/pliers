@@ -201,9 +201,9 @@ def merge_results(results, format='wide', timing=True, metadata=True,
             returning results. The specific behavior depends on whether format
             is 'long' or 'wide'. Valid values include:
 
-                - 'prepend': In both 'long' and 'wide' formats, feature names
-                  will be prepended with the Extractor name (e.g.,
-                  "FaceExtractor#face_likelihood").
+                - 'prepend' or True: In both 'long' and 'wide' formats,
+                  feature names will be prepended with the Extractor name
+                  (e.g., "FaceExtractor#face_likelihood").
                 - 'drop' or False: In both 'long' and 'wide' formats, extractor
                   names will be omitted entirely from the result. Note that
                   this can create feature name conflicts when merging results
@@ -216,8 +216,6 @@ def merge_results(results, format='wide', timing=True, metadata=True,
                   Extractor name and the second level containing the feature
                   name. This value is invalid if format='long' (and will raise
                   and error).
-                - True: When format='long', behaves like 'column'. When
-                  format='wide', behaves like 'prepend'.
 
         object_id (bool): If True, attempts to intelligently add an
             'object_id' column that differentiates between multiple objects in
@@ -241,7 +239,9 @@ def merge_results(results, format='wide', timing=True, metadata=True,
     _object_id = True if object_id == 'auto' else object_id
 
     if extractor_names is True:
-        extractor_names = 'prepend' if format == 'wide' else 'column'
+        extractor_names = 'prepend'
+    elif extractor_names is False:
+        extractor_names = 'drop'
 
     dfs = [r.to_df(timing=_timing, metadata=metadata, format='long',
                    extractor_name=True, object_id=_object_id)
@@ -275,6 +275,7 @@ def merge_results(results, format='wide', timing=True, metadata=True,
 
         data = data.pivot_table(index=ind_cols, columns='feature',
                                 values='value', aggfunc=aggfunc).reset_index()
+        data.columns.name = None  # vestigial--is set to 'feature'
         data[ind_cols] = data[ind_cols].replace('PlAcEholdER', np.nan)
         data[ind_cols] = data[ind_cols].astype(dict(zip(ind_cols, dtypes)))
 
