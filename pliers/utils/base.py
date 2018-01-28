@@ -104,7 +104,7 @@ def attempt_to_import(dependency, name=None, fromlist=None):
 
 def verify_dependencies(dependencies):
     missing = []
-    for dep in dependencies:
+    for dep in listify(dependencies):
         if module_names[dep].value is None:
             missing.append(module_names[dep].package)
     if missing:

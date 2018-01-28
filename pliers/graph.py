@@ -176,7 +176,7 @@ class Graph(object):
 
         g.draw(filename, prog='dot')
 
-    def run(self, stim, merge=True):
+    def run(self, stim, merge=True, **merge_kwargs):
         ''' Executes the graph by calling all Transformers in sequence.
 
         Args:
@@ -186,11 +186,13 @@ class Graph(object):
                 DataFrame before being returned. If False, a list of
                 ExtractorResult objects is returned (one per Extractor/Stim
                 combination).
+            merge_kwargs: Optional keyword arguments to pass onto the
+                merge_results() call.
         '''
         results = list(chain(*[self.run_node(n, stim) for n in self.roots]))
         results = list(flatten(results))
         self._results = results  # For use in plotting
-        return merge_results(results) if merge else results
+        return merge_results(results, **merge_kwargs) if merge else results
 
     transform = run
 
