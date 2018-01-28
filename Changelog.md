@@ -1,9 +1,10 @@
 # Changelog
 
-## 0.2 (January 8, 2018)
+## 0.2 (January 29, 2018)
 This is a major release that adds many new features and transformers. Changes include:
 * Sphinx [documentation](http://tyarkoni.github.io/pliers/)!
-* New package features:
+* New package features
+    * An updated extractor result management API with simplified merging mechanisms (see #232 for more details)
     * Ability to create transformer Graphs via a JSON specification
     * Scitkit-learn integration: ability to use pliers Graphs or Extractors as sklearn Transformers that can be plugged into full Pipelines
     * Batch transformation: added ability to transform stimuli in batches when the transformer inherits `BatchTransformerMixin`, but a batch size must be given
