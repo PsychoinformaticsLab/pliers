@@ -64,5 +64,4 @@ class MicrosoftAPITransformer(Transformer):
 class MicrosoftVisionAPITransformer(MicrosoftAPITransformer, EnvironmentKeyMixin):
 
     api_name = 'vision'
-    api_method = 'analyze'
     _env_keys = 'MICROSOFT_VISION_SUBSCRIPTION_KEY'

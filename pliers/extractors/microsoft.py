@@ -92,6 +92,10 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
                                                    '%s_' % (k))
                         else:
                             data_dict[k] = v
+                elif isinstance(val, dict):
+                    update_with_key_prefix(data_dict,
+                                           val[field],
+                                           '%s_' % (field))
                 else:
                     data_dict[field] = val
 
@@ -118,6 +122,8 @@ class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
             noise, occlusion, and smile. Note that each attribute has
             additional computational and time cost.
     '''
+
+    api_method = 'analyze'
 
     def __init__(self, features='Description,Categories,ImageType,Color,Adult',
                  **kwargs):
