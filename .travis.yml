@@ -31,7 +31,7 @@ before_install:
 - hash -r
 - conda info -a
 - conda config --set always_yes yes --set changeps1 no
-- conda config --add channels conda-forge menpo
+- conda config --add channels conda-forge
 - conda update -y conda
 - rm -rf /home/travis/miniconda/envs/test-env
 - conda create -q -n test-env python=$PYTHON_VERSION $CONDA_DEPS
