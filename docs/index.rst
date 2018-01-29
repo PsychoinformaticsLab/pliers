@@ -11,6 +11,7 @@ Pliers documentation
    stimuli
    transformers
    graphs
+   results
    config
    reference
 
