@@ -2,7 +2,7 @@ sudo: required
 dist: trusty
 env:
   global:
-  - CONDA_DEPS="pip pytest numpy pillow pandas requests scipy nltk six tqdm seaborn
+  - CONDA_DEPS="pip pytest numpy pillow pandas requests scipy nltk six tqdm seaborn opencv3
     matplotlib pathos tensorflow contextlib2"
   - secure: XwXubMYVa7nTQK2XwJySgtFM/+8xzzaQClSWI76Nik5eqb2yVW4DTJnpeZgp66EvTHEc202bddmleZ6bPw/wWauk+UEjTuRckeocM70rIdSEjzGuDMEKNRmxSQ+5ysf2f7akrog6aUtNjKaEZJIV8RlUWHGLNNAybtTS73tiwcM=
   - secure: OAxWIyFPse0jBXLdS9GzcQgM4d0/lYY9zzAycth0hqOPIrjAzkfUSFz/aGu0ODErwRcOrJPCV8RSaBq5uVCGQ4U7Yl/UKYhS4fkye/CUehmUUDtRxlUIl7pwUznjR8YDHglB9GcGN2FQEz44eLmSWz7JQCKEyqfGEqIHJxb4HmA=
@@ -31,7 +31,7 @@ before_install:
 - hash -r
 - conda info -a
 - conda config --set always_yes yes --set changeps1 no
-- conda config --add channels conda-forge
+- conda config --add channels conda-forge menpo
 - conda update -y conda
 - rm -rf /home/travis/miniconda/envs/test-env
 - conda create -q -n test-env python=$PYTHON_VERSION $CONDA_DEPS
@@ -42,7 +42,7 @@ install:
 - pip install python-magic coveralls pytest-cov pysrt xlrd clarifai pytesseract
 - pip install moviepy==0.2.2.13
 - pip install SpeechRecognition IndicoIo pygraphviz sklearn python-twitter gensim
-  google-compute-engine librosa face_recognition
+  google-compute-engine librosa face_recognition google-api-python-client
 before_script:
 - python -m pliers.support.download
 script:
