@@ -21,9 +21,9 @@ matrix:
 before_install:
 - openssl aes-256-cbc -K $encrypted_a0a62c26415d_key -iv $encrypted_a0a62c26415d_iv
   -in pliers/tests/credentials/google.json.enc -out pliers/tests/credentials/google.json -d
-- sudo add-apt-repository ppa:joyard-nicolas/ffmpeg -y
+- sudo add-apt-repository ppa:mc3man/trusty-media -y
 - sudo apt-get -qq update
-- sudo apt-get install ffmpeg tesseract-ocr graphviz cmake
+- sudo apt-get install libmp3lame-dev ffmpeg tesseract-ocr graphviz cmake
 - export MINICONDA=$HOME/miniconda
 - export PATH="$MINICONDA/bin:$PATH"
 - wget $MINICONDA_URL -O miniconda.sh;
