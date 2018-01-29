@@ -245,7 +245,7 @@ def test_save():
                                        columns='ot', default_duration=0.2)
     text_stim = TextStim(text='hello')
     video_stim = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
-    audio_stim = AudioStim(join(get_test_data_path(), 'audio', 'crowd.mp3'))
+    audio_stim = AudioStim(join(get_test_data_path(), 'audio', 'barber.wav'))
     image_stim = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
     stims = [complextext_stim, text_stim, video_stim, audio_stim, image_stim]
     for s in stims:
