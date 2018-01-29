@@ -104,7 +104,7 @@ def test_merge_extractor_results():
     with pytest.raises(ValueError):
         merge_results(results, format='long', extractor_names='multi')
 
-    df = merge_results(results, format='long')
+    df = merge_results(results, format='long', extractor_names='column')
     assert df.shape == (1800, 11)
     _cols = cols + ['feature', 'extractor', 'value']
     assert not set(_cols) - set(df.columns)
