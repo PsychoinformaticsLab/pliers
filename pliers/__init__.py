@@ -1,4 +1,5 @@
 from .config import set_option, get_option, set_options
+from .graph import Graph
 
 
 __all__ = [
