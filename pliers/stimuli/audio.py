@@ -18,6 +18,9 @@ class AudioStim(Stim):
             respect to some more general context or timeline the user wishes
             to keep track of.
         sampling_rate (int): Sampling rate of clip, in hertz.
+        url (str): Optional url to read contents from.
+        clip (AudioFileClip): Optional moviepy AudioFileClip to initialize
+            from.
 
     '''
 

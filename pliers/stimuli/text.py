@@ -20,19 +20,22 @@ class TextStim(Stim):
             respect to some more general context or timeline the user wishes
             to keep track of.
         duration (float): Optional duration of the TextStim, in seconds.
+        order (int): Optional sequential index of the TextStim within some
+            broader context.
+        url (str): Optional url to read contents from.
     '''
 
     _default_file_extension = '.txt'
 
     def __init__(self, filename=None, text=None, onset=None, duration=None,
-                 url=None):
+                 order=None, url=None):
         if filename is not None and text is None:
             text = open(filename).read()
         if url is not None:
             text = urlopen(url).read()
         self.text = text
         name = 'text[%s]' % text[:40]  # Truncate at 40 chars
-        super(TextStim, self).__init__(filename, onset, duration, name)
+        super(TextStim, self).__init__(filename, onset, duration, order, name)
 
     @property
     def data(self):
@@ -133,7 +136,7 @@ class ComplexTextStim(Stim):
 
         for i, r in data.iterrows():
             if 'onset' not in r:
-                elem = TextStim(r['text'])
+                elem = TextStim(r['text'], order=i)
             else:
                 duration = r.get('duration', None)
                 if duration is None:
@@ -168,7 +171,8 @@ class ComplexTextStim(Stim):
         df = pd.DataFrame(columns=["text", "onset", "duration"], data=list_)
 
         for i, r in df.iterrows():
-            elem = TextStim(filename, r['text'], r['onset'], r["duration"])
+            elem = TextStim(filename, text=r['text'], onset=r['onset'],
+                            duration=r['duration'], order=i)
             self.add_elem(elem)
 
     def add_elem(self, elem):
@@ -213,4 +217,5 @@ class ComplexTextStim(Stim):
         # TODO: track order as a separate attribute from duration, because we
         # can't treat serial position as if it were time in seconds.
         for i, t in enumerate(tokens):
-            self.add_elem(TextStim(text=t, onset=None, duration=None))
+            self.add_elem(TextStim(text=t, onset=None, duration=None,
+                                   order=i))

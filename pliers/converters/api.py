@@ -115,6 +115,7 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
             raise Exception(
                 'received invalid results from API: {0}'.format(str(_json)))
         elements = []
+        order = 0
         for result in results:
             if result['final'] is True:
                 timestamps = result['alternatives'][0]['timestamps']
@@ -125,14 +126,18 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
                         end = entry[2]
                         elements.append(TextStim(text=text,
                                                  onset=offset+start,
-                                                 duration=end-start))
+                                                 duration=end-start,
+                                                 order=order))
+                        order += 1
                 elif self.resolution is 'phrases':
                     text = result['alternatives'][0]['transcript']
                     start = timestamps[0][1]
                     end = timestamps[-1][2]
                     elements.append(TextStim(text=text,
                                              onset=offset+start,
-                                             duration=end-start))
+                                             duration=end-start,
+                                             order=order))
+                    order += 1
         return ComplexTextStim(elements=elements, onset=audio.onset)
 
     def _query_api(self, clip):
