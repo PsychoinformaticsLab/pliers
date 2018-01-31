@@ -878,7 +878,7 @@ result.head(10)
 plt.imshow(result.iloc[:, 4:].values.T, aspect='auto')
 ```
 
-![png](https://raw.githubusercontent.com/tyarkoni/pliers/master/pliers/docs/_static/images/chromagram.png)
+![png](https://raw.githubusercontent.com/tyarkoni/pliers/master/docs/_static/images/chromagram.png)
 
 
 ### Sentiment analysis on speech transcribed from audio
