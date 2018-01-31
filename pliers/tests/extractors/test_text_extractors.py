@@ -24,7 +24,6 @@ def test_text_extractor():
                              variables=['length', 'frequency'])
     assert td.data.shape == (7, 2)
     result = td.transform(stim)[2].to_df()
-    print(result)
     assert result['duration'][0] == 1
     assert result.shape == (1, 6)
     assert np.isclose(result['frequency'][0], 11.729, 1e-5)
