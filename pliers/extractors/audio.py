@@ -96,7 +96,8 @@ class STFTAudioExtractor(AudioExtractor):
         values[np.isnan(values)] = 0.
         values[np.isinf(values)] = 0.
         return ExtractorResult(values, stim, self, features=features,
-                               onsets=index, durations=self.hop_size)
+                               onsets=index, durations=self.hop_size,
+                               orders=list(range(len(index))))
 
 
 class MeanAmplitudeExtractor(Extractor):
@@ -126,8 +127,11 @@ class MeanAmplitudeExtractor(Extractor):
             mean_amplitude = np.mean(amps[r_onset:r_offset])
             values.append(mean_amplitude)
 
+        orders = list(range(len(elements)))
+
         return ExtractorResult(values, stim, self, features=['mean_amplitude'],
-                               onsets=onsets, durations=durations)
+                               onsets=onsets, durations=durations,
+                               orders=orders)
 
 
 class LibrosaFeatureExtractor(AudioExtractor):
@@ -162,10 +166,9 @@ class LibrosaFeatureExtractor(AudioExtractor):
                                         hop_length=self.hop_length)
         onsets = onsets + stim.onset if stim.onset else onsets
         durations = [self.hop_length / float(stim.sampling_rate)] * n_frames
-        return ExtractorResult(values, stim, self,
-                               features=feature_names,
-                               onsets=onsets,
-                               durations=durations)
+        return ExtractorResult(values, stim, self, features=feature_names,
+                               onsets=onsets, durations=durations,
+                               orders=list(range(n_frames)))
 
 
 class SpectralCentroidExtractor(LibrosaFeatureExtractor):

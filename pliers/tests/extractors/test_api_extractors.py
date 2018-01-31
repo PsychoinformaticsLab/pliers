@@ -23,6 +23,7 @@ def test_indico_api_text_extractor():
     outdfKeysCheck = {
         'onset',
         'duration',
+        'order',
         'object_id',
         'emotion_anger',
         'emotion_fear',
@@ -55,7 +56,8 @@ def test_indico_api_image_extractor():
 
     image_dir = join(get_test_data_path(), 'image')
     stim1 = ImageStim(join(image_dir, 'apple.jpg'))
-    result1 = merge_results(ext.transform([stim1, stim1]), extractor_names=False)
+    result1 = merge_results(ext.transform([stim1, stim1]),
+                            extractor_names=False)
     outdfKeysCheck = {
         'object_id',
         'fer_Surprise',
@@ -70,7 +72,8 @@ def test_indico_api_image_extractor():
                     'class',
                     'filename',
                     'onset',
-                    'duration'}
+                    'duration',
+                    'order'}
 
     assert set(result1.columns) - set(['stim_name']) == outdfKeysCheck | meta_columns
     assert result1['content_filtering'][0] < 0.2
@@ -90,15 +93,16 @@ def test_clarifai_api_extractor():
     assert result.ix[:, 5][0] > 0.0
 
     result = ClarifaiAPIExtractor(max_concepts=5).transform(stim).to_df()
-    assert result.shape == (1, 8)
+    assert result.shape == (1, 9)
 
-    result = ClarifaiAPIExtractor(min_value=0.9).transform(stim).to_df()
+    result = ClarifaiAPIExtractor(
+        min_value=0.9).transform(stim).to_df(object_id=False)
     assert all(np.isnan(d) or d > 0.9 for d in result.values[0, 3:])
 
     concepts = ['cat', 'dog']
     result = ClarifaiAPIExtractor(select_concepts=concepts).transform(stim)
     result = result.to_df()
-    assert result.shape == (1, 5)
+    assert result.shape == (1, 6)
     assert 'cat' in result.columns and 'dog' in result.columns
 
 

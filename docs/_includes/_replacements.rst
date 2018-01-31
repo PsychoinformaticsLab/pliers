@@ -9,6 +9,7 @@
 .. |PredefinedDictionaryExtractor|  replace:: :py:class:`PredefinedDictionaryExtractor`
 .. |IndicoAPIExtractor|  replace:: :py:class:`IndicoAPIExtractor`
 .. |IndicoAPITextExtractor| replace:: :py:class:`IndicoAPITextExtractor`
+.. |FaceRecognitionFaceLocationsExtractor| replace:: :py:class:`FaceRecognitionFaceLocationsExtractor`
 
 .. currentmodule:: pliers.converters
 .. |Converter| replace:: :py:class:`Converter`
