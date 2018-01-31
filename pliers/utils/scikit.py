@@ -45,9 +45,9 @@ class PliersTransformer(SklearnBase):
             result = merge_results(result, format='wide',
                                    extractor_names=False)
 
-        extra_columns = list(set(['onset', 'duration', 'history', 'class',
-                                  'filename', 'stim_name', 'source_file',
-                                  'object_id', 'extractor']) &
+        extra_columns = list(set(['onset', 'duration', 'order', 'history',
+                                  'class', 'filename', 'stim_name',
+                                  'source_file', 'object_id', 'extractor']) &
                              set(result.columns))
         self.metadata_ = result[extra_columns]
         result.drop(extra_columns, axis=1, inplace=True, errors='ignore')
