@@ -1,13 +1,20 @@
-from pliers.version import __version__
 from setuptools import setup, find_packages
+import os
 
 extra_setuptools_args = dict(
     tests_require=['pytest']
 )
 
+thispath, _ = os.path.split(__file__)
+
+ver_file = os.path.join(thispath, 'pliers', 'version.py')
+
+with open(ver_file) as fp:
+    exec(fp.read(), globals(), locals())
+
 setup(
     name="pliers",
-    version=__version__,
+    version=locals()['__version__'],
     description="Multimodal feature extraction in Python",
     maintainer='Tal Yarkoni',
     maintainer_email='tyarkoni@gmail.com',
