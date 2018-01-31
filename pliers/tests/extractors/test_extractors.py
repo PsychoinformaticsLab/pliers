@@ -84,19 +84,19 @@ def test_merge_extractor_results():
     results += [de.transform(stim2) for de in des]
 
     df = merge_results(results, format='wide')
-    assert df.shape == (200, 17)
-    cols = ['onset', 'duration', 'class', 'filename', 'history', 'stim_name',
-            'source_file']
+    assert df.shape == (200, 18)
+    cols = ['onset', 'duration', 'order', 'class', 'filename', 'history',
+            'stim_name', 'source_file']
     assert not set(cols) - set(df.columns)
     assert 'Extractor2#feature_3' in df.columns
 
     df = merge_results(results, format='wide', extractor_names='drop')
-    assert df.shape == (200, 11)
+    assert df.shape == (200, 12)
     assert not set(cols) - set(df.columns)
     assert 'feature_3' in df.columns
 
     df = merge_results(results, format='wide', extractor_names='multi')
-    assert df.shape == (200, 17)
+    assert df.shape == (200, 18)
     _cols = [(c, np.nan) for c in cols]
     assert not set(_cols) - set(df.columns)
     assert ('Extractor2', 'feature_3') in df.columns
@@ -105,19 +105,19 @@ def test_merge_extractor_results():
         merge_results(results, format='long', extractor_names='multi')
 
     df = merge_results(results, format='long', extractor_names='column')
-    assert df.shape == (1800, 11)
+    assert df.shape == (1800, 12)
     _cols = cols + ['feature', 'extractor', 'value']
     assert not set(_cols) - set(df.columns)
     row = df.iloc[523, :]
-    assert row['feature'] == 'feature_3'
-    assert row['value'] == 934
-    assert row['extractor'] == 'Extractor2'
+    assert row['feature'] == 'feature_2'
+    assert row['value'] == 475
+    assert row['extractor'] == 'Extractor1'
 
     df = merge_results(results, format='long', extractor_names='drop')
-    assert df.shape == (1800, 10)
+    assert df.shape == (1800, 11)
     assert set(_cols) - set(df.columns) == {'extractor'}
 
     df = merge_results(results, format='long', extractor_names='prepend')
-    assert df.shape == (1800, 10)
+    assert df.shape == (1800, 11)
     row = df.iloc[523, :]
-    assert row['feature'] == 'Extractor2#feature_3'
+    assert row['feature'] == 'Extractor1#feature_2'
