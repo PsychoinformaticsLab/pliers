@@ -1,6 +1,6 @@
 from .config import set_option, get_option, set_options
 from .graph import Graph
-
+from .version import __version__
 
 __all__ = [
     'config'
