@@ -19,7 +19,8 @@ matrix:
     - PYTHON_VERSION=2.7
     - MINICONDA_URL="https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh"
 before_install:
-- ./ci/decrypt.sh
+- openssl aes-256-cbc -K $encrypted_a0a62c26415d_key -iv $encrypted_a0a62c26415d_iv
+  -in pliers/tests/credentials/google.json.enc -out pliers/tests/credentials/google.json -d || true
 - sudo add-apt-repository ppa:mc3man/trusty-media -y
 - sudo apt-get -qq update
 - sudo apt-get install libmp3lame-dev ffmpeg tesseract-ocr graphviz cmake
