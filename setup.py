@@ -1,9 +1,23 @@
-from pliers.version import __version__
+from os.path import dirname, join as opj
 from setuptools import setup, find_packages
+
+
+def get_version():
+    """Load version from version.py without entailing any imports
+    """
+    # This might entail lots of imports which might not yet be available
+    # so let's do ad-hoc parsing of the version.py
+    with open(opj(dirname(__file__), 'pliers', 'version.py')) as f:
+        version_lines = list(filter(lambda x: x.startswith('__version__'), f))
+    assert (len(version_lines) == 1)
+    return version_lines[0].split('=')[1].strip(" '\"\t\n")
+
 
 extra_setuptools_args = dict(
     tests_require=['pytest']
 )
+
+__version__ = get_version()
 
 setup(
     name="pliers",
@@ -21,6 +35,6 @@ setup(
                   },
     zip_safe=False,
     download_url='https://github.com/tyarkoni/pliers/archive/%s.tar.gz' %
-    __version__,
+        __version__,
     **extra_setuptools_args
 )
