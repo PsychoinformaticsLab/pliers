@@ -114,37 +114,9 @@ At present, pliers implements several dozen |Extractor| classes that span a wide
 
 Note that, in practice, the number of features one can extract using the above classes is extremely large, because many of these Extractors return open-ended feature sets that are determined by the contents of the input |Stim| and/or the specified initialization arguments. For example, most of the image-labeling Extractors that rely on deep learning-based services (e.g., |GoogleVisionAPILabelExtractor| and |ClarifaiAPIExtractor|) will return feature information for any of the top N objects detected in the image. And the |PredefinedDictionaryExtractor| provides a standardized interface to a large number of online word lookup dictionaries (e.g., word norms for written frequency, age-of-acquisition, emotionality ratings, etc.).
 
-The ExtractorResult class
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Calling transform() on an instantiated |Extractor| returns an object of class |ExtractorResult|. This is a lightweight container that contains all of the extracted feature information returned by the |Extractor|, and also stores references to the |Stim| and |Extractor| objects used to generate the result. The raw extracted feature values are stored in the .data property, but typically, we'll want to work with the data in a more convenient format. Fortunately, every |ExtractorResult| instance exposes a .to_df() methods that gives us a nice pandas DataFrame. You can refer back to our first Quickstart example to see this in action.
-
-Merging Extractor results
-~~~~~~~~~~~~~~~~~~~~~~~~~
-In most cases, we'll want to do more than just apply a single |Extractor| to a single |Stim|. We might want to apply an |Extractor| to a set of stims (e.g., to run the GoogleVisionAPIFaceExtractor on a whole bunch of images), or to apply several different Extractors to a single |Stim| (e.g., to run both face recognition and object recognition services on each image). As we'll see later (in the section on |Graph|\s), pliers makes it easy to apply many Extractors to many |Stim|\s, and in such cases, it will automatically merge the extracted feature data into one big pandas DataFrame. But in cases where we're working with multiple results manually, we can still merge the results ourselves, using the appropriately named merge_results function.
-
-Suppose we have a list of images, and we want to run both face recognition and object labeling on each image. Then we can do the following:
-
-::
-
-	from pliers.extractors import (GoogleVisionAPIFaceExtractor, GoogleVisionAPILabelExtractor)
-	my_images = ['file1.jpg', 'file2.jpg', ...]
-
-	face_ext = GoogleVisionAPIFaceExtractor()
-	face_feats = face_ext.transform(my_images)
-
-	lab_ext = GoogleVisionAPILabelExtractor()
-	lab_feats = lab_ext.transform(my_images)
-
-Now each of face_feats and lab_feats is a list of |ExtractorResult| objects. We could explicitly convert each element in each list to a pandas DataFrame (by calling .to_df()), but that would still be pretty unwieldy, as we would still need to figure out how to merge those DataFrames in a sensible way. Fortunately, merge_results will do all the work for us:
-
-::
-
-	from pliers.extractors import merge_results
-	# merge_results expects a single list, so we concatenate our two lists
-	df = merge_results(face_feats + lab_feats)
-
-In the resulting DataFrame, every |Stim| is represented in a different row, and every feature is represented in a separate column. As noted earlier, the resulting DataFrame contains much more information than what's returned when we call to_df() on a single |ExtractorResult| object. Extra columns injected into the merged result include the name, class, filename (if any) and transformation history of each |Stim|; the name of each feature returned by each |Extractor|; and the name of each |Extractor| (as a second level in the column MultiIndex). You can prevent some of this additional information from being added by setting the :py:`extractor_names` and :py:`stim_names` arguments in :py:func:`merge_results` to :py:`False` (by default, both are :py:`True`).
+Working with Extractor results
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+|ExtractorResult| classes differ from other Transformers in an important way: they return feature data rather than |Stim| objects. Pliers imposes a standardized representation on these results; in particular, calling ``transform`` on any |Extractor| returns an aptly-named object of class |ExtractorResult|. This object contains all kinds of useful internal references and logged data; however, it can also be easily converted to a pandas ``DataFrame``. There's much more to say about feature extraction results in pliers, but to keep things focused, we'll say it in a separate :ref:`Results` section rather than here.
 
 Converters
 ----------
@@ -173,7 +145,7 @@ Although Converters play a critical role in pliers, they usually don't need to b
 
 Because pliers contains a number of "multistep" |Converter| classes, which chain together multiple standard Converters, implicit |Stim| conversion will typically work not only for a single conversion, but also for a whole series of them. For example, if you feed a video file to a |LengthExtractor| (which just counts the number of characters in each TextStim's text), pliers will use the built-in VideoToTextConverter class to transform your |VideoStim| into a |TextStim|, and everything should work smoothly in most cases.
 
-I say "most" cases, because there are two important gotchas to be aware of when relying on implicit conversion. First, sometimes there's an inherent ambiguity about what trajectory a given stimulus should take through converter space; in such cases, the default conversions pliers performs may not line up with your expectations. For example, a |VideoStim| can be converted to a |TextStim| either by (a) extracting the audio track from the video and then transcribing into text via a speech recognition service, or (b) extracting the video frames from the video and then attempting to detect any text labels within each image. Because pliers has no way of knowing which of these you're trying to accomplish, it will default to the first. The upshot is that if you think there's any chance of ambiguity in the conversion process, it's probably a good idea to explicitly chain the |Converter| steps (you can do this very easily using the |Graph| interface discussed below). The explicit approach also provides additional precision in that you may want to initialize a particular |Converter| with non-default arguments, and/or specify exactly which of several candidate |Converter| classes to use (e.g., pliers defaults to performing speech-to-text conversion via the IBM Watson API, but also provides alternative support for the Wit.AI, and Google Cloud Speech APIs services).
+I say "most" cases, because there are two important gotchas to be aware of when relying on implicit conversion. First, sometimes there's an inherent ambiguity about what trajectory a given stimulus should take through converter space; in such cases, the default conversions pliers performs may not line up with your expectations. For example, a |VideoStim| can be converted to a |TextStim| either by (a) extracting the audio track from the video and then transcribing into text via a speech recognition service, or (b) extracting the video frames from the video and then attempting to detect any text labels within each image. Because pliers has no way of knowing which of these you're trying to accomplish, it will default to the first. The upshot is that if you think there's any chance of ambiguity in the conversion process, it's probably a good idea to explicitly chain the |Converter| steps (you can do this very easily using the |Graph| interface discussed separately). The explicit approach also provides additional precision in that you may want to initialize a particular |Converter| with non-default arguments, and/or specify exactly which of several candidate |Converter| classes to use (e.g., pliers defaults to performing speech-to-text conversion via the IBM Watson API, but also provides alternative support for the Wit.AI, and Google Cloud Speech APIs services).
 
 .. _conversion-defaults:
 

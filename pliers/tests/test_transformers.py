@@ -65,7 +65,7 @@ def test_batch_transformer():
     ext = DummyBatchExtractor()
     res = merge_results(ext.transform([img1, img2, img3]))
     assert ext.num_calls == 1
-    assert res.shape == (3, 9)
+    assert res.shape == (3, 10)
     ext = DummyBatchExtractor(batch_size=1)
     res2 = merge_results(ext.transform([img1, img2, img3]))
     assert ext.num_calls == 3

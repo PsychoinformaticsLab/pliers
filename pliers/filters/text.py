@@ -51,8 +51,8 @@ class WordStemmingFilter(TextFilter):
         if isinstance(stemmer, string_types):
             if stemmer not in self.stemmers:
                 valid = list(self.stemmers.keys())
-                raise ValueError("Invalid stemmer '%s'; please use one of %s." %
-                                 (stemmer, valid))
+                raise ValueError("Invalid stemmer '%s'; please use one of %s."
+                                 % (stemmer, valid))
             stemmer = getattr(stem, self.stemmers[stemmer])(*args, **kwargs)
         elif not isinstance(stemmer, (stem.StemmerI, stem.WordNetLemmatizer)):
             raise ValueError("stemmer must be either a valid string, or an "
@@ -67,7 +67,8 @@ class WordStemmingFilter(TextFilter):
             stemmed = ' '.join([self.stemmer.stem(tok) for tok in tokens])
         else:
             stemmed = self.stemmer.stem(stim.text)
-        return TextStim(stim.filename, stemmed, stim.onset, stim.duration)
+        return TextStim(stim.filename, stemmed, onset=stim.onset,
+                        duration=stim.duration, order=stim.order)
 
 
 class TokenizingFilter(TextFilter):
@@ -96,7 +97,8 @@ class TokenizingFilter(TextFilter):
             tokens = self.tokenizer.tokenize(stim.text)
         else:
             tokens = word_tokenize(stim.text)
-        stims = [TextStim(stim.filename, token, stim.onset, stim.duration)
+        stims = [TextStim(stim.filename, token, onset=stim.onset,
+                          duration=stim.duration, order=stim.order)
                  for token in tokens]
         return stims
 
@@ -132,7 +134,8 @@ class TokenRemovalFilter(TextFilter):
         tokens = word_tokenize(stim.text)
         tokens = [tok for tok in tokens if tok not in self.tokens]
         text = ' '.join(tokens)
-        return TextStim(stim.filename, text, stim.onset, stim.duration)
+        return TextStim(stim.filename, text, onset=stim.onset,
+                        duration=stim.duration, order=stim.order)
 
 
 class PunctuationRemovalFilter(TokenRemovalFilter):

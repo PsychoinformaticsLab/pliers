@@ -22,6 +22,7 @@ class ImageStim(Stim):
         duration (float): Optional duration of the ImageStim, in seconds.
         data (ndarray): Optional numpy array to initialize the image from,
             if no filename is passed.
+        url (str): Optional url to read contents from.
     '''
 
     _default_file_extension = '.png'
