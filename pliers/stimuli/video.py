@@ -48,7 +48,8 @@ class VideoFrameCollectionStim(Stim):
             respect to some more general context or timeline the user wishes
             to keep track of.
         url (str): Optional url source for a video.
-        clip (VideoClip): An existing moviepy VideoClip to wrap.
+        clip (VidoFileClip): Optional moviepy VideoFileClip to initialize
+            from.
     '''
 
     _default_file_extension = '.mp4'
@@ -145,7 +146,8 @@ class VideoStim(VideoFrameCollectionStim):
             respect to some more general context or timeline the user wishes
             to keep track of.
         url (str): Optional url source for a video.
-        clip (VideoClip): An existing moviepy VideoClip to wrap.
+        clip (VidoFileClip): Optional moviepy VideoFileClip to initialize
+            from.
     '''
 
     def __init__(self, filename=None, onset=None, url=None, clip=None):

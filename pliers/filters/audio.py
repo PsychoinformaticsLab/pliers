@@ -6,7 +6,7 @@ from .base import Filter, TemporalTrimmingFilter
 
 class AudioFilter(Filter):
 
-    ''' Base class for all VideoFilters. '''
+    ''' Base class for all audio filters. '''
 
     _input_type = AudioStim
 
