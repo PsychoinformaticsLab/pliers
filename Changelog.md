@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.1 (January 31, 2018)
+This is a bugfix release that addresses an installation bug on bare environments (thanks to @mgxd).
+
 ## 0.2 (January 29, 2018)
 This is a major release that adds many new features and transformers. Changes include:
 * Sphinx [documentation](http://tyarkoni.github.io/pliers/)!
