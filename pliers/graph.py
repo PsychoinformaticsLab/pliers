@@ -1,7 +1,7 @@
 ''' The `graph` module contains tools for constructing and executing graphs
 of pliers Transformers. '''
 
-from pliers.extractors.base import Extractor, merge_results
+from pliers.extractors.base import merge_results
 from pliers.transformers import get_transformer
 from pliers.utils import (listify, flatten, isgenerator, attempt_to_import,
                           verify_dependencies)
@@ -31,6 +31,7 @@ class Node(object):
         if isinstance(transformer, string_types):
             transformer = get_transformer(transformer, **parameters)
         self.transformer = transformer
+        self.parameters = parameters
         if name is not None:
             self.transformer.name = name
         self.id = id(transformer)
@@ -41,6 +42,19 @@ class Node(object):
 
     def is_leaf(self):
         return len(self.children)
+
+    def to_json(self):
+        spec = {'transformer': self.transformer.__class__.__name__}
+        if self.name:
+            spec['name'] = self.name
+        if self.children:
+            children = []
+            for c in self.children:
+                children.append(c.to_json())
+            spec['children'] = children
+        if self.parameters:
+            spec['parameters'] = self.parameters
+        return spec
 
 
 class Graph(object):
@@ -240,3 +254,13 @@ class Graph(object):
             kwargs['transformer'] = node
 
         return kwargs
+
+    def to_json(self):
+        roots = []
+        for r in self.roots:
+            roots.append(r.to_json())
+        return {'roots': roots}
+
+    def save(self, filename):
+        with open(filename, 'w') as outfile:
+            json.dump(self.to_json(), outfile)

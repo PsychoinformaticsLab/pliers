@@ -280,3 +280,77 @@ def test_stim_results():
     assert results['LengthExtractor#text_length'][0] == 17
     with pytest.raises(ValueError):
         g.run(stim, invalid_results='fail')
+
+
+@pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
+def test_to_json():
+    nodes = {
+        "roots": [
+            {
+                "transformer": "FrameSamplingFilter",
+                "parameters": {
+                    "every": 15
+                },
+                "children": [
+                    {
+                        "transformer": "TesseractConverter",
+                        "children": [
+                            {
+                                "transformer": "LengthExtractor"
+                            }
+                        ]
+                    },
+                    {
+                        "transformer": "VibranceExtractor"
+                    },
+                    {
+                        "transformer": "BrightnessExtractor"
+                    }
+                ]
+            },
+            {
+                "transformer": "VideoToAudioConverter",
+                "children": [
+                    {
+                        "transformer": "WitTranscriptionConverter",
+                        "children": [
+                            {
+                                "transformer": "LengthExtractor"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+    graph = Graph(nodes)
+    assert graph.to_json() == nodes
+    graph = Graph(spec=join(get_test_data_path(), 'graph', 'simple_graph.json'))
+    simple_graph = {
+        "roots": [
+            {
+                "transformer": "TesseractConverter",
+                "children": [
+                    {
+                        "transformer": "LengthExtractor"
+                    }
+                ]
+            }
+        ]
+    }
+    assert graph.to_json() == simple_graph
+    filename = join(get_test_data_path(), 'image', 'button.jpg')
+    res = graph.run(filename)
+    assert res['LengthExtractor#text_length'][0] == 4
+
+
+def test_save_graph():
+    graph = Graph(spec=join(get_test_data_path(), 'graph', 'simple_graph.json'))
+    filename = tempfile.mkstemp()[1]
+    graph.save(filename)
+    assert os.path.exists(filename)
+    same_graph = Graph(spec=filename)
+    assert graph.to_json() == same_graph.to_json()
+    img = join(get_test_data_path(), 'image', 'button.jpg')
+    res = same_graph.run(img)
+    assert res['LengthExtractor#text_length'][0] == 4
