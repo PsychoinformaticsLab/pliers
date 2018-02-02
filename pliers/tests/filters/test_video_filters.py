@@ -1,6 +1,8 @@
 from os.path import join
 from ..utils import get_test_data_path
-from pliers.filters import FrameSamplingFilter, VideoTrimmingFilter
+from pliers.filters import (FrameSamplingFilter,
+                            VideoTrimmingFilter,
+                            TemporalTrimmingFilter)
 from pliers.stimuli import VideoStim, VideoFrameStim
 import pytest
 import math
