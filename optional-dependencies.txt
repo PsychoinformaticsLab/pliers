@@ -1,4 +1,5 @@
 clarifai
+duecredit
 face_recognition
 python-twitter
 gensim
