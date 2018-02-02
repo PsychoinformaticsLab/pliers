@@ -6,10 +6,11 @@ from pliers.converters import (TesseractConverter,
 from pliers.filters import FrameSamplingFilter
 from pliers.extractors import (BrightnessExtractor, VibranceExtractor,
                                LengthExtractor, merge_results)
-from pliers.stimuli import (ImageStim, VideoStim)
+from pliers.stimuli import (ImageStim, TextStim, VideoStim)
 from .utils import get_test_data_path, DummyExtractor
 from os.path import join, exists
 from numpy.testing import assert_almost_equal
+import pandas as pd
 import tempfile
 import os
 
@@ -263,3 +264,19 @@ def test_big_pipeline_json():
     # assert not result[('onset', '')].isnull().any()
     assert 'text[negotiations]' in result['stim_name'].values
     assert 'frame[90]' in result['stim_name'].values
+
+
+def test_stim_results():
+    stim = TextStim(text='some, example text.')
+    g = Graph([('PunctuationRemovalFilter', ['TokenizingFilter'])])
+    final_stims = g.run(stim, merge=False)
+    assert len(final_stims) == 3
+    assert final_stims[1].text == 'example'
+
+    g = Graph([('PunctuationRemovalFilter', ['TokenizingFilter',
+                                             'LengthExtractor'])])
+    results = g.run(stim)
+    assert isinstance(results, pd.DataFrame)
+    assert results['LengthExtractor#text_length'][0] == 17
+    with pytest.raises(ValueError):
+        g.run(stim, invalid_results='fail')

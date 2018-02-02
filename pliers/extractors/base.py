@@ -189,7 +189,8 @@ class ExtractorResult(object):
 
 
 def merge_results(results, format='wide', timing=True, metadata=True,
-                  extractor_names=True, object_id=True, aggfunc=None):
+                  extractor_names=True, object_id=True, aggfunc=None,
+                  invalid_results='ignore'):
     ''' Merges a list of ExtractorResults instances and returns a pandas DF.
 
     Args:
@@ -239,6 +240,13 @@ def merge_results(results, format='wide', timing=True, metadata=True,
             same index. Can be a callable or any string value recognized by
             pandas. By default (None), 'mean' will be used for numeric columns
             and 'first' will be used for object/categorical columns.
+        invalid_results (str): Specifies desired action for treating elements
+            of the passed in results argument that are not ExtractorResult
+            objects. Valid values include:
+                - 'ignore' will ignore them and merge the valid
+                    ExtractorResults.
+                - 'fail' will raise an exception on any invalid input
+
 
     Returns: a pandas DataFrame. For format details, see 'format' argument.
     '''
@@ -253,9 +261,20 @@ def merge_results(results, format='wide', timing=True, metadata=True,
     elif extractor_names is False:
         extractor_names = 'drop'
 
-    dfs = [r.to_df(timing=_timing, metadata=metadata, format='long',
-                   extractor_name=True, object_id=_object_id)
-           for r in results]
+    dfs = []
+    for r in results:
+        if isinstance(r, ExtractorResult):
+            dfs.append(r.to_df(timing=_timing, metadata=metadata,
+                               format='long', extractor_name=True,
+                               object_id=_object_id))
+        elif invalid_results == 'fail':
+            raise ValueError("At least one of the provided results was not an"
+                             "ExtractorResult. Set the invalid_results"
+                             "parameter to 'ignore' if you wish to ignore"
+                             "this.")
+
+    if len(dfs) == 0:
+        return pd.DataFrame()
 
     data = pd.concat(dfs, axis=0).reset_index(drop=True)
 

@@ -153,7 +153,6 @@ class Graph(object):
             has_parent = True
 
             while has_parent:
-
                 # Add nodes
                 source_from = log.parent[6] if log.parent else ''
                 s_node = hash((source_from, log[2]))
@@ -209,7 +208,7 @@ class Graph(object):
             node = self.nodes[node]
 
         result = node.transformer.transform(stim)
-        if isinstance(node.transformer, Extractor):
+        if len(node.children) == 0:
             return listify(result)
 
         stim = result
