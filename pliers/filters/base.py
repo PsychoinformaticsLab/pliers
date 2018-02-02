@@ -2,7 +2,7 @@
 
 from abc import ABCMeta, abstractmethod
 from six import with_metaclass
-from pliers.stimuli import VideoStim
+from pliers.stimuli import AudioStim, VideoStim
 from pliers.transformers import Transformer
 from pliers.utils import listify
 
@@ -46,6 +46,8 @@ class TemporalTrimmingFilter(Filter):
     '''
 
     _log_attributes = ('start', 'end', 'frames', 'validation')
+    _input_type = ()
+    _optional_input_type = (AudioStim, VideoStim)
 
     def __init__(self, start=0, end=None, frames=False, validation='warn'):
         self.start = start

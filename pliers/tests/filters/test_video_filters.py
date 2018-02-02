@@ -51,7 +51,7 @@ def test_frame_sampling_cv2():
 
 def test_video_trimming_filter():
     video = VideoStim(join(VIDEO_DIR, 'small.mp4'))
-    filt = VideoTrimmingFilter(end=4.0)
+    filt = TemporalTrimmingFilter(end=4.0)
     short_video = filt.transform(video)
     assert short_video.fps == 30
     assert short_video.duration == 4.0

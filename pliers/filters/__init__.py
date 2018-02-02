@@ -4,6 +4,7 @@ some changes to its data).
 '''
 
 from .audio import AudioTrimmingFilter
+from .base import TemporalTrimmingFilter
 from .image import (ImageCroppingFilter,
                     PillowImageFilter)
 from .text import (WordStemmingFilter,
@@ -16,6 +17,7 @@ from .video import (FrameSamplingFilter,
 
 __all__ = [
     'AudioTrimmingFilter',
+    'TemporalTrimmingFilter',
     'ImageCroppingFilter',
     'PillowImageFilter',
     'WordStemmingFilter',
