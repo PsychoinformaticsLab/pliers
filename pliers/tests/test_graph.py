@@ -188,7 +188,7 @@ def test_big_pipeline():
         VibranceExtractor(), 'BrightnessExtractor',
     ])]
     audio_nodes = [(VideoToAudioConverter(), [
-        WitTranscriptionConverter(), 'LengthExtractor'],
+        (WitTranscriptionConverter(), ['LengthExtractor'])],
         'video_to_audio')]
     graph = Graph()
     graph.add_nodes(visual_nodes)
@@ -350,6 +350,7 @@ def test_save_graph():
     graph.save(filename)
     assert os.path.exists(filename)
     same_graph = Graph(spec=filename)
+    os.remove(filename)
     assert graph.to_json() == same_graph.to_json()
     img = join(get_test_data_path(), 'image', 'button.jpg')
     res = same_graph.run(img)

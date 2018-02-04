@@ -164,9 +164,7 @@ class Graph(object):
                 continue
             log = elem.history
 
-            has_parent = True
-
-            while has_parent:
+            while log:
                 # Add nodes
                 source_from = log.parent[6] if log.parent else ''
                 s_node = hash((source_from, log[2]))
@@ -184,7 +182,6 @@ class Graph(object):
                 # Add edges
                 g.add_edge(s_node, t_node)
                 g.add_edge(t_node, r_node)
-                has_parent = log.parent
                 log = log.parent
 
         g.draw(filename, prog='dot')
@@ -256,11 +253,19 @@ class Graph(object):
         return kwargs
 
     def to_json(self):
+        ''' Returns the JSON representation of this graph. '''
         roots = []
         for r in self.roots:
             roots.append(r.to_json())
         return {'roots': roots}
 
     def save(self, filename):
+        ''' Writes the JSON representation of this graph to the provided
+        filename, such that the graph can be easily reconstructed using
+        Graph(spec=filename).
+
+        Args:
+            filename (str): path at which to write out the json file.
+        '''
         with open(filename, 'w') as outfile:
             json.dump(self.to_json(), outfile)
