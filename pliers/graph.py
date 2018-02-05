@@ -157,7 +157,20 @@ class Graph(object):
                                "Try calling run() first.")
 
         g = pgv.AGraph(directed=True)
-        node_list = {}
+
+        color_dict = {
+            'AudioStim': 'aquamarine3',
+            'CompoundStim': 'cyan4',
+            'TranscribedAudioCompoundStim': 'cadetblue',
+            'ComplexTextStim': 'springgreen3',
+            'TextStim': 'springgreen2',
+            'VideoStim': 'red3',
+            'VideoFrameCollectionStim': 'tomato3',
+            'VideoFrameStim': 'salmon',
+            'ImageStim': 'indianred',
+            'TweetStim': 'plum',
+            'ExtractorResult': 'cornflowerblue'
+        }
 
         for elem in self._results:
             if not hasattr(elem, 'history'):
@@ -168,20 +181,23 @@ class Graph(object):
                 # Add nodes
                 source_from = log.parent[6] if log.parent else ''
                 s_node = hash((source_from, log[2]))
-                if s_node not in node_list:
-                    g.add_node(s_node, label=log[2], shape='ellipse')
+                g.add_node(s_node, label=log[2], shape='ellipse',
+                           style='filled', fillcolor=color_dict[log[2]])
 
+                style = 'filled'
+                style += ',dotted' if log.implicit else ''
+                t_color = ':'.join([color_dict[log[5]], color_dict[log[2]]])
                 t_node = hash((log[6], log[7]))
-                if t_node not in node_list:
-                    g.add_node(t_node, label=log[6], shape='box')
+                g.add_node(t_node, label=log[6], shape='box', style=style,
+                           fillcolor=t_color, gradientangle=90)
 
                 r_node = hash((log[6], log[5]))
-                if r_node not in node_list:
-                    g.add_node(r_node, label=log[5], shape='ellipse')
+                g.add_node(r_node, label=log[5], shape='ellipse',
+                           style='filled', fillcolor=color_dict[log[5]])
 
                 # Add edges
-                g.add_edge(s_node, t_node)
-                g.add_edge(t_node, r_node)
+                g.add_edge(s_node, t_node, style=style)
+                g.add_edge(t_node, r_node, style=style)
                 log = log.parent
 
         g.draw(filename, prog='dot')
@@ -265,7 +281,7 @@ class Graph(object):
         Graph(spec=filename).
 
         Args:
-            filename (str): path at which to write out the json file.
+            filename (str): Path at which to write out the json file.
         '''
         with open(filename, 'w') as outfile:
             json.dump(self.to_json(), outfile)

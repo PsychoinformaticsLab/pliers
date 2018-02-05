@@ -141,7 +141,7 @@ class Transformer(with_metaclass(ABCMeta)):
             if converter:
                 _old_stim = stim
                 stim = converter.transform(stim)
-                stim = _log_transformation(_old_stim, stim, converter)
+                stim = _log_transformation(_old_stim, stim, converter, True)
             else:
                 msg = ("Transformers of type %s can only be applied to stimuli"
                        " of type(s) %s (not type %s), and no applicable "
