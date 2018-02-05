@@ -110,3 +110,8 @@ class AudioStim(Stim):
             path (str): Filename to save audio data to.
         '''
         self.clip.write_audiofile(path, fps=self.sampling_rate)
+
+    def close(self):
+        if self.clip:
+            self.clip.close()
+            self.clip = None
