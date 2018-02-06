@@ -122,6 +122,13 @@ class Graph(object):
             parent (Node): Optional parent node (i.e., the node containing the
                 pliers Transformer from which the to-be-created nodes receive
                 their inputs).
+            mode (str): Indicates the direction with which to add the new nodes
+                * horizontal: the nodes should each be added as a child of the
+                  'parent' argument (or a Graph root by default).
+                * vertical: the nodes should each be added in sequence with
+                  the first node being the child of the 'parnet' argument
+                  (a Graph root by default) and each subsequent node being
+                  the child of the previous node in the list.
         '''
         for n in nodes:
             node_args = self._parse_node_args(n)
@@ -135,9 +142,11 @@ class Graph(object):
                                  "%s" % mode)
 
     def add_chain(self, nodes, parent=None):
+        ''' An alias for add_nodes with the mode preset to 'vertical'. '''
         self.add_nodes(nodes, parent, 'vertical')
 
     def add_children(self, nodes, parent=None):
+        ''' An alias for add_nodes with the mode preset to 'horizontal'. '''
         self.add_nodes(nodes, parent, 'horizontal')
 
     def add_node(self, transformer, name=None, children=None, parent=None,

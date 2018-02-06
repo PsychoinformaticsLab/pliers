@@ -212,8 +212,8 @@ class TransformationLog(_trans_log):
     def to_df(self):
         def _append_row(rows, history):
             rows.append(history[:-3])
-            if history[-2]:
-                _append_row(rows, history[-2])
+            if history.parent:
+                _append_row(rows, history.parent)
             return rows
         rows = _append_row([], self)[::-1]
         return pd.DataFrame(rows, columns=self._fields[:-3])
