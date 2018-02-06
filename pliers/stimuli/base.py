@@ -2,7 +2,7 @@
 
 
 from abc import ABCMeta, abstractmethod
-from os.path import exists, isdir, join, basename, realpath, isfile
+from os.path import isdir, join, basename, realpath, isfile
 from glob import glob
 from six import with_metaclass, string_types
 from six.moves.urllib.request import urlopen
