@@ -242,16 +242,15 @@ class WordEmbeddingExtractor(TextExtractor):
         if stim.text in self.wvModel:
             embedding_vector = self.wvModel[stim.text]
         else:
-            if self.unk_vector is not None:
-                if self.unk_vector.shape[0] == num_dims:
-                    embedding_vector = self.unk_vector
-                elif self.unk_vector == 'random':
-                    embedding_vector = 2.0 * np.random(num_dims) - 1.0
-                else:
-                    embedding_vector = np.zeros(num_dims)
+            unk = self.unk_vector
+            if hasattr(unk, 'shape') and unk.shape[0] == num_dims:
+                embedding_vector = unk
+            elif unk == 'random':
+                embedding_vector = 2.0 * np.random.random(num_dims) - 1.0
             else:
                 # By default, UNKs will have zeroed-out vectors
                 embedding_vector = np.zeros(num_dims)
+
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
         return ExtractorResult([embedding_vector],
                                stim,
