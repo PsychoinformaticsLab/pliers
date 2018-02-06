@@ -267,17 +267,19 @@ def test_big_pipeline_json():
 
 
 def test_stim_results():
-    stim = TextStim(text='some, example text.')
-    g = Graph([('PunctuationRemovalFilter', ['TokenizingFilter'])])
+    stim = TextStim(text='some, example the text.')
+    g = Graph()
+    g.add_nodes(['PunctuationRemovalFilter', 'TokenRemovalFilter',
+                 'TokenizingFilter'], mode='vertical')
     final_stims = g.run(stim, merge=False)
-    assert len(final_stims) == 3
-    assert final_stims[1].text == 'example'
+    assert len(final_stims) == 2
+    assert final_stims[1].text == 'text'
 
     g = Graph([('PunctuationRemovalFilter', ['TokenizingFilter',
                                              'LengthExtractor'])])
     results = g.run(stim)
     assert isinstance(results, pd.DataFrame)
-    assert results['LengthExtractor#text_length'][0] == 17
+    assert results['LengthExtractor#text_length'][0] == 21
     with pytest.raises(ValueError):
         g.run(stim, invalid_results='fail')
 
@@ -355,3 +357,27 @@ def test_save_graph():
     img = join(get_test_data_path(), 'image', 'button.jpg')
     res = same_graph.run(img)
     assert res['LengthExtractor#text_length'][0] == 4
+
+
+def test_adding_nodes():
+    graph = Graph()
+    graph.add_children(['VibranceExtractor', 'BrightnessExtractor'])
+    assert len(graph.roots) == 2
+    assert len(graph.nodes) == 2
+    for r in graph.roots:
+        assert len(r.children) == 0
+    img = ImageStim(join(get_test_data_path(), 'image', 'button.jpg'))
+    results = graph.run(img, merge=False)
+    assert len(results) == 2
+    assert_almost_equal(results[0].to_df()['vibrance'][0], 841.577274, 5)
+    assert_almost_equal(results[1].to_df()['brightness'][0], 0.746965, 5)
+
+    graph = Graph()
+    graph.add_chain(['PunctuationRemovalFilter', 'LengthExtractor'])
+    txt = TextStim(text='the.best.text.')
+    results = graph.run(txt, merge=False)
+    assert len(results) == 1
+    assert results[0].to_df()['text_length'][0] == 13
+
+    with pytest.raises(ValueError):
+        graph.add_nodes(['LengthExtractor'], mode='invalid')

@@ -80,7 +80,7 @@ class Graph(object):
             with open(spec) as spec_file:
                 self.add_nodes(json.load(spec_file)['roots'])
 
-    def add_nodes(self, nodes, parent=None):
+    def add_nodes(self, nodes, parent=None, mode='horizontal'):
         ''' Adds one or more nodes to the current graph.
 
         Args:
@@ -103,7 +103,20 @@ class Graph(object):
         '''
         for n in nodes:
             node_args = self._parse_node_args(n)
-            self.add_node(parent=parent, **node_args)
+            if mode == 'horizontal':
+                self.add_node(parent=parent, **node_args)
+            elif mode == 'vertical':
+                parent = self.add_node(parent=parent, return_node=True,
+                                       **node_args)
+            else:
+                raise ValueError("Invalid mode for adding nodes to a graph:"
+                                 "%s" % mode)
+
+    def add_chain(self, nodes, parent=None):
+        self.add_nodes(nodes, parent, 'vertical')
+
+    def add_children(self, nodes, parent=None):
+        self.add_nodes(nodes, parent, 'horizontal')
 
     def add_node(self, transformer, name=None, children=None, parent=None,
                  parameters={}, return_node=False):
