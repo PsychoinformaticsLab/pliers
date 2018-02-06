@@ -80,6 +80,28 @@ class Graph(object):
             with open(spec) as spec_file:
                 self.add_nodes(json.load(spec_file)['roots'])
 
+    @staticmethod
+    def _parse_node_args(node):
+        if isinstance(node, dict):
+            return node
+
+        kwargs = {}
+
+        if isinstance(node, (list, tuple)):
+            kwargs['transformer'] = node[0]
+            if len(node) > 1:
+                kwargs['children'] = node[1]
+            if len(node) > 2:
+                kwargs['name'] = node[2]
+        elif isinstance(node, Node):
+            kwargs['transformer'] = node.transformer
+            kwargs['children'] = node.children
+            kwargs['name'] = node.name
+        else:
+            kwargs['transformer'] = node
+
+        return kwargs
+
     def add_nodes(self, nodes, parent=None, mode='horizontal'):
         ''' Adds one or more nodes to the current graph.
 
@@ -158,6 +180,49 @@ class Graph(object):
         if return_node:
             return node
 
+    def run(self, stim, merge=True, **merge_kwargs):
+        ''' Executes the graph by calling all Transformers in sequence.
+
+        Args:
+            stim (str, Stim, list): One or more valid inputs to any
+                Transformer's 'transform' call.
+            merge (bool): If True, all results are merged into a single pandas
+                DataFrame before being returned. If False, a list of
+                ExtractorResult objects is returned (one per Extractor/Stim
+                combination).
+            merge_kwargs: Optional keyword arguments to pass onto the
+                merge_results() call.
+        '''
+        results = list(chain(*[self.run_node(n, stim) for n in self.roots]))
+        results = list(flatten(results))
+        self._results = results  # For use in plotting
+        return merge_results(results, **merge_kwargs) if merge else results
+
+    transform = run
+
+    def run_node(self, node, stim):
+        ''' Executes the Transformer at a specific node.
+
+        Args:
+            node (str, Node): If a string, the name of the Node in the current
+                Graph. Otherwise the Node instance to execute.
+            stim (str, stim, list): Any valid input to the Transformer stored
+                at the target node.
+        '''
+        if isinstance(node, string_types):
+            node = self.nodes[node]
+
+        result = node.transformer.transform(stim)
+        if len(node.children) == 0:
+            return listify(result)
+
+        stim = result
+        # If result is a generator, the first child will destroy the
+        # iterable, so cache via list conversion
+        if len(node.children) > 1 and isgenerator(stim):
+            stim = list(stim)
+        return list(chain(*[self.run_node(c, stim) for c in node.children]))
+
     def draw(self, filename):
         ''' Render a plot of the graph via pygraphviz.
 
@@ -214,72 +279,6 @@ class Graph(object):
                 log = log.parent
 
         g.draw(filename, prog='dot')
-
-    def run(self, stim, merge=True, **merge_kwargs):
-        ''' Executes the graph by calling all Transformers in sequence.
-
-        Args:
-            stim (str, Stim, list): One or more valid inputs to any
-                Transformer's 'transform' call.
-            merge (bool): If True, all results are merged into a single pandas
-                DataFrame before being returned. If False, a list of
-                ExtractorResult objects is returned (one per Extractor/Stim
-                combination).
-            merge_kwargs: Optional keyword arguments to pass onto the
-                merge_results() call.
-        '''
-        results = list(chain(*[self.run_node(n, stim) for n in self.roots]))
-        results = list(flatten(results))
-        self._results = results  # For use in plotting
-        return merge_results(results, **merge_kwargs) if merge else results
-
-    transform = run
-
-    def run_node(self, node, stim):
-        ''' Executes the Transformer at a specific node.
-
-        Args:
-            node (str, Node): If a string, the name of the Node in the current
-                Graph. Otherwise the Node instance to execute.
-            stim (str, stim, list): Any valid input to the Transformer stored
-                at the target node.
-        '''
-        if isinstance(node, string_types):
-            node = self.nodes[node]
-
-        result = node.transformer.transform(stim)
-        if len(node.children) == 0:
-            return listify(result)
-
-        stim = result
-        # If result is a generator, the first child will destroy the
-        # iterable, so cache via list conversion
-        if len(node.children) > 1 and isgenerator(stim):
-            stim = list(stim)
-        return list(chain(*[self.run_node(c, stim) for c in node.children]))
-
-    @staticmethod
-    def _parse_node_args(node):
-
-        if isinstance(node, dict):
-            return node
-
-        kwargs = {}
-
-        if isinstance(node, (list, tuple)):
-            kwargs['transformer'] = node[0]
-            if len(node) > 1:
-                kwargs['children'] = node[1]
-            if len(node) > 2:
-                kwargs['name'] = node[2]
-        elif isinstance(node, Node):
-            kwargs['transformer'] = node.transformer
-            kwargs['children'] = node.children
-            kwargs['name'] = node.name
-        else:
-            kwargs['transformer'] = node
-
-        return kwargs
 
     def to_json(self):
         ''' Returns the JSON representation of this graph. '''
