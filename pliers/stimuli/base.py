@@ -2,7 +2,7 @@
 
 
 from abc import ABCMeta, abstractmethod
-from os.path import exists, isdir, join, basename
+from os.path import exists, isdir, join, basename, realpath, isfile
 from glob import glob
 from six import with_metaclass, string_types
 from six.moves.urllib.request import urlopen
@@ -128,6 +128,7 @@ def load_stims(source, dtype=None, fail_silently=False):
     }
 
     def load_file(source):
+        source = realpath(source)
         import magic  # requires libmagic, so import here
         mime = magic.from_file(source, mime=True)
         if not isinstance(mime, string_types):
@@ -151,8 +152,9 @@ def load_stims(source, dtype=None, fail_silently=False):
             load_url(s)
         elif isdir(s):
             for f in glob(join(s, '*')):
-                load_file(f)
-        elif exists(s):
+                if isfile(f):
+                    load_file(f)
+        elif isfile(s):
             load_file(s)
         else:
             if not (return_list and fail_silently):
