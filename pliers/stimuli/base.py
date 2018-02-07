@@ -2,7 +2,7 @@
 
 
 from abc import ABCMeta, abstractmethod
-from os.path import exists, isdir, join, basename
+from os.path import isdir, join, basename, realpath, isfile
 from glob import glob
 from six import with_metaclass, string_types
 from six.moves.urllib.request import urlopen
@@ -26,16 +26,19 @@ class Stim(with_metaclass(ABCMeta)):
             respect to some more general context or timeline the user wishes
             to keep track of.
         duration (float): Optional duration of the Stim, in seconds.
+        order (int): Optional order of Stim within some broader context.
         name (str): Optional name to give the Stim instance. If None is
             provided, the name will be derived from the filename if one is
             defined. If no filename is defined, name will be an empty string.
     '''
 
-    def __init__(self, filename=None, onset=None, duration=None, name=None):
+    def __init__(self, filename=None, onset=None, duration=None, order=None,
+                 name=None):
 
         self.filename = filename
         self.onset = onset
         self.duration = duration
+        self.order = order
         self._history = None
 
         if name is None:
@@ -68,7 +71,7 @@ class Stim(with_metaclass(ABCMeta)):
 
     def __hash__(self):
         return hash((self.filename, self.name, self.onset, self.duration,
-                     self.history))
+                     self.order, self.history))
 
 
 def _get_stim_class(name):
@@ -125,6 +128,7 @@ def load_stims(source, dtype=None, fail_silently=False):
     }
 
     def load_file(source):
+        source = realpath(source)
         import magic  # requires libmagic, so import here
         mime = magic.from_file(source, mime=True)
         if not isinstance(mime, string_types):
@@ -148,8 +152,9 @@ def load_stims(source, dtype=None, fail_silently=False):
             load_url(s)
         elif isdir(s):
             for f in glob(join(s, '*')):
-                load_file(f)
-        elif exists(s):
+                if isfile(f):
+                    load_file(f)
+        elif isfile(s):
             load_file(s)
         else:
             if not (return_list and fail_silently):

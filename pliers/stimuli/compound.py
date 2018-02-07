@@ -103,8 +103,12 @@ class CompoundStim(object):
     def __getattr__(self, attr):
         try:
             stim = _get_stim_class(attr)
-        except:
-            return self.__getattribute__(attr)
+        except Exception as e:
+            try:
+                primary = self.get_stim(self._primary)
+                return getattr(primary, attr)
+            except Exception as e:
+                return self.__getattribute__(attr)
         return self.get_stim(stim)
 
 
@@ -123,4 +127,5 @@ class TranscribedAudioCompoundStim(CompoundStim):
     _primary = AudioStim
 
     def __init__(self, audio, text):
-        super(TranscribedAudioCompoundStim, self).__init__(elements=[audio, text])
+        super(TranscribedAudioCompoundStim, self).__init__(
+            elements=[audio, text])

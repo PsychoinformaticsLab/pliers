@@ -5,7 +5,7 @@ from six import with_metaclass
 import pandas as pd
 import numpy as np
 from pliers.transformers import Transformer
-from pliers.utils import isgenerator
+from pliers.utils import isgenerator, flatten
 from pandas.api.types import is_numeric_dtype
 
 
@@ -47,13 +47,15 @@ class ExtractorResult(object):
             rows in data. Length must match the input data.
         durations (list, ndarray): Optional iterable giving the durations
             associated with the rows in data.
+        orders (list, ndarray): Optional iterable giving the integer orders
+            associated with the rows in data.
         raw: The raw result (net of any containers or overhead) returned by
             the underlying feature extraction tool. Can be an object of any
             type.
     '''
 
     def __init__(self, data, stim, extractor, features=None, onsets=None,
-                 durations=None, raw=None):
+                 durations=None, orders=None, raw=None):
 
         if data is None and raw is None:
             raise ValueError("At least one of 'data' and 'raw' must be a "
@@ -82,6 +84,10 @@ class ExtractorResult(object):
             durations = stim.duration
         self.durations = durations if durations is not None else np.nan
 
+        if orders is None:
+            orders = stim.order
+        self.orders = orders if orders is not None else np.nan
+
     def to_df(self, timing=True, metadata=False, format='wide',
               extractor_name=False, object_id=True):
         ''' Convert current instance to a pandas DatasFrame.
@@ -91,7 +97,7 @@ class ExtractorResult(object):
                 Note that these columns will be added even if there are no
                 valid values in the current object (NaNs will be inserted).
                 If 'auto', timing columns are only inserted if there's at least
-                one valid (i.e., non-NaN) onset/duration.
+                one valid (i.e., non-NaN) onset/order/duration.
             metadata (bool): If True, adds columns for key metadata (including
                 the name, filename, class, history, and source file of the
                 Stim).
@@ -127,6 +133,8 @@ class ExtractorResult(object):
                             for i in range(self.data.shape[1])]
             df = pd.DataFrame(self.data, columns=features)
 
+        index_cols = []
+
         # Generally we leave it to Extractors to properly track the number of
         # objects returned in the result DF, using the 'object_id' column.
         # But in cases where the Extractor punt on this and_object_id=True, we
@@ -141,14 +149,15 @@ class ExtractorResult(object):
                 ids = np.arange(len(df)) if len(index) == 1 \
                     else df.groupby(index).cumcount()
                 df.insert(0, 'object_id', ids)
+                index_cols = ['object_id']
 
-        index_cols = ['object_id']
-
-        if timing is True or (timing == 'auto' and not
-                              np.isnan(self.durations).any()):
+        if timing is True or (timing == 'auto' and
+                              (np.isfinite(self.durations).any() or
+                               np.isfinite(self.orders).any())):
             df.insert(0, 'duration', self.durations)
+            df.insert(0, 'order', self.orders)
             df.insert(0, 'onset', self.onsets)
-            index_cols.extend(['duration', 'onset'])
+            index_cols.extend(['onset', 'order', 'duration'])
 
         if format == 'long':
             df = df.melt(index_cols, var_name='feature')
@@ -189,8 +198,8 @@ def merge_results(results, format='wide', timing=True, metadata=True,
             'long'. In the wide case, every extracted feature is a column,
             and every Stim is a row. In the long case, every row contains a
             single Stim/Extractor/feature combination.
-        timing (bool, str): Whether or not to include columns for onset and
-            duration.
+        timing (bool, str): Whether or not to include columns for onset,
+            order, and duration.
         metadata (bool): if True, includes Stim metadata columns in the
             returned DataFrame. These columns include 'stim_name', 'class',
             'filename', 'history', and 'source_file'. Note that these values
@@ -200,9 +209,9 @@ def merge_results(results, format='wide', timing=True, metadata=True,
             returning results. The specific behavior depends on whether format
             is 'long' or 'wide'. Valid values include:
 
-                - 'prepend': In both 'long' and 'wide' formats, feature names
-                  will be prepended with the Extractor name (e.g.,
-                  "FaceExtractor#face_likelihood").
+                - 'prepend' or True: In both 'long' and 'wide' formats,
+                  feature names will be prepended with the Extractor name
+                  (e.g., "FaceExtractor#face_likelihood").
                 - 'drop' or False: In both 'long' and 'wide' formats, extractor
                   names will be omitted entirely from the result. Note that
                   this can create feature name conflicts when merging results
@@ -215,12 +224,10 @@ def merge_results(results, format='wide', timing=True, metadata=True,
                   Extractor name and the second level containing the feature
                   name. This value is invalid if format='long' (and will raise
                   and error).
-                - True: When format='long', behaves like 'column'. When
-                  format='wide', behaves like 'prepend'.
 
         object_id (bool): If True, attempts to intelligently add an
             'object_id' column that differentiates between multiple objects in
-            the results that may share onsets and durations (and would
+            the results that may share onsets/orders/durations (and would
             otherwise be impossible to distinguish). This frequently occurs for
             ImageExtractors that identify multiple target objects (e.g., faces)
             within a single ImageStim. Default is 'auto', which includes the
@@ -236,11 +243,15 @@ def merge_results(results, format='wide', timing=True, metadata=True,
     Returns: a pandas DataFrame. For format details, see 'format' argument.
     '''
 
+    results = flatten(results)
+
     _timing = True if timing == 'auto' else timing
     _object_id = True if object_id == 'auto' else object_id
 
     if extractor_names is True:
-        extractor_names = 'prepend' if format == 'wide' else 'column'
+        extractor_names = 'prepend'
+    elif extractor_names is False:
+        extractor_names = 'drop'
 
     dfs = [r.to_df(timing=_timing, metadata=metadata, format='long',
                    extractor_name=True, object_id=_object_id)
@@ -258,8 +269,8 @@ def merge_results(results, format='wide', timing=True, metadata=True,
         data = data.drop('extractor', axis=1)
 
     if format == 'wide':
-        ind_cols = {'stim_name', 'onset', 'duration', 'object_id', 'class',
-                    'filename', 'history', 'source_file'}
+        ind_cols = {'stim_name', 'onset', 'order', 'duration', 'object_id',
+                    'class', 'filename', 'history', 'source_file'}
         ind_cols = list(ind_cols & set(data.columns))
         # pandas groupby/index operations can't handle NaNs in index, (see
         # issue at https://github.com/pandas-dev/pandas/issues/3729), so we
@@ -274,19 +285,19 @@ def merge_results(results, format='wide', timing=True, metadata=True,
 
         data = data.pivot_table(index=ind_cols, columns='feature',
                                 values='value', aggfunc=aggfunc).reset_index()
+        data.columns.name = None  # vestigial--is set to 'feature'
         data[ind_cols] = data[ind_cols].replace('PlAcEholdER', np.nan)
         data[ind_cols] = data[ind_cols].astype(dict(zip(ind_cols, dtypes)))
 
     if timing == 'auto' and 'onset' in data.columns:
         if data['onset'].isnull().all():
-            data = data.drop(['onset', 'duration'], axis=1)
+            data = data.drop(['onset', 'order', 'duration'], axis=1)
 
     if 'onset' in data.columns:
-        if isinstance(data.columns, pd.MultiIndex):
-            if ('onset', '') in data.columns:
-                data = data.sort_values(('onset', '')).reset_index(drop=True)
-        else:
-            data = data.sort_values('onset').reset_index(drop=True)
+        key = [('onset', ''), ('order', ''), ('duration', '')] \
+            if isinstance(data.columns, pd.MultiIndex) \
+            else ['onset', 'order', 'duration']
+        data = data.sort_values(key).reset_index(drop=True)
 
     if extractor_names == 'multi':
         if format == 'long':

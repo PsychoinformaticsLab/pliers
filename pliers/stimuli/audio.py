@@ -18,13 +18,18 @@ class AudioStim(Stim):
             respect to some more general context or timeline the user wishes
             to keep track of.
         sampling_rate (int): Sampling rate of clip, in hertz.
+        url (str): Optional url to read contents from.
+        clip (AudioFileClip): Optional moviepy AudioFileClip to initialize
+            from.
+        order (int): Optional sequential index of the AudioStim within some
+            containing context.
 
     '''
 
     _default_file_extension = '.wav'
 
     def __init__(self, filename=None, onset=None, sampling_rate=None, url=None,
-                 clip=None):
+                 clip=None, order=None):
         if url is not None:
             filename = url
         self.filename = filename
@@ -48,7 +53,7 @@ class AudioStim(Stim):
             self.data = self.data.mean(axis=1)
 
         super(AudioStim, self).__init__(
-            filename, onset=onset, duration=duration)
+            filename, onset=onset, duration=duration, order=order)
 
     @staticmethod
     def get_sampling_rate(filename):

@@ -7,10 +7,12 @@ Pliers documentation
    :caption: Contents:
 
    installation
+   quickstart
    basic-concepts
    stimuli
    transformers
    graphs
+   results
    config
    reference
 
