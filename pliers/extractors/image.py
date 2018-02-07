@@ -5,6 +5,7 @@ Extractors that operate primarily or exclusively on Image stimuli.
 from pliers.stimuli.image import ImageStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.utils import attempt_to_import, verify_dependencies, listify
+from pliers.support.due import due, Url, Doi
 import numpy as np
 import pandas as pd
 from functools import partial
@@ -72,6 +73,10 @@ class SaliencyExtractor(ImageExtractor):
     ''' Determines the saliency of the image using Itti & Koch (1998) algorithm
     implemented in pySaliencyMap '''
 
+    @due.dcite(Doi("10.1109/34.730558"),
+               description="Image saliency estimation",
+               path='pliers.extractors.image.SilencyExtractor',
+               tags=["implementation"])
     def _extract(self, stim):
         from pliers.external.pysaliency import pySaliencyMap
         # pySaliencyMap from https://github.com/akisato-/pySaliencyMap
