@@ -6,7 +6,6 @@ from pliers.extractors.base import ExtractorResult
 from pliers.extractors.image import ImageExtractor
 from pliers.transformers import (MicrosoftAPITransformer,
                                  MicrosoftVisionAPITransformer)
-from pliers.utils import update_with_key_prefix
 
 import pandas as pd
 
@@ -55,55 +54,51 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
         raw = self._query_api(data, params)
         return ExtractorResult(None, stim, self, raw=raw)
 
-    def to_df(self, result):
+    def _parse_response_json(self, json):
+        keys = []
+        values = []
+        for k, v in json.items():
+            if k == 'faceAttributes':
+                k = 'face'
+            if isinstance(v, dict):
+                subkeys, subvalues = self._parse_response_json(v)
+                keys.extend(['%s_%s' % (k, s) for s in subkeys])
+                values.extend(subvalues)
+            elif isinstance(v, list):
+                # Hard coded to this extractor
+                for attr in v:
+                    if k == 'hairColor':
+                        keys.append('%s' % attr['color'])
+                    elif k == 'accessories':
+                        keys.append('%s_%s' % (k, attr['type']))
+                    else:
+                        continue
+                    values.append(attr['confidence'])
+            else:
+                keys.append(k)
+                values.append(v)
+        return keys, values
+
+    def _to_df(self, result):
         cols = []
         data = []
-
         for i, face in enumerate(result.raw):
-            data_dict = {}
-            for field, val in face.items():
-                if field == 'faceRectangle':
-                    update_with_key_prefix(data_dict,
-                                           val,
-                                           'rectangle_')
-                elif field == 'faceLandmarks':
-                    for name, pos in val.items():
-                        update_with_key_prefix(data_dict,
-                                               pos,
-                                               'landmark_%s_' % (name))
-                elif field == 'faceAttributes':
-                    attributes = val.items()
-                    for k, v in attributes:
-                        if k == 'accessories':
-                            for accessory in v:
-                                name = 'accessory_' + accessory['type']
-                                data_dict[name] = accessory['confidence']
-                        elif k == 'hair':
-                            update_with_key_prefix(data_dict,
-                                                   {'bald': v['bald'],
-                                                    'invisible': v['invisible']},
-                                                   'hair_')
-                            for color in v['hairColor']:
-                                feature_name = 'hairColor_%s' % color['color']
-                                data_dict[feature_name] = color['confidence']
-                        elif isinstance(v, dict):
-                            update_with_key_prefix(data_dict,
-                                                   v,
-                                                   '%s_' % (k))
-                        else:
-                            data_dict[k] = v
-                elif isinstance(val, dict):
-                    update_with_key_prefix(data_dict,
-                                           val[field],
-                                           '%s_' % (field))
-                else:
-                    data_dict[field] = val
+            face_keys, face_data = self._parse_response_json(face)
+            cols = face_keys if i == 0 else cols
+            data.append(face_data)
 
-            names = ['face%d_%s' % (i+1, n) for n in data_dict.keys()]
-            cols += names
-            data += list(data_dict.values())
+        return pd.DataFrame(data, columns=cols)
 
-        return pd.DataFrame([data], columns=cols)
+
+class MicrosoftVisionAPIFaceEmotionExtractor(MicrosoftAPIFaceExtractor):
+
+    ''' Extracts facial emotions from images using the Microsoft API '''
+
+    def __init__(self, face_id=False, landmarks=False, **kwargs):
+        super(MicrosoftVisionAPIFaceEmotionExtractor, self).__init__(face_id,
+                                                                     landmarks,
+                                                                     'emotion',
+                                                                     **kwargs)
 
 
 class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
@@ -125,7 +120,7 @@ class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
 
     api_method = 'analyze'
 
-    def __init__(self, features='Description,Categories,ImageType,Color,Adult',
+    def __init__(self, features='Tags,Categories,ImageType,Color,Adult',
                  **kwargs):
         if hasattr(self, '_feature'):
             self.features = self._feature
@@ -143,15 +138,15 @@ class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
         raw = self._query_api(data, params)
         return ExtractorResult(None, stim, self, raw=raw)
 
-    def to_df(self, result):
+    def _to_df(self, result):
         features = self.features.split(',')
 
         data_dict = {}
         for feat in features:
             feat = feat[0].lower() + feat[1:]
-            if feat == 'description':
-                for tag in result.raw[feat]['tags']:
-                    data_dict[tag] = 1.0
+            if feat == 'tags':
+                for tag in result.raw[feat]:
+                    data_dict[tag['name']] = tag['confidence']
             elif feat == 'categories':
                 for cat in result.raw[feat]:
                     data_dict[cat['name']] = cat['score']
@@ -164,7 +159,7 @@ class MicrosoftVisionAPITagExtractor(MicrosoftVisionAPIExtractor):
 
     ''' Extracts image tags using the Microsoft API '''
 
-    _feature = 'Description'
+    _feature = 'Tags'
 
 
 class MicrosoftVisionAPICategoryExtractor(MicrosoftVisionAPIExtractor):

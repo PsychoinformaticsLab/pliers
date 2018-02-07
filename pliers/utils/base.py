@@ -80,13 +80,6 @@ def progress_bar_wrapper(iterable, **kwargs):
         and not isinstance(iterable, tqdm)) else iterable
 
 
-def update_with_key_prefix(primary_dict, updating_dict, prefix):
-    ''' Updates the first dictionary argument with the second, but prepends
-    a provided prefix to every key'''
-    update_dict = {prefix + k: v for (k, v) in updating_dict.items()}
-    primary_dict.update(update_dict)
-
-
 module_names = {}
 Dependency = collections.namedtuple('Dependency', 'package value')
 
