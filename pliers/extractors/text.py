@@ -215,20 +215,26 @@ class WordEmbeddingExtractor(TextExtractor):
     vectors for text.
 
     Args:
-        embedding_file (str): path to a word embedding file. Assumed to be in
+        embedding_file (str): Path to a word embedding file. Assumed to be in
             word2vec format compatible with gensim.
-        binary (bool): flag indicating whether embedding file is saved in a
-            binary format
-        prefix (str): prefix for feature names in the ExtractorResult.
+        binary (bool): Flag indicating whether embedding file is saved in a
+            binary format.
+        prefix (str): Prefix for feature names in the ExtractorResult.
+        unk_vector (numpy array or str): Default vector to use for texts not
+            found in the embedding file. If None is specified, uses a
+            vector with all zeros. If 'random' is specified, uses a vector with
+            random values between -1.0 and 1.0. Must have the same dimensions
+            as the embeddings.
     '''
 
     _log_attributes = ('wvModel', 'prefix')
 
-    def __init__(self, embedding_file, binary=False,
-                 prefix='embedding_dim'):
+    def __init__(self, embedding_file, binary=False, prefix='embedding_dim',
+                 unk_vector=None):
         verify_dependencies(['keyedvectors'])
         self.wvModel = keyedvectors.KeyedVectors.load_word2vec_format(embedding_file, binary=binary)
         self.prefix = prefix
+        self.unk_vector = unk_vector
         super(WordEmbeddingExtractor, self).__init__()
 
     def _extract(self, stim):
@@ -236,8 +242,15 @@ class WordEmbeddingExtractor(TextExtractor):
         if stim.text in self.wvModel:
             embedding_vector = self.wvModel[stim.text]
         else:
-            # UNKs will have zeroed-out vectors
-            embedding_vector = np.zeros(num_dims)
+            unk = self.unk_vector
+            if hasattr(unk, 'shape') and unk.shape[0] == num_dims:
+                embedding_vector = unk
+            elif unk == 'random':
+                embedding_vector = 2.0 * np.random.random(num_dims) - 1.0
+            else:
+                # By default, UNKs will have zeroed-out vectors
+                embedding_vector = np.zeros(num_dims)
+
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
         return ExtractorResult([embedding_vector],
                                stim,

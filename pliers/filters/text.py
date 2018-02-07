@@ -98,8 +98,8 @@ class TokenizingFilter(TextFilter):
         else:
             tokens = word_tokenize(stim.text)
         stims = [TextStim(stim.filename, token, onset=stim.onset,
-                          duration=stim.duration, order=stim.order)
-                 for token in tokens]
+                          duration=stim.duration, order=i)
+                 for i, token in enumerate(tokens)]
         return stims
 
 
@@ -144,3 +144,12 @@ class PunctuationRemovalFilter(TokenRemovalFilter):
 
     def __init__(self, tokens=string.punctuation):
         super(PunctuationRemovalFilter, self).__init__(tokens)
+
+
+class LowerCasingFilter(TextFilter):
+
+    ''' Lower cases the text in a TextStim. '''
+
+    def _filter(self, stim):
+        return TextStim(stim.filename, stim.text.lower(), onset=stim.onset,
+                        duration=stim.duration, order=stim.order)

@@ -3,7 +3,9 @@ from ..utils import get_test_data_path
 from pliers.filters import (WordStemmingFilter,
                             TokenizingFilter,
                             TokenRemovalFilter,
+                            LowerCasingFilter,
                             PunctuationRemovalFilter)
+from pliers.graph import Graph
 from pliers.stimuli import ComplexTextStim, TextStim
 from nltk import stem as nls
 from nltk.tokenize import PunktSentenceTokenizer
@@ -78,6 +80,20 @@ def test_multiple_text_filters():
     full_text = ' '.join([s.text for s in stemmed_tokens])
     assert full_text == 'test the filter featur'
 
+    stim = TextStim(text='ARTICLE ONE: Rights')
+    g = Graph()
+    g.add_node(LowerCasingFilter())
+    filt1 = LowerCasingFilter()
+    filt2 = PunctuationRemovalFilter()
+    filt3 = TokenizingFilter()
+    final_texts = filt3.transform(filt2.transform(filt1.transform(stim)))
+    assert len(final_texts) == 3
+    assert final_texts[0].text == 'article'
+    assert final_texts[0].order == 0
+    assert final_texts[1].text == 'one'
+    assert final_texts[2].text == 'rights'
+    assert final_texts[2].order == 2
+
 
 def test_token_removal_filter():
     stim = TextStim(text='this is not a very long sentence')
@@ -102,4 +118,11 @@ def test_punctuation_removal_filter():
     stim = TextStim(text='this sentence, will have: punctuation, and words.')
     filt = PunctuationRemovalFilter()
     target = 'this sentence will have punctuation and words'
+    assert filt.transform(stim).text == target
+
+
+def test_lower_casing_filter():
+    stim = TextStim(text='This is an Example Sentence.')
+    filt = LowerCasingFilter()
+    target = 'this is an example sentence.'
     assert filt.transform(stim).text == target

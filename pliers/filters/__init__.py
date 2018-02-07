@@ -10,7 +10,8 @@ from .image import (ImageCroppingFilter,
 from .text import (WordStemmingFilter,
                    TokenizingFilter,
                    TokenRemovalFilter,
-                   PunctuationRemovalFilter)
+                   PunctuationRemovalFilter,
+                   LowerCasingFilter)
 from .video import (FrameSamplingFilter,
                     VideoTrimmingFilter)
 
@@ -24,6 +25,7 @@ __all__ = [
     'TokenizingFilter',
     'TokenRemovalFilter',
     'PunctuationRemovalFilter',
+    'LowerCasingFilter',
     'FrameSamplingFilter',
     'VideoTrimmingFilter'
 ]

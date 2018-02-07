@@ -96,6 +96,27 @@ def test_word_embedding_extractor():
     assert ('WordEmbeddingExtractor', 'embedding_dim99') in result.columns
     assert 0.001091 in result[('WordEmbeddingExtractor', 'embedding_dim0')]
 
+    unk = TextStim(text='nowaythisinvocab')
+    result = ext.transform(unk).to_df()
+    assert result['embedding_dim10'][0] == 0.0
+
+    ones = np.ones(100)
+    ext = WordEmbeddingExtractor(join(TEXT_DIR, 'simple_vectors.bin'),
+                                 binary=True, unk_vector=ones)
+    result = ext.transform(unk).to_df()
+    assert result['embedding_dim10'][0] == 1.0
+
+    ext = WordEmbeddingExtractor(join(TEXT_DIR, 'simple_vectors.bin'),
+                                 binary=True, unk_vector='random')
+    result = ext.transform(unk).to_df()
+    assert result['embedding_dim10'][0] <= 1.0
+    assert result['embedding_dim10'][0] >= -1.0
+
+    ext = WordEmbeddingExtractor(join(TEXT_DIR, 'simple_vectors.bin'),
+                                 binary=True, unk_vector='nothing')
+    result = ext.transform(unk).to_df()
+    assert result['embedding_dim10'][0] == 0.0
+
 
 def test_vectorizer_extractor():
     pytest.importorskip('sklearn')
