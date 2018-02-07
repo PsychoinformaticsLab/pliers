@@ -48,15 +48,21 @@ class VideoFrameCollectionStim(Stim):
             respect to some more general context or timeline the user wishes
             to keep track of.
         url (str): Optional url source for a video.
+        clip (VidoFileClip): Optional moviepy VideoFileClip to initialize
+            from.
     '''
 
     _default_file_extension = '.mp4'
 
-    def __init__(self, filename=None, frame_index=None, onset=None, url=None):
+    def __init__(self, filename=None, frame_index=None, onset=None, url=None,
+                 clip=None):
         if url is not None:
             filename = url
         self.filename = filename
-        self._load_clip()
+        if clip:
+            self.clip = clip
+        else:
+            self._load_clip()
         self.fps = self.clip.fps
         self.width = self.clip.w
         self.height = self.clip.h
@@ -140,9 +146,12 @@ class VideoStim(VideoFrameCollectionStim):
             respect to some more general context or timeline the user wishes
             to keep track of.
         url (str): Optional url source for a video.
+        clip (VidoFileClip): Optional moviepy VideoFileClip to initialize
+            from.
     '''
 
-    def __init__(self, filename=None, onset=None, url=None):
+    def __init__(self, filename=None, onset=None, url=None, clip=None):
         super(VideoStim, self).__init__(filename=filename,
                                         onset=onset,
-                                        url=url)
+                                        url=url,
+                                        clip=clip)

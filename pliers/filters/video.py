@@ -1,7 +1,7 @@
 ''' Filters that operate on TextStim inputs. '''
 
 from pliers.stimuli.video import VideoFrameCollectionStim
-from .base import Filter
+from .base import Filter, TemporalTrimmingFilter
 
 
 class VideoFilter(Filter):
@@ -59,3 +59,7 @@ class FrameSamplingFilter(VideoFilter):
         return VideoFrameCollectionStim(filename=video.filename,
                                         frame_index=frame_index,
                                         onset=video.onset)
+
+
+class VideoTrimmingFilter(TemporalTrimmingFilter, VideoFilter):
+    pass

@@ -38,8 +38,9 @@ class AudioStim(Stim):
         if not self.sampling_rate:
             self.sampling_rate = self.get_sampling_rate(self.filename)
 
-        self.clip = clip
-        if not self.clip:
+        if clip:
+            self.clip = clip
+        else:
             self._load_clip()
 
         # Small default buffer isn't ideal, but moviepy has persistent issues
