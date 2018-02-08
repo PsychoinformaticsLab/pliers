@@ -234,11 +234,13 @@ class Graph(object):
             stim = list(stim)
         return list(chain(*[self.run_node(c, stim) for c in node.children]))
 
-    def draw(self, filename):
+    def draw(self, filename, color=True):
         ''' Render a plot of the graph via pygraphviz.
 
         Args:
             filename (str): Path to save the generated image to.
+            color (bool): If True, will color graph nodes based on their type,
+                otherwise will draw a black-and-white graph.
         '''
         verify_dependencies(['pgv'])
         if not hasattr(self, '_results'):
@@ -254,35 +256,43 @@ class Graph(object):
             log = elem.history
 
             while log:
-                # Add nodes
+                # Configure nodes
                 source_from = log.parent[6] if log.parent else ''
                 s_node = hash((source_from, log[2]))
                 s_color = stim_list.index(log[2])
                 s_color = s_color % 12 + 1
-                g.add_node(s_node, label=log[2], shape='ellipse',
-                           style='filled', fillcolor=s_color)
 
-                style = 'filled'
-                style += ',dotted' if log.implicit else ''
+                t_node = hash((log[6], log[7]))
+                t_style = 'filled,' if color else ''
+                t_style += 'dotted' if log.implicit else ''
                 if log[6].endswith('Extractor'):
                     t_color = '#0082c8'
                 elif log[6].endswith('Filter'):
                     t_color = '#e6194b'
                 else:
                     t_color = '#3cb44b'
-                t_node = hash((log[6], log[7]))
-                g.add_node(t_node, label=log[6], shape='box', style=style,
-                           fillcolor=t_color)
 
                 r_node = hash((log[6], log[5]))
                 r_color = stim_list.index(log[5])
                 r_color = r_color % 12 + 1
-                g.add_node(r_node, label=log[5], shape='ellipse',
-                           style='filled', fillcolor=r_color)
+
+                # Add nodes
+                if color:
+                    g.add_node(s_node, label=log[2], shape='ellipse',
+                               style='filled', fillcolor=s_color)
+                    g.add_node(t_node, label=log[6], shape='box',
+                               style=t_style, fillcolor=t_color)
+                    g.add_node(r_node, label=log[5], shape='ellipse',
+                               style='filled', fillcolor=r_color)
+                else:
+                    g.add_node(s_node, label=log[2], shape='ellipse')
+                    g.add_node(t_node, label=log[6], shape='box',
+                               style=t_style)
+                    g.add_node(r_node, label=log[5], shape='ellipse')
 
                 # Add edges
-                g.add_edge(s_node, t_node, style=style)
-                g.add_edge(t_node, r_node, style=style)
+                g.add_edge(s_node, t_node, style=t_style)
+                g.add_edge(t_node, r_node, style=t_style)
                 log = log.parent
 
         g.draw(filename, prog='dot')
