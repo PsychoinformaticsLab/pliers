@@ -21,7 +21,7 @@ class MicrosoftAPITransformer(Transformer):
 
     _log_attributes = ('api_version',)
 
-    def __init__(self, subscription_key=None, location='westus',
+    def __init__(self, subscription_key=None, location=None,
                  api_version='v1.0'):
         if subscription_key is None:
             if self._env_keys not in os.environ:
@@ -31,6 +31,16 @@ class MicrosoftAPITransformer(Transformer):
                                  "subscription_key argument, or set in the "
                                  "appropriate environment variable.")
             subscription_key = os.environ[self._env_keys]
+
+        if location is None:
+            if 'MICROSOFT_SUBSCRIPTION_LOCATION' not in os.environ:
+                raise ValueError("No Microsoft Cognitive Services credential "
+                                 "location found. The verified region for the "
+                                 "provided credentials must be either passed "
+                                 "as the location argument, or set in the "
+                                 "MICROSOFT_SUBSCRIPTION_LOCATION environment "
+                                 "variable.")
+            location = os.environ['MICROSOFT_SUBSCRIPTION_LOCATION']
 
         self.subscription_key = subscription_key
         self.location = location

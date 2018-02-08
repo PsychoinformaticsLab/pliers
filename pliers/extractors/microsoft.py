@@ -90,42 +90,38 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
         return pd.DataFrame(data, columns=cols)
 
 
-class MicrosoftVisionAPIFaceEmotionExtractor(MicrosoftAPIFaceExtractor):
+class MicrosoftAPIFaceEmotionExtractor(MicrosoftAPIFaceExtractor):
 
     ''' Extracts facial emotions from images using the Microsoft API '''
 
     def __init__(self, face_id=False, landmarks=False, **kwargs):
-        super(MicrosoftVisionAPIFaceEmotionExtractor, self).__init__(face_id,
-                                                                     landmarks,
-                                                                     'emotion',
-                                                                     **kwargs)
+        super(MicrosoftAPIFaceEmotionExtractor, self).__init__(face_id,
+                                                               landmarks,
+                                                               'emotion',
+                                                               **kwargs)
 
 
 class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
                                   ImageExtractor):
-    ''' Base MicrosoftVisionAPIExtractor class. By default extracts all visual
-    features from an image.
+    ''' Base MicrosoftVisionAPIExtractor class.
 
     Args:
-        face_id (bool): return faceIds of the detected faces or not. The
-            default value is False.
-        landmarks (str): return face landmarks of the detected faces or
-            not. The default value is False.
-        attributes (list): one or more specified face attributes as strings.
-            Supported face attributes include accessories, age, blur, emotion,
-            exposure, facialHair, gender, glasses, hair, headPose, makeup,
-            noise, occlusion, and smile. Note that each attribute has
-            additional computational and time cost.
+        features (list): one or more specified vision features as strings.
+            Supported vision features include Tags, Categories, ImageType,
+            Color, and Adult. Note that each attribute has additional
+            computational and time cost. By default extracts all visual
+            features from an image.
     '''
 
     api_method = 'analyze'
 
-    def __init__(self, features='Tags,Categories,ImageType,Color,Adult',
-                 **kwargs):
+    def __init__(self, features=None, **kwargs):
         if hasattr(self, '_feature'):
             self.features = self._feature
         else:
-            self.features = features
+            self.features = features if features else ['Tags', 'Categories',
+                                                       'ImageType', 'Color',
+                                                       'Adult']
         super(MicrosoftVisionAPIExtractor, self).__init__(**kwargs)
 
     def _extract(self, stim):

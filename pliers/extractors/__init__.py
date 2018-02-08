@@ -32,7 +32,14 @@ from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
                     VibranceExtractor, FaceRecognitionFaceEncodingsExtractor,
                     FaceRecognitionFaceLandmarksExtractor,
                     FaceRecognitionFaceLocationsExtractor)
-from .microsoft import MicrosoftAPIFaceExtractor
+from .microsoft import (MicrosoftAPIFaceExtractor,
+                        MicrosoftAPIFaceEmotionExtractor,
+                        MicrosoftVisionAPIExtractor,
+                        MicrosoftVisionAPITagExtractor,
+                        MicrosoftVisionAPICategoryExtractor,
+                        MicrosoftVisionAPIImageTypeExtractor,
+                        MicrosoftVisionAPIColorExtractor,
+                        MicrosoftVisionAPIAdultExtractor)
 from .models import TensorFlowInceptionV3Extractor
 from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
@@ -75,6 +82,14 @@ __all__ = [
     'FaceRecognitionFaceEncodingsExtractor',
     'FaceRecognitionFaceLandmarksExtractor',
     'FaceRecognitionFaceLocationsExtractor',
+    'MicrosoftAPIFaceExtractor',
+    'MicrosoftAPIFaceEmotionExtractor',
+    'MicrosoftVisionAPIExtractor',
+    'MicrosoftVisionAPITagExtractor',
+    'MicrosoftVisionAPICategoryExtractor',
+    'MicrosoftVisionAPIImageTypeExtractor',
+    'MicrosoftVisionAPIColorExtractor',
+    'MicrosoftVisionAPIAdultExtractor',
     'TensorFlowInceptionV3Extractor',
     'ComplexTextExtractor',
     'DictionaryExtractor',
@@ -86,6 +101,5 @@ __all__ = [
     'WordEmbeddingExtractor',
     'TextVectorizerExtractor',
     'VADERSentimentExtractor',
-    'MicrosoftAPIFaceExtractor',
     'merge_results'
 ]
