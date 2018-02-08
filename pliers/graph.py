@@ -13,6 +13,20 @@ import json
 
 pgv = attempt_to_import('pygraphviz', 'pgv')
 
+COLOR_DICT = {
+    'AudioStim': '#f58231',
+    'ComplexTextStim': '#911eb4',
+    'TextStim': '#e6beff',
+    'VideoStim': '#ffe119',
+    'VideoFrameCollectionStim': 'yellow',
+    'VideoFrameStim': 'yellow',
+    'ImageStim': '#d2f53c',
+    'CompoundStim': 'pink',
+    'TranscribedAudioCompoundStim': 'violet',
+    'TweetStim': 'plum',
+    'ExtractorResult': 'honeydew2'
+}
+
 
 class Node(object):
 
@@ -245,20 +259,6 @@ class Graph(object):
 
         g = pgv.AGraph(directed=True)
 
-        color_dict = {
-            'AudioStim': 'aquamarine3',
-            'CompoundStim': 'cyan4',
-            'TranscribedAudioCompoundStim': 'cadetblue',
-            'ComplexTextStim': 'springgreen3',
-            'TextStim': 'springgreen2',
-            'VideoStim': 'red3',
-            'VideoFrameCollectionStim': 'tomato3',
-            'VideoFrameStim': 'salmon',
-            'ImageStim': 'indianred',
-            'TweetStim': 'plum',
-            'ExtractorResult': 'cornflowerblue'
-        }
-
         for elem in self._results:
             if not hasattr(elem, 'history'):
                 continue
@@ -269,18 +269,23 @@ class Graph(object):
                 source_from = log.parent[6] if log.parent else ''
                 s_node = hash((source_from, log[2]))
                 g.add_node(s_node, label=log[2], shape='ellipse',
-                           style='filled', fillcolor=color_dict[log[2]])
+                           style='filled', fillcolor=COLOR_DICT[log[2]])
 
                 style = 'filled'
                 style += ',dotted' if log.implicit else ''
-                t_color = ':'.join([color_dict[log[5]], color_dict[log[2]]])
+                if log[6].endswith('Extractor'):
+                    t_color = '#0082c8'
+                elif log[6].endswith('Filter'):
+                    t_color = '#e6194b'
+                else:
+                    t_color = '#3cb44b'
                 t_node = hash((log[6], log[7]))
                 g.add_node(t_node, label=log[6], shape='box', style=style,
-                           fillcolor=t_color, gradientangle=90)
+                           fillcolor=t_color)
 
                 r_node = hash((log[6], log[5]))
                 g.add_node(r_node, label=log[5], shape='ellipse',
-                           style='filled', fillcolor=color_dict[log[5]])
+                           style='filled', fillcolor=COLOR_DICT[log[5]])
 
                 # Add edges
                 g.add_edge(s_node, t_node, style=style)
