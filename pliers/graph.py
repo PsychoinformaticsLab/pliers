@@ -1,7 +1,8 @@
 ''' The `graph` module contains tools for constructing and executing graphs
 of pliers Transformers. '''
 
-from pliers.extractors.base import Extractor, merge_results
+from pliers.extractors.base import merge_results
+from pliers.stimuli import __all__ as stim_list
 from pliers.transformers import get_transformer
 from pliers.utils import (listify, flatten, isgenerator, attempt_to_import,
                           verify_dependencies)
@@ -12,6 +13,7 @@ from collections import OrderedDict
 import json
 
 pgv = attempt_to_import('pygraphviz', 'pgv')
+stim_list.insert(0, 'ExtractorResult')
 
 
 class Node(object):
@@ -31,6 +33,7 @@ class Node(object):
         if isinstance(transformer, string_types):
             transformer = get_transformer(transformer, **parameters)
         self.transformer = transformer
+        self.parameters = parameters
         if name is not None:
             self.transformer.name = name
         self.id = id(transformer)
@@ -41,6 +44,19 @@ class Node(object):
 
     def is_leaf(self):
         return len(self.children)
+
+    def to_json(self):
+        spec = {'transformer': self.transformer.__class__.__name__}
+        if self.name:
+            spec['name'] = self.name
+        if self.children:
+            children = []
+            for c in self.children:
+                children.append(c.to_json())
+            spec['children'] = children
+        if self.parameters:
+            spec['parameters'] = self.parameters
+        return spec
 
 
 class Graph(object):
@@ -66,7 +82,29 @@ class Graph(object):
             with open(spec) as spec_file:
                 self.add_nodes(json.load(spec_file)['roots'])
 
-    def add_nodes(self, nodes, parent=None):
+    @staticmethod
+    def _parse_node_args(node):
+        if isinstance(node, dict):
+            return node
+
+        kwargs = {}
+
+        if isinstance(node, (list, tuple)):
+            kwargs['transformer'] = node[0]
+            if len(node) > 1:
+                kwargs['children'] = node[1]
+            if len(node) > 2:
+                kwargs['name'] = node[2]
+        elif isinstance(node, Node):
+            kwargs['transformer'] = node.transformer
+            kwargs['children'] = node.children
+            kwargs['name'] = node.name
+        else:
+            kwargs['transformer'] = node
+
+        return kwargs
+
+    def add_nodes(self, nodes, parent=None, mode='horizontal'):
         ''' Adds one or more nodes to the current graph.
 
         Args:
@@ -86,10 +124,32 @@ class Graph(object):
             parent (Node): Optional parent node (i.e., the node containing the
                 pliers Transformer from which the to-be-created nodes receive
                 their inputs).
+            mode (str): Indicates the direction with which to add the new nodes
+                * horizontal: the nodes should each be added as a child of the
+                  'parent' argument (or a Graph root by default).
+                * vertical: the nodes should each be added in sequence with
+                  the first node being the child of the 'parnet' argument
+                  (a Graph root by default) and each subsequent node being
+                  the child of the previous node in the list.
         '''
         for n in nodes:
             node_args = self._parse_node_args(n)
-            self.add_node(parent=parent, **node_args)
+            if mode == 'horizontal':
+                self.add_node(parent=parent, **node_args)
+            elif mode == 'vertical':
+                parent = self.add_node(parent=parent, return_node=True,
+                                       **node_args)
+            else:
+                raise ValueError("Invalid mode for adding nodes to a graph:"
+                                 "%s" % mode)
+
+    def add_chain(self, nodes, parent=None):
+        ''' An alias for add_nodes with the mode preset to 'vertical'. '''
+        self.add_nodes(nodes, parent, 'vertical')
+
+    def add_children(self, nodes, parent=None):
+        ''' An alias for add_nodes with the mode preset to 'horizontal'. '''
+        self.add_nodes(nodes, parent, 'horizontal')
 
     def add_node(self, transformer, name=None, children=None, parent=None,
                  parameters={}, return_node=False):
@@ -131,51 +191,6 @@ class Graph(object):
         if return_node:
             return node
 
-    def draw(self, filename):
-        ''' Render a plot of the graph via pygraphviz.
-
-        Args:
-            filename (str): Path to save the generated image to.
-        '''
-        verify_dependencies(['pgv'])
-        if not hasattr(self, '_results'):
-            raise RuntimeError("Graph cannot be drawn before it is executed. "
-                               "Try calling run() first.")
-
-        g = pgv.AGraph(directed=True)
-        node_list = {}
-
-        for elem in self._results:
-            if not hasattr(elem, 'history'):
-                continue
-            log = elem.history
-
-            has_parent = True
-
-            while has_parent:
-
-                # Add nodes
-                source_from = log.parent[6] if log.parent else ''
-                s_node = hash((source_from, log[2]))
-                if s_node not in node_list:
-                    g.add_node(s_node, label=log[2], shape='ellipse')
-
-                t_node = hash((log[6], log[7]))
-                if t_node not in node_list:
-                    g.add_node(t_node, label=log[6], shape='box')
-
-                r_node = hash((log[6], log[5]))
-                if r_node not in node_list:
-                    g.add_node(r_node, label=log[5], shape='ellipse')
-
-                # Add edges
-                g.add_edge(s_node, t_node)
-                g.add_edge(t_node, r_node)
-                has_parent = log.parent
-                log = log.parent
-
-        g.draw(filename, prog='dot')
-
     def run(self, stim, merge=True, **merge_kwargs):
         ''' Executes the graph by calling all Transformers in sequence.
 
@@ -209,7 +224,7 @@ class Graph(object):
             node = self.nodes[node]
 
         result = node.transformer.transform(stim)
-        if isinstance(node.transformer, Extractor):
+        if len(node.children) == 0:
             return listify(result)
 
         stim = result
@@ -219,25 +234,83 @@ class Graph(object):
             stim = list(stim)
         return list(chain(*[self.run_node(c, stim) for c in node.children]))
 
-    @staticmethod
-    def _parse_node_args(node):
+    def draw(self, filename, color=True):
+        ''' Render a plot of the graph via pygraphviz.
 
-        if isinstance(node, dict):
-            return node
+        Args:
+            filename (str): Path to save the generated image to.
+            color (bool): If True, will color graph nodes based on their type,
+                otherwise will draw a black-and-white graph.
+        '''
+        verify_dependencies(['pgv'])
+        if not hasattr(self, '_results'):
+            raise RuntimeError("Graph cannot be drawn before it is executed. "
+                               "Try calling run() first.")
 
-        kwargs = {}
+        g = pgv.AGraph(directed=True)
+        g.node_attr['colorscheme'] = 'set312'
 
-        if isinstance(node, (list, tuple)):
-            kwargs['transformer'] = node[0]
-            if len(node) > 1:
-                kwargs['children'] = node[1]
-            if len(node) > 2:
-                kwargs['name'] = node[2]
-        elif isinstance(node, Node):
-            kwargs['transformer'] = node.transformer
-            kwargs['children'] = node.children
-            kwargs['name'] = node.name
-        else:
-            kwargs['transformer'] = node
+        for elem in self._results:
+            if not hasattr(elem, 'history'):
+                continue
+            log = elem.history
 
-        return kwargs
+            while log:
+                # Configure nodes
+                source_from = log.parent[6] if log.parent else ''
+                s_node = hash((source_from, log[2]))
+                s_color = stim_list.index(log[2])
+                s_color = s_color % 12 + 1
+
+                t_node = hash((log[6], log[7]))
+                t_style = 'filled,' if color else ''
+                t_style += 'dotted' if log.implicit else ''
+                if log[6].endswith('Extractor'):
+                    t_color = '#0082c8'
+                elif log[6].endswith('Filter'):
+                    t_color = '#e6194b'
+                else:
+                    t_color = '#3cb44b'
+
+                r_node = hash((log[6], log[5]))
+                r_color = stim_list.index(log[5])
+                r_color = r_color % 12 + 1
+
+                # Add nodes
+                if color:
+                    g.add_node(s_node, label=log[2], shape='ellipse',
+                               style='filled', fillcolor=s_color)
+                    g.add_node(t_node, label=log[6], shape='box',
+                               style=t_style, fillcolor=t_color)
+                    g.add_node(r_node, label=log[5], shape='ellipse',
+                               style='filled', fillcolor=r_color)
+                else:
+                    g.add_node(s_node, label=log[2], shape='ellipse')
+                    g.add_node(t_node, label=log[6], shape='box',
+                               style=t_style)
+                    g.add_node(r_node, label=log[5], shape='ellipse')
+
+                # Add edges
+                g.add_edge(s_node, t_node, style=t_style)
+                g.add_edge(t_node, r_node, style=t_style)
+                log = log.parent
+
+        g.draw(filename, prog='dot')
+
+    def to_json(self):
+        ''' Returns the JSON representation of this graph. '''
+        roots = []
+        for r in self.roots:
+            roots.append(r.to_json())
+        return {'roots': roots}
+
+    def save(self, filename):
+        ''' Writes the JSON representation of this graph to the provided
+        filename, such that the graph can be easily reconstructed using
+        Graph(spec=filename).
+
+        Args:
+            filename (str): Path at which to write out the json file.
+        '''
+        with open(filename, 'w') as outfile:
+            json.dump(self.to_json(), outfile)

@@ -166,7 +166,7 @@ def load_stims(source, dtype=None, fail_silently=False):
     return stims[0]
 
 
-def _log_transformation(source, result, trans=None):
+def _log_transformation(source, result, trans=None, implicit=False):
 
     if result is None or not config.get_option('log_transformations') or \
             (trans is not None and not trans._loggable):
@@ -191,12 +191,15 @@ def _log_transformation(source, result, trans=None):
     string = str(parent) if parent else values[2]
     string += '->%s/%s' % (values[6], values[5])
     values.extend([string, parent])
+    values.append(implicit)
     result.history = TransformationLog(*values)
     return result
 
+
 _trans_log = namedtuple('TransformationLog', "source_name source_file " +
                         "source_class result_name result_file result_class " +
-                        " transformer_class transformer_params string parent")
+                        " transformer_class transformer_params string " +
+                        "parent implicit")
 
 
 class TransformationLog(_trans_log):
@@ -210,9 +213,9 @@ class TransformationLog(_trans_log):
 
     def to_df(self):
         def _append_row(rows, history):
-            rows.append(history[:-2])
-            if history[-1]:
-                _append_row(rows, history[-1])
+            rows.append(history[:-3])
+            if history.parent:
+                _append_row(rows, history.parent)
             return rows
         rows = _append_row([], self)[::-1]
-        return pd.DataFrame(rows, columns=self._fields[:-2])
+        return pd.DataFrame(rows, columns=self._fields[:-3])
