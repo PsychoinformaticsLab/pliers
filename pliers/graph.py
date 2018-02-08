@@ -2,6 +2,7 @@
 of pliers Transformers. '''
 
 from pliers.extractors.base import merge_results
+from pliers.stimuli import __all__ as stim_list
 from pliers.transformers import get_transformer
 from pliers.utils import (listify, flatten, isgenerator, attempt_to_import,
                           verify_dependencies)
@@ -12,20 +13,7 @@ from collections import OrderedDict
 import json
 
 pgv = attempt_to_import('pygraphviz', 'pgv')
-
-COLOR_DICT = {
-    'AudioStim': '#f58231',
-    'ComplexTextStim': '#911eb4',
-    'TextStim': '#e6beff',
-    'VideoStim': '#ffe119',
-    'VideoFrameCollectionStim': 'yellow',
-    'VideoFrameStim': 'yellow',
-    'ImageStim': '#d2f53c',
-    'CompoundStim': 'pink',
-    'TranscribedAudioCompoundStim': 'violet',
-    'TweetStim': 'plum',
-    'ExtractorResult': 'honeydew2'
-}
+stim_list.insert(0, 'ExtractorResult')
 
 
 class Node(object):
@@ -258,6 +246,7 @@ class Graph(object):
                                "Try calling run() first.")
 
         g = pgv.AGraph(directed=True)
+        g.node_attr['colorscheme'] = 'set312'
 
         for elem in self._results:
             if not hasattr(elem, 'history'):
@@ -268,8 +257,10 @@ class Graph(object):
                 # Add nodes
                 source_from = log.parent[6] if log.parent else ''
                 s_node = hash((source_from, log[2]))
+                s_color = stim_list.index(log[2])
+                s_color = s_color % 12 + 1
                 g.add_node(s_node, label=log[2], shape='ellipse',
-                           style='filled', fillcolor=COLOR_DICT[log[2]])
+                           style='filled', fillcolor=s_color)
 
                 style = 'filled'
                 style += ',dotted' if log.implicit else ''
@@ -284,8 +275,10 @@ class Graph(object):
                            fillcolor=t_color)
 
                 r_node = hash((log[6], log[5]))
+                r_color = stim_list.index(log[5])
+                r_color = r_color % 12 + 1
                 g.add_node(r_node, label=log[5], shape='ellipse',
-                           style='filled', fillcolor=COLOR_DICT[log[5]])
+                           style='filled', fillcolor=r_color)
 
                 # Add edges
                 g.add_edge(s_node, t_node, style=style)
