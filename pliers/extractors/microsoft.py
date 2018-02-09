@@ -29,18 +29,18 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
     api_name = 'face'
     api_method = 'detect'
     _env_keys = 'MICROSOFT_FACE_SUBSCRIPTION_KEY'
-    _log_attributes = ('api_version', 'face_id', 'landmarks', 'attributes')
+    _log_attributes = ('api_version', 'face_id', 'rectangle', 'landmarks',
+                       'attributes')
 
-    def __init__(self, face_id=False, landmarks=False, attributes=None, **kwargs):
+    def __init__(self, face_id=False, rectangle=True, landmarks=False,
+                 attributes=None, **kwargs):
         self.face_id = face_id
+        self.rectangle = rectangle
         self.landmarks = landmarks
         self.attributes = attributes
         super(MicrosoftAPIFaceExtractor, self).__init__(**kwargs)
 
     def _extract(self, stim):
-        with stim.get_filename() as filename:
-            data = open(filename, 'rb').read()
-
         if self.attributes:
             attributes = ','.join(self.attributes)
         else:
@@ -51,53 +51,53 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
             'returnFaceLandmarks': self.landmarks,
             'returnFaceAttributes': attributes
         }
-        raw = self._query_api(data, params)
+        raw = self._query_api(stim, params)
         return ExtractorResult(None, stim, self, raw=raw)
 
     def _parse_response_json(self, json):
-        keys = []
-        values = []
+        data_dict = {}
         for k, v in json.items():
+            if k == 'faceRectangle' and not self.rectangle:
+                continue
             if k == 'faceAttributes':
                 k = 'face'
             if isinstance(v, dict):
-                subkeys, subvalues = self._parse_response_json(v)
-                keys.extend(['%s_%s' % (k, s) for s in subkeys])
-                values.extend(subvalues)
+                subdata = self._parse_response_json(v)
+                for sk, sv in subdata.items():
+                    data_dict['%s_%s' % (k, sk)] = sv
             elif isinstance(v, list):
                 # Hard coded to this extractor
                 for attr in v:
                     if k == 'hairColor':
-                        keys.append('%s' % attr['color'])
+                        key = attr['color']
                     elif k == 'accessories':
-                        keys.append('%s_%s' % (k, attr['type']))
+                        key = '%s_%s' % (k, attr['type'])
                     else:
                         continue
-                    values.append(attr['confidence'])
+                    data_dict[key] = attr['confidence']
             else:
-                keys.append(k)
-                values.append(v)
-        return keys, values
+                data_dict[k] = v
+        return data_dict
 
     def _to_df(self, result):
-        cols = []
-        data = []
+        face_results = []
         for i, face in enumerate(result.raw):
-            face_keys, face_data = self._parse_response_json(face)
-            cols = face_keys if i == 0 else cols
-            data.append(face_data)
+            face_data = self._parse_response_json(face)
+            face_results.append(face_data)
 
-        return pd.DataFrame(data, columns=cols)
+        return pd.DataFrame(face_results)
 
 
 class MicrosoftAPIFaceEmotionExtractor(MicrosoftAPIFaceExtractor):
 
     ''' Extracts facial emotions from images using the Microsoft API '''
 
-    def __init__(self, face_id=False, landmarks=False, **kwargs):
+    def __init__(self, face_id=False, rectangle=False, landmarks=False,
+                 **kwargs):
         super(MicrosoftAPIFaceEmotionExtractor, self).__init__(face_id,
+                                                               rectangle,
                                                                landmarks,
-                                                               'emotion',
+                                                               ['emotion'],
                                                                **kwargs)
 
 
@@ -114,10 +114,11 @@ class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
     '''
 
     api_method = 'analyze'
+    _log_attributes = ('api_version', 'features')
 
     def __init__(self, features=None, **kwargs):
         if hasattr(self, '_feature'):
-            self.features = self._feature
+            self.features = [self._feature]
         else:
             self.features = features if features else ['Tags', 'Categories',
                                                        'ImageType', 'Color',
@@ -125,20 +126,15 @@ class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
         super(MicrosoftVisionAPIExtractor, self).__init__(**kwargs)
 
     def _extract(self, stim):
-        with stim.get_filename() as filename:
-            data = open(filename, 'rb').read()
-
         params = {
-            'visualFeatures': self.features,
+            'visualFeatures': ','.join(self.features),
         }
-        raw = self._query_api(data, params)
+        raw = self._query_api(stim, params)
         return ExtractorResult(None, stim, self, raw=raw)
 
     def _to_df(self, result):
-        features = self.features.split(',')
-
         data_dict = {}
-        for feat in features:
+        for feat in self.features:
             feat = feat[0].lower() + feat[1:]
             if feat == 'tags':
                 for tag in result.raw[feat]:

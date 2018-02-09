@@ -47,7 +47,10 @@ class MicrosoftAPITransformer(Transformer):
         self.api_version = api_version
         super(MicrosoftAPITransformer, self).__init__()
 
-    def _query_api(self, data, params):
+    def _query_api(self, stim, params):
+        with stim.get_filename() as filename:
+            data = open(filename, 'rb').read()
+
         headers = {
             'Content-Type': 'application/octet-stream',
             'Ocp-Apim-Subscription-Key': self.subscription_key,

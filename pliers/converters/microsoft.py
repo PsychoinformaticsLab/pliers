@@ -12,14 +12,11 @@ class MicrosoftAPITextConverter(MicrosoftVisionAPITransformer, ImageToTextConver
     api_method = 'ocr'
 
     def _convert(self, stim):
-        with stim.get_filename() as filename:
-            data = open(filename, 'rb').read()
-
         params = {
             'language': 'en',
             'detectOrientation': False
         }
-        response = self._query_api(data, params)
+        response = self._query_api(stim, params)
 
         text = ''
         for r in response['regions']:
