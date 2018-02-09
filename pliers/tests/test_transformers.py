@@ -41,6 +41,8 @@ def test_parallelization():
     # require some new logging functionality, or introspection). For now we
     # just make sure the parallelized version produces the same result.
     default = config.get_option('parallelize')
+    cache_default = config.get_option('cache_transformers')
+    config.set_option('cache_transformers', True)
 
     filename = join(get_test_data_path(), 'video', 'small.mp4')
     video = VideoStim(filename)
@@ -56,6 +58,7 @@ def test_parallelization():
 
     assert result1 == result2
     config.set_option('parallelize', default)
+    config.set_option('cache_transformers', cache_default)
 
 
 def test_batch_transformer():
