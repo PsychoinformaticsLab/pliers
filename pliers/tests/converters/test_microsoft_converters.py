@@ -17,4 +17,4 @@ def test_microsoft_vision_api_text_converter():
     conv = MicrosoftAPITextConverter()
     img = ImageStim(join(IMAGE_DIR, 'CC0', '28010844841_c5b81cb9cc_z.jpg'))
     text = conv.transform(img).text
-    assert 'Santander' in text
+    assert 'Santander\nSantander' in text

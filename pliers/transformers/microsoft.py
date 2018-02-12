@@ -16,6 +16,9 @@ class MicrosoftAPITransformer(Transformer):
             Services. Only needs to be passed the first time the extractor is
             initialized.
         location (str): region the subscription key has been registered in.
+            It will be the first part of the endpoint URL suggested by
+            Microsoft when you first created the key.
+            Examples include: westus, westcentralus, eastus
         api_version (str): API version to use.
     '''
 
@@ -49,7 +52,8 @@ class MicrosoftAPITransformer(Transformer):
 
     def _query_api(self, stim, params):
         with stim.get_filename() as filename:
-            data = open(filename, 'rb').read()
+            with open(filename, 'rb') as fp:
+                data = fp.read()
 
         headers = {
             'Content-Type': 'application/octet-stream',
@@ -69,6 +73,9 @@ class MicrosoftAPITransformer(Transformer):
         if 'error' in response:
             raise Exception(response['error']['message'])
         elif 'statusCode' in response and response['statusCode'] in [401, 429]:
+            raise Exception(response['message'])
+        elif 'code' in response and \
+             response['code'] == 'NotSupportedVisualFeature':
             raise Exception(response['message'])
 
         return response
