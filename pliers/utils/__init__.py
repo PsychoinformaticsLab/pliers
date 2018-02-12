@@ -16,5 +16,5 @@ __all__ = [
     'attempt_to_import',
     'EnvironmentKeyMixin',
     'verify_dependencies',
-    'set_iterable_type',
+    'set_iterable_type'
 ]

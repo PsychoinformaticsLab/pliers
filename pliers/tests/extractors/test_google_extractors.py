@@ -4,7 +4,7 @@ from pliers.extractors import (GoogleVisionAPIFaceExtractor,
                                GoogleVisionAPIPropertyExtractor,
                                GoogleVisionAPISafeSearchExtractor,
                                GoogleVisionAPIWebEntitiesExtractor,
-                               ExtractorResult, merge_results)
+                               merge_results)
 from pliers.extractors.google import GoogleVisionAPIExtractor
 from pliers.stimuli import ImageStim, VideoStim
 import pytest
