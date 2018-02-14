@@ -71,10 +71,7 @@ class ExtractorResult(object):
         # generate the .data property via calls to to_array() or to_df()
         # implemented in the Extractor. But to avoid breaking the API without
         # warning, we provide a backward-compatible version for the time being.
-        if self.raw is not None and hasattr(self.extractor, '_to_array'):
-            self.data = self.extractor._to_array(self)
-        else:
-            self.data = np.array(data)
+        self.data = np.array(data)
 
         if onsets is None:
             onsets = stim.onset
