@@ -101,7 +101,8 @@ class Transformer(with_metaclass(ABCMeta)):
         # If stims is an iterable, naively loop over elements, removing
         # invalid results if needed
         if isiterable(stims):
-            iters = self._iterate(stims, *args, **kwargs)
+            iters = self._iterate(stims, validation=validation, *args,
+                                  **kwargs)
             if config.get_option('drop_bad_extractor_results'):
                 iters = (i for i in iters if i is not None)
             iters = progress_bar_wrapper(iters, desc='Stim')
@@ -215,7 +216,7 @@ class BatchTransformerMixin(Transformer):
             self._batch_size = batch_size
         super(BatchTransformerMixin, self).__init__(*args, **kwargs)
 
-    def _iterate(self, stims, *args, **kwargs):
+    def _iterate(self, stims, validation='strict', *args, **kwargs):
         batches = batch_iterable(stims, self._batch_size)
         results = []
         for batch in progress_bar_wrapper(batches):

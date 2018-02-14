@@ -5,6 +5,7 @@ extractors that span audio, image, etc.).'''
 
 from .base import Transformer, BatchTransformerMixin, get_transformer
 from .google import GoogleAPITransformer, GoogleVisionAPITransformer
+from .microsoft import MicrosoftAPITransformer, MicrosoftVisionAPITransformer
 
 
 __all__ = [
@@ -12,6 +13,7 @@ __all__ = [
     'get_transformer',
     'GoogleAPITransformer',
     'GoogleVisionAPITransformer',
-    'PliersTransformer',
+    'MicrosoftAPITransformer',
+    'MicrosoftVisionAPITransformer',
     'Transformer'
 ]

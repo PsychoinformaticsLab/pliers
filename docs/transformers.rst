@@ -80,6 +80,14 @@ At present, pliers implements several dozen |Extractor| classes that span a wide
   GoogleVisionAPISafeSearchExtractor
   GoogleVisionAPIWebEntitiesExtractor
   IndicoAPIImageExtractor
+  MicrosoftAPIFaceExtractor
+  MicrosoftAPIFaceEmotionExtractor
+  MicrosoftVisionAPIExtractor
+  MicrosoftVisionAPITagExtractor
+  MicrosoftVisionAPICategoryExtractor
+  MicrosoftVisionAPIImageTypeExtractor
+  MicrosoftVisionAPIColorExtractor
+  MicrosoftVisionAPIAdultExtractor
   SaliencyExtractor
   SharpnessExtractor
   TensorFlowInceptionV3Extractor
@@ -179,6 +187,7 @@ Pliers currently implements the following |Converter| classes:
 	IBMSpeechAPIConverter
 	GoogleSpeechAPIConverter
 	GoogleVisionAPITextConverter
+	MicrosoftAPITextConverter
 	TesseractConverter
 	VideoFrameCollectionIterator
 	VideoFrameIterator
@@ -201,12 +210,16 @@ Pliers currently implements the following |Filter| classes:
 	:toctree: generated/
  	:template: _class.rst
 
+	AudioTrimmingFilter
 	FrameSamplingFilter
 	ImageCroppingFilter
+	LowerCasingFilter
 	PillowImageFilter
 	PunctuationRemovalFilter
+	TemporalTrimmingFilter
 	TokenizingFilter
 	TokenRemovalFilter
+	VideoTrimmingFilter
 	WordStemmingFilter
 
 Iterable-aware transformations
