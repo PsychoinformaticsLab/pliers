@@ -116,14 +116,14 @@ class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
     api_method = 'analyze'
     _log_attributes = ('api_version', 'features')
 
-    def __init__(self, features=None, **kwargs):
-        if hasattr(self, '_feature'):
-            self.features = [self._feature]
-        else:
-            self.features = features if features else ['Tags', 'Categories',
-                                                       'ImageType', 'Color',
-                                                       'Adult']
-        super(MicrosoftVisionAPIExtractor, self).__init__(**kwargs)
+    def __init__(self, features=None, subscription_key=None, location=None,
+                 api_version='v1.0'):
+        self.features = features if features else ['Tags', 'Categories',
+                                                   'ImageType', 'Color',
+                                                   'Adult']
+        super(MicrosoftVisionAPIExtractor, self).__init__(subscription_key=None,
+                                                          location=None,
+                                                          api_version='v1.0')
 
     def _extract(self, stim):
         params = {
@@ -151,32 +151,52 @@ class MicrosoftVisionAPITagExtractor(MicrosoftVisionAPIExtractor):
 
     ''' Extracts image tags using the Microsoft API '''
 
-    _feature = 'Tags'
+    def __init__(self, subscription_key=None, location=None, api_version='v1.0'):
+        super(MicrosoftVisionAPITagExtractor, self).__init__(features=['Tags'],
+                                                             subscription_key=None,
+                                                             location=None,
+                                                             api_version='v1.0')
 
 
 class MicrosoftVisionAPICategoryExtractor(MicrosoftVisionAPIExtractor):
 
     ''' Extracts image categories using the Microsoft API '''
 
-    _feature = 'Categories'
+    def __init__(self, subscription_key=None, location=None, api_version='v1.0'):
+        super(MicrosoftVisionAPICategoryExtractor, self).__init__(features=['Categories'],
+                                                                  subscription_key=None,
+                                                                  location=None,
+                                                                  api_version='v1.0')
 
 
 class MicrosoftVisionAPIImageTypeExtractor(MicrosoftVisionAPIExtractor):
 
     ''' Extracts image types (clipart, etc.) using the Microsoft API '''
 
-    _feature = 'ImageType'
+    def __init__(self, subscription_key=None, location=None, api_version='v1.0'):
+        super(MicrosoftVisionAPIImageTypeExtractor, self).__init__(features=['ImageType'],
+                                                                   subscription_key=None,
+                                                                   location=None,
+                                                                   api_version='v1.0')
 
 
 class MicrosoftVisionAPIColorExtractor(MicrosoftVisionAPIExtractor):
 
     ''' Extracts image color attributes using the Microsoft API '''
 
-    _feature = 'Color'
+    def __init__(self, subscription_key=None, location=None, api_version='v1.0'):
+        super(MicrosoftVisionAPIColorExtractor, self).__init__(features=['Color'],
+                                                               subscription_key=None,
+                                                               location=None,
+                                                               api_version='v1.0')
 
 
 class MicrosoftVisionAPIAdultExtractor(MicrosoftVisionAPIExtractor):
 
     ''' Extracts the presence of adult content using the Microsoft API '''
 
-    _feature = 'Adult'
+    def __init__(self, subscription_key=None, location=None, api_version='v1.0'):
+        super(MicrosoftVisionAPIAdultExtractor, self).__init__(features=['Adult'],
+                                                               subscription_key=None,
+                                                               location=None,
+                                                               api_version='v1.0')

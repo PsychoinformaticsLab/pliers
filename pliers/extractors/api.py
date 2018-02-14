@@ -95,10 +95,11 @@ class IndicoAPITextExtractor(TextExtractor, IndicoAPIExtractor):
     sentiment extraction.
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self, api_key=None, models=None):
         verify_dependencies(['indicoio'])
         self.allowed_models = indicoio.TEXT_APIS.keys()
-        super(IndicoAPITextExtractor, self).__init__(**kwargs)
+        super(IndicoAPITextExtractor, self).__init__(api_key=api_key,
+                                                     models=models)
 
 
 class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
@@ -107,10 +108,11 @@ class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
     facial emotion recognition or content filtering.
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self, api_key=None, models=None):
         verify_dependencies(['indicoio'])
         self.allowed_models = indicoio.IMAGE_APIS.keys()
-        super(IndicoAPIImageExtractor, self).__init__(**kwargs)
+        super(IndicoAPIImageExtractor, self).__init__(api_key=api_key,
+                                                      models=models)
 
 
 class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
