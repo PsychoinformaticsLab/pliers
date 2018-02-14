@@ -43,7 +43,7 @@ class Node(object):
         self.children.append(node)
 
     def is_leaf(self):
-        return len(self.children)
+        return len(self.children) == 0
 
     def to_json(self):
         spec = {'transformer': self.transformer.__class__.__name__}
@@ -224,7 +224,7 @@ class Graph(object):
             node = self.nodes[node]
 
         result = node.transformer.transform(stim)
-        if len(node.children) == 0:
+        if node.is_leaf():
             return listify(result)
 
         stim = result

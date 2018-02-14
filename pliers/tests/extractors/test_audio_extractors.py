@@ -1,6 +1,7 @@
 from os.path import join
 from ..utils import get_test_data_path
-from pliers.extractors import (STFTAudioExtractor,
+from pliers.extractors import (LibrosaFeatureExtractor,
+                               STFTAudioExtractor,
                                MeanAmplitudeExtractor,
                                SpectralCentroidExtractor,
                                SpectralBandwidthExtractor,
@@ -33,10 +34,17 @@ def test_stft_extractor():
     assert df.shape == (557, 7)
     assert df['onset'][0] == 4.2
 
+    ext = STFTAudioExtractor(frame_size=1., spectrogram=False,
+                             freq_bins=5)
+    result = ext.transform(stim)
+    df = result.to_df(timing=False, object_id=False)
+    assert df.shape == (557, 5)
+    assert '0_1102' in df.columns
+
 
 def test_mean_amplitude_extractor():
-    audio = AudioStim(join(AUDIO_DIR, "barber_edited.wav"))
-    text_file = join(get_test_data_path(), 'text', "wonderful_edited.srt")
+    audio = AudioStim(join(AUDIO_DIR, 'barber_edited.wav'))
+    text_file = join(get_test_data_path(), 'text', 'wonderful_edited.srt')
     text = ComplexTextStim(text_file)
     stim = TranscribedAudioCompoundStim(audio=audio, text=text)
     ext = MeanAmplitudeExtractor()
@@ -45,8 +53,18 @@ def test_mean_amplitude_extractor():
     assert np.allclose(result['mean_amplitude'], targets)
 
 
+def test_librosa_extractor():
+    audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
+    ext = LibrosaFeatureExtractor(feature='rmse')
+    df = ext.transform(audio).to_df()
+    assert df.shape == (1221, 5)
+    assert np.isclose(df['onset'][1], 0.04644)
+    assert np.isclose(df['duration'][0], 0.04644)
+    assert np.isclose(df['rmse'][0], 0.25663)
+
+
 def test_spectral_extractors():
-    audio = AudioStim(join(AUDIO_DIR, "barber.wav"))
+    audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
     ext = SpectralCentroidExtractor()
     df = ext.transform(audio).to_df()
     assert df.shape == (1221, 5)
@@ -78,7 +96,7 @@ def test_spectral_extractors():
 
 
 def test_polyfeatures_extractor():
-    audio = AudioStim(join(AUDIO_DIR, "barber.wav"))
+    audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
     ext = PolyFeaturesExtractor()
     df = ext.transform(audio).to_df()
     assert df.shape == (1221, 6)
@@ -93,7 +111,7 @@ def test_polyfeatures_extractor():
 
 
 def test_rmse_extractor():
-    audio = AudioStim(join(AUDIO_DIR, "barber.wav"),
+    audio = AudioStim(join(AUDIO_DIR, 'barber.wav'),
                       onset=1.0)
     ext = RMSEExtractor()
     df = ext.transform(audio).to_df()
@@ -111,7 +129,7 @@ def test_rmse_extractor():
 
 
 def test_zcr_extractor():
-    audio = AudioStim(join(AUDIO_DIR, "barber.wav"),
+    audio = AudioStim(join(AUDIO_DIR, 'barber.wav'),
                       onset=2.0)
     ext = ZeroCrossingRateExtractor()
     df = ext.transform(audio).to_df()
@@ -130,7 +148,7 @@ def test_zcr_extractor():
 
 
 def test_chroma_extractors():
-    audio = AudioStim(join(AUDIO_DIR, "barber.wav"))
+    audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
     ext = ChromaSTFTExtractor()
     df = ext.transform(audio).to_df()
     assert df.shape == (1221, 16)
@@ -157,7 +175,7 @@ def test_chroma_extractors():
 
 
 def test_melspectrogram_extractor():
-    audio = AudioStim(join(AUDIO_DIR, "barber.wav"))
+    audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
     ext = MelspectrogramExtractor()
     df = ext.transform(audio).to_df()
     assert df.shape == (1221, 132)
@@ -172,7 +190,7 @@ def test_melspectrogram_extractor():
 
 
 def test_mfcc_extractor():
-    audio = AudioStim(join(AUDIO_DIR, "barber.wav"))
+    audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
     ext = MFCCExtractor()
     df = ext.transform(audio).to_df()
     assert df.shape == (1221, 24)
@@ -187,7 +205,7 @@ def test_mfcc_extractor():
 
 
 def test_tonnetz_extractor():
-    audio = AudioStim(join(AUDIO_DIR, "barber.wav"))
+    audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
     ext = TonnetzExtractor()
     df = ext.transform(audio).to_df()
     assert df.shape == (1221, 10)
@@ -197,7 +215,7 @@ def test_tonnetz_extractor():
 
 
 def test_tempogram_extractor():
-    audio = AudioStim(join(AUDIO_DIR, "barber.wav"))
+    audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
     ext = TempogramExtractor()
     df = ext.transform(audio).to_df()
     assert df.shape == (1221, 388)
