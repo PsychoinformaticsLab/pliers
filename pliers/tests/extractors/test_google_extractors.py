@@ -58,8 +58,8 @@ def test_google_vision_multiple_face_extraction():
     filename = join(get_test_data_path(), 'image', 'thai_people.jpg')
     stim = ImageStim(filename)
     # Only first record
-    ext = GoogleVisionAPIFaceExtractor(handle_annotations='first')
-    result1 = ext.transform(stim).to_df()
+    ext = GoogleVisionAPIFaceExtractor()
+    result1 = ext.transform(stim).to_df(handle_annotations='first')
     assert 'joyLikelihood' in result1.columns
     # All records
     ext = GoogleVisionAPIFaceExtractor()
@@ -74,9 +74,10 @@ def test_google_vision_face_batch():
     stim_files = [join(get_test_data_path(), 'image', '%s.jpg' % s)
                   for s in stims]
     stims = [ImageStim(s) for s in stim_files]
-    ext = GoogleVisionAPIFaceExtractor(handle_annotations='first')
+    ext = GoogleVisionAPIFaceExtractor()
     result = ext.transform(stims)
-    result = merge_results(result, format='wide', extractor_names=False)
+    result = merge_results(result, format='wide', extractor_names=False,
+                           handle_annotations='first')
     assert result.shape == (2, 139)
     assert 'joyLikelihood' in result.columns
     assert result['joyLikelihood'][0] == 'VERY_LIKELY'
@@ -88,7 +89,7 @@ def test_google_vision_face_batch():
     result = ext.transform(video)
     result = merge_results(result, format='wide', extractor_names=False)
     assert 'joyLikelihood' in result.columns
-    assert result.shape == (11, 139)
+    assert result.shape == (22, 139)
 
     video = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
     video = conv.transform(video)

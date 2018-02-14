@@ -89,7 +89,7 @@ class ExtractorResult(object):
         self.orders = orders if orders is not None else np.nan
 
     def to_df(self, timing=True, metadata=False, format='wide',
-              extractor_name=False, object_id=True):
+              extractor_name=False, object_id=True, **to_df_kwargs):
         ''' Convert current instance to a pandas DatasFrame.
 
         Args:
@@ -125,7 +125,7 @@ class ExtractorResult(object):
         # that produces a DataFrame in standardized format. Failing that, we
         # assume self.data is already array-like and can be wrapped in a DF.
         if hasattr(self.extractor, '_to_df'):
-            df = self.extractor._to_df(self)
+            df = self.extractor._to_df(self, **to_df_kwargs)
         else:
             features = self.features
             if features is None:
@@ -190,7 +190,7 @@ class ExtractorResult(object):
 
 def merge_results(results, format='wide', timing=True, metadata=True,
                   extractor_names=True, object_id=True, aggfunc=None,
-                  invalid_results='ignore'):
+                  invalid_results='ignore', **to_df_kwargs):
     ''' Merges a list of ExtractorResults instances and returns a pandas DF.
 
     Args:
@@ -266,7 +266,7 @@ def merge_results(results, format='wide', timing=True, metadata=True,
         if isinstance(r, ExtractorResult):
             dfs.append(r.to_df(timing=_timing, metadata=metadata,
                                format='long', extractor_name=True,
-                               object_id=_object_id))
+                               object_id=_object_id, **to_df_kwargs))
         elif invalid_results == 'fail':
             raise ValueError("At least one of the provided results was not an"
                              "ExtractorResult. Set the invalid_results"

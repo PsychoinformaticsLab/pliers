@@ -37,9 +37,20 @@ class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
     request_type = 'FACE_DETECTION'
     response_object = 'faceAnnotations'
 
-    def _to_df(self, result):
+    def _to_df(self, result, handle_annotations=None):
+        '''
+        Converts a Google API Face JSON response into a Pandas Dataframe.
+
+        Args:
+            result (ExtractorResult): Result object from which to parse out a
+                Dataframe.
+            handle_annotations (str): How returned face annotations should be
+                handled in cases where there are multiple faces.
+                'first' indicates to only use the first face JSON object, all
+                other values will default to including every face.
+        '''
         annotations = result.raw
-        if self.handle_annotations == 'first':
+        if handle_annotations == 'first':
             annotations = [annotations[0]]
 
         face_results = []
