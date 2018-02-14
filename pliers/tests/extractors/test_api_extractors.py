@@ -50,7 +50,6 @@ def test_indico_api_text_extractor():
 
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
 def test_indico_api_image_extractor():
-
     ext = IndicoAPIImageExtractor(api_key=os.environ['INDICO_APP_KEY'],
                                   models=['fer', 'content_filtering'])
 

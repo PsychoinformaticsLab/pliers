@@ -13,6 +13,7 @@ from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.transformers import BatchTransformerMixin
 from pliers.utils import (listify, EnvironmentKeyMixin, attempt_to_import,
                           verify_dependencies)
+import pandas as pd
 
 clarifai_client = attempt_to_import('clarifai.rest.client', 'clarifai_client',
                                     ['ClarifaiApp',
@@ -72,22 +73,20 @@ class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
 
         results = []
         for i, stim in enumerate(stims):
-            features, data = [], []
-            for j, score in enumerate(scores):
-                if isinstance(score[i], float):
-                    features.append(self.names[j])
-                    data.append(score[i])
-                elif isinstance(score[i], dict):
-                    for k in score[i].keys():
-                        features.append(self.names[j] + '_' + k)
-                        data.append(score[i][k])
-
-            results.append(ExtractorResult([data], stim, self,
-                                           features=features,
-                                           onsets=stim.onset,
-                                           durations=stim.duration))
-
+            stim_scores = [s[i] for s in scores]
+            results.append(ExtractorResult(None, stim, self,
+                                           raw=stim_scores))
         return results
+
+    def _to_df(self, result):
+        data_dict = {}
+        for i, model_response in enumerate(result.raw):
+            if isinstance(model_response, float):
+                data_dict[self.names[i]] = model_response
+            elif isinstance(model_response, dict):
+                for k, v in model_response.items():
+                    data_dict['%s_%s' % (self.names[i], k)] = v
+        return pd.DataFrame([data_dict])
 
 
 class IndicoAPITextExtractor(TextExtractor, IndicoAPIExtractor):
@@ -176,14 +175,12 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
             tags = self.model.predict(imgs, model_output_info=model_output_info)
 
         extracted = []
-        for i, res in enumerate(tags['outputs']):
-            data = res['data']['concepts']
-            concepts = []
-            values = []
-            for d in data:
-                concepts.append(d['name'])
-                values.append(d['value'])
-            extracted.append(ExtractorResult([values], stims[i],
-                             self, features=concepts))
-
+        for i, resp in enumerate(tags['outputs']):
+            extracted.append(ExtractorResult(None, stims[i], self, raw=resp))
         return extracted
+
+    def _to_df(self, result):
+        data_dict = {}
+        for tag in result.raw['data']['concepts']:
+            data_dict[tag['name']] = tag['value']
+        return pd.DataFrame([data_dict])
