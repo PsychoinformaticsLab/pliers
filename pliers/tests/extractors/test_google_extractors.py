@@ -35,7 +35,7 @@ def test_google_vision_api_face_extractor_inits():
         get_test_data_path(), 'payloads', 'google_vision_api_face_payload.json')
     response = json.load(open(filename, 'r'))
     stim = ImageStim(join(get_test_data_path(), 'image', 'obama.jpg'))
-    res = ExtractorResult(None, stim, ext, raw=response['faceAnnotations'])
+    res = ExtractorResult(response['faceAnnotations'], stim, ext)
     df = res.to_df()
     assert df['angerLikelihood'][0] == 'VERY_UNLIKELY'
     assert df['landmark_LEFT_EYE_BOTTOM_BOUNDARY_y'][0] == 257.023

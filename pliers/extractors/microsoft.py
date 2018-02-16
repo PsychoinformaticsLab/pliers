@@ -130,7 +130,7 @@ class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
             'visualFeatures': ','.join(self.features),
         }
         raw = self._query_api(stim, params)
-        return ExtractorResult(None, stim, self, raw=raw)
+        return ExtractorResult(raw, stim, self)
 
     def _to_df(self, result):
         data_dict = {}

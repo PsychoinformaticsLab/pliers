@@ -21,11 +21,11 @@ class GoogleVisionAPIExtractor(GoogleVisionAPITransformer, ImageExtractor):
         for i, response in enumerate(responses):
             if response and self.response_object in response:
                 raw = response[self.response_object]
-                results.append(ExtractorResult(None, stims[i], self, raw=raw))
+                results.append(ExtractorResult(raw, stims[i], self))
             elif 'error' in response:
                 raise Exception(response['error']['message'])
             else:
-                results.append(ExtractorResult(None, stims[i], self, raw=[{}]))
+                results.append(ExtractorResult([{}], stims[i], self))
 
         return results
 
