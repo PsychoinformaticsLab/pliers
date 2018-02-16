@@ -29,4 +29,4 @@ class MicrosoftAPITextConverter(MicrosoftVisionAPITransformer, ImageToTextConver
                 lines.append(' '.join([w['text'] for w in l['words']]))
 
         text = '\n'.join(lines)
-        return TextStim(text=text, onset=stim.onset, duration=stim.duration)
+        return TextStim(text=text)

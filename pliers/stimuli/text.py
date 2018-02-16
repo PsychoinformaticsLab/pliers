@@ -121,7 +121,7 @@ class ComplexTextStim(Stim):
 
     @property
     def elements(self):
-        return self._elements
+        return [f for f in self]
 
     def _from_file(self, filename, columns, default_duration):
         tod_names = {'t': 'text', 'o': 'onset', 'd': 'duration'}
@@ -142,7 +142,7 @@ class ComplexTextStim(Stim):
                 if duration is None:
                     duration = default_duration
                 elem = TextStim(filename, r['text'], r['onset'], duration)
-            self.add_elem(elem)
+            self._elements.append(elem)
 
     def save(self, path):
         with open(path, 'w') as f:
@@ -173,16 +173,13 @@ class ComplexTextStim(Stim):
         for i, r in df.iterrows():
             elem = TextStim(filename, text=r['text'], onset=r['onset'],
                             duration=r['duration'], order=i)
-            self.add_elem(elem)
-
-    def add_elem(self, elem):
-        offset = 0.0 if self.onset is None else self.onset
-        elem.onset = offset if elem.onset is None else offset + elem.onset
-        self._elements.append(elem)
+            self._elements.append(elem)
 
     def __iter__(self):
         """ Iterate text elements. """
         for elem in self._elements:
+            offset = 0.0 if self.onset is None else self.onset
+            elem.onset = offset if elem.onset is None else offset + elem.onset
             yield elem
 
     def _to_sec(self, tup):
@@ -215,5 +212,5 @@ class ComplexTextStim(Stim):
             tokens = tokenize_text(text)
 
         for i, t in enumerate(tokens):
-            self.add_elem(TextStim(text=t, onset=None, duration=None,
-                                   order=i))
+            self._elements.append(TextStim(text=t, onset=None, duration=None,
+                                  order=i))

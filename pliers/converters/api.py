@@ -52,7 +52,7 @@ class SpeechRecognitionAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
 
         text = getattr(self.recognizer, self.recognize_method)(clip, self.api_key)
 
-        return ComplexTextStim(text=text, onset=audio.onset)
+        return ComplexTextStim(text=text)
 
 
 class WitTranscriptionConverter(SpeechRecognitionAPIConverter):

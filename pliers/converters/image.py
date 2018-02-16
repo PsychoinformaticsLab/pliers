@@ -26,5 +26,4 @@ class TesseractConverter(ImageToTextConverter):
     def _convert(self, stim):
         verify_dependencies(['pytesseract'])
         text = pytesseract.image_to_string(Image.fromarray(stim.data))
-        return TextStim(text=text, onset=stim.onset, duration=stim.duration,
-                        order=stim.order)
+        return TextStim(text=text)

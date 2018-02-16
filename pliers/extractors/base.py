@@ -66,24 +66,15 @@ class ExtractorResult(object):
         self.features = features
         self.raw = raw
         self._history = None
+        self.onset = onsets
+        self.duration = durations
+        self.order = orders
 
         # Eventually, the goal is to make raw mandatory, and always
         # generate the .data property via calls to to_array() or to_df()
         # implemented in the Extractor. But to avoid breaking the API without
         # warning, we provide a backward-compatible version for the time being.
         self.data = np.array(data)
-
-        if onsets is None:
-            onsets = stim.onset
-        self.onsets = onsets if onsets is not None else np.nan
-
-        if durations is None:
-            durations = stim.duration
-        self.durations = durations if durations is not None else np.nan
-
-        if orders is None:
-            orders = stim.order
-        self.orders = orders if orders is not None else np.nan
 
     def to_df(self, timing=True, metadata=False, format='wide',
               extractor_name=False, object_id=True, **to_df_kwargs):
@@ -130,6 +121,10 @@ class ExtractorResult(object):
                             for i in range(self.data.shape[1])]
             df = pd.DataFrame(self.data, columns=features)
 
+        onsets = np.nan if self.onset is None else self.onset
+        durations = np.nan if self.duration is None else self.duration
+        orders = np.nan if self.order is None else self.order
+
         index_cols = []
 
         # Generally we leave it to Extractors to properly track the number of
@@ -139,8 +134,8 @@ class ExtractorResult(object):
         # counter for any row in the DF that cannot be uniquely distinguished
         # from other rows by onset and duration.
         if object_id and 'object_id' not in df.columns:
-            index = pd.Series(self.onsets).astype(str) + '_' + \
-                pd.Series(self.durations).astype(str)
+            index = pd.Series(onsets).astype(str) + '_' + \
+                pd.Series(durations).astype(str)
             if object_id is True or (object_id == 'auto' and
                                      len(set(index)) > 1):
                 ids = np.arange(len(df)) if len(index) == 1 \
@@ -149,11 +144,11 @@ class ExtractorResult(object):
                 index_cols = ['object_id']
 
         if timing is True or (timing == 'auto' and
-                              (np.isfinite(self.durations).any() or
-                               np.isfinite(self.orders).any())):
-            df.insert(0, 'duration', self.durations)
-            df.insert(0, 'order', self.orders)
-            df.insert(0, 'onset', self.onsets)
+                              (np.isfinite(durations).any() or
+                               np.isfinite(orders).any())):
+            df.insert(0, 'onset', onsets)
+            df.insert(0, 'duration', durations)
+            df.insert(0, 'order', orders)
             index_cols.extend(['onset', 'order', 'duration'])
 
         if format == 'long':

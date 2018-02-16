@@ -129,6 +129,7 @@ class Transformer(with_metaclass(ABCMeta)):
                 result = _log_transformation(validated_stim, result, self)
                 if isgenerator(result):
                     result = list(result)
+                self._propagate_context(validated_stim, result)
                 return result
 
     def _validate(self, stim):
@@ -186,6 +187,18 @@ class Transformer(with_metaclass(ABCMeta)):
         return (t for t in (self.transform(s, *args, **kwargs)
                             for s in stims) if t)
 
+    def _propagate_context(self, stim, result):
+        if isiterable(result):
+            for r in result:
+                self._propagate_context(stim, r)
+        else:
+            if result.onset is None:
+                result.onset = stim.onset
+            if result.duration is None:
+                result.duration = stim.duration
+            if result.order is None:
+                result.order = stim.order
+
     @abstractmethod
     def _transform(self, stim):
         pass
@@ -223,6 +236,7 @@ class BatchTransformerMixin(Transformer):
             res = self._transform(batch, *args, **kwargs)
             for i, stim in enumerate(batch):
                 res[i] = _log_transformation(stim, res[i], self)
+                self._propagate_context(stim, res[i])
             results.extend(res)
         return results
 

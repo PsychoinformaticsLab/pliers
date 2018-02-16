@@ -89,7 +89,7 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
                                           onset=offset + onset,
                                           duration=duration))
 
-        return ComplexTextStim(elements=words, onset=stim.onset)
+        return ComplexTextStim(elements=words)
 
 
 class GoogleVisionAPITextConverter(GoogleVisionAPITransformer,
@@ -121,30 +121,24 @@ class GoogleVisionAPITextConverter(GoogleVisionAPITransformer,
         responses = self._query_api(request)
         texts = []
 
-        for i, response in enumerate(responses):
-            stim = stims[i]
+        for response in responses:
             if response and self.response_object in response:
                 annotations = response[self.response_object]
                 # Combine the annotations
                 if self.handle_annotations == 'first':
                     text = annotations[0]['description']
-                    texts.append(TextStim(text=text, onset=stim.onset,
-                                          duration=stim.duration))
+                    texts.append(TextStim(text=text))
                 elif self.handle_annotations == 'concatenate':
                     text = ''
                     for annotation in annotations:
                         text = ' '.join([text, annotation['description']])
-                    texts.append(TextStim(text=text, onset=stim.onset,
-                                          duration=stim.duration))
+                    texts.append(TextStim(text=text))
                 elif self.handle_annotations == 'list':
                     for annotation in annotations:
-                        texts.append(TextStim(text=annotation['description'],
-                                              onset=stim.onset,
-                                              duration=stim.duration))
+                        texts.append(TextStim(text=annotation['description']))
             elif 'error' in response:
                 raise Exception(response['error']['message'])
             else:
-                texts.append(TextStim(text='', onset=stim.onset,
-                                      duration=stim.duration))
+                texts.append(TextStim(text=''))
 
         return texts
