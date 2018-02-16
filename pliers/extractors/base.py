@@ -37,8 +37,9 @@ class ExtractorResult(object):
     ''' Stores feature data produced by an Extractor.
 
     Args:
-        data (ndarray, iterable): Extracted feature values. Either an ndarray
-            or an iterable. Can be either 1-d or 2-d.
+        data (ndarray, iterable): Extracted feature data. Either an ndarray
+            (1-d or 2-d), an iterable, or a raw result. If a raw result is
+            passed, the source Extractor must implement _to_df().
         stim (Stim): The input Stim object from which features were extracted.
         extractor (Extractor): The Extractor object used in extraction.
         features (list, ndarray): Optional names of extracted features. If
@@ -55,26 +56,15 @@ class ExtractorResult(object):
     '''
 
     def __init__(self, data, stim, extractor, features=None, onsets=None,
-                 durations=None, orders=None, raw=None):
-
-        if data is None and raw is None:
-            raise ValueError("At least one of 'data' and 'raw' must be a "
-                             "value other than None.")
-
+                 durations=None, orders=None):
+        self.data = data
         self.stim = stim
         self.extractor = extractor
         self.features = features
-        self.raw = raw
         self._history = None
         self.onset = onsets
         self.duration = durations
         self.order = orders
-
-        # Eventually, the goal is to make raw mandatory, and always
-        # generate the .data property via calls to to_array() or to_df()
-        # implemented in the Extractor. But to avoid breaking the API without
-        # warning, we provide a backward-compatible version for the time being.
-        self.data = np.array(data)
 
     def to_df(self, timing=True, metadata=False, format='wide',
               extractor_name=False, object_id=True, **to_df_kwargs):
@@ -116,10 +106,11 @@ class ExtractorResult(object):
             df = self.extractor._to_df(self, **to_df_kwargs)
         else:
             features = self.features
+            data = np.array(self.data)
             if features is None:
                 features = ['feature_%d' % (i + 1)
-                            for i in range(self.data.shape[1])]
-            df = pd.DataFrame(self.data, columns=features)
+                            for i in range(data.shape[1])]
+            df = pd.DataFrame(data, columns=features)
 
         onsets = np.nan if self.onset is None else self.onset
         durations = np.nan if self.duration is None else self.duration

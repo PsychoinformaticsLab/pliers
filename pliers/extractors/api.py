@@ -74,13 +74,12 @@ class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
         results = []
         for i, stim in enumerate(stims):
             stim_scores = [s[i] for s in scores]
-            results.append(ExtractorResult(None, stim, self,
-                                           raw=stim_scores))
+            results.append(ExtractorResult(stim_scores, stim, self))
         return results
 
     def _to_df(self, result):
         data_dict = {}
-        for i, model_response in enumerate(result.raw):
+        for i, model_response in enumerate(result.data):
             if isinstance(model_response, float):
                 data_dict[self.names[i]] = model_response
             elif isinstance(model_response, dict):
@@ -178,11 +177,11 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
 
         extracted = []
         for i, resp in enumerate(tags['outputs']):
-            extracted.append(ExtractorResult(None, stims[i], self, raw=resp))
+            extracted.append(ExtractorResult(resp, stims[i], self))
         return extracted
 
     def _to_df(self, result):
         data_dict = {}
-        for tag in result.raw['data']['concepts']:
+        for tag in result.data['data']['concepts']:
             data_dict[tag['name']] = tag['value']
         return pd.DataFrame([data_dict])

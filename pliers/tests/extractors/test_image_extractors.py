@@ -80,7 +80,7 @@ def test_face_recognition_landmarks_extractor():
     assert 'face_landmarks_nose_tip' in dfs[1].columns
     assert 'face_landmarks_nose_tip' in dfs[2].columns
     assert dfs[1].loc[3, 'face_landmarks_left_eyebrow'] == \
-        result[1].raw[3]['left_eyebrow']
+        result[1].data[3]['left_eyebrow']
 
 
 def test_face_recognition_encodings_extractor():

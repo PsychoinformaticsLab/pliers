@@ -52,7 +52,7 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
             'returnFaceAttributes': attributes
         }
         raw = self._query_api(stim, params)
-        return ExtractorResult(None, stim, self, raw=raw)
+        return ExtractorResult(raw, stim, self)
 
     def _parse_response_json(self, json):
         data_dict = {}
@@ -81,7 +81,7 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
 
     def _to_df(self, result):
         face_results = []
-        for i, face in enumerate(result.raw):
+        for i, face in enumerate(result.data):
             face_data = self._parse_response_json(face)
             face_results.append(face_data)
 
@@ -137,13 +137,13 @@ class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
         for feat in self.features:
             feat = feat[0].lower() + feat[1:]
             if feat == 'tags':
-                for tag in result.raw[feat]:
+                for tag in result.data[feat]:
                     data_dict[tag['name']] = tag['confidence']
             elif feat == 'categories':
-                for cat in result.raw[feat]:
+                for cat in result.data[feat]:
                     data_dict[cat['name']] = cat['score']
             else:
-                data_dict.update(result.raw[feat])
+                data_dict.update(result.data[feat])
         return pd.DataFrame([data_dict.values()], columns=data_dict.keys())
 
 
