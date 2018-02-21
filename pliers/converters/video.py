@@ -16,5 +16,4 @@ class VideoToAudioConverter(Converter):
     def _convert(self, video):
         fps = AudioStim.get_sampling_rate(video.filename)
         return AudioStim(sampling_rate=fps,
-                         clip=video.clip.audio,
-                         onset=video.onset)
+                         clip=video.clip.audio)

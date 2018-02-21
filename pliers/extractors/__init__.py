@@ -7,7 +7,8 @@ from .base import Extractor, ExtractorResult, merge_results
 from .api import (IndicoAPITextExtractor,
                   IndicoAPIImageExtractor,
                   ClarifaiAPIExtractor)
-from .audio import (STFTAudioExtractor,
+from .audio import (LibrosaFeatureExtractor,
+                    STFTAudioExtractor,
                     MeanAmplitudeExtractor,
                     SpectralCentroidExtractor,
                     SpectralBandwidthExtractor,
@@ -56,6 +57,7 @@ __all__ = [
     'ClarifaiAPIExtractor',
     'STFTAudioExtractor',
     'MeanAmplitudeExtractor',
+    'LibrosaFeatureExtractor',
     'SpectralCentroidExtractor',
     'SpectralBandwidthExtractor',
     'SpectralContrastExtractor',

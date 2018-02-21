@@ -14,6 +14,9 @@ def test_get_transformer_by_name():
     tda = get_transformer('stFtAudioeXtrActOr', base='extractors')
     assert isinstance(tda, STFTAudioExtractor)
 
+    with pytest.raises(KeyError):
+        tda = get_transformer('NotRealExtractor')
+
 
 def test_transformation_history():
     img = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
@@ -76,6 +79,9 @@ def test_batch_transformer():
 
 
 def test_validation_levels(caplog):
+    cache_default = config.get_option('cache_transformers')
+    config.set_option('cache_transformers', False)
+
     ext = BrightnessExtractor()
     stim = TextStim(text='hello world')
     with pytest.raises(TypeError):
@@ -95,6 +101,8 @@ def test_validation_levels(caplog):
     res = ext.transform([stim, stim2], validation='loose')
     assert len(res) == 1
     assert np.isclose(res[0].to_df()['brightness'][0], 0.88784294, 1e-5)
+
+    config.set_option('cache_transformers', cache_default)
 
 
 def test_versioning():

@@ -37,8 +37,9 @@ class ExtractorResult(object):
     ''' Stores feature data produced by an Extractor.
 
     Args:
-        data (ndarray, iterable): Extracted feature values. Either an ndarray
-            or an iterable. Can be either 1-d or 2-d.
+        data (ndarray, iterable): Extracted feature data. Either an ndarray
+            (1-d or 2-d), an iterable, or a raw result. If a raw result is
+            passed, the source Extractor must implement _to_df().
         stim (Stim): The input Stim object from which features were extracted.
         extractor (Extractor): The Extractor object used in extraction.
         features (list, ndarray): Optional names of extracted features. If
@@ -55,41 +56,29 @@ class ExtractorResult(object):
     '''
 
     def __init__(self, data, stim, extractor, features=None, onsets=None,
-                 durations=None, orders=None, raw=None):
-
-        if data is None and raw is None:
-            raise ValueError("At least one of 'data' and 'raw' must be a "
-                             "value other than None.")
-
+                 durations=None, orders=None):
+        self._data = data
         self.stim = stim
         self.extractor = extractor
         self.features = features
-        self.raw = raw
         self._history = None
+        self.onset = onsets
+        self.duration = durations
+        self.order = orders
 
-        # Eventually, the goal is to make raw mandatory, and always
-        # generate the .data property via calls to to_array() or to_df()
-        # implemented in the Extractor. But to avoid breaking the API without
-        # warning, we provide a backward-compatible version for the time being.
-        if self.raw is not None and hasattr(self.extractor, '_to_array'):
-            self.data = self.extractor._to_array(self)
-        else:
-            self.data = np.array(data)
+    @property
+    def raw(self):
+        ''' Stores raw result of extraction, prior to postprocessing done
+        in to_df(). '''
+        return self._data if hasattr(self.extractor, '_to_df') else None
 
-        if onsets is None:
-            onsets = stim.onset
-        self.onsets = onsets if onsets is not None else np.nan
-
-        if durations is None:
-            durations = stim.duration
-        self.durations = durations if durations is not None else np.nan
-
-        if orders is None:
-            orders = stim.order
-        self.orders = orders if orders is not None else np.nan
+    @property
+    def data(self):
+        ''' Creates a DataFrame with default arguments '''
+        return self.to_df()
 
     def to_df(self, timing=True, metadata=False, format='wide',
-              extractor_name=False, object_id=True):
+              extractor_name=False, object_id=True, **to_df_kwargs):
         ''' Convert current instance to a pandas DatasFrame.
 
         Args:
@@ -123,15 +112,20 @@ class ExtractorResult(object):
 
         # Ideally, Extractors should implement their own _to_df() class method
         # that produces a DataFrame in standardized format. Failing that, we
-        # assume self.data is already array-like and can be wrapped in a DF.
+        # assume self._data is already array-like and can be wrapped in a DF.
         if hasattr(self.extractor, '_to_df'):
-            df = self.extractor._to_df(self)
+            df = self.extractor._to_df(self, **to_df_kwargs)
         else:
             features = self.features
+            data = np.array(self._data)
             if features is None:
                 features = ['feature_%d' % (i + 1)
-                            for i in range(self.data.shape[1])]
-            df = pd.DataFrame(self.data, columns=features)
+                            for i in range(data.shape[1])]
+            df = pd.DataFrame(data, columns=features)
+
+        onsets = np.nan if self.onset is None else self.onset
+        durations = np.nan if self.duration is None else self.duration
+        orders = np.nan if self.order is None else self.order
 
         index_cols = []
 
@@ -142,8 +136,8 @@ class ExtractorResult(object):
         # counter for any row in the DF that cannot be uniquely distinguished
         # from other rows by onset and duration.
         if object_id and 'object_id' not in df.columns:
-            index = pd.Series(self.onsets).astype(str) + '_' + \
-                pd.Series(self.durations).astype(str)
+            index = pd.Series(onsets).astype(str) + '_' + \
+                pd.Series(durations).astype(str)
             if object_id is True or (object_id == 'auto' and
                                      len(set(index)) > 1):
                 ids = np.arange(len(df)) if len(index) == 1 \
@@ -152,11 +146,11 @@ class ExtractorResult(object):
                 index_cols = ['object_id']
 
         if timing is True or (timing == 'auto' and
-                              (np.isfinite(self.durations).any() or
-                               np.isfinite(self.orders).any())):
-            df.insert(0, 'duration', self.durations)
-            df.insert(0, 'order', self.orders)
-            df.insert(0, 'onset', self.onsets)
+                              (np.isfinite(durations).any() or
+                               np.isfinite(orders).any())):
+            df.insert(0, 'onset', onsets)
+            df.insert(0, 'duration', durations)
+            df.insert(0, 'order', orders)
             index_cols.extend(['onset', 'order', 'duration'])
 
         if format == 'long':
@@ -190,7 +184,7 @@ class ExtractorResult(object):
 
 def merge_results(results, format='wide', timing=True, metadata=True,
                   extractor_names=True, object_id=True, aggfunc=None,
-                  invalid_results='ignore'):
+                  invalid_results='ignore', **to_df_kwargs):
     ''' Merges a list of ExtractorResults instances and returns a pandas DF.
 
     Args:
@@ -266,7 +260,7 @@ def merge_results(results, format='wide', timing=True, metadata=True,
         if isinstance(r, ExtractorResult):
             dfs.append(r.to_df(timing=_timing, metadata=metadata,
                                format='long', extractor_name=True,
-                               object_id=_object_id))
+                               object_id=_object_id, **to_df_kwargs))
         elif invalid_results == 'fail':
             raise ValueError("At least one of the provided results was not an"
                              "ExtractorResult. Set the invalid_results"

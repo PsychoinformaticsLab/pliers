@@ -40,9 +40,7 @@ class ImageCroppingFilter(ImageFilter):
             x0, y0, x1, y1 = pillow_img.getbbox()
         new_img = stim.data[y0:y1, x0:x1]
         return ImageStim(stim.filename,
-                         data=new_img,
-                         onset=stim.onset,
-                         duration=stim.duration)
+                         data=new_img)
 
 
 class PillowImageFilter(ImageFilter):
@@ -87,6 +85,4 @@ class PillowImageFilter(ImageFilter):
         pillow_img = Image.fromarray(stim.data)
         new_img = np.array(pillow_img.filter(self.filter))
         return ImageStim(stim.filename,
-                         data=new_img,
-                         onset=stim.onset,
-                         duration=stim.duration)
+                         data=new_img)

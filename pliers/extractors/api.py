@@ -13,6 +13,7 @@ from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.transformers import BatchTransformerMixin
 from pliers.utils import (listify, EnvironmentKeyMixin, attempt_to_import,
                           verify_dependencies)
+import pandas as pd
 
 clarifai_client = attempt_to_import('clarifai.rest.client', 'clarifai_client',
                                     ['ClarifaiApp',
@@ -72,22 +73,19 @@ class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
 
         results = []
         for i, stim in enumerate(stims):
-            features, data = [], []
-            for j, score in enumerate(scores):
-                if isinstance(score[i], float):
-                    features.append(self.names[j])
-                    data.append(score[i])
-                elif isinstance(score[i], dict):
-                    for k in score[i].keys():
-                        features.append(self.names[j] + '_' + k)
-                        data.append(score[i][k])
-
-            results.append(ExtractorResult([data], stim, self,
-                                           features=features,
-                                           onsets=stim.onset,
-                                           durations=stim.duration))
-
+            stim_scores = [s[i] for s in scores]
+            results.append(ExtractorResult(stim_scores, stim, self))
         return results
+
+    def _to_df(self, result):
+        data_dict = {}
+        for i, model_response in enumerate(result._data):
+            if isinstance(model_response, float):
+                data_dict[self.names[i]] = model_response
+            elif isinstance(model_response, dict):
+                for k, v in model_response.items():
+                    data_dict['%s_%s' % (self.names[i], k)] = v
+        return pd.DataFrame([data_dict])
 
 
 class IndicoAPITextExtractor(TextExtractor, IndicoAPIExtractor):
@@ -96,10 +94,11 @@ class IndicoAPITextExtractor(TextExtractor, IndicoAPIExtractor):
     sentiment extraction.
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self, api_key=None, models=None):
         verify_dependencies(['indicoio'])
         self.allowed_models = indicoio.TEXT_APIS.keys()
-        super(IndicoAPITextExtractor, self).__init__(**kwargs)
+        super(IndicoAPITextExtractor, self).__init__(api_key=api_key,
+                                                     models=models)
 
 
 class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
@@ -108,10 +107,11 @@ class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
     facial emotion recognition or content filtering.
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self, api_key=None, models=None):
         verify_dependencies(['indicoio'])
         self.allowed_models = indicoio.IMAGE_APIS.keys()
-        super(IndicoAPIImageExtractor, self).__init__(**kwargs)
+        super(IndicoAPIImageExtractor, self).__init__(api_key=api_key,
+                                                      models=models)
 
 
 class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
@@ -176,14 +176,12 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
             tags = self.model.predict(imgs, model_output_info=model_output_info)
 
         extracted = []
-        for i, res in enumerate(tags['outputs']):
-            data = res['data']['concepts']
-            concepts = []
-            values = []
-            for d in data:
-                concepts.append(d['name'])
-                values.append(d['value'])
-            extracted.append(ExtractorResult([values], stims[i],
-                             self, features=concepts))
-
+        for i, resp in enumerate(tags['outputs']):
+            extracted.append(ExtractorResult(resp, stims[i], self))
         return extracted
+
+    def _to_df(self, result):
+        data_dict = {}
+        for tag in result._data['data']['concepts']:
+            data_dict[tag['name']] = tag['value']
+        return pd.DataFrame([data_dict])

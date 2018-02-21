@@ -67,8 +67,7 @@ class WordStemmingFilter(TextFilter):
             stemmed = ' '.join([self.stemmer.stem(tok) for tok in tokens])
         else:
             stemmed = self.stemmer.stem(stim.text)
-        return TextStim(stim.filename, stemmed, onset=stim.onset,
-                        duration=stim.duration, order=stim.order)
+        return TextStim(stim.filename, stemmed)
 
 
 class TokenizingFilter(TextFilter):
@@ -97,8 +96,7 @@ class TokenizingFilter(TextFilter):
             tokens = self.tokenizer.tokenize(stim.text)
         else:
             tokens = word_tokenize(stim.text)
-        stims = [TextStim(stim.filename, token, onset=stim.onset,
-                          duration=stim.duration, order=i)
+        stims = [TextStim(stim.filename, token, order=i)
                  for i, token in enumerate(tokens)]
         return stims
 
@@ -134,8 +132,7 @@ class TokenRemovalFilter(TextFilter):
         tokens = word_tokenize(stim.text)
         tokens = [tok for tok in tokens if tok not in self.tokens]
         text = ' '.join(tokens)
-        return TextStim(stim.filename, text, onset=stim.onset,
-                        duration=stim.duration, order=stim.order)
+        return TextStim(stim.filename, text)
 
 
 class PunctuationRemovalFilter(TokenRemovalFilter):
@@ -151,5 +148,4 @@ class LowerCasingFilter(TextFilter):
     ''' Lower cases the text in a TextStim. '''
 
     def _filter(self, stim):
-        return TextStim(stim.filename, stim.text.lower(), onset=stim.onset,
-                        duration=stim.duration, order=stim.order)
+        return TextStim(stim.filename, stim.text.lower())

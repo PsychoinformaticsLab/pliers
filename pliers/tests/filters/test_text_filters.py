@@ -54,11 +54,15 @@ def test_word_stemming_filter():
 
 
 def test_tokenizing_filter():
-    stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
+    stim = TextStim(join(TEXT_DIR, 'scandal.txt'), onset=4.2)
     filt = TokenizingFilter()
     words = filt.transform(stim)
     assert len(words) == 231
     assert words[0].text == 'To'
+    assert words[0].onset == 4.2
+    assert words[0].order == 0
+    assert words[1].onset == 4.2
+    assert words[1].order == 1
 
     custom_tokenizer = PunktSentenceTokenizer()
     filt = TokenizingFilter(tokenizer=custom_tokenizer)

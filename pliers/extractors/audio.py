@@ -81,9 +81,12 @@ class STFTAudioExtractor(AudioExtractor):
 
         if isinstance(self.freq_bins, int):
             bins = []
-            bin_size = data.shape[1] / self.freq_bins
+            bin_size = int(data.shape[1] / self.freq_bins)
             for i in range(self.freq_bins):
-                bins.append((i * bin_size, (i + 1) * bin_size))
+                if i == self.freq_bins - 1:
+                    bins.append((i * bin_size, data.shape[1]))
+                else:
+                    bins.append((i * bin_size, (i + 1) * bin_size))
             self.freq_bins = bins
 
         features = ['%d_%d' % fb for fb in self.freq_bins]
@@ -152,9 +155,16 @@ class LibrosaFeatureExtractor(AudioExtractor):
         return self._feature
 
     def _get_values(self, stim):
-        return getattr(librosa.feature, self._feature)(
-            y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
-            **self.librosa_kwargs)
+        if self._feature in ['rmse', 'zero_crossing_rate']:
+            return getattr(librosa.feature, self._feature)(
+                y=stim.data, hop_length=self.hop_length, **self.librosa_kwargs)
+        elif self._feature == 'tonnetz':
+            return getattr(librosa.feature, self._feature)(
+                y=stim.data, sr=stim.sampling_rate, **self.librosa_kwargs)
+        else:
+            return getattr(librosa.feature, self._feature)(
+                y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
+                **self.librosa_kwargs)
 
     def _extract(self, stim):
         values = self._get_values(stim)
@@ -248,10 +258,6 @@ class RMSEExtractor(LibrosaFeatureExtractor):
 
     _feature = 'rmse'
 
-    def _get_values(self, stim):
-        return getattr(librosa.feature, self._feature)(
-            y=stim.data, hop_length=self.hop_length, **self.librosa_kwargs)
-
 
 class ZeroCrossingRateExtractor(LibrosaFeatureExtractor):
 
@@ -261,10 +267,6 @@ class ZeroCrossingRateExtractor(LibrosaFeatureExtractor):
     https://librosa.github.io/librosa/feature.html.'''
 
     _feature = 'zero_crossing_rate'
-
-    def _get_values(self, stim):
-        return getattr(librosa.feature, self._feature)(
-            y=stim.data, hop_length=self.hop_length, **self.librosa_kwargs)
 
 
 class ChromaSTFTExtractor(LibrosaFeatureExtractor):
@@ -367,10 +369,6 @@ class TonnetzExtractor(LibrosaFeatureExtractor):
 
     def get_feature_names(self):
         return ['tonal_centroid_%d' % i for i in range(6)]
-
-    def _get_values(self, stim):
-        return getattr(librosa.feature, self._feature)(
-            y=stim.data, sr=stim.sampling_rate, **self.librosa_kwargs)
 
 
 class TempogramExtractor(LibrosaFeatureExtractor):

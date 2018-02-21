@@ -22,17 +22,13 @@ class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
       api_version (str): API version to use.
       max_results (int): Max number of results per page.
       num_retries (int): Number of times to retry query on failure.
-      handle_annotations (str): How returned annotations should be handled in
-        cases where there are multiple values for a single stim. Valid values
-        depend on Transformer, but are always one of 'first', 'list', 'prefix',
-        or 'concatenate'.
     '''
 
     _env_keys = 'GOOGLE_APPLICATION_CREDENTIALS'
-    _log_attributes = ('handle_annotations',)
+    _log_attributes = ('api_version',)
 
     def __init__(self, discovery_file=None, api_version='v1', max_results=100,
-                 num_retries=3, handle_annotations=None):
+                 num_retries=3):
         verify_dependencies(['googleapiclient', 'oauth_client'])
         if discovery_file is None:
             if 'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ:
@@ -47,10 +43,10 @@ class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
             discovery_file)
         self.max_results = max_results
         self.num_retries = num_retries
+        self.api_version = api_version
         self.service = googleapiclient.discovery.build(
-            self.api_name, api_version, credentials=self.credentials,
+            self.api_name, self.api_version, credentials=self.credentials,
             discoveryServiceUrl=DISCOVERY_URL)
-        self.handle_annotations = handle_annotations
         super(GoogleAPITransformer, self).__init__()
 
 

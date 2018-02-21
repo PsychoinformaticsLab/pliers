@@ -7,7 +7,7 @@ Pliers is meant to provide a unified interface to a wide range of feature extrac
 
 The ExtractorResult class
 -------------------------
-Calling ``transform()`` on an instantiated |Extractor| returns an object of class |ExtractorResult|. This is a lightweight container that contains all of the extracted feature information returned by the |Extractor|, references to the |Stim| and |Extractor| objects used to generate the result, and both "raw" and processed forms of the results returned by the |Extractor| (though note that many Extractors don't set a ``.raw`` attribute). For example:
+Calling ``transform()`` on an instantiated |Extractor| returns an object of class |ExtractorResult|. This is a lightweight container that contains all of the extracted feature information returned by the |Extractor|, references to the |Stim| and |Extractor| objects used to generate the result, and both "raw" and processed forms of the results returned by the |Extractor| (though note that many Extractors don't set a ``.raw`` property). For example:
 
 ::
 
@@ -23,9 +23,6 @@ Calling ``transform()`` on an instantiated |Extractor| returns an object of clas
 
     >>> result.raw
     [(142, 349, 409, 82)]
-
-    >>> result.data
-    array([[142, 349, 409,  82]])
 
 .. _results-to-df:
 

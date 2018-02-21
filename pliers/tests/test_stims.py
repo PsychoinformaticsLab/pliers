@@ -195,7 +195,7 @@ def test_transformations_on_compound_stim():
     ext = BrightnessExtractor()
     results = ext.transform(stim)
     assert len(results) == 2
-    assert np.allclose(results[0].data[0], 0.88784294)
+    assert np.allclose(results[0]._data[0], 0.88784294)
 
 
 def test_transcribed_audio_stim():

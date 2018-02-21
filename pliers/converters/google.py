@@ -26,8 +26,7 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
 
     api_name = 'speech'
     resource = 'speech'
-    _log_attributes = ('language_code', 'profanity_filter', 'speech_contexts',
-                       'handle_annotations')
+    _log_attributes = ('language_code', 'profanity_filter', 'speech_contexts')
 
     def __init__(self, language_code='en-US', profanity_filter=False,
                  speech_contexts=None, *args, **kwargs):
@@ -90,7 +89,7 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
                                           onset=offset + onset,
                                           duration=duration))
 
-        return ComplexTextStim(elements=words, onset=stim.onset)
+        return ComplexTextStim(elements=words)
 
 
 class GoogleVisionAPITextConverter(GoogleVisionAPITransformer,
@@ -111,40 +110,35 @@ class GoogleVisionAPITextConverter(GoogleVisionAPITransformer,
     request_type = 'TEXT_DETECTION'
     response_object = 'textAnnotations'
     VERSION = '1.0'
+    _log_attributes = ('handle_annotations', 'api_version')
 
     def __init__(self, handle_annotations='first', *args, **kwargs):
-        super(GoogleVisionAPITextConverter, self).__init__(*args, **kwargs)
         self.handle_annotations = handle_annotations
+        super(GoogleVisionAPITextConverter, self).__init__(*args, **kwargs)
 
     def _convert(self, stims):
         request = self._build_request(stims)
         responses = self._query_api(request)
         texts = []
 
-        for i, response in enumerate(responses):
-            stim = stims[i]
+        for response in responses:
             if response and self.response_object in response:
                 annotations = response[self.response_object]
                 # Combine the annotations
                 if self.handle_annotations == 'first':
                     text = annotations[0]['description']
-                    texts.append(TextStim(text=text, onset=stim.onset,
-                                          duration=stim.duration))
+                    texts.append(TextStim(text=text))
                 elif self.handle_annotations == 'concatenate':
                     text = ''
                     for annotation in annotations:
                         text = ' '.join([text, annotation['description']])
-                    texts.append(TextStim(text=text, onset=stim.onset,
-                                          duration=stim.duration))
+                    texts.append(TextStim(text=text))
                 elif self.handle_annotations == 'list':
                     for annotation in annotations:
-                        texts.append(TextStim(text=annotation['description'],
-                                              onset=stim.onset,
-                                              duration=stim.duration))
+                        texts.append(TextStim(text=annotation['description']))
             elif 'error' in response:
                 raise Exception(response['error']['message'])
             else:
-                texts.append(TextStim(text='', onset=stim.onset,
-                                      duration=stim.duration))
+                texts.append(TextStim(text=''))
 
         return texts

@@ -4,6 +4,7 @@ from pliers.extractors import (GoogleVisionAPIFaceExtractor,
                                GoogleVisionAPIPropertyExtractor,
                                GoogleVisionAPISafeSearchExtractor,
                                GoogleVisionAPIWebEntitiesExtractor,
+                               ExtractorResult,
                                merge_results)
 from pliers.extractors.google import GoogleVisionAPIExtractor
 from pliers.stimuli import ImageStim, VideoStim
@@ -33,12 +34,12 @@ def test_google_vision_api_face_extractor_inits():
     filename = join(
         get_test_data_path(), 'payloads', 'google_vision_api_face_payload.json')
     response = json.load(open(filename, 'r'))
-    features, data = ext._parse_annotations(response['faceAnnotations'])
-    assert len(features) == len(data)
-    assert data[features.index('face1_angerLikelihood')] == 'VERY_UNLIKELY'
-    assert data[
-        features.index('face1_landmark_LEFT_EYE_BOTTOM_BOUNDARY_y')] == 257.023
-    assert np.isnan(data[features.index('face1_boundingPoly_vertex2_y')])
+    stim = ImageStim(join(get_test_data_path(), 'image', 'obama.jpg'))
+    res = ExtractorResult(response['faceAnnotations'], stim, ext)
+    df = res.to_df()
+    assert df['angerLikelihood'][0] == 'VERY_UNLIKELY'
+    assert df['landmark_LEFT_EYE_BOTTOM_BOUNDARY_y'][0] == 257.023
+    assert np.isnan(df['boundingPoly_vertex2_y'][0])
 
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
@@ -47,9 +48,9 @@ def test_google_vision_api_face_extractor():
     filename = join(get_test_data_path(), 'image', 'obama.jpg')
     stim = ImageStim(filename)
     result = ext.transform(stim).to_df()
-    assert 'face1_joyLikelihood' in result.columns
-    assert result['face1_joyLikelihood'][0] == 'VERY_LIKELY'
-    assert float(result['face1_face_detectionConfidence'][0]) > 0.7
+    assert 'joyLikelihood' in result.columns
+    assert result['joyLikelihood'][0] == 'VERY_LIKELY'
+    assert float(result['face_detectionConfidence'][0]) > 0.7
 
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
@@ -57,14 +58,14 @@ def test_google_vision_multiple_face_extraction():
     filename = join(get_test_data_path(), 'image', 'thai_people.jpg')
     stim = ImageStim(filename)
     # Only first record
-    ext = GoogleVisionAPIFaceExtractor(handle_annotations='first')
-    result1 = ext.transform(stim).to_df()
-    assert 'face1_joyLikelihood' in result1.columns
+    ext = GoogleVisionAPIFaceExtractor()
+    result1 = ext.transform(stim).to_df(handle_annotations='first')
+    assert 'joyLikelihood' in result1.columns
     # All records
     ext = GoogleVisionAPIFaceExtractor()
     result2 = ext.transform(stim).to_df()
-    assert 'face2_joyLikelihood' in result2.columns
-    assert result2.shape[1] > result1.shape[1]
+    assert 'joyLikelihood' in result2.columns
+    assert result2.shape[0] > result1.shape[0]
 
 
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
@@ -73,27 +74,28 @@ def test_google_vision_face_batch():
     stim_files = [join(get_test_data_path(), 'image', '%s.jpg' % s)
                   for s in stims]
     stims = [ImageStim(s) for s in stim_files]
-    ext = GoogleVisionAPIFaceExtractor(handle_annotations='first')
+    ext = GoogleVisionAPIFaceExtractor()
     result = ext.transform(stims)
-    result = merge_results(result, format='wide', extractor_names=False)
+    result = merge_results(result, format='wide', extractor_names=False,
+                           handle_annotations='first')
     assert result.shape == (2, 139)
-    assert 'face1_joyLikelihood' in result.columns
-    assert result['face1_joyLikelihood'][0] == 'VERY_LIKELY'
-    assert result['face1_joyLikelihood'][1] == 'VERY_LIKELY'
+    assert 'joyLikelihood' in result.columns
+    assert result['joyLikelihood'][0] == 'VERY_LIKELY'
+    assert result['joyLikelihood'][1] == 'VERY_LIKELY'
 
     video = VideoStim(join(get_test_data_path(), 'video', 'obama_speech.mp4'))
     conv = FrameSamplingFilter(every=10)
     video = conv.transform(video)
     result = ext.transform(video)
     result = merge_results(result, format='wide', extractor_names=False)
-    assert 'face1_joyLikelihood' in result.columns
-    assert result.shape == (11, 139)
+    assert 'joyLikelihood' in result.columns
+    assert result.shape == (22, 139)
 
     video = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
     video = conv.transform(video)
     result = ext.transform(video)
     result = merge_results(result, format='wide', extractor_names=False)
-    assert 'face1_joyLikelihood' not in result.columns
+    assert 'joyLikelihood' not in result.columns
     assert len(result) == 0
 
 

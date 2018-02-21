@@ -4,6 +4,7 @@ from pliers.extractors.image import ImageExtractor
 from pliers.transformers import GoogleVisionAPITransformer
 from pliers.extractors.base import ExtractorResult
 import numpy as np
+import pandas as pd
 
 
 class GoogleVisionAPIExtractor(GoogleVisionAPITransformer, ImageExtractor):
@@ -19,17 +20,12 @@ class GoogleVisionAPIExtractor(GoogleVisionAPITransformer, ImageExtractor):
         results = []
         for i, response in enumerate(responses):
             if response and self.response_object in response:
-                annotations = response[self.response_object]
-                features, values = self._parse_annotations(annotations)
-                values = [values]
-                results.append(ExtractorResult(values, stims[i], self,
-                                               features=features))
+                raw = response[self.response_object]
+                results.append(ExtractorResult(raw, stims[i], self))
             elif 'error' in response:
                 raise Exception(response['error']['message'])
-
             else:
-                results.append(ExtractorResult([[]], stims[i], self,
-                                               features=[]))
+                results.append(ExtractorResult([{}], stims[i], self))
 
         return results
 
@@ -41,13 +37,23 @@ class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
     request_type = 'FACE_DETECTION'
     response_object = 'faceAnnotations'
 
-    def _parse_annotations(self, annotations):
-        features = []
-        values = []
+    def _to_df(self, result, handle_annotations=None):
+        '''
+        Converts a Google API Face JSON response into a Pandas Dataframe.
 
-        if self.handle_annotations == 'first':
+        Args:
+            result (ExtractorResult): Result object from which to parse out a
+                Dataframe.
+            handle_annotations (str): How returned face annotations should be
+                handled in cases where there are multiple faces.
+                'first' indicates to only use the first face JSON object, all
+                other values will default to including every face.
+        '''
+        annotations = result._data
+        if handle_annotations == 'first':
             annotations = [annotations[0]]
 
+        face_results = []
         for i, annotation in enumerate(annotations):
             data_dict = {}
             for field, val in annotation.items():
@@ -68,11 +74,9 @@ class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
                 else:
                     data_dict[field] = val
 
-            names = ['face%d_%s' % (i+1, n) for n in data_dict.keys()]
-            features += names
-            values += list(data_dict.values())
+            face_results.append(data_dict)
 
-        return features, values
+        return pd.DataFrame(face_results)
 
 
 class GoogleVisionAPILabelExtractor(GoogleVisionAPIExtractor):
@@ -82,13 +86,9 @@ class GoogleVisionAPILabelExtractor(GoogleVisionAPIExtractor):
     request_type = 'LABEL_DETECTION'
     response_object = 'labelAnnotations'
 
-    def _parse_annotations(self, annotations):
-        features = []
-        values = []
-        for annotation in annotations:
-            features.append(annotation['description'])
-            values.append(annotation['score'])
-        return features, values
+    def _to_df(self, result):
+        res = {label['description']: label['score'] for label in result._data}
+        return pd.DataFrame([res])
 
 
 class GoogleVisionAPIPropertyExtractor(GoogleVisionAPIExtractor):
@@ -98,15 +98,13 @@ class GoogleVisionAPIPropertyExtractor(GoogleVisionAPIExtractor):
     request_type = 'IMAGE_PROPERTIES'
     response_object = 'imagePropertiesAnnotation'
 
-    def _parse_annotations(self, annotation):
-        colors = annotation['dominantColors']['colors']
-        features = []
-        values = []
+    def _to_df(self, result):
+        colors = result._data['dominantColors']['colors']
+        data_dict = {}
         for color in colors:
             rgb = color['color']
-            features.append((rgb['red'], rgb['green'], rgb['blue']))
-            values.append(color['score'])
-        return features, values
+            data_dict[(rgb['red'], rgb['green'], rgb['blue'])] = color['score']
+        return pd.DataFrame([data_dict])
 
 
 class GoogleVisionAPISafeSearchExtractor(GoogleVisionAPIExtractor):
@@ -116,8 +114,8 @@ class GoogleVisionAPISafeSearchExtractor(GoogleVisionAPIExtractor):
     request_type = 'SAFE_SEARCH_DETECTION'
     response_object = 'safeSearchAnnotation'
 
-    def _parse_annotations(self, annotation):
-        return list(annotation.keys()), list(annotation.values())
+    def _to_df(self, result):
+        return pd.DataFrame([result._data])
 
 
 class GoogleVisionAPIWebEntitiesExtractor(GoogleVisionAPIExtractor):
@@ -127,12 +125,10 @@ class GoogleVisionAPIWebEntitiesExtractor(GoogleVisionAPIExtractor):
     request_type = 'WEB_DETECTION'
     response_object = 'webDetection'
 
-    def _parse_annotations(self, annotations):
-        features = []
-        values = []
-        if 'webEntities' in annotations:
-            for annotation in annotations['webEntities']:
-                if 'description' in annotation and 'score' in annotation:
-                    features.append(annotation['description'])
-                    values.append(annotation['score'])
-        return features, values
+    def _to_df(self, result):
+        data_dict = {}
+        if 'webEntities' in result._data:
+            for entity in result._data['webEntities']:
+                if 'description' in entity and 'score' in entity:
+                    data_dict[entity['description']] = entity['score']
+        return pd.DataFrame([data_dict])

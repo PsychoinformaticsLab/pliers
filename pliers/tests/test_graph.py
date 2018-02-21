@@ -193,11 +193,14 @@ def test_big_pipeline():
     graph = Graph()
     graph.add_nodes(visual_nodes)
     graph.add_nodes(audio_nodes)
+    with pytest.raises(RuntimeError):
+        graph.draw('temp.png')
     results = graph.run(video, merge=False)
     result = merge_results(results, format='wide', extractor_names='multi')
     # Test that pygraphviz outputs a file
     drawfile = next(tempfile._get_candidate_names())
     graph.draw(drawfile)
+    graph.draw(drawfile, color=False)
     assert exists(drawfile)
     os.remove(drawfile)
     assert ('LengthExtractor', 'text_length') in result.columns
@@ -275,8 +278,9 @@ def test_stim_results():
     assert len(final_stims) == 2
     assert final_stims[1].text == 'text'
 
-    g = Graph([('PunctuationRemovalFilter', ['TokenizingFilter',
-                                             'LengthExtractor'])])
+    n = Node('PunctuationRemovalFilter', name='punc')
+    g = Graph([n])
+    g.add_nodes(['TokenizingFilter', 'LengthExtractor'], parent=n)
     results = g.run(stim)
     assert isinstance(results, pd.DataFrame)
     assert results['LengthExtractor#text_length'][0] == 21
