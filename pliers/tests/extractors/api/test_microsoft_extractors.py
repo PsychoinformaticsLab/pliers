@@ -9,7 +9,7 @@ from pliers.extractors import (MicrosoftAPIFaceExtractor,
 from pliers.stimuli import ImageStim
 import pytest
 from os.path import join
-from ..utils import get_test_data_path
+from ...utils import get_test_data_path
 
 IMAGE_DIR = join(get_test_data_path(), 'image')
 

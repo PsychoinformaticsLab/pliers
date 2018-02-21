@@ -4,8 +4,8 @@ import base64
 import os
 import tempfile
 
-from .audio import AudioToTextConverter
-from .image import ImageToTextConverter
+from pliers.converters.audio import AudioToTextConverter
+from pliers.converters.image import ImageToTextConverter
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.transformers import (GoogleVisionAPITransformer,
                                  GoogleAPITransformer)

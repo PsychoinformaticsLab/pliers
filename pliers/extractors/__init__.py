@@ -6,7 +6,20 @@ another `Stim` instance).
 from .base import Extractor, ExtractorResult, merge_results
 from .api import (IndicoAPITextExtractor,
                   IndicoAPIImageExtractor,
-                  ClarifaiAPIExtractor)
+                  ClarifaiAPIExtractor,
+                  GoogleVisionAPIFaceExtractor,
+                  GoogleVisionAPILabelExtractor,
+                  GoogleVisionAPIPropertyExtractor,
+                  GoogleVisionAPISafeSearchExtractor,
+                  GoogleVisionAPIWebEntitiesExtractor,
+                  MicrosoftAPIFaceExtractor,
+                  MicrosoftAPIFaceEmotionExtractor,
+                  MicrosoftVisionAPIExtractor,
+                  MicrosoftVisionAPITagExtractor,
+                  MicrosoftVisionAPICategoryExtractor,
+                  MicrosoftVisionAPIImageTypeExtractor,
+                  MicrosoftVisionAPIColorExtractor,
+                  MicrosoftVisionAPIAdultExtractor)
 from .audio import (LibrosaFeatureExtractor,
                     STFTAudioExtractor,
                     MeanAmplitudeExtractor,
@@ -24,23 +37,10 @@ from .audio import (LibrosaFeatureExtractor,
                     MFCCExtractor,
                     TonnetzExtractor,
                     TempogramExtractor)
-from .google import (GoogleVisionAPIFaceExtractor,
-                     GoogleVisionAPILabelExtractor,
-                     GoogleVisionAPIPropertyExtractor,
-                     GoogleVisionAPISafeSearchExtractor,
-                     GoogleVisionAPIWebEntitiesExtractor)
 from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
                     VibranceExtractor, FaceRecognitionFaceEncodingsExtractor,
                     FaceRecognitionFaceLandmarksExtractor,
                     FaceRecognitionFaceLocationsExtractor)
-from .microsoft import (MicrosoftAPIFaceExtractor,
-                        MicrosoftAPIFaceEmotionExtractor,
-                        MicrosoftVisionAPIExtractor,
-                        MicrosoftVisionAPITagExtractor,
-                        MicrosoftVisionAPICategoryExtractor,
-                        MicrosoftVisionAPIImageTypeExtractor,
-                        MicrosoftVisionAPIColorExtractor,
-                        MicrosoftVisionAPIAdultExtractor)
 from .models import TensorFlowInceptionV3Extractor
 from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
