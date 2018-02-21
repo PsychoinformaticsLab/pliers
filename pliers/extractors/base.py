@@ -57,7 +57,7 @@ class ExtractorResult(object):
 
     def __init__(self, data, stim, extractor, features=None, onsets=None,
                  durations=None, orders=None):
-        self.data = data
+        self._data = data
         self.stim = stim
         self.extractor = extractor
         self.features = features
@@ -65,6 +65,17 @@ class ExtractorResult(object):
         self.onset = onsets
         self.duration = durations
         self.order = orders
+
+    @property
+    def raw(self):
+        ''' Stores raw result of extraction, prior to postprocessing done
+        in to_df(). '''
+        return self._data if hasattr(self.extractor, '_to_df') else None
+
+    @property
+    def data(self):
+        ''' Creates a DataFrame with default arguments '''
+        return self.to_df()
 
     def to_df(self, timing=True, metadata=False, format='wide',
               extractor_name=False, object_id=True, **to_df_kwargs):
@@ -101,12 +112,12 @@ class ExtractorResult(object):
 
         # Ideally, Extractors should implement their own _to_df() class method
         # that produces a DataFrame in standardized format. Failing that, we
-        # assume self.data is already array-like and can be wrapped in a DF.
+        # assume self._data is already array-like and can be wrapped in a DF.
         if hasattr(self.extractor, '_to_df'):
             df = self.extractor._to_df(self, **to_df_kwargs)
         else:
             features = self.features
-            data = np.array(self.data)
+            data = np.array(self._data)
             if features is None:
                 features = ['feature_%d' % (i + 1)
                             for i in range(data.shape[1])]

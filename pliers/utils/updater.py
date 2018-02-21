@@ -59,9 +59,9 @@ def check_updates(transformers, datastore=None, stimuli=None):
                 res = trans.transform(stim)
 
                 try: # Add iterable
-                    res = [res.data for r in res]
+                    res = [res._data for r in res]
                 except TypeError:
-                    res = res.data
+                    res = res._data
 
                 res = hash_data(res) if isinstance(
                     trans, (Converter, Filter)) else res[0][0]

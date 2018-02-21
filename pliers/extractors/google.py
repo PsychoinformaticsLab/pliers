@@ -49,7 +49,7 @@ class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
                 'first' indicates to only use the first face JSON object, all
                 other values will default to including every face.
         '''
-        annotations = result.data
+        annotations = result._data
         if handle_annotations == 'first':
             annotations = [annotations[0]]
 
@@ -87,7 +87,7 @@ class GoogleVisionAPILabelExtractor(GoogleVisionAPIExtractor):
     response_object = 'labelAnnotations'
 
     def _to_df(self, result):
-        res = {label['description']: label['score'] for label in result.data}
+        res = {label['description']: label['score'] for label in result._data}
         return pd.DataFrame([res])
 
 
@@ -99,7 +99,7 @@ class GoogleVisionAPIPropertyExtractor(GoogleVisionAPIExtractor):
     response_object = 'imagePropertiesAnnotation'
 
     def _to_df(self, result):
-        colors = result.data['dominantColors']['colors']
+        colors = result._data['dominantColors']['colors']
         data_dict = {}
         for color in colors:
             rgb = color['color']
@@ -115,7 +115,7 @@ class GoogleVisionAPISafeSearchExtractor(GoogleVisionAPIExtractor):
     response_object = 'safeSearchAnnotation'
 
     def _to_df(self, result):
-        return pd.DataFrame([result.data])
+        return pd.DataFrame([result._data])
 
 
 class GoogleVisionAPIWebEntitiesExtractor(GoogleVisionAPIExtractor):
@@ -127,8 +127,8 @@ class GoogleVisionAPIWebEntitiesExtractor(GoogleVisionAPIExtractor):
 
     def _to_df(self, result):
         data_dict = {}
-        if 'webEntities' in result.data:
-            for entity in result.data['webEntities']:
+        if 'webEntities' in result._data:
+            for entity in result._data['webEntities']:
                 if 'description' in entity and 'score' in entity:
                     data_dict[entity['description']] = entity['score']
         return pd.DataFrame([data_dict])
