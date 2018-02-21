@@ -166,12 +166,12 @@ def test_chroma_extractors():
     ext = ChromaCQTExtractor()
     df = ext.transform(audio).to_df()
     assert df.shape == (1221, 16)
-    assert np.isclose(df['chroma_cqt_2'][0], 0.355324)
+    assert np.isclose(df['chroma_cqt_2'][0], 0.336481)
 
     ext = ChromaCENSExtractor()
     df = ext.transform(audio).to_df()
     assert df.shape == (1221, 16)
-    assert np.isclose(df['chroma_cens_2'][0], 0.137765)
+    assert np.isclose(df['chroma_cens_2'][0], 0.136409)
 
 
 def test_melspectrogram_extractor():
@@ -211,7 +211,7 @@ def test_tonnetz_extractor():
     assert df.shape == (1221, 10)
     assert np.isclose(df['onset'][1], 0.04644)
     assert np.isclose(df['duration'][0], 0.04644)
-    assert np.isclose(df['tonal_centroid_0'][0], -0.031784)
+    assert np.isclose(df['tonal_centroid_0'][0], -0.0391266)
 
 
 def test_tempogram_extractor():
