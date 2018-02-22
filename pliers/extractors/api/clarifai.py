@@ -12,6 +12,7 @@ from pliers.extractors.base import ExtractorResult
 from pliers.transformers import BatchTransformerMixin
 from pliers.utils import (listify, EnvironmentKeyMixin, attempt_to_import,
                           verify_dependencies)
+from six.moves.urllib.parse import urlparse
 import pandas as pd
 
 clarifai_client = attempt_to_import('clarifai.rest.client', 'clarifai_client',
@@ -79,8 +80,13 @@ class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
 
         # ExitStack lets us use filename context managers simultaneously
         with ExitStack() as stack:
-            files = [stack.enter_context(s.get_filename()) for s in stims]
-            imgs = [clarifai_client.Image(filename=filename) for filename in files]
+            imgs = []
+            for s in stims:
+                if urlparse(s.filename).scheme:
+                    imgs.append(clarifai_client.Image(url=s.filename))
+                else:
+                    f = stack.enter_context(s.get_filename())
+                    imgs.append(clarifai_client.Image(filename=f))
             tags = self.model.predict(imgs, model_output_info=model_output_info)
 
         extracted = []
