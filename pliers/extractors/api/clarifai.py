@@ -10,6 +10,7 @@ except Exception as e:
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.base import ExtractorResult
 from pliers.transformers import BatchTransformerMixin
+from pliers.transformers.api import APITransformer
 from pliers.utils import (listify, EnvironmentKeyMixin, attempt_to_import,
                           verify_dependencies)
 import pandas as pd
@@ -22,8 +23,8 @@ clarifai_client = attempt_to_import('clarifai.rest.client', 'clarifai_client',
                                      'Image'])
 
 
-class ClarifaiAPIExtractor(BatchTransformerMixin, ImageExtractor,
-                           EnvironmentKeyMixin):
+class ClarifaiAPIExtractor(APITransformer, BatchTransformerMixin,
+                           ImageExtractor, EnvironmentKeyMixin):
 
     ''' Uses the Clarifai API to extract tags of images.
 

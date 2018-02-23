@@ -1,6 +1,6 @@
 import os
 import requests
-from pliers.transformers import Transformer
+from pliers.transformers.api import APITransformer
 from pliers.utils import EnvironmentKeyMixin
 
 
@@ -8,7 +8,7 @@ BASE_URL = 'https://{location}.api.cognitive.microsoft.com/{api}/{version}'\
            '/{method}'
 
 
-class MicrosoftAPITransformer(Transformer):
+class MicrosoftAPITransformer(APITransformer):
     ''' Base MicrosoftAPITransformer class.
 
     Args:

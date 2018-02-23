@@ -6,11 +6,13 @@ from pliers.stimuli.text import ComplexTextStim
 from pliers.utils import (EnvironmentKeyMixin, attempt_to_import,
                           verify_dependencies)
 from pliers.converters.audio import AudioToTextConverter
+from pliers.transformers.api import APITransformer
 
 sr = attempt_to_import('speech_recognition', 'sr')
 
 
-class SpeechRecognitionAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
+class SpeechRecognitionAPIConverter(APITransformer, AudioToTextConverter,
+                                    EnvironmentKeyMixin):
 
     ''' Uses the SpeechRecognition API, which interacts with several APIs,
     like Google and Wit, to run speech-to-text transcription on an audio file.

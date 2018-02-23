@@ -1,6 +1,7 @@
 import base64
 import os
-from pliers.transformers import Transformer, BatchTransformerMixin
+from pliers.transformers import BatchTransformerMixin
+from pliers.transformers.api import APITransformer
 from pliers.utils import (EnvironmentKeyMixin, attempt_to_import,
                           verify_dependencies)
 
@@ -13,7 +14,7 @@ oauth_client = attempt_to_import('oauth2client.client', 'oauth_client',
 DISCOVERY_URL = 'https://{api}.googleapis.com/$discovery/rest?version={apiVersion}'
 
 
-class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
+class GoogleAPITransformer(APITransformer, EnvironmentKeyMixin):
     ''' Base GoogleAPITransformer class.
 
     Args:
@@ -50,7 +51,7 @@ class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
         super(GoogleAPITransformer, self).__init__()
 
 
-class GoogleVisionAPITransformer(BatchTransformerMixin, GoogleAPITransformer):
+class GoogleVisionAPITransformer(GoogleAPITransformer, BatchTransformerMixin):
 
     api_name = 'vision'
     _batch_size = 10
