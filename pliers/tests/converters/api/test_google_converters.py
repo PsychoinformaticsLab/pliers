@@ -9,6 +9,7 @@ IMAGE_DIR = join(get_test_data_path(), 'image')
 AUDIO_DIR = join(get_test_data_path(), 'audio')
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_googleAPI_converter():
     stim = AudioStim(join(AUDIO_DIR, 'obama_speech.wav'))
@@ -20,6 +21,7 @@ def test_googleAPI_converter():
     assert 'United' in text
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_text_converter():
     conv = GoogleVisionAPITextConverter(num_retries=5)

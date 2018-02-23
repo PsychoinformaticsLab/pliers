@@ -7,6 +7,7 @@ import pytest
 AUDIO_DIR = join(get_test_data_path(), 'audio')
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'IBM_USERNAME' not in os.environ or "
                     "'IBM_PASSWORD' not in os.environ")
 def test_IBMSpeechAPIConverter():

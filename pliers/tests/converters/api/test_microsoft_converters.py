@@ -7,6 +7,7 @@ import pytest
 IMAGE_DIR = join(get_test_data_path(), 'image')
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_vision_api_text_converter():
     conv = MicrosoftAPITextConverter()

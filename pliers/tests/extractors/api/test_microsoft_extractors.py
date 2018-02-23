@@ -14,6 +14,7 @@ from ...utils import get_test_data_path
 IMAGE_DIR = join(get_test_data_path(), 'image')
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_FACE_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_api_face_extractor():
     ext = MicrosoftAPIFaceExtractor()
@@ -39,6 +40,7 @@ def test_microsoft_api_face_extractor():
     assert res['face_gender'][0] == 'female'
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_FACE_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_api_face_emotion_extractor():
     ext = MicrosoftAPIFaceEmotionExtractor()
@@ -49,6 +51,7 @@ def test_microsoft_api_face_emotion_extractor():
     assert res['face_emotion_anger'][0] < 0.5
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_vision_api_extractor():
     ext = MicrosoftVisionAPIExtractor()
@@ -69,6 +72,7 @@ def test_microsoft_vision_api_extractor():
     assert 'isAdultContent' not in res.columns
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_vision_api_tag_extractor():
     ext = MicrosoftVisionAPITagExtractor()
@@ -79,6 +83,7 @@ def test_microsoft_vision_api_tag_extractor():
     assert res['apple'][0] > 0.7
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_vision_api_category_extractor():
     ext = MicrosoftVisionAPICategoryExtractor()
@@ -89,6 +94,7 @@ def test_microsoft_vision_api_category_extractor():
     assert res['people_portrait'][0] > 0.5
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_vision_api_type_extractor():
     ext = MicrosoftVisionAPIImageTypeExtractor()
@@ -98,6 +104,7 @@ def test_microsoft_vision_api_type_extractor():
     assert res['clipArtType'][0] == 0
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_vision_api_color_extractor():
     ext = MicrosoftVisionAPIColorExtractor()
@@ -109,6 +116,7 @@ def test_microsoft_vision_api_color_extractor():
     assert not res['isBwImg'][0]
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_vision_api_adult_extractor():
     ext = MicrosoftVisionAPIAdultExtractor()
