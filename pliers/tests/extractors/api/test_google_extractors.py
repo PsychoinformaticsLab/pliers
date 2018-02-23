@@ -1,3 +1,4 @@
+from pliers import config
 from pliers.filters import FrameSamplingFilter
 from pliers.extractors import (GoogleVisionAPIFaceExtractor,
                                GoogleVisionAPILabelExtractor,
@@ -145,3 +146,23 @@ def test_google_vision_api_web_entities():
     stim = ImageStim(filename)
     result = ext.transform(stim).to_df()
     assert 'Barack Obama' in result.columns
+
+
+@pytest.mark.requires_payment
+@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
+def test_google_vision_api_extractor_large():
+    default = config.get_option('allow_large_jobs')
+    config.set_option('allow_large_jobs', False)
+
+    ext = GoogleVisionAPILabelExtractor()
+
+    images = [ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))] * 101
+    with pytest.raises(ValueError):
+        merge_results(ext.transform(images))
+
+    config.set_option('allow_large_jobs', True)
+    results = merge_results(ext.transform(images))
+    assert 'GoogleVisionAPILabelExtractor#apple' in results.columns
+    assert results.shape == (1, 16)  # not 101 cause all the same instance
+
+    config.set_option('allow_large_jobs', default)

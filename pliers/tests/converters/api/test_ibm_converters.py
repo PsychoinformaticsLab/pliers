@@ -1,5 +1,6 @@
 from os.path import join
 from ...utils import get_test_data_path
+from pliers import config
 from pliers.converters import IBMSpeechAPIConverter
 from pliers.stimuli import AudioStim, TextStim, ComplexTextStim
 import pytest
@@ -34,3 +35,20 @@ def test_IBMSpeechAPIConverter():
     assert len(full_text.split()) > 1
     assert 'thermodynamics' in full_text or 'obey' in full_text
     assert len(out_stim.elements) < num_words
+
+
+@pytest.mark.requires_payment
+@pytest.mark.skipif("'IBM_USERNAME' not in os.environ or "
+                    "'IBM_PASSWORD' not in os.environ")
+def test_ibm_speech_converter_large():
+    default = config.get_option('allow_large_jobs')
+    config.set_option('allow_large_jobs', False)
+
+    conv = IBMSpeechAPIConverter()
+
+    url = 'https://github.com/anars/blank-audio/raw/master/15-minutes-of-silence.mp3'
+    audio = AudioStim(url=url)
+    with pytest.raises(ValueError):
+        conv.transform(audio)
+
+    config.set_option('allow_large_jobs', default)
