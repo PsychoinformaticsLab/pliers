@@ -15,7 +15,7 @@ class APITransformer(Transformer):
                 raise ValueError("Attempted to run an API transformation "
                                  "on %d stims, aborting. To allow "
                                  "transformation, change config option "
-                                 "'allow_large_job' to True." % len(stims))
+                                 "'allow_large_jobs' to True." % len(stims))
 
         return super(APITransformer, self)._iterate(stims, *args, **kwargs)
 
@@ -24,9 +24,9 @@ class APITransformer(Transformer):
         if not config.get_option('allow_large_jobs'):
             if not isiterable(stim) and stim.duration and stim.duration > 60:
                 raise ValueError("Attempted to run an API transformation "
-                                 "on a stimulus of duration %f, aborting."
+                                 "on a stimulus of duration %f, aborting. "
                                  "To allow this transformation, change "
-                                 "config option 'allow_large_job' to "
+                                 "config option 'allow_large_jobs' to "
                                  "True." % stim.duration)
 
         return super(APITransformer, self)._transform(stim, *args, **kwargs)
