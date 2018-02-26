@@ -46,8 +46,7 @@ def test_ibm_speech_converter_large():
 
     conv = IBMSpeechAPIConverter()
 
-    url = 'https://github.com/anars/blank-audio/raw/master/15-minutes-of-silence.mp3'
-    audio = AudioStim(url=url)
+    audio = AudioStim(join(AUDIO_DIR, 'silence.wav'))
     with pytest.raises(ValueError):
         conv.transform(audio)
 

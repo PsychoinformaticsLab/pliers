@@ -2,6 +2,7 @@
 
 from pliers import config
 from pliers.transformers import Transformer
+from pliers.utils import isiterable
 
 
 class APITransformer(Transformer):
@@ -9,7 +10,7 @@ class APITransformer(Transformer):
     def _iterate(self, stims, validation='strict', *args, **kwargs):
         # Check if we are trying to transform a large number of stimuli
         if not config.get_option('allow_large_jobs'):
-            stims = list(stims)
+            stims = list(stims)  # TODO: better way to do this?
             if len(stims) > 100:
                 raise ValueError("Attempted to run an API transformation "
                                  "on %d stims, aborting. To allow "
@@ -21,7 +22,7 @@ class APITransformer(Transformer):
     def _transform(self, stim, *args, **kwargs):
         # Check if we are trying to transform a large amount of data
         if not config.get_option('allow_large_jobs'):
-            if stim.duration > 60:
+            if not isiterable(stim) and stim.duration and stim.duration > 60:
                 raise ValueError("Attempted to run an API transformation "
                                  "on a stimulus of duration %f, aborting."
                                  "To allow this transformation, change "
