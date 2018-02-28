@@ -2,6 +2,7 @@
 
 import collections
 import os
+from abc import abstractmethod
 from six import string_types
 from tqdm import tqdm
 from pliers import config
@@ -117,3 +118,7 @@ class EnvironmentKeyMixin(object):
     @classproperty
     def available(cls):
         return all([k in os.environ for k in cls.env_keys])
+
+    @abstractmethod
+    def validate_keys(self):
+        pass
