@@ -1,6 +1,6 @@
 ''' Microsoft Azure API-based Converter classes. '''
 
-from .image import ImageToTextConverter
+from pliers.converters.image import ImageToTextConverter
 from pliers.stimuli.text import TextStim
 from pliers.transformers import MicrosoftVisionAPITransformer
 

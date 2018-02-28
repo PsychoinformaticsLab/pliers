@@ -1,5 +1,5 @@
 from os.path import join
-from ..utils import get_test_data_path
+from ...utils import get_test_data_path
 from pliers.converters import MicrosoftAPITextConverter
 from pliers.stimuli import ImageStim
 import pytest
