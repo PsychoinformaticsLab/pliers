@@ -1,7 +1,6 @@
 import os
 import requests
 from pliers.transformers.api import APITransformer
-from pliers.utils import EnvironmentKeyMixin
 
 
 BASE_URL = 'https://{location}.api.cognitive.microsoft.com/{api}/{version}'\
@@ -81,7 +80,7 @@ class MicrosoftAPITransformer(APITransformer):
         return response
 
 
-class MicrosoftVisionAPITransformer(MicrosoftAPITransformer, EnvironmentKeyMixin):
+class MicrosoftVisionAPITransformer(MicrosoftAPITransformer):
 
     api_name = 'vision'
     _env_keys = 'MICROSOFT_VISION_SUBSCRIPTION_KEY'

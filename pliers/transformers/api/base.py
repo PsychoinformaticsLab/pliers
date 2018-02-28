@@ -2,10 +2,10 @@
 
 from pliers import config
 from pliers.transformers import Transformer
-from pliers.utils import isiterable
+from pliers.utils import isiterable, EnvironmentKeyMixin
 
 
-class APITransformer(Transformer):
+class APITransformer(Transformer, EnvironmentKeyMixin):
 
     def _iterate(self, stims, validation='strict', *args, **kwargs):
         # Check if we are trying to transform a large number of stimuli

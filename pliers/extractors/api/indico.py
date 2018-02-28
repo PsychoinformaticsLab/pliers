@@ -8,15 +8,13 @@ from pliers.extractors.text import TextExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.transformers import BatchTransformerMixin
 from pliers.transformers.api import APITransformer
-from pliers.utils import (EnvironmentKeyMixin, attempt_to_import,
-                          verify_dependencies)
+from pliers.utils import attempt_to_import, verify_dependencies
 import pandas as pd
 
 indicoio = attempt_to_import('indicoio')
 
 
-class IndicoAPIExtractor(APITransformer, BatchTransformerMixin, Extractor,
-                         EnvironmentKeyMixin):
+class IndicoAPIExtractor(APITransformer, BatchTransformerMixin, Extractor):
 
     ''' Base class for all Indico API Extractors
 

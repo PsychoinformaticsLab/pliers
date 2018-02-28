@@ -2,8 +2,7 @@ import base64
 import os
 from pliers.transformers import BatchTransformerMixin
 from pliers.transformers.api import APITransformer
-from pliers.utils import (EnvironmentKeyMixin, attempt_to_import,
-                          verify_dependencies)
+from pliers.utils import attempt_to_import, verify_dependencies
 
 
 googleapiclient = attempt_to_import('googleapiclient', fromlist=['discovery'])
@@ -14,7 +13,7 @@ oauth_client = attempt_to_import('oauth2client.client', 'oauth_client',
 DISCOVERY_URL = 'https://{api}.googleapis.com/$discovery/rest?version={apiVersion}'
 
 
-class GoogleAPITransformer(APITransformer, EnvironmentKeyMixin):
+class GoogleAPITransformer(APITransformer):
     ''' Base GoogleAPITransformer class.
 
     Args:

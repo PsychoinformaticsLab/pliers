@@ -4,8 +4,7 @@ import os
 import base64
 import json
 from pliers.stimuli.text import TextStim, ComplexTextStim
-from pliers.utils import (EnvironmentKeyMixin, attempt_to_import,
-                          verify_dependencies)
+from pliers.utils import attempt_to_import, verify_dependencies
 from pliers.converters.audio import AudioToTextConverter
 from pliers.transformers.api import APITransformer
 from six.moves.urllib.parse import urlencode
@@ -15,8 +14,7 @@ from six.moves.urllib.error import URLError, HTTPError
 sr = attempt_to_import('speech_recognition', 'sr')
 
 
-class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter,
-                            EnvironmentKeyMixin):
+class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
 
     ''' Uses the IBM Watson Text to Speech API to run speech-to-text
     transcription on an audio file.
