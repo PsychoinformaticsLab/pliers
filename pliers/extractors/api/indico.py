@@ -56,6 +56,19 @@ class IndicoAPIExtractor(APITransformer, BatchTransformerMixin, Extractor):
         self.names = models
         super(IndicoAPIExtractor, self).__init__()
 
+    def validate_keys(self):
+        verify_dependencies(['indicoio'])
+        from indicoio.utils import api
+        from indicoio.utils.errors import IndicoError
+        try:
+            api.api_handler(None, None, self.model_names[0])
+        except IndicoError as e:
+            if str(e) == 'Invalid API key':
+                return False
+            else:
+                # If valid key, a data error (None passed) is expected here
+                return True
+
     def _extract(self, stims):
         tokens = [stim.data for stim in stims if stim.data is not None]
         scores = [model(tokens) for model in self.models]
