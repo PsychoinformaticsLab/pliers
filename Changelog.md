@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.2.2 (March 1, 2018)
+This is a minor release that adds several new features and bug fixes:
+* Support for several Microsoft Vision services, including the Face API and Vision API (#259)
+* Improvements to the Graph API (#254):
+    * Graphs can now return Stims in cases where terminal nodes are Converters or Filters
+    * Serialization and de-serialization from JSON
+    * A helper `add_chain` method that simplifies construction of completely linear Graphs
+    * Improved graph plotting, including representation of node types using color and line type
+* Improved internal handling and propagation of temporal properties (onset, duration, and order; #261)
+* Refactored the internal handling/formatting of raw feature extraction results (#261)
+* Added temporal cropping filters that make it easy to crop audio and video clips to specified boundaries (#244)
+* Reorganization of the API Transformer hierarchy (#266)
+* Minor improvements to to text filters (e.g., lower-casing and tokenization; #246)
+* Added basic support for duecredit (thanks to @yarikoptic; #254)
+* Several minor bug fixes
+
 ## 0.2.1 (January 31, 2018)
 This is a bugfix release that addresses an installation bug on bare environments (thanks to @mgxd).
 
