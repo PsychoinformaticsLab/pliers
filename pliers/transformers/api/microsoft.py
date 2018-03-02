@@ -49,11 +49,26 @@ class MicrosoftAPITransformer(APITransformer):
         self.api_version = api_version
         super(MicrosoftAPITransformer, self).__init__()
 
+    def validate_keys(self):
+        try:
+            self._send_request(None, {})
+            return True
+        except Exception as e:
+            if 'invalid subscription' in str(e):
+                return False
+            elif '[Errno 8]' in str(e):
+                return False
+            else:
+                raise e
+
     def _query_api(self, stim, params):
         with stim.get_filename() as filename:
             with open(filename, 'rb') as fp:
                 data = fp.read()
 
+        return self._send_request(data, params)
+
+    def _send_request(self, data, params):
         headers = {
             'Content-Type': 'application/octet-stream',
             'Ocp-Apim-Subscription-Key': self.subscription_key,

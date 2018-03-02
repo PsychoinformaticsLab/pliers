@@ -39,15 +39,22 @@ class GoogleAPITransformer(APITransformer):
                                  "environment variable.")
             discovery_file = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
 
-        self.credentials = oauth_client.GoogleCredentials.from_stream(
-            discovery_file)
+        try:
+            self.credentials = oauth_client.GoogleCredentials.from_stream(
+                discovery_file)
+            self.service = googleapiclient.discovery.build(
+                self.api_name, self.api_version, credentials=self.credentials,
+                discoveryServiceUrl=DISCOVERY_URL)
+        except:
+            self.credentials = None
+            self.service = None
         self.max_results = max_results
         self.num_retries = num_retries
         self.api_version = api_version
-        self.service = googleapiclient.discovery.build(
-            self.api_name, self.api_version, credentials=self.credentials,
-            discoveryServiceUrl=DISCOVERY_URL)
         super(GoogleAPITransformer, self).__init__()
+
+    def validate_keys(self):
+        return self.credentials is not None
 
 
 class GoogleVisionAPITransformer(GoogleAPITransformer, BatchTransformerMixin):
