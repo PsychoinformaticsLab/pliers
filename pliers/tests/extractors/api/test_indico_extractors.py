@@ -14,6 +14,7 @@ def test_indico_api_text_extractor():
 
     ext = IndicoAPITextExtractor(api_key=os.environ['INDICO_APP_KEY'],
                                  models=['emotion', 'personality'])
+    assert ext.validate_keys()
 
     # With ComplexTextStim input
     srtfile = join(get_test_data_path(), 'text', 'wonderful.srt')
@@ -45,6 +46,11 @@ def test_indico_api_text_extractor():
     result = ext.transform(ts).to_df(object_id=True)
     assert set(result.columns) == outdfKeysCheck
     assert len(result) == 1
+
+    ext = IndicoAPITextExtractor(api_key='nogood', models=['language'])
+    assert not ext.validate_keys()
+    with pytest.raises(ValueError):
+        ext.transform(ts)
 
 
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")

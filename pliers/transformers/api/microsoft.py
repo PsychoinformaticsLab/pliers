@@ -21,7 +21,7 @@ class MicrosoftAPITransformer(APITransformer):
         api_version (str): API version to use.
     '''
 
-    _log_attributes = ('api_version',)
+    _log_attributes = ('subscription_key', 'location', 'api_version')
 
     def __init__(self, subscription_key=None, location=None,
                  api_version='v1.0'):
@@ -49,14 +49,31 @@ class MicrosoftAPITransformer(APITransformer):
         self.api_version = api_version
         super(MicrosoftAPITransformer, self).__init__()
 
+    def validate_keys(self):
+        try:
+            self._send_request('', {})
+            return True
+        except Exception as e:
+            if 'too small' in str(e):
+                return True
+            if 'invalid subscription' in str(e):
+                return False
+            elif '[Errno 8]' in str(e):
+                return False
+            else:
+                raise e
+
     def _query_api(self, stim, params):
         with stim.get_filename() as filename:
             with open(filename, 'rb') as fp:
                 data = fp.read()
 
+        return self._send_request(data, params)
+
+    def _send_request(self, data, params):
         headers = {
             'Content-Type': 'application/octet-stream',
-            'Ocp-Apim-Subscription-Key': self.subscription_key,
+            'Ocp-Apim-Subscription-Key': self.subscription_key
         }
 
         url = BASE_URL.format(location=self.location,

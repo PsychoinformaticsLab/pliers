@@ -6,6 +6,8 @@ from pliers.stimuli.text import ComplexTextStim
 from pliers.utils import attempt_to_import, verify_dependencies
 from pliers.converters.audio import AudioToTextConverter
 from pliers.transformers.api import APITransformer
+from six.moves.urllib.request import Request, urlopen
+from six.moves.urllib.error import HTTPError
 
 sr = attempt_to_import('speech_recognition', 'sr')
 
@@ -20,7 +22,7 @@ class SpeechRecognitionAPIConverter(APITransformer, AudioToTextConverter):
             the environment variable specified in the _env_keys field.
     '''
 
-    _log_attributes = ('recognize_method',)
+    _log_attributes = ('api_key', 'recognize_method')
     VERSION = '1.0'
 
     @abstractproperty
@@ -56,3 +58,14 @@ class WitTranscriptionConverter(SpeechRecognitionAPIConverter):
 
     _env_keys = 'WIT_AI_API_KEY'
     recognize_method = 'recognize_wit'
+
+    def validate_keys(self):
+        url = "https://api.wit.ai/message?v=20160526&q=authenticate"
+        request = Request(url, headers={
+            "Authorization": "Bearer {}".format(self.api_key)
+        })
+        try:
+            urlopen(request)
+            return True
+        except HTTPError:
+            return False

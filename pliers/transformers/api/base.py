@@ -29,4 +29,10 @@ class APITransformer(Transformer, EnvironmentKeyMixin):
                                  "config option 'allow_large_jobs' to "
                                  "True." % stim.duration)
 
+        if not self.validate_keys():
+            raise ValueError("The provided environment key was invalid or "
+                             "unauthorized. Please confirm that you have "
+                             "authorized credentials for accessing the target "
+                             "API.")
+
         return super(APITransformer, self)._transform(stim, *args, **kwargs)

@@ -51,11 +51,21 @@ class TweetStimFactory(EnvironmentKeyMixin):
                                consumer_secret=consumer_secret,
                                access_token_key=access_token_key,
                                access_token_secret=access_token_secret)
-        self.api.VerifyCredentials()
+
+    def validate_keys(self):
+        verify_dependencies(['twitter'])
+        try:
+            self.api.VerifyCredentials()
+            return True
+        except twitter.error.TwitterError:
+            return False
 
     def get_status(self, status_id):
-        status = self.api.GetStatus(status_id)
-        return TweetStim(status)
+        if self.validate_keys():
+            status = self.api.GetStatus(status_id)
+            return TweetStim(status)
+        else:
+            raise twitter.error.TwitterError('Invalid or expired token.')
 
 
 class TweetStim(CompoundStim):

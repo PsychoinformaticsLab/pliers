@@ -40,8 +40,8 @@ class ClarifaiAPIExtractor(APITransformer, BatchTransformerMixin,
             API. For example, ['food', 'animal'].
     '''
 
-    _log_attributes = ('model', 'model_name', 'min_value', 'max_concepts',
-                       'select_concepts')
+    _log_attributes = ('api_key', 'model', 'model_name', 'min_value',
+                       'max_concepts', 'select_concepts')
     _batch_size = 128
     _env_keys = ('CLARIFAI_API_KEY',)
     VERSION = '1.0'
@@ -57,9 +57,14 @@ class ClarifaiAPIExtractor(APITransformer, BatchTransformerMixin,
                                  "must be passed the first time a Clarifai "
                                  "extractor is initialized.")
 
-        self.api = clarifai_client.ClarifaiApp(api_key=api_key)
+        self.api_key = api_key
+        try:
+            self.api = clarifai_client.ClarifaiApp(api_key=api_key)
+            self.model = self.api.models.get(model)
+        except clarifai_client.ApiError:
+            self.api = None
+            self.model = None
         self.model_name = model
-        self.model = self.api.models.get(model)
         self.min_value = min_value
         self.max_concepts = max_concepts
         self.select_concepts = select_concepts
@@ -68,6 +73,9 @@ class ClarifaiAPIExtractor(APITransformer, BatchTransformerMixin,
             self.select_concepts = [clarifai_client.Concept(concept_name=n)
                                     for n in select_concepts]
         super(ClarifaiAPIExtractor, self).__init__()
+
+    def validate_keys(self):
+        return self.api is not None
 
     def _extract(self, stims):
         verify_dependencies(['clarifai_client'])

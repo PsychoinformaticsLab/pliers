@@ -11,6 +11,7 @@ AUDIO_DIR = join(get_test_data_path(), 'audio')
 def test_WitTranscriptionConverter():
     stim = AudioStim(join(AUDIO_DIR, 'homer.wav'), onset=4.2)
     conv = WitTranscriptionConverter()
+    assert conv.validate_keys()
     out_stim = conv.transform(stim)
     assert type(out_stim) == ComplexTextStim
     first_word = next(w for w in out_stim)
@@ -20,3 +21,8 @@ def test_WitTranscriptionConverter():
     assert second_word.onset == 4.2
     text = [elem.text for elem in out_stim]
     assert 'thermodynamics' in text or 'obey' in text
+
+    conv = WitTranscriptionConverter(api_key='nogood')
+    assert not conv.validate_keys()
+    with pytest.raises(ValueError):
+        conv.transform(stim)
