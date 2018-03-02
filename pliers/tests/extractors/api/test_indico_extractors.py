@@ -1,6 +1,7 @@
 from os.path import join
 import os
 from ...utils import get_test_data_path
+from pliers import config
 from pliers.extractors import (IndicoAPITextExtractor,
                                IndicoAPIImageExtractor)
 from pliers.stimuli import (TextStim, ComplexTextStim, ImageStim)
@@ -13,6 +14,7 @@ def test_indico_api_text_extractor():
 
     ext = IndicoAPITextExtractor(api_key=os.environ['INDICO_APP_KEY'],
                                  models=['emotion', 'personality'])
+    assert ext.validate_keys()
 
     # With ComplexTextStim input
     srtfile = join(get_test_data_path(), 'text', 'wonderful.srt')
@@ -44,6 +46,11 @@ def test_indico_api_text_extractor():
     result = ext.transform(ts).to_df(object_id=True)
     assert set(result.columns) == outdfKeysCheck
     assert len(result) == 1
+
+    ext = IndicoAPITextExtractor(api_key='nogood', models=['language'])
+    assert not ext.validate_keys()
+    with pytest.raises(ValueError):
+        ext.transform(ts)
 
 
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
@@ -79,3 +86,22 @@ def test_indico_api_image_extractor():
     result2 = ext.transform(stim2).to_df(timing=False, object_id=True)
     assert set(result2.columns) == outdfKeysCheck
     assert result2['fer_Happy'][0] > 0.7
+
+
+@pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
+def test_indico_api_extractor_large():
+    default = config.get_option('allow_large_jobs')
+    config.set_option('allow_large_jobs', False)
+
+    ext = IndicoAPIImageExtractor(models=['fer', 'content_filtering'])
+
+    images = [ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))] * 101
+    with pytest.raises(ValueError):
+        merge_results(ext.transform(images))
+
+    config.set_option('allow_large_jobs', True)
+    results = merge_results(ext.transform(images))
+    assert 'IndicoAPIImageExtractor#fer_Neutral' in results.columns
+    assert results.shape == (1, 16)  # not 101 cause all the same instance
+
+    config.set_option('allow_large_jobs', default)

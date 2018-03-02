@@ -1,3 +1,4 @@
+from pliers import config
 from pliers.filters import FrameSamplingFilter
 from pliers.extractors import (GoogleVisionAPIFaceExtractor,
                                GoogleVisionAPILabelExtractor,
@@ -15,6 +16,7 @@ from ...utils import get_test_data_path
 import numpy as np
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_extractor_inits():
     ext = GoogleVisionAPIExtractor(num_retries=5)
@@ -23,6 +25,7 @@ def test_google_vision_api_extractor_inits():
     assert ext.service is not None
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_face_extractor_inits():
     ext = GoogleVisionAPIFaceExtractor(num_retries=5)
@@ -42,9 +45,11 @@ def test_google_vision_api_face_extractor_inits():
     assert np.isnan(df['boundingPoly_vertex2_y'][0])
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_face_extractor():
     ext = GoogleVisionAPIFaceExtractor(num_retries=5)
+    assert ext.validate_keys()
     filename = join(get_test_data_path(), 'image', 'obama.jpg')
     stim = ImageStim(filename)
     result = ext.transform(stim).to_df()
@@ -52,7 +57,13 @@ def test_google_vision_api_face_extractor():
     assert result['joyLikelihood'][0] == 'VERY_LIKELY'
     assert float(result['face_detectionConfidence'][0]) > 0.7
 
+    ext = GoogleVisionAPIFaceExtractor(discovery_file='nogood')
+    assert not ext.validate_keys()
+    with pytest.raises(ValueError):
+        ext.transform(stim)
 
+
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_multiple_face_extraction():
     filename = join(get_test_data_path(), 'image', 'thai_people.jpg')
@@ -68,6 +79,7 @@ def test_google_vision_multiple_face_extraction():
     assert result2.shape[0] > result1.shape[0]
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_face_batch():
     stims = ['apple', 'obama', 'thai_people']
@@ -99,16 +111,24 @@ def test_google_vision_face_batch():
     assert len(result) == 0
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_label_extractor():
     ext = GoogleVisionAPILabelExtractor(num_retries=5)
+    assert ext.validate_keys()
     filename = join(get_test_data_path(), 'image', 'apple.jpg')
     stim = ImageStim(filename)
     result = ext.transform(stim).to_df()
     assert 'apple' in result.columns
     assert result['apple'][0] > 0.75
 
+    ext = GoogleVisionAPILabelExtractor(discovery_file='nogood')
+    assert not ext.validate_keys()
+    with pytest.raises(ValueError):
+        ext.transform(stim)
 
+
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_properties_extractor():
     ext = GoogleVisionAPIPropertyExtractor(num_retries=5)
@@ -119,6 +139,7 @@ def test_google_vision_api_properties_extractor():
     assert np.isfinite(result[(158, 13, 29)][0])
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_safe_search():
     ext = GoogleVisionAPISafeSearchExtractor(num_retries=5)
@@ -129,6 +150,7 @@ def test_google_vision_api_safe_search():
     assert result['violence'][0] == 'VERY_UNLIKELY'
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_web_entities():
     ext = GoogleVisionAPIWebEntitiesExtractor(num_retries=5)
@@ -136,3 +158,23 @@ def test_google_vision_api_web_entities():
     stim = ImageStim(filename)
     result = ext.transform(stim).to_df()
     assert 'Barack Obama' in result.columns
+
+
+@pytest.mark.requires_payment
+@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
+def test_google_vision_api_extractor_large():
+    default = config.get_option('allow_large_jobs')
+    config.set_option('allow_large_jobs', False)
+
+    ext = GoogleVisionAPILabelExtractor()
+
+    images = [ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))] * 101
+    with pytest.raises(ValueError):
+        merge_results(ext.transform(images))
+
+    config.set_option('allow_large_jobs', True)
+    results = merge_results(ext.transform(images))
+    assert 'GoogleVisionAPILabelExtractor#apple' in results.columns
+    assert results.shape == (1, 16)  # not 101 cause all the same instance
+
+    config.set_option('allow_large_jobs', default)

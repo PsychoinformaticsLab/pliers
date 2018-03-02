@@ -7,15 +7,14 @@ from pliers.extractors.image import ImageExtractor
 from pliers.extractors.text import TextExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.transformers import BatchTransformerMixin
-from pliers.utils import (EnvironmentKeyMixin, attempt_to_import,
-                          verify_dependencies)
+from pliers.transformers.api import APITransformer
+from pliers.utils import attempt_to_import, verify_dependencies
 import pandas as pd
 
 indicoio = attempt_to_import('indicoio')
 
 
-class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
-                         EnvironmentKeyMixin):
+class IndicoAPIExtractor(APITransformer, BatchTransformerMixin, Extractor):
 
     ''' Base class for all Indico API Extractors
 
@@ -25,7 +24,7 @@ class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
         models (list): The names of the Indico models to use.
     '''
 
-    _log_attributes = ('models', 'model_names')
+    _log_attributes = ('api_key', 'models', 'model_names')
     _input_type = ()
     _batch_size = 20
     _env_keys = 'INDICO_APP_KEY'
@@ -56,6 +55,19 @@ class IndicoAPIExtractor(BatchTransformerMixin, Extractor,
         self.models = [getattr(indicoio, model) for model in models]
         self.names = models
         super(IndicoAPIExtractor, self).__init__()
+
+    def validate_keys(self):
+        verify_dependencies(['indicoio'])
+        from indicoio.utils import api
+        from indicoio.utils.errors import IndicoError
+        try:
+            api.api_handler(None, None, self.model_names[0])
+        except IndicoError as e:
+            if str(e) == 'Invalid API key':
+                return False
+            else:
+                # If valid key, a data error (None passed) is expected here
+                return True
 
     def _extract(self, stims):
         tokens = [stim.data for stim in stims if stim.data is not None]

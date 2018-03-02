@@ -68,10 +68,11 @@ class VideoFrameCollectionStim(Stim):
         self.height = self.clip.h
         if frame_index:
             self.frame_index = frame_index
+            duration = len(frame_index) / float(self.fps)
         else:
             self.frame_index = range(int(ceil(self.fps * self.clip.duration)))
+            duration = self.clip.duration
         self.n_frames = len(self.frame_index)
-        duration = self.clip.duration
         super(VideoFrameCollectionStim, self).__init__(filename,
                                                        onset=onset,
                                                        duration=duration)

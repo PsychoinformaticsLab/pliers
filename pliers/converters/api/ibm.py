@@ -4,9 +4,9 @@ import os
 import base64
 import json
 from pliers.stimuli.text import TextStim, ComplexTextStim
-from pliers.utils import (EnvironmentKeyMixin, attempt_to_import,
-                          verify_dependencies)
+from pliers.utils import attempt_to_import, verify_dependencies
 from pliers.converters.audio import AudioToTextConverter
+from pliers.transformers.api import APITransformer
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.request import Request, urlopen
 from six.moves.urllib.error import URLError, HTTPError
@@ -14,7 +14,7 @@ from six.moves.urllib.error import URLError, HTTPError
 sr = attempt_to_import('speech_recognition', 'sr')
 
 
-class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
+class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
 
     ''' Uses the IBM Watson Text to Speech API to run speech-to-text
     transcription on an audio file.
@@ -33,7 +33,7 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
     '''
 
     _env_keys = ('IBM_USERNAME', 'IBM_PASSWORD')
-    _log_attributes = ('resolution',)
+    _log_attributes = ('username', 'password', 'resolution')
     VERSION = '1.0'
 
     def __init__(self, username=None, password=None, resolution='words'):
@@ -50,6 +50,18 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
         self.password = password
         self.resolution = resolution
         super(IBMSpeechAPIConverter, self).__init__()
+
+    def validate_keys(self):
+        url = "https://stream.watsonplatform.net/speech-to-text/api/v1/recognize"
+        request = Request(url)
+        try:
+            self._send_request(request)
+            return True
+        except Exception as e:
+            if 'Unauthorized' in str(e):
+                return False
+            else:
+                raise e
 
     def _convert(self, audio):
         verify_dependencies(['sr'])
@@ -110,7 +122,9 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
             "Content-Type": "audio/x-flac",
             "X-Watson-Learning-Opt-Out": "true",
         })
+        return self._send_request(request)
 
+    def _send_request(self, request):
         if hasattr("", "encode"):  # Python 2.6 compatibility
             authorization_value = base64.standard_b64encode(
                 "{0}:{1}".format(self.username, self.password).encode("utf-8")).decode("utf-8")
