@@ -12,7 +12,9 @@ import pytest
 def test_clarifai_api_extractor():
     image_dir = join(get_test_data_path(), 'image')
     stim = ImageStim(join(image_dir, 'apple.jpg'))
-    result = ClarifaiAPIExtractor().transform(stim).to_df()
+    ext = ClarifaiAPIExtractor()
+    assert ext.validate_keys()
+    result = ext.transform(stim).to_df()
     assert result['apple'][0] > 0.5
     assert result.ix[:, 5][0] > 0.0
 
@@ -28,6 +30,11 @@ def test_clarifai_api_extractor():
     result = result.to_df()
     assert result.shape == (1, 6)
     assert 'cat' in result.columns and 'dog' in result.columns
+
+    ext = ClarifaiAPIExtractor(api_key='nogood')
+    assert not ext.validate_keys()
+    with pytest.raises(ValueError):
+        ext.transform(stim)
 
 
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")

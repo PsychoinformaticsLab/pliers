@@ -15,6 +15,7 @@ def test_IBMSpeechAPIConverter():
     stim = AudioStim(join(AUDIO_DIR, 'homer.wav'), onset=4.2)
     conv = IBMSpeechAPIConverter()
     out_stim = conv.transform(stim)
+    assert conv.validate_keys()
     assert isinstance(out_stim, ComplexTextStim)
     first_word = next(w for w in out_stim)
     assert isinstance(first_word, TextStim)
@@ -35,6 +36,11 @@ def test_IBMSpeechAPIConverter():
     assert len(full_text.split()) > 1
     assert 'thermodynamics' in full_text or 'obey' in full_text
     assert len(out_stim.elements) < num_words
+
+    conv = IBMSpeechAPIConverter(username='nogood', password='bad')
+    assert not conv.validate_keys()
+    with pytest.raises(ValueError):
+        conv.transform(stim)
 
 
 @pytest.mark.requires_payment

@@ -14,11 +14,17 @@ AUDIO_DIR = join(get_test_data_path(), 'audio')
 def test_googleAPI_converter():
     stim = AudioStim(join(AUDIO_DIR, 'obama_speech.wav'))
     conv = GoogleSpeechAPIConverter()
+    assert conv.validate_keys()
     out_stim = conv.transform(stim)
     assert type(out_stim) == ComplexTextStim
     text = [elem.text for elem in out_stim]
     assert 'today' in text
     assert 'United' in text
+
+    conv = GoogleSpeechAPIConverter(discovery_file='no/good.json')
+    assert not conv.validate_keys()
+    with pytest.raises(ValueError):
+        conv.transform(stim)
 
 
 @pytest.mark.requires_payment

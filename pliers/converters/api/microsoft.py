@@ -5,12 +5,13 @@ from pliers.stimuli.text import TextStim
 from pliers.transformers import MicrosoftVisionAPITransformer
 
 
-class MicrosoftAPITextConverter(MicrosoftVisionAPITransformer, ImageToTextConverter):
+class MicrosoftAPITextConverter(MicrosoftVisionAPITransformer,
+                                ImageToTextConverter):
 
     ''' Detects text within images using the Microsoft Vision API. '''
 
     api_method = 'ocr'
-    _log_attributes = ('api_version', 'language')
+    _log_attributes = ('subscription_key', 'api_version', 'language')
 
     def __init__(self, language='en', **kwargs):
         self.language = language

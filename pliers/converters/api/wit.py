@@ -22,7 +22,7 @@ class SpeechRecognitionAPIConverter(APITransformer, AudioToTextConverter):
             the environment variable specified in the _env_keys field.
     '''
 
-    _log_attributes = ('recognize_method',)
+    _log_attributes = ('api_key', 'recognize_method')
     VERSION = '1.0'
 
     @abstractproperty

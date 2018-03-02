@@ -29,8 +29,8 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
     api_name = 'face'
     api_method = 'detect'
     _env_keys = 'MICROSOFT_FACE_SUBSCRIPTION_KEY'
-    _log_attributes = ('api_version', 'face_id', 'rectangle', 'landmarks',
-                       'attributes')
+    _log_attributes = ('subscription_key', 'location', 'api_version',
+                       'face_id', 'rectangle', 'landmarks', 'attributes')
 
     def __init__(self, face_id=False, rectangle=True, landmarks=False,
                  attributes=None, subscription_key=None, location=None,
@@ -121,16 +121,18 @@ class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
     '''
 
     api_method = 'analyze'
-    _log_attributes = ('api_version', 'features')
+    _log_attributes = ('subscription_key', 'location', 'api_version',
+                       'features')
 
     def __init__(self, features=None, subscription_key=None, location=None,
                  api_version='v1.0'):
         self.features = features if features else ['Tags', 'Categories',
                                                    'ImageType', 'Color',
                                                    'Adult']
-        super(MicrosoftVisionAPIExtractor, self).__init__(subscription_key=subscription_key,
-                                                          location=location,
-                                                          api_version=api_version)
+        super(MicrosoftVisionAPIExtractor,
+              self).__init__(subscription_key=subscription_key,
+                             location=location,
+                             api_version=api_version)
 
     def _extract(self, stim):
         params = {

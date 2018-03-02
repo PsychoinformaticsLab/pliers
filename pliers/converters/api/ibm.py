@@ -33,7 +33,7 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
     '''
 
     _env_keys = ('IBM_USERNAME', 'IBM_PASSWORD')
-    _log_attributes = ('resolution',)
+    _log_attributes = ('username', 'password', 'resolution')
     VERSION = '1.0'
 
     def __init__(self, username=None, password=None, resolution='words'):

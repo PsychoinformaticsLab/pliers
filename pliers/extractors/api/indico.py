@@ -24,7 +24,7 @@ class IndicoAPIExtractor(APITransformer, BatchTransformerMixin, Extractor):
         models (list): The names of the Indico models to use.
     '''
 
-    _log_attributes = ('models', 'model_names')
+    _log_attributes = ('api_key', 'models', 'model_names')
     _input_type = ()
     _batch_size = 20
     _env_keys = 'INDICO_APP_KEY'

@@ -52,6 +52,11 @@ def test_microsoft_api_face_emotion_extractor():
     assert res['face_emotion_happiness'][0] > 0.5
     assert res['face_emotion_anger'][0] < 0.5
 
+    ext = MicrosoftAPIFaceEmotionExtractor(subscription_key='nogood')
+    assert not ext.validate_keys()
+    with pytest.raises(ValueError):
+        ext.transform(img)
+
 
 @pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
@@ -122,6 +127,7 @@ def test_microsoft_vision_api_color_extractor():
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_vision_api_adult_extractor():
     ext = MicrosoftVisionAPIAdultExtractor()
+    assert ext.validate_keys()
     img = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     res = ext.transform(img).to_df(timing=False, object_id=False)
     assert res.shape == (1, 4)
@@ -131,6 +137,11 @@ def test_microsoft_vision_api_adult_extractor():
     res = ext.transform(img).to_df(timing=False, object_id=False)
     assert res['adultScore'][0] > 0.1
     assert res['racyScore'][0] > 0.1
+
+    ext = MicrosoftVisionAPIAdultExtractor(subscription_key='nogood')
+    assert not ext.validate_keys()
+    with pytest.raises(ValueError):
+        ext.transform(img)
 
 
 @pytest.mark.requires_payment

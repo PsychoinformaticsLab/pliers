@@ -49,12 +49,18 @@ def test_google_vision_api_face_extractor_inits():
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_face_extractor():
     ext = GoogleVisionAPIFaceExtractor(num_retries=5)
+    assert ext.validate_keys()
     filename = join(get_test_data_path(), 'image', 'obama.jpg')
     stim = ImageStim(filename)
     result = ext.transform(stim).to_df()
     assert 'joyLikelihood' in result.columns
     assert result['joyLikelihood'][0] == 'VERY_LIKELY'
     assert float(result['face_detectionConfidence'][0]) > 0.7
+
+    ext = GoogleVisionAPIFaceExtractor(discovery_file='nogood')
+    assert not ext.validate_keys()
+    with pytest.raises(ValueError):
+        ext.transform(stim)
 
 
 @pytest.mark.requires_payment
@@ -109,11 +115,17 @@ def test_google_vision_face_batch():
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_label_extractor():
     ext = GoogleVisionAPILabelExtractor(num_retries=5)
+    assert ext.validate_keys()
     filename = join(get_test_data_path(), 'image', 'apple.jpg')
     stim = ImageStim(filename)
     result = ext.transform(stim).to_df()
     assert 'apple' in result.columns
     assert result['apple'][0] > 0.75
+
+    ext = GoogleVisionAPILabelExtractor(discovery_file='nogood')
+    assert not ext.validate_keys()
+    with pytest.raises(ValueError):
+        ext.transform(stim)
 
 
 @pytest.mark.requires_payment

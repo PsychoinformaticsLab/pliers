@@ -26,7 +26,8 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
 
     api_name = 'speech'
     resource = 'speech'
-    _log_attributes = ('language_code', 'profanity_filter', 'speech_contexts')
+    _log_attributes = ('discovery_file', 'language_code', 'profanity_filter',
+                       'speech_contexts')
 
     def __init__(self, language_code='en-US', profanity_filter=False,
                  speech_contexts=None, *args, **kwargs):
@@ -110,7 +111,7 @@ class GoogleVisionAPITextConverter(GoogleVisionAPITransformer,
     request_type = 'TEXT_DETECTION'
     response_object = 'textAnnotations'
     VERSION = '1.0'
-    _log_attributes = ('handle_annotations', 'api_version')
+    _log_attributes = ('discovery_file', 'handle_annotations', 'api_version')
 
     def __init__(self, handle_annotations='first', *args, **kwargs):
         self.handle_annotations = handle_annotations
