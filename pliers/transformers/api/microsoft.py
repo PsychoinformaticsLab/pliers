@@ -52,6 +52,7 @@ class MicrosoftAPITransformer(APITransformer):
     def validate_keys(self):
         try:
             self._send_request('', {})
+            return True
         except Exception as e:
             if 'too small' in str(e):
                 return True
