@@ -8,12 +8,13 @@ from pliers.extractors import (MicrosoftAPIFaceExtractor,
                                MicrosoftVisionAPIColorExtractor,
                                MicrosoftVisionAPIAdultExtractor)
 from pliers.extractors import merge_results
-from pliers.stimuli import ImageStim
+from pliers.stimuli import ImageStim, VideoStim
 import pytest
 from os.path import join
 from ...utils import get_test_data_path
 
 IMAGE_DIR = join(get_test_data_path(), 'image')
+VIDEO_DIR = join(get_test_data_path(), 'video')
 
 
 @pytest.mark.requires_payment
@@ -148,17 +149,15 @@ def test_microsoft_vision_api_adult_extractor():
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_vision_api_extractor_large():
     default = config.get_option('allow_large_jobs')
+    default_large = config.get_option('large_job')
     config.set_option('allow_large_jobs', False)
+    config.set_option('large_job', 3)
 
     ext = MicrosoftVisionAPITagExtractor()
 
-    images = [ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))] * 101
+    video = VideoStim(join(VIDEO_DIR, 'small.mp4'))
     with pytest.raises(ValueError):
-        merge_results(ext.transform(images))
-
-    config.set_option('allow_large_jobs', True)
-    results = merge_results(ext.transform(images))
-    assert 'MicrosoftVisionAPITagExtractor#apple' in results.columns
-    assert results.shape == (1, 14)  # not 101 cause all the same instance
+        merge_results(ext.transform(video))
 
     config.set_option('allow_large_jobs', default)
+    config.set_option('large_job', default_large)

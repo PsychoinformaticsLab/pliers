@@ -2,8 +2,8 @@
 
 import collections
 import os
-from abc import abstractmethod
-from six import string_types
+from abc import abstractmethod, ABCMeta
+from six import string_types, with_metaclass
 from tqdm import tqdm
 from pliers import config
 from pliers.support.exceptions import MissingDependencyError
@@ -105,7 +105,7 @@ def verify_dependencies(dependencies):
         raise MissingDependencyError(missing)
 
 
-class EnvironmentKeyMixin(object):
+class EnvironmentKeyMixin(with_metaclass(ABCMeta)):
 
     @classproperty
     def _env_keys(cls):
