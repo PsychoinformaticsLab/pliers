@@ -90,8 +90,8 @@ class ClarifaiAPIExtractor(APITransformer, BatchTransformerMixin,
         with ExitStack() as stack:
             imgs = []
             for s in stims:
-                if urlparse(s.filename).scheme:
-                    imgs.append(clarifai_client.Image(url=s.filename))
+                if s.url:
+                    imgs.append(clarifai_client.Image(url=s.url))
                 else:
                     f = stack.enter_context(s.get_filename())
                     imgs.append(clarifai_client.Image(filename=f))

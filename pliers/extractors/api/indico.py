@@ -69,8 +69,11 @@ class IndicoAPIExtractor(APITransformer, BatchTransformerMixin, Extractor):
                 # If valid key, a data error (None passed) is expected here
                 return True
 
+    def _get_tokens(self, stims):
+        return [stim.data for stim in stims if stim.data is not None]
+
     def _extract(self, stims):
-        tokens = [stim.data for stim in stims if stim.data is not None]
+        tokens = self._get_tokens(stims)
         scores = [model(tokens) for model in self.models]
 
         results = []
@@ -114,3 +117,12 @@ class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
         self.allowed_models = indicoio.IMAGE_APIS.keys()
         super(IndicoAPIImageExtractor, self).__init__(api_key=api_key,
                                                       models=models)
+
+    def _get_tokens(self, stims):
+        toks = []
+        for s in stims:
+            if s.url:
+                toks.append(s.url)
+            elif s.data:
+                toks.append(s.data)
+        return toks
