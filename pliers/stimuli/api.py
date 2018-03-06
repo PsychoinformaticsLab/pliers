@@ -71,7 +71,7 @@ class TweetStimFactory(EnvironmentKeyMixin):
             valid = self.check_valid_keys()
             if valid:
                 for k in self.api_keys:
-                    self.validate_keys.add(k)
+                    self.validated_keys.add(k)
             return valid
 
     def check_valid_keys(self):
