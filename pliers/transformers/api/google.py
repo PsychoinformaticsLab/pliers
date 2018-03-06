@@ -54,7 +54,11 @@ class GoogleAPITransformer(APITransformer):
         self.api_version = api_version
         super(GoogleAPITransformer, self).__init__()
 
-    def validate_keys(self):
+    @property
+    def api_keys(self):
+        return [self.credentials]
+
+    def check_valid_keys(self):
         return self.credentials is not None
 
 

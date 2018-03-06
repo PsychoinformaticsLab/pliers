@@ -1,5 +1,6 @@
 ''' Base implementation for all API transformers. '''
 
+from abc import abstractmethod, abstractproperty
 from pliers import config
 from pliers.transformers import Transformer
 from pliers.utils import isiterable, EnvironmentKeyMixin, listify
@@ -9,7 +10,26 @@ class APITransformer(Transformer, EnvironmentKeyMixin):
 
     def __init__(self, **kwargs):
         self.transformed_stim_count = 0
+        self.validated_keys = set()
         super(APITransformer, self).__init__(**kwargs)
+
+    @abstractproperty
+    def api_keys(self):
+        pass
+
+    def validate_keys(self):
+        if all(k in self.validated_keys for k in self.api_keys):
+            return True
+        else:
+            valid = self.check_valid_keys()
+            if valid:
+                for k in self.api_keys:
+                    self.validated_keys.add(k)
+            return valid
+
+    @abstractmethod
+    def check_valid_keys(self):
+        pass
 
     def _transform(self, stim, *args, **kwargs):
         # Check if we are trying to transform a large amount of data

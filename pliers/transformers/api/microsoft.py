@@ -49,7 +49,11 @@ class MicrosoftAPITransformer(APITransformer):
         self.api_version = api_version
         super(MicrosoftAPITransformer, self).__init__()
 
-    def validate_keys(self):
+    @property
+    def api_keys(self):
+        return [self.subscription_key]
+
+    def check_valid_keys(self):
         try:
             self._send_request('', {})
             return True

@@ -59,7 +59,11 @@ class WitTranscriptionConverter(SpeechRecognitionAPIConverter):
     _env_keys = 'WIT_AI_API_KEY'
     recognize_method = 'recognize_wit'
 
-    def validate_keys(self):
+    @property
+    def api_keys(self):
+        return [self.api_key]
+
+    def check_valid_keys(self):
         url = "https://api.wit.ai/message?v=20160526&q=authenticate"
         request = Request(url, headers={
             "Authorization": "Bearer {}".format(self.api_key)

@@ -51,7 +51,11 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
         self.resolution = resolution
         super(IBMSpeechAPIConverter, self).__init__()
 
-    def validate_keys(self):
+    @property
+    def api_keys(self):
+        return [self.username, self.password]
+
+    def check_valid_keys(self):
         url = "https://stream.watsonplatform.net/speech-to-text/api/v1/recognize"
         request = Request(url)
         try:

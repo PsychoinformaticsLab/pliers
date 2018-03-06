@@ -51,8 +51,30 @@ class TweetStimFactory(EnvironmentKeyMixin):
                                consumer_secret=consumer_secret,
                                access_token_key=access_token_key,
                                access_token_secret=access_token_secret)
+        self.consumer_key = consumer_key
+        self.consumer_secret = consumer_secret
+        self.access_token_key = access_token_key
+        self.access_token_secret = access_token_secret
+        self.validated_keys = set()
+
+    @property
+    def api_keys(self):
+        return [self.consumer_key,
+                self.consumer_secret,
+                self.access_token_key,
+                self.access_token_secret]
 
     def validate_keys(self):
+        if all(k in self.validated_keys for k in self.api_keys):
+            return True
+        else:
+            valid = self.check_valid_keys()
+            if valid:
+                for k in self.api_keys:
+                    self.validate_keys.add(k)
+            return valid
+
+    def check_valid_keys(self):
         verify_dependencies(['twitter'])
         try:
             self.api.VerifyCredentials()

@@ -2,7 +2,7 @@
 
 import collections
 import os
-from abc import abstractmethod, ABCMeta
+from abc import ABCMeta
 from six import string_types, with_metaclass
 from tqdm import tqdm
 from pliers import config
@@ -118,7 +118,3 @@ class EnvironmentKeyMixin(with_metaclass(ABCMeta)):
     @classproperty
     def available(cls):
         return all([k in os.environ for k in cls.env_keys])
-
-    @abstractmethod
-    def validate_keys(self):
-        pass

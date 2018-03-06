@@ -56,7 +56,11 @@ class IndicoAPIExtractor(APITransformer, BatchTransformerMixin, Extractor):
         self.names = models
         super(IndicoAPIExtractor, self).__init__()
 
-    def validate_keys(self):
+    @property
+    def api_keys(self):
+        return [self.api_key]
+
+    def check_valid_keys(self):
         verify_dependencies(['indicoio'])
         from indicoio.utils import api
         from indicoio.utils.errors import IndicoError

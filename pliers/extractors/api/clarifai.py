@@ -74,7 +74,11 @@ class ClarifaiAPIExtractor(APITransformer, BatchTransformerMixin,
                                     for n in select_concepts]
         super(ClarifaiAPIExtractor, self).__init__()
 
-    def validate_keys(self):
+    @property
+    def api_keys(self):
+        return [self.api_key]
+
+    def check_valid_keys(self):
         return self.api is not None
 
     def _extract(self, stims):
