@@ -6,12 +6,14 @@ from pliers.extractors.base import merge_results
 from pliers.stimuli import ImageStim, VideoStim
 import numpy as np
 import pytest
+import time
+
+IMAGE_DIR = join(get_test_data_path(), 'image')
 
 
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
 def test_clarifai_api_extractor():
-    image_dir = join(get_test_data_path(), 'image')
-    stim = ImageStim(join(image_dir, 'apple.jpg'))
+    stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     ext = ClarifaiAPIExtractor()
     assert ext.validate_keys()
     result = ext.transform(stim).to_df()
@@ -39,9 +41,8 @@ def test_clarifai_api_extractor():
 
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
 def test_clarifai_api_extractor_batch():
-    image_dir = join(get_test_data_path(), 'image')
-    stim = ImageStim(join(image_dir, 'apple.jpg'))
-    stim2 = ImageStim(join(image_dir, 'obama.jpg'))
+    stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
+    stim2 = ImageStim(join(IMAGE_DIR, 'obama.jpg'))
     ext = ClarifaiAPIExtractor()
     results = ext.transform([stim, stim2])
     results = merge_results(results)

@@ -28,7 +28,7 @@ class GoogleAPITransformer(APITransformer):
     _log_attributes = ('discovery_file', 'api_version')
 
     def __init__(self, discovery_file=None, api_version='v1', max_results=100,
-                 num_retries=3):
+                 num_retries=3, rate_limit=None):
         verify_dependencies(['googleapiclient', 'oauth_client'])
         if discovery_file is None:
             if 'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ:
@@ -52,7 +52,7 @@ class GoogleAPITransformer(APITransformer):
         self.max_results = max_results
         self.num_retries = num_retries
         self.api_version = api_version
-        super(GoogleAPITransformer, self).__init__()
+        super(GoogleAPITransformer, self).__init__(rate_limit=rate_limit)
 
     @property
     def api_keys(self):

@@ -4,13 +4,18 @@ from abc import abstractmethod, abstractproperty
 from pliers import config
 from pliers.transformers import Transformer
 from pliers.utils import isiterable, EnvironmentKeyMixin, listify
+import time
 
 
 class APITransformer(Transformer, EnvironmentKeyMixin):
 
-    def __init__(self, **kwargs):
+    _rate_limit = 0
+
+    def __init__(self, rate_limit=None, **kwargs):
         self.transformed_stim_count = 0
         self.validated_keys = set()
+        self.rate_limit = rate_limit if rate_limit else self._rate_limit
+        self._last_request_time = 0
         super(APITransformer, self).__init__(**kwargs)
 
     @abstractproperty
@@ -32,6 +37,14 @@ class APITransformer(Transformer, EnvironmentKeyMixin):
         pass
 
     def _transform(self, stim, *args, **kwargs):
+        # Check if we are requesting faster than the rate limit,
+        # if so, throttle by sleeping
+        print(self.rate_limit)
+        time_diff = time.time() - self._last_request_time
+        if time_diff < self.rate_limit:
+            time.sleep(self.rate_limit - time_diff)
+        self._last_request_time = time.time()
+
         # Check if we are trying to transform a large amount of data
         self.transformed_stim_count += len(listify(stim))
         if not config.get_option('allow_large_jobs'):

@@ -36,7 +36,8 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
     _log_attributes = ('username', 'password', 'resolution')
     VERSION = '1.0'
 
-    def __init__(self, username=None, password=None, resolution='words'):
+    def __init__(self, username=None, password=None, resolution='words',
+                 rate_limit=None):
         verify_dependencies(['sr'])
         if username is None or password is None:
             try:
@@ -49,7 +50,7 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
         self.username = username
         self.password = password
         self.resolution = resolution
-        super(IBMSpeechAPIConverter, self).__init__()
+        super(IBMSpeechAPIConverter, self).__init__(rate_limit=rate_limit)
 
     @property
     def api_keys(self):

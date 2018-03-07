@@ -29,7 +29,7 @@ class SpeechRecognitionAPIConverter(APITransformer, AudioToTextConverter):
     def recognize_method(self):
         pass
 
-    def __init__(self, api_key=None):
+    def __init__(self, api_key=None, rate_limit=None):
         verify_dependencies(['sr'])
         if api_key is None:
             try:
@@ -39,7 +39,7 @@ class SpeechRecognitionAPIConverter(APITransformer, AudioToTextConverter):
                                  " SpeechRecognitionAPIConverter is initialized.")
         self.recognizer = sr.Recognizer()
         self.api_key = api_key
-        super(SpeechRecognitionAPIConverter, self).__init__()
+        super(SpeechRecognitionAPIConverter, self).__init__(rate_limit=rate_limit)
 
     def _convert(self, audio):
         verify_dependencies(['sr'])

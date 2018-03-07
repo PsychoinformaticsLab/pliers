@@ -22,9 +22,10 @@ class MicrosoftAPITransformer(APITransformer):
     '''
 
     _log_attributes = ('subscription_key', 'location', 'api_version')
+    _rate_limit = 3
 
     def __init__(self, subscription_key=None, location=None,
-                 api_version='v1.0'):
+                 api_version='v1.0', rate_limit=None):
         if subscription_key is None:
             if self._env_keys not in os.environ:
                 raise ValueError("No Microsoft Cognitive Services credentials "
@@ -47,7 +48,7 @@ class MicrosoftAPITransformer(APITransformer):
         self.subscription_key = subscription_key
         self.location = location
         self.api_version = api_version
-        super(MicrosoftAPITransformer, self).__init__()
+        super(MicrosoftAPITransformer, self).__init__(rate_limit=rate_limit)
 
     @property
     def api_keys(self):

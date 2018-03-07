@@ -113,9 +113,12 @@ class GoogleVisionAPITextConverter(GoogleVisionAPITransformer,
     VERSION = '1.0'
     _log_attributes = ('discovery_file', 'handle_annotations', 'api_version')
 
-    def __init__(self, handle_annotations='first', *args, **kwargs):
+    def __init__(self, handle_annotations='first', rate_limit=None, *args,
+                 **kwargs):
         self.handle_annotations = handle_annotations
-        super(GoogleVisionAPITextConverter, self).__init__(*args, **kwargs)
+        super(GoogleVisionAPITextConverter, self).__init__(rate_limit=rate_limit,
+                                                           *args,
+                                                           **kwargs)
 
     def _convert(self, stims):
         request = self._build_request(stims)
