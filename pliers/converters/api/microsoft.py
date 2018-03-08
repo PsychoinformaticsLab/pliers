@@ -13,9 +13,13 @@ class MicrosoftAPITextConverter(MicrosoftVisionAPITransformer,
     api_method = 'ocr'
     _log_attributes = ('subscription_key', 'api_version', 'language')
 
-    def __init__(self, language='en', **kwargs):
+    def __init__(self, language='en', subscription_key=None, location=None,
+                 api_version='v1.0', rate_limit=None):
         self.language = language
-        super(MicrosoftAPITextConverter, self).__init__(**kwargs)
+        super(MicrosoftAPITextConverter, self).__init__(subscription_key=None,
+                                                        location=None,
+                                                        api_version='v1.0',
+                                                        rate_limit=None)
 
     def _convert(self, stim):
         params = {

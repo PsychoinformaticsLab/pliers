@@ -7,13 +7,13 @@ from .compound import CompoundStim
 from .image import ImageStim
 from .text import TextStim
 from .video import VideoStim
-from pliers.utils import (EnvironmentKeyMixin, attempt_to_import,
+from pliers.utils import (APIDependent, attempt_to_import,
                           verify_dependencies)
 
 twitter = attempt_to_import('twitter')
 
 
-class TweetStimFactory(EnvironmentKeyMixin):
+class TweetStimFactory(APIDependent):
 
     '''
     An object from which to generate TweetStims, creates an Api instance from
@@ -33,7 +33,7 @@ class TweetStimFactory(EnvironmentKeyMixin):
                  'TWITTER_ACCESS_TOKEN_KEY', 'TWITTER_ACCESS_TOKEN_SECRET')
 
     def __init__(self, consumer_key=None, consumer_secret=None,
-                 access_token_key=None, access_token_secret=None):
+                 access_token_key=None, access_token_secret=None, **kwargs):
         verify_dependencies(['twitter'])
         if consumer_key is None or consumer_secret is None or \
            access_token_key is None or access_token_secret is None:
@@ -55,7 +55,7 @@ class TweetStimFactory(EnvironmentKeyMixin):
         self.consumer_secret = consumer_secret
         self.access_token_key = access_token_key
         self.access_token_secret = access_token_secret
-        self.validated_keys = set()
+        super(TweetStimFactory, self).__init__(**kwargs)
 
     @property
     def api_keys(self):
@@ -63,16 +63,6 @@ class TweetStimFactory(EnvironmentKeyMixin):
                 self.consumer_secret,
                 self.access_token_key,
                 self.access_token_secret]
-
-    def validate_keys(self):
-        if all(k in self.validated_keys for k in self.api_keys):
-            return True
-        else:
-            valid = self.check_valid_keys()
-            if valid:
-                for k in self.api_keys:
-                    self.validated_keys.add(k)
-            return valid
 
     def check_valid_keys(self):
         verify_dependencies(['twitter'])

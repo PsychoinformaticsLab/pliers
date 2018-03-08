@@ -1,45 +1,16 @@
 ''' Base implementation for all API transformers. '''
 
-from abc import abstractmethod, abstractproperty
 from pliers import config
 from pliers.transformers import Transformer
-from pliers.utils import isiterable, EnvironmentKeyMixin, listify
+from pliers.utils import isiterable, listify, APIDependent
 import time
 
 
-class APITransformer(Transformer, EnvironmentKeyMixin):
-
-    _rate_limit = 0
-
-    def __init__(self, rate_limit=None, **kwargs):
-        self.transformed_stim_count = 0
-        self.validated_keys = set()
-        self.rate_limit = rate_limit if rate_limit else self._rate_limit
-        self._last_request_time = 0
-        super(APITransformer, self).__init__(**kwargs)
-
-    @abstractproperty
-    def api_keys(self):
-        pass
-
-    def validate_keys(self):
-        if all(k in self.validated_keys for k in self.api_keys):
-            return True
-        else:
-            valid = self.check_valid_keys()
-            if valid:
-                for k in self.api_keys:
-                    self.validated_keys.add(k)
-            return valid
-
-    @abstractmethod
-    def check_valid_keys(self):
-        pass
+class APITransformer(APIDependent, Transformer):
 
     def _transform(self, stim, *args, **kwargs):
         # Check if we are requesting faster than the rate limit,
         # if so, throttle by sleeping
-        print(self.rate_limit)
         time_diff = time.time() - self._last_request_time
         if time_diff < self.rate_limit:
             time.sleep(self.rate_limit - time_diff)

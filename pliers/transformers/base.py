@@ -38,10 +38,11 @@ class Transformer(with_metaclass(ABCMeta)):
     # the input would have to be a CompoundStim with both audio and text slots.
     _optional_input_type = ()
 
-    def __init__(self, name=None):
+    def __init__(self, name=None, **kwargs):
         if name is None:
             name = self.__class__.__name__
         self.name = name
+        super(Transformer, self).__init__(**kwargs)
 
     def _memoize(transform):
         @wraps(transform)
