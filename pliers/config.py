@@ -28,7 +28,8 @@ _default_settings = {
     'use_generators': False,
     'allow_large_jobs': True,
     'long_job': 60,  # in seconds
-    'large_job': 100
+    'large_job': 100,
+    'api_key_validation': False
 }
 
 

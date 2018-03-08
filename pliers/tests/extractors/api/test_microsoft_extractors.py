@@ -55,6 +55,11 @@ def test_microsoft_api_face_emotion_extractor():
 
     ext = MicrosoftAPIFaceEmotionExtractor(subscription_key='nogood')
     assert not ext.validate_keys()
+    default = config.get_option('api_key_validation')
+    config.set_option('api_key_validation', True)
+    with pytest.raises(ValueError):
+        ext.transform(img)
+    config.set_option('api_key_validation', default)
 
 
 @pytest.mark.requires_payment

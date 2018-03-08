@@ -35,4 +35,10 @@ class APITransformer(APIDependent, Transformer):
                                  (self.__class__.__name__,
                                   config.get_option('large_job')))
 
+        if config.get_option('api_key_validation') and not self.validate_keys():
+            raise ValueError("Error running %s, a provided environment key "
+                             "was invalid or unauthorized. Please check that "
+                             "you have authorized credentials for accessing "
+                             "the target API." % self.__class__.__name__)
+
         return super(APITransformer, self)._transform(stim, *args, **kwargs)
