@@ -52,8 +52,6 @@ def test_indico_api_text_extractor():
 
     ext = IndicoAPITextExtractor(api_key='nogood', models=['language'])
     assert not ext.validate_keys()
-    with pytest.raises(ValueError):
-        ext.transform(ts)
 
 
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")

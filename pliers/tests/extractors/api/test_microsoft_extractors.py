@@ -55,8 +55,6 @@ def test_microsoft_api_face_emotion_extractor():
 
     ext = MicrosoftAPIFaceEmotionExtractor(subscription_key='nogood')
     assert not ext.validate_keys()
-    with pytest.raises(ValueError):
-        ext.transform(img)
 
 
 @pytest.mark.requires_payment
@@ -141,8 +139,6 @@ def test_microsoft_vision_api_adult_extractor():
 
     ext = MicrosoftVisionAPIAdultExtractor(subscription_key='nogood')
     assert not ext.validate_keys()
-    with pytest.raises(ValueError):
-        ext.transform(img)
 
 
 @pytest.mark.requires_payment

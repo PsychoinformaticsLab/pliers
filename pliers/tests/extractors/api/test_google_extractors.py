@@ -59,8 +59,6 @@ def test_google_vision_api_face_extractor():
 
     ext = GoogleVisionAPIFaceExtractor(discovery_file='nogood')
     assert not ext.validate_keys()
-    with pytest.raises(ValueError):
-        ext.transform(stim)
 
 
 @pytest.mark.requires_payment
@@ -124,8 +122,6 @@ def test_google_vision_api_label_extractor():
 
     ext = GoogleVisionAPILabelExtractor(discovery_file='nogood')
     assert not ext.validate_keys()
-    with pytest.raises(ValueError):
-        ext.transform(stim)
 
 
 @pytest.mark.requires_payment

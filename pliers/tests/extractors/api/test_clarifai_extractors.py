@@ -35,8 +35,6 @@ def test_clarifai_api_extractor():
 
     ext = ClarifaiAPIExtractor(api_key='nogood')
     assert not ext.validate_keys()
-    with pytest.raises(ValueError):
-        ext.transform(stim)
 
 
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")

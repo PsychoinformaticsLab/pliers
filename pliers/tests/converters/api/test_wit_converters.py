@@ -24,5 +24,3 @@ def test_WitTranscriptionConverter():
 
     conv = WitTranscriptionConverter(api_key='nogood')
     assert not conv.validate_keys()
-    with pytest.raises(ValueError):
-        conv.transform(stim)

@@ -23,8 +23,6 @@ def test_googleAPI_converter():
 
     conv = GoogleSpeechAPIConverter(discovery_file='no/good.json')
     assert not conv.validate_keys()
-    with pytest.raises(ValueError):
-        conv.transform(stim)
 
 
 @pytest.mark.requires_payment
