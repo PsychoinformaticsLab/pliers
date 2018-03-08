@@ -33,7 +33,8 @@ class TweetStimFactory(APIDependent):
                  'TWITTER_ACCESS_TOKEN_KEY', 'TWITTER_ACCESS_TOKEN_SECRET')
 
     def __init__(self, consumer_key=None, consumer_secret=None,
-                 access_token_key=None, access_token_secret=None, **kwargs):
+                 access_token_key=None, access_token_secret=None,
+                 rate_limit=None):
         verify_dependencies(['twitter'])
         if consumer_key is None or consumer_secret is None or \
            access_token_key is None or access_token_secret is None:
@@ -55,7 +56,7 @@ class TweetStimFactory(APIDependent):
         self.consumer_secret = consumer_secret
         self.access_token_key = access_token_key
         self.access_token_secret = access_token_secret
-        super(TweetStimFactory, self).__init__(**kwargs)
+        super(TweetStimFactory, self).__init__(rate_limit=rate_limit)
 
     @property
     def api_keys(self):

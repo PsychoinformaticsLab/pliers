@@ -35,11 +35,12 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
         self.language_code = language_code
         self.profanity_filter = profanity_filter
         self.speech_contexts = speech_contexts
-        super(GoogleSpeechAPIConverter, self).__init__(discovery_file=None,
-                                                       api_version='v1',
-                                                       max_results=100,
-                                                       num_retries=3,
-                                                       rate_limit=None)
+        super(GoogleSpeechAPIConverter,
+              self).__init__(discovery_file=discovery_file,
+                             api_version=api_version,
+                             max_results=max_results,
+                             num_retries=num_retries,
+                             rate_limit=rate_limit)
 
     def _query_api(self, request):
         request_obj = self.service.speech().recognize(body=request)
@@ -122,11 +123,12 @@ class GoogleVisionAPITextConverter(GoogleVisionAPITransformer,
                  api_version='v1', max_results=100, num_retries=3,
                  rate_limit=None):
         self.handle_annotations = handle_annotations
-        super(GoogleVisionAPITextConverter, self).__init__(discovery_file=None,
-                                                           api_version='v1',
-                                                           max_results=100,
-                                                           num_retries=3,
-                                                           rate_limit=None)
+        super(GoogleVisionAPITextConverter,
+              self).__init__(discovery_file=discovery_file,
+                             api_version=api_version,
+                             max_results=max_results,
+                             num_retries=num_retries,
+                             rate_limit=rate_limit)
 
     def _convert(self, stims):
         request = self._build_request(stims)

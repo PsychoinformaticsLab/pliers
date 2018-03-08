@@ -16,10 +16,11 @@ class MicrosoftAPITextConverter(MicrosoftVisionAPITransformer,
     def __init__(self, language='en', subscription_key=None, location=None,
                  api_version='v1.0', rate_limit=None):
         self.language = language
-        super(MicrosoftAPITextConverter, self).__init__(subscription_key=None,
-                                                        location=None,
-                                                        api_version='v1.0',
-                                                        rate_limit=None)
+        super(MicrosoftAPITextConverter,
+              self).__init__(subscription_key=subscription_key,
+                             location=location,
+                             api_version=api_version,
+                             rate_limit=rate_limit)
 
     def _convert(self, stim):
         params = {
