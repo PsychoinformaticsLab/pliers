@@ -71,14 +71,20 @@ class GoogleVisionAPITransformer(GoogleAPITransformer, BatchTransformerMixin):
     def _build_request(self, stims):
         request = []
         for image in stims:
-            with image.get_filename() as filename:
-                with open(filename, 'rb') as f:
-                    img_data = f.read()
+            image_desc = {}
+            if image.url:
+                image_desc['source'] = {
+                    'imageUri': image.url
+                }
+            else:
+                with image.get_filename() as filename:
+                    with open(filename, 'rb') as f:
+                        img_data = f.read()
+                image_desc['content'] = base64.b64encode(img_data).decode()
 
-            content = base64.b64encode(img_data).decode()
             request.append(
                 {
-                    'image': {'content': content},
+                    'image': image_desc,
                     'features': [{
                         'type': self.request_type,
                         'maxResults': self.max_results,

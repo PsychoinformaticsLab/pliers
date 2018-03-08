@@ -41,23 +41,24 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
         return request_obj.execute(num_retries=self.num_retries)
 
     def _build_request(self, stim):
-        tmp = tempfile.mktemp() + '.flac'
-        stim.clip.write_audiofile(tmp, fps=stim.sampling_rate, codec='flac',
-                                  ffmpeg_params=['-ac', '1'])
+        audio_desc = {}
+        if stim.url:
+            audio_desc['uri'] = stim.url
+        else:
+            tmp = tempfile.mktemp() + '.flac'
+            stim.clip.write_audiofile(tmp, fps=stim.sampling_rate, codec='flac',
+                                      ffmpeg_params=['-ac', '1'])
+            with open(tmp, 'rb') as f:
+                data = f.read()
+            os.remove(tmp)
+            audio_desc['content'] = base64.b64encode(data).decode()
 
-        with open(tmp, 'rb') as f:
-            data = f.read()
-        os.remove(tmp)
-
-        content = base64.b64encode(data).decode()
         if self.speech_contexts:
             speech_contexts = [{'phrases': c} for c in self.speech_contexts]
         else:
             speech_contexts = []
         request = {
-            'audio': {
-                'content': content
-            },
+            'audio': audio_desc,
             'config': {
                 'encoding': 'FLAC',
                 'sampleRateHertz': stim.sampling_rate,
