@@ -6,8 +6,6 @@ import pandas as pd
 import numpy as np
 from os.path import realpath, join, dirname, exists, expanduser
 from pliers.stimuli import load_stims
-from pliers.converters import Converter
-from pliers.filters.base import Filter
 from pliers.transformers import get_transformer
 import hashlib
 
@@ -16,7 +14,7 @@ def hash_data(data, blocksize=65536):
     """" Hashes list of data, strings or data """
     if isinstance(data, str):
         data = [data.encode('utf-8')]
-    elif not isinstance(data, list):
+    if not isinstance(data, list):
         data = [data]
 
     hasher = hashlib.sha1()
@@ -59,12 +57,11 @@ def check_updates(transformers, datastore=None, stimuli=None):
                 res = trans.transform(stim)
 
                 try: # Add iterable
-                    res = [res._data for r in res]
+                    res = [getattr(res, '_data', res.data) for r in res]
                 except TypeError:
-                    res = res._data
+                    res = getattr(res, '_data', res.data)
 
-                res = hash_data(res) if isinstance(
-                    trans, (Converter, Filter)) else res[0][0]
+                res = hash_data(res)
 
                 results["{}.{}".format(trans.__hash__(), stim.name)] = [res]
 

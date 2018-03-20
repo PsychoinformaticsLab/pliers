@@ -4,14 +4,13 @@ import pandas as pd
 
 def test_updater():
     datastore_file = NamedTemporaryFile().name
+    transformers = [('BrightnessExtractor', {}), ('TesseractConverter', {})]
     # Run updater once
-    results = check_updates([('BrightnessExtractor', {})],
-                            datastore=datastore_file)
+    results = check_updates(transformers, datastore=datastore_file)
     assert results == {'transformers': [], 'mismatches': []}
 
     # Run again with same values
-    results = check_updates([('BrightnessExtractor', {})],
-                            datastore=datastore_file)
+    results = check_updates(transformers, datastore=datastore_file)
     assert results == {'transformers': [], 'mismatches': []}
 
     # Change value in datastore
@@ -19,7 +18,6 @@ def test_updater():
     ds.iloc[1, 3] = 1
     ds.to_csv(datastore_file, index=False)
 
-    results = check_updates([('BrightnessExtractor', {})],
-                            datastore=datastore_file)
-    assert results['transformers'] == [('BrightnessExtractor', {})]
+    results = check_updates(transformers, datastore=datastore_file)
+    assert results['transformers'] == [('TesseractConverter', {})]
     assert len(results['mismatches']) == 1
