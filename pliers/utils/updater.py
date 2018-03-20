@@ -8,18 +8,14 @@ from os.path import realpath, join, dirname, exists, expanduser
 from pliers.stimuli import load_stims
 from pliers.transformers import get_transformer
 import hashlib
-
+import pickle
 
 def hash_data(data, blocksize=65536):
     """" Hashes list of data, strings or data """
-    if isinstance(data, str):
-        data = [data.encode('utf-8')]
-    if not isinstance(data, list):
-        data = [data]
+    data = pickle.dumps(data)
 
     hasher = hashlib.sha1()
-    for i in data:
-        hasher.update(i)
+    hasher.update(data)
 
     return hasher.hexdigest()
 

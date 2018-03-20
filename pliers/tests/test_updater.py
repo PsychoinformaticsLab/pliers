@@ -15,9 +15,10 @@ def test_updater():
 
     # Change value in datastore
     ds = pd.read_csv(datastore_file)
-    ds.iloc[1, 3] = 1
+    ds.iloc[1, 1:] = 1
     ds.to_csv(datastore_file, index=False)
 
     results = check_updates(transformers, datastore=datastore_file)
-    assert results['transformers'] == [('TesseractConverter', {})]
-    assert len(results['mismatches']) == 1
+    for j in results['transformers']:
+        assert j in transformers
+    assert len(results['mismatches']) == 198
