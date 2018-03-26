@@ -53,7 +53,7 @@ class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
 class GoogleVisionAPITransformer(BatchTransformerMixin, GoogleAPITransformer):
 
     api_name = 'vision'
-    _batch_size = 10
+    _batch_size = 1
 
     def _query_api(self, request):
         request_obj = self.service.images() \
