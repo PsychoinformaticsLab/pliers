@@ -145,14 +145,15 @@ class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
         data_dict = {}
         for feat in self.features:
             feat = feat[0].lower() + feat[1:]
-            if feat == 'tags':
-                for tag in result._data[feat]:
-                    data_dict[tag['name']] = tag['confidence']
-            elif feat == 'categories':
-                for cat in result._data[feat]:
-                    data_dict[cat['name']] = cat['score']
-            else:
-                data_dict.update(result._data[feat])
+            if feat in result._data:
+                if feat == 'tags':
+                    for tag in result._data[feat]:
+                        data_dict[tag['name']] = tag['confidence']
+                elif feat == 'categories':
+                    for cat in result._data[feat]:
+                        data_dict[cat['name']] = cat['score']
+                else:
+                    data_dict.update(result._data[feat])
         return pd.DataFrame([data_dict.values()], columns=data_dict.keys())
 
 

@@ -83,8 +83,7 @@ class ClarifaiAPIExtractor(APITransformer, BatchTransformerMixin,
         moc = clarifai_client.ModelOutputConfig(min_value=self.min_value,
                                                 max_concepts=self.max_concepts,
                                                 select_concepts=self.select_concepts)
-        output_config = moc
-        model_output_info = clarifai_client.ModelOutputInfo(output_config=output_config)
+        model_output_info = clarifai_client.ModelOutputInfo(output_config=moc)
 
         # ExitStack lets us use filename context managers simultaneously
         with ExitStack() as stack:

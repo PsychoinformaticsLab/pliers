@@ -123,6 +123,6 @@ class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
         for s in stims:
             if s.url:
                 toks.append(s.url)
-            elif s.data:
+            elif s.data is not None:
                 toks.append(s.data)
         return toks
