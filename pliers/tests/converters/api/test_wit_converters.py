@@ -9,7 +9,7 @@ AUDIO_DIR = join(get_test_data_path(), 'audio')
 
 @pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
 def test_WitTranscriptionConverter():
-    stim = AudioStim(join(AUDIO_DIR, 'homer.wav'), onset=4.2)
+    stim = AudioStim(join(AUDIO_DIR, 'obama_speech.wav'), onset=4.2)
     conv = WitTranscriptionConverter()
     assert conv.validate_keys()
     out_stim = conv.transform(stim)
@@ -20,7 +20,7 @@ def test_WitTranscriptionConverter():
     second_word = [w for w in out_stim][1]
     assert second_word.onset == 4.2
     text = [elem.text for elem in out_stim]
-    assert 'thermodynamics' in text or 'obey' in text
+    assert 'today' in text or 'negotiations' in text
 
     conv = WitTranscriptionConverter(api_key='nogood')
     assert not conv.validate_keys()
