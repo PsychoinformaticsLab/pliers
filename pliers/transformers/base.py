@@ -168,7 +168,8 @@ class Transformer(with_metaclass(ABCMeta)):
             msg = ("Transformer of class %s requires multiple mandatory "
                    "inputs, so the passed input Stim must be a CompoundStim"
                    "--which it isn't." % self.__class__.__name__)
-            raise ValueError(msg)
+            logging.warning(msg)
+            return False
 
         return isinstance(stim, mandatory) or (not mandatory and
                                                isinstance(stim, optional))
