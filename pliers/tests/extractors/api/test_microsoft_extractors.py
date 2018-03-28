@@ -8,12 +8,13 @@ from pliers.extractors import (MicrosoftAPIFaceExtractor,
                                MicrosoftVisionAPIColorExtractor,
                                MicrosoftVisionAPIAdultExtractor)
 from pliers.extractors import merge_results
-from pliers.stimuli import ImageStim
+from pliers.stimuli import ImageStim, VideoStim
 import pytest
 from os.path import join
 from ...utils import get_test_data_path
 
 IMAGE_DIR = join(get_test_data_path(), 'image')
+VIDEO_DIR = join(get_test_data_path(), 'video')
 
 
 @pytest.mark.requires_payment
@@ -54,8 +55,11 @@ def test_microsoft_api_face_emotion_extractor():
 
     ext = MicrosoftAPIFaceEmotionExtractor(subscription_key='nogood')
     assert not ext.validate_keys()
+    default = config.get_option('api_key_validation')
+    config.set_option('api_key_validation', True)
     with pytest.raises(ValueError):
         ext.transform(img)
+    config.set_option('api_key_validation', default)
 
 
 @pytest.mark.requires_payment
@@ -145,25 +149,21 @@ def test_microsoft_vision_api_adult_extractor():
 
     ext = MicrosoftVisionAPIAdultExtractor(subscription_key='nogood')
     assert not ext.validate_keys()
-    with pytest.raises(ValueError):
-        ext.transform(img)
 
 
 @pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_vision_api_extractor_large():
     default = config.get_option('allow_large_jobs')
+    default_large = config.get_option('large_job')
     config.set_option('allow_large_jobs', False)
+    config.set_option('large_job', 3)
 
     ext = MicrosoftVisionAPITagExtractor()
 
-    images = [ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))] * 101
+    video = VideoStim(join(VIDEO_DIR, 'small.mp4'))
     with pytest.raises(ValueError):
-        merge_results(ext.transform(images))
-
-    config.set_option('allow_large_jobs', True)
-    results = merge_results(ext.transform(images))
-    assert 'MicrosoftVisionAPITagExtractor#apple' in results.columns
-    assert results.shape == (1, 14)  # not 101 cause all the same instance
+        merge_results(ext.transform(video))
 
     config.set_option('allow_large_jobs', default)
+    config.set_option('large_job', default_large)

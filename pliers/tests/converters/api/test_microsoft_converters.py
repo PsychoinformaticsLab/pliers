@@ -23,5 +23,3 @@ def test_microsoft_vision_api_text_converter():
 
     conv = MicrosoftAPITextConverter(subscription_key='nogood')
     assert not conv.validate_keys()
-    with pytest.raises(ValueError):
-        conv.transform(img)

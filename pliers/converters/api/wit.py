@@ -29,7 +29,7 @@ class SpeechRecognitionAPIConverter(APITransformer, AudioToTextConverter):
     def recognize_method(self):
         pass
 
-    def __init__(self, api_key=None):
+    def __init__(self, api_key=None, rate_limit=None):
         verify_dependencies(['sr'])
         if api_key is None:
             try:
@@ -39,7 +39,7 @@ class SpeechRecognitionAPIConverter(APITransformer, AudioToTextConverter):
                                  " SpeechRecognitionAPIConverter is initialized.")
         self.recognizer = sr.Recognizer()
         self.api_key = api_key
-        super(SpeechRecognitionAPIConverter, self).__init__()
+        super(SpeechRecognitionAPIConverter, self).__init__(rate_limit=rate_limit)
 
     def _convert(self, audio):
         verify_dependencies(['sr'])
@@ -59,7 +59,11 @@ class WitTranscriptionConverter(SpeechRecognitionAPIConverter):
     _env_keys = 'WIT_AI_API_KEY'
     recognize_method = 'recognize_wit'
 
-    def validate_keys(self):
+    @property
+    def api_keys(self):
+        return [self.api_key]
+
+    def check_valid_keys(self):
         url = "https://api.wit.ai/message?v=20160526&q=authenticate"
         request = Request(url, headers={
             "Authorization": "Bearer {}".format(self.api_key)

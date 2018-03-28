@@ -30,11 +30,17 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
                        'speech_contexts')
 
     def __init__(self, language_code='en-US', profanity_filter=False,
-                 speech_contexts=None, *args, **kwargs):
+                 speech_contexts=None, discovery_file=None, api_version='v1',
+                 max_results=100, num_retries=3, rate_limit=None):
         self.language_code = language_code
         self.profanity_filter = profanity_filter
         self.speech_contexts = speech_contexts
-        super(GoogleSpeechAPIConverter, self).__init__(*args, **kwargs)
+        super(GoogleSpeechAPIConverter,
+              self).__init__(discovery_file=discovery_file,
+                             api_version=api_version,
+                             max_results=max_results,
+                             num_retries=num_retries,
+                             rate_limit=rate_limit)
 
     def _query_api(self, request):
         request_obj = self.service.speech().recognize(body=request)
@@ -111,9 +117,16 @@ class GoogleVisionAPITextConverter(GoogleVisionAPITransformer,
     VERSION = '1.0'
     _log_attributes = ('discovery_file', 'handle_annotations', 'api_version')
 
-    def __init__(self, handle_annotations='first', *args, **kwargs):
+    def __init__(self, handle_annotations='first', discovery_file=None,
+                 api_version='v1', max_results=100, num_retries=3,
+                 rate_limit=None):
         self.handle_annotations = handle_annotations
-        super(GoogleVisionAPITextConverter, self).__init__(*args, **kwargs)
+        super(GoogleVisionAPITextConverter,
+              self).__init__(discovery_file=discovery_file,
+                             api_version=api_version,
+                             max_results=max_results,
+                             num_retries=num_retries,
+                             rate_limit=rate_limit)
 
     def _convert(self, stims):
         request = self._build_request(stims)

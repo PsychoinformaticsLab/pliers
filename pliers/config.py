@@ -26,7 +26,10 @@ _default_settings = {
     'parallelize': False,
     'progress_bar': True,
     'use_generators': False,
-    'allow_large_jobs': True
+    'allow_large_jobs': True,
+    'long_job': 60,  # in seconds
+    'large_job': 100,
+    'api_key_validation': False
 }
 
 

@@ -13,9 +13,6 @@ class Extractor(with_metaclass(ABCMeta, Transformer)):
 
     ''' Base class for all pliers Extractors.'''
 
-    def __init__(self):
-        super(Extractor, self).__init__()
-
     def transform(self, stim, *args, **kwargs):
         result = super(Extractor, self).transform(stim, *args, **kwargs)
         return list(result) if isgenerator(result) else result

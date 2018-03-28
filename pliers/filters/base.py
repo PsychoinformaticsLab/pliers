@@ -12,9 +12,6 @@ import logging
 class Filter(with_metaclass(ABCMeta, Transformer)):
     ''' Base class for Filters.'''
 
-    def __init__(self):
-        super(Filter, self).__init__()
-
     def _transform(self, stim, *args, **kwargs):
         new_stim = self._filter(stim, *args, **kwargs)
         if not isinstance(new_stim, self._input_type) and \

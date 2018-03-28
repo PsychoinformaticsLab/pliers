@@ -59,8 +59,6 @@ def test_google_vision_api_face_extractor():
 
     ext = GoogleVisionAPIFaceExtractor(discovery_file='nogood')
     assert not ext.validate_keys()
-    with pytest.raises(ValueError):
-        ext.transform(stim)
 
 
 @pytest.mark.requires_payment
@@ -129,8 +127,6 @@ def test_google_vision_api_label_extractor():
 
     ext = GoogleVisionAPILabelExtractor(discovery_file='nogood')
     assert not ext.validate_keys()
-    with pytest.raises(ValueError):
-        ext.transform(stim)
 
 
 @pytest.mark.requires_payment
@@ -169,17 +165,19 @@ def test_google_vision_api_web_entities():
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_vision_api_extractor_large():
     default = config.get_option('allow_large_jobs')
+    default_large = config.get_option('large_job')
     config.set_option('allow_large_jobs', False)
+    config.set_option('large_job', 1)
 
     ext = GoogleVisionAPILabelExtractor()
-
-    images = [ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))] * 101
+    images = [ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))] * 2
     with pytest.raises(ValueError):
         merge_results(ext.transform(images))
 
     config.set_option('allow_large_jobs', True)
     results = merge_results(ext.transform(images))
     assert 'GoogleVisionAPILabelExtractor#apple' in results.columns
-    assert results.shape == (1, 16)  # not 101 cause all the same instance
+    assert results.shape == (1, 16)  # not 2 cause all the same instance
 
     config.set_option('allow_large_jobs', default)
+    config.set_option('large_job', default_large)

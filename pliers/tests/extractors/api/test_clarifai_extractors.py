@@ -6,12 +6,14 @@ from pliers.extractors.base import merge_results
 from pliers.stimuli import ImageStim, VideoStim
 import numpy as np
 import pytest
+import time
+
+IMAGE_DIR = join(get_test_data_path(), 'image')
 
 
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
 def test_clarifai_api_extractor():
-    image_dir = join(get_test_data_path(), 'image')
-    stim = ImageStim(join(image_dir, 'apple.jpg'))
+    stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     ext = ClarifaiAPIExtractor()
     assert ext.validate_keys()
     result = ext.transform(stim).to_df()
@@ -39,15 +41,12 @@ def test_clarifai_api_extractor():
 
     ext = ClarifaiAPIExtractor(api_key='nogood')
     assert not ext.validate_keys()
-    with pytest.raises(ValueError):
-        ext.transform(stim)
 
 
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
 def test_clarifai_api_extractor_batch():
-    image_dir = join(get_test_data_path(), 'image')
-    stim = ImageStim(join(image_dir, 'apple.jpg'))
-    stim2 = ImageStim(join(image_dir, 'obama.jpg'))
+    stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
+    stim2 = ImageStim(join(IMAGE_DIR, 'obama.jpg'))
     ext = ClarifaiAPIExtractor()
     results = ext.transform([stim, stim2])
     results = merge_results(results)
@@ -58,20 +57,19 @@ def test_clarifai_api_extractor_batch():
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
 def test_clarifai_api_extractor_large():
     default = config.get_option('allow_large_jobs')
+    default_large = config.get_option('large_job')
     config.set_option('allow_large_jobs', False)
+    config.set_option('large_job', 1)
 
     ext = ClarifaiAPIExtractor()
-    video = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
-    with pytest.raises(ValueError):
-        merge_results(ext.transform(video))
-
-    images = [ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))] * 101
+    images = [ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))] * 2
     with pytest.raises(ValueError):
         merge_results(ext.transform(images))
 
     config.set_option('allow_large_jobs', True)
     results = merge_results(ext.transform(images))
     assert 'ClarifaiAPIExtractor#apple' in results.columns
-    assert results.shape == (1, 29)  # not 101 cause all the same instance
+    assert results.shape == (1, 29)  # not 2 cause all the same instance
 
     config.set_option('allow_large_jobs', default)
+    config.set_option('large_job', default_large)

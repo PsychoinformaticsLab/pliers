@@ -2,8 +2,8 @@
 
 import collections
 import os
-from abc import abstractmethod
-from six import string_types
+from abc import ABCMeta, abstractmethod, abstractproperty
+from six import string_types, with_metaclass
 from tqdm import tqdm
 from pliers import config
 from pliers.support.exceptions import MissingDependencyError
@@ -119,6 +119,32 @@ class EnvironmentKeyMixin(object):
     def available(cls):
         return all([k in os.environ for k in cls.env_keys])
 
-    @abstractmethod
+
+class APIDependent(with_metaclass(ABCMeta, EnvironmentKeyMixin)):
+
+    _rate_limit = 0
+
+    def __init__(self, rate_limit=None, **kwargs):
+        self.transformed_stim_count = 0
+        self.validated_keys = set()
+        self.rate_limit = rate_limit if rate_limit else self._rate_limit
+        self._last_request_time = 0
+        super(APIDependent, self).__init__(**kwargs)
+
+    @abstractproperty
+    def api_keys(self):
+        pass
+
     def validate_keys(self):
+        if all(k in self.validated_keys for k in self.api_keys):
+            return True
+        else:
+            valid = self.check_valid_keys()
+            if valid:
+                for k in self.api_keys:
+                    self.validated_keys.add(k)
+            return valid
+
+    @abstractmethod
+    def check_valid_keys(self):
         pass

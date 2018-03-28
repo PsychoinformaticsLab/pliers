@@ -38,10 +38,11 @@ class Transformer(with_metaclass(ABCMeta)):
     # the input would have to be a CompoundStim with both audio and text slots.
     _optional_input_type = ()
 
-    def __init__(self, name=None):
+    def __init__(self, name=None, **kwargs):
         if name is None:
             name = self.__class__.__name__
         self.name = name
+        super(Transformer, self).__init__(**kwargs)
 
     def _memoize(transform):
         @wraps(transform)
@@ -168,7 +169,8 @@ class Transformer(with_metaclass(ABCMeta)):
             msg = ("Transformer of class %s requires multiple mandatory "
                    "inputs, so the passed input Stim must be a CompoundStim"
                    "--which it isn't." % self.__class__.__name__)
-            raise ValueError(msg)
+            logging.warning(msg)
+            return False
 
         return isinstance(stim, mandatory) or (not mandatory and
                                                isinstance(stim, optional))

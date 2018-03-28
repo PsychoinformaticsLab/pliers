@@ -39,8 +39,6 @@ def test_IBMSpeechAPIConverter():
 
     conv = IBMSpeechAPIConverter(username='nogood', password='bad')
     assert not conv.validate_keys()
-    with pytest.raises(ValueError):
-        conv.transform(stim)
 
 
 @pytest.mark.requires_payment
