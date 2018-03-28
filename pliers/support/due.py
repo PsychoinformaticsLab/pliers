@@ -56,7 +56,8 @@ try:
         raise RuntimeError(
             "Imported due lacks .cite. DueCredit is now disabled")
 except Exception as e:
-    if type(e).__name__ != 'ImportError':
+    error = type(e).__name__
+    if error != 'ImportError' and error != 'ModuleNotFoundError':
         import logging
         logging.getLogger("duecredit").error(
             "Failed to import duecredit due to %s" % str(e))

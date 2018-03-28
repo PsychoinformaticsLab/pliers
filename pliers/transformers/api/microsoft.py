@@ -1,14 +1,13 @@
 import os
 import requests
-from pliers.transformers import Transformer
-from pliers.utils import EnvironmentKeyMixin
+from pliers.transformers.api import APITransformer
 
 
 BASE_URL = 'https://{location}.api.cognitive.microsoft.com/{api}/{version}'\
            '/{method}'
 
 
-class MicrosoftAPITransformer(Transformer):
+class MicrosoftAPITransformer(APITransformer):
     ''' Base MicrosoftAPITransformer class.
 
     Args:
@@ -22,10 +21,11 @@ class MicrosoftAPITransformer(Transformer):
         api_version (str): API version to use.
     '''
 
-    _log_attributes = ('api_version',)
+    _log_attributes = ('subscription_key', 'location', 'api_version')
+    _rate_limit = 3
 
     def __init__(self, subscription_key=None, location=None,
-                 api_version='v1.0'):
+                 api_version='v1.0', rate_limit=None):
         if subscription_key is None:
             if self._env_keys not in os.environ:
                 raise ValueError("No Microsoft Cognitive Services credentials "
@@ -48,16 +48,37 @@ class MicrosoftAPITransformer(Transformer):
         self.subscription_key = subscription_key
         self.location = location
         self.api_version = api_version
-        super(MicrosoftAPITransformer, self).__init__()
+        super(MicrosoftAPITransformer, self).__init__(rate_limit=rate_limit)
+
+    @property
+    def api_keys(self):
+        return [self.subscription_key]
+
+    def check_valid_keys(self):
+        try:
+            self._send_request('', {})
+            return True
+        except Exception as e:
+            if 'too small' in str(e):
+                return True
+            if 'invalid subscription' in str(e):
+                return False
+            elif '[Errno 8]' in str(e):
+                return False
+            else:
+                raise e
 
     def _query_api(self, stim, params):
         with stim.get_filename() as filename:
             with open(filename, 'rb') as fp:
                 data = fp.read()
 
+        return self._send_request(data, params)
+
+    def _send_request(self, data, params):
         headers = {
             'Content-Type': 'application/octet-stream',
-            'Ocp-Apim-Subscription-Key': self.subscription_key,
+            'Ocp-Apim-Subscription-Key': self.subscription_key
         }
 
         url = BASE_URL.format(location=self.location,
@@ -81,7 +102,7 @@ class MicrosoftAPITransformer(Transformer):
         return response
 
 
-class MicrosoftVisionAPITransformer(MicrosoftAPITransformer, EnvironmentKeyMixin):
+class MicrosoftVisionAPITransformer(MicrosoftAPITransformer):
 
     api_name = 'vision'
     _env_keys = 'MICROSOFT_VISION_SUBSCRIPTION_KEY'

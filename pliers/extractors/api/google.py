@@ -87,7 +87,7 @@ class GoogleVisionAPILabelExtractor(GoogleVisionAPIExtractor):
     response_object = 'labelAnnotations'
 
     def _to_df(self, result):
-        res = {label['description']: label['score'] for label in result._data}
+        res = {label['description']: label['score'] for label in result._data if label}
         return pd.DataFrame([res])
 
 

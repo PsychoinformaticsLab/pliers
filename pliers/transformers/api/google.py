@@ -1,8 +1,8 @@
 import base64
 import os
-from pliers.transformers import Transformer, BatchTransformerMixin
-from pliers.utils import (EnvironmentKeyMixin, attempt_to_import,
-                          verify_dependencies)
+from pliers.transformers import BatchTransformerMixin
+from pliers.transformers.api import APITransformer
+from pliers.utils import attempt_to_import, verify_dependencies
 
 
 googleapiclient = attempt_to_import('googleapiclient', fromlist=['discovery'])
@@ -13,7 +13,7 @@ oauth_client = attempt_to_import('oauth2client.client', 'oauth_client',
 DISCOVERY_URL = 'https://{api}.googleapis.com/$discovery/rest?version={apiVersion}'
 
 
-class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
+class GoogleAPITransformer(APITransformer):
     ''' Base GoogleAPITransformer class.
 
     Args:
@@ -25,10 +25,10 @@ class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
     '''
 
     _env_keys = 'GOOGLE_APPLICATION_CREDENTIALS'
-    _log_attributes = ('api_version',)
+    _log_attributes = ('discovery_file', 'api_version')
 
     def __init__(self, discovery_file=None, api_version='v1', max_results=100,
-                 num_retries=3):
+                 num_retries=3, rate_limit=None):
         verify_dependencies(['googleapiclient', 'oauth_client'])
         if discovery_file is None:
             if 'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ:
@@ -39,18 +39,30 @@ class GoogleAPITransformer(Transformer, EnvironmentKeyMixin):
                                  "environment variable.")
             discovery_file = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
 
-        self.credentials = oauth_client.GoogleCredentials.from_stream(
-            discovery_file)
+        self.discovery_file = discovery_file
+        try:
+            self.credentials = oauth_client.GoogleCredentials.from_stream(
+                discovery_file)
+            self.service = googleapiclient.discovery.build(
+                self.api_name, api_version, credentials=self.credentials,
+                discoveryServiceUrl=DISCOVERY_URL)
+        except:
+            self.credentials = None
+            self.service = None
         self.max_results = max_results
         self.num_retries = num_retries
         self.api_version = api_version
-        self.service = googleapiclient.discovery.build(
-            self.api_name, self.api_version, credentials=self.credentials,
-            discoveryServiceUrl=DISCOVERY_URL)
-        super(GoogleAPITransformer, self).__init__()
+        super(GoogleAPITransformer, self).__init__(rate_limit=rate_limit)
+
+    @property
+    def api_keys(self):
+        return [self.credentials]
+
+    def check_valid_keys(self):
+        return self.credentials is not None
 
 
-class GoogleVisionAPITransformer(BatchTransformerMixin, GoogleAPITransformer):
+class GoogleVisionAPITransformer(GoogleAPITransformer, BatchTransformerMixin):
 
     api_name = 'vision'
     _batch_size = 1

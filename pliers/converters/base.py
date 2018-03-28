@@ -12,9 +12,6 @@ class Converter(with_metaclass(ABCMeta, Transformer)):
 
     ''' Base class for Converters.'''
 
-    def __init__(self):
-        super(Converter, self).__init__()
-
     @abstractmethod
     def _convert(self, stim):
         pass

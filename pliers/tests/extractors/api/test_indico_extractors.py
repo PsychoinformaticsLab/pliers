@@ -1,11 +1,15 @@
 from os.path import join
 import os
 from ...utils import get_test_data_path
+from pliers import config
 from pliers.extractors import (IndicoAPITextExtractor,
                                IndicoAPIImageExtractor)
 from pliers.stimuli import (TextStim, ComplexTextStim, ImageStim)
 from pliers.extractors.base import merge_results
 import pytest
+import time
+
+IMAGE_DIR = join(get_test_data_path(), 'image')
 
 
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
@@ -13,6 +17,7 @@ def test_indico_api_text_extractor():
 
     ext = IndicoAPITextExtractor(api_key=os.environ['INDICO_APP_KEY'],
                                  models=['emotion', 'personality'])
+    assert ext.validate_keys()
 
     # With ComplexTextStim input
     srtfile = join(get_test_data_path(), 'text', 'wonderful.srt')
@@ -45,14 +50,15 @@ def test_indico_api_text_extractor():
     assert set(result.columns) == outdfKeysCheck
     assert len(result) == 1
 
+    ext = IndicoAPITextExtractor(api_key='nogood', models=['language'])
+    assert not ext.validate_keys()
+
 
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
 def test_indico_api_image_extractor():
     ext = IndicoAPIImageExtractor(api_key=os.environ['INDICO_APP_KEY'],
                                   models=['fer', 'content_filtering'])
-
-    image_dir = join(get_test_data_path(), 'image')
-    stim1 = ImageStim(join(image_dir, 'apple.jpg'))
+    stim1 = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     result1 = merge_results(ext.transform([stim1, stim1]),
                             extractor_names=False)
     outdfKeysCheck = {
@@ -75,7 +81,42 @@ def test_indico_api_image_extractor():
     assert set(result1.columns) - set(['stim_name']) == outdfKeysCheck | meta_columns
     assert result1['content_filtering'][0] < 0.2
 
-    stim2 = ImageStim(join(image_dir, 'obama.jpg'))
+    stim2 = ImageStim(join(IMAGE_DIR, 'obama.jpg'))
     result2 = ext.transform(stim2).to_df(timing=False, object_id=True)
     assert set(result2.columns) == outdfKeysCheck
     assert result2['fer_Happy'][0] > 0.7
+
+
+@pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
+def test_indico_api_extractor_large():
+    default = config.get_option('allow_large_jobs')
+    default_large = config.get_option('large_job')
+    config.set_option('allow_large_jobs', False)
+    config.set_option('large_job', 1)
+
+    ext = IndicoAPIImageExtractor(models=['fer'])
+
+    images = [ImageStim(join(IMAGE_DIR, 'apple.jpg'))] * 2
+    with pytest.raises(ValueError):
+        merge_results(ext.transform(images))
+
+    config.set_option('allow_large_jobs', True)
+
+    results = merge_results(ext.transform(images))
+    assert 'IndicoAPIImageExtractor#fer_Neutral' in results.columns
+    assert results.shape == (1, 15)  # not 2 rows cause all the same instance
+
+    config.set_option('allow_large_jobs', default)
+    config.set_option('large_job', default_large)
+
+
+@pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
+def test_indico_api_extractor_rate_limit():
+    stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
+    stim2 = ImageStim(join(IMAGE_DIR, 'obama.jpg'))
+    ext = IndicoAPIImageExtractor(models=['fer'], rate_limit=5)
+    ext._batch_size = 1
+    t1 = time.time()
+    ext.transform([stim, stim2])
+    t2 = time.time()
+    assert t2 - t1 >= 5

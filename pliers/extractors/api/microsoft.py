@@ -29,16 +29,21 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
     api_name = 'face'
     api_method = 'detect'
     _env_keys = 'MICROSOFT_FACE_SUBSCRIPTION_KEY'
-    _log_attributes = ('api_version', 'face_id', 'rectangle', 'landmarks',
-                       'attributes')
+    _log_attributes = ('subscription_key', 'location', 'api_version',
+                       'face_id', 'rectangle', 'landmarks', 'attributes')
 
     def __init__(self, face_id=False, rectangle=True, landmarks=False,
-                 attributes=None, **kwargs):
+                 attributes=None, subscription_key=None, location=None,
+                 api_version='v1.0', rate_limit=None):
         self.face_id = face_id
         self.rectangle = rectangle
         self.landmarks = landmarks
         self.attributes = attributes
-        super(MicrosoftAPIFaceExtractor, self).__init__(**kwargs)
+        super(MicrosoftAPIFaceExtractor,
+              self).__init__(subscription_key=subscription_key,
+                             location=location,
+                             api_version=api_version,
+                             rate_limit=rate_limit)
 
     def _extract(self, stim):
         if self.attributes:
@@ -93,12 +98,17 @@ class MicrosoftAPIFaceEmotionExtractor(MicrosoftAPIFaceExtractor):
     ''' Extracts facial emotions from images using the Microsoft API '''
 
     def __init__(self, face_id=False, rectangle=False, landmarks=False,
-                 **kwargs):
-        super(MicrosoftAPIFaceEmotionExtractor, self).__init__(face_id,
-                                                               rectangle,
-                                                               landmarks,
-                                                               ['emotion'],
-                                                               **kwargs)
+                 subscription_key=None, location=None, api_version='v1.0',
+                 rate_limit=None):
+        super(MicrosoftAPIFaceEmotionExtractor,
+              self).__init__(face_id,
+                             rectangle,
+                             landmarks,
+                             ['emotion'],
+                             subscription_key=subscription_key,
+                             location=location,
+                             api_version=api_version,
+                             rate_limit=rate_limit)
 
 
 class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
@@ -114,16 +124,19 @@ class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
     '''
 
     api_method = 'analyze'
-    _log_attributes = ('api_version', 'features')
+    _log_attributes = ('subscription_key', 'location', 'api_version',
+                       'features')
 
     def __init__(self, features=None, subscription_key=None, location=None,
-                 api_version='v1.0'):
+                 api_version='v1.0', rate_limit=None):
         self.features = features if features else ['Tags', 'Categories',
                                                    'ImageType', 'Color',
                                                    'Adult']
-        super(MicrosoftVisionAPIExtractor, self).__init__(subscription_key=None,
-                                                          location=None,
-                                                          api_version='v1.0')
+        super(MicrosoftVisionAPIExtractor,
+              self).__init__(subscription_key=subscription_key,
+                             location=location,
+                             api_version=api_version,
+                             rate_limit=rate_limit)
 
     def _extract(self, stim):
         params = {
@@ -151,52 +164,67 @@ class MicrosoftVisionAPITagExtractor(MicrosoftVisionAPIExtractor):
 
     ''' Extracts image tags using the Microsoft API '''
 
-    def __init__(self, subscription_key=None, location=None, api_version='v1.0'):
-        super(MicrosoftVisionAPITagExtractor, self).__init__(features=['Tags'],
-                                                             subscription_key=None,
-                                                             location=None,
-                                                             api_version='v1.0')
+    def __init__(self, subscription_key=None, location=None, api_version='v1.0',
+                 rate_limit=None):
+        super(MicrosoftVisionAPITagExtractor,
+              self).__init__(features=['Tags'],
+                             subscription_key=subscription_key,
+                             location=location,
+                             api_version=api_version,
+                             rate_limit=rate_limit)
 
 
 class MicrosoftVisionAPICategoryExtractor(MicrosoftVisionAPIExtractor):
 
     ''' Extracts image categories using the Microsoft API '''
 
-    def __init__(self, subscription_key=None, location=None, api_version='v1.0'):
-        super(MicrosoftVisionAPICategoryExtractor, self).__init__(features=['Categories'],
-                                                                  subscription_key=None,
-                                                                  location=None,
-                                                                  api_version='v1.0')
+    def __init__(self, subscription_key=None, location=None, api_version='v1.0',
+                 rate_limit=None):
+        super(MicrosoftVisionAPICategoryExtractor,
+              self).__init__(features=['Categories'],
+                             subscription_key=subscription_key,
+                             location=location,
+                             api_version=api_version,
+                             rate_limit=rate_limit)
 
 
 class MicrosoftVisionAPIImageTypeExtractor(MicrosoftVisionAPIExtractor):
 
     ''' Extracts image types (clipart, etc.) using the Microsoft API '''
 
-    def __init__(self, subscription_key=None, location=None, api_version='v1.0'):
-        super(MicrosoftVisionAPIImageTypeExtractor, self).__init__(features=['ImageType'],
-                                                                   subscription_key=None,
-                                                                   location=None,
-                                                                   api_version='v1.0')
+    def __init__(self, subscription_key=None, location=None, api_version='v1.0',
+                 rate_limit=None):
+        super(MicrosoftVisionAPIImageTypeExtractor,
+              self).__init__(features=['ImageType'],
+                             subscription_key=subscription_key,
+                             location=location,
+                             api_version=api_version,
+                             rate_limit=rate_limit)
 
 
 class MicrosoftVisionAPIColorExtractor(MicrosoftVisionAPIExtractor):
 
     ''' Extracts image color attributes using the Microsoft API '''
 
-    def __init__(self, subscription_key=None, location=None, api_version='v1.0'):
-        super(MicrosoftVisionAPIColorExtractor, self).__init__(features=['Color'],
-                                                               subscription_key=None,
-                                                               location=None,
-                                                               api_version='v1.0')
+    def __init__(self, subscription_key=None, location=None, api_version='v1.0',
+                 rate_limit=None):
+        super(MicrosoftVisionAPIColorExtractor,
+              self).__init__(features=['Color'],
+                             subscription_key=subscription_key,
+                             location=location,
+                             api_version=api_version,
+                             rate_limit=rate_limit)
 
 
 class MicrosoftVisionAPIAdultExtractor(MicrosoftVisionAPIExtractor):
 
     ''' Extracts the presence of adult content using the Microsoft API '''
 
-    def __init__(self, subscription_key=None, location=None, api_version='v1.0'):
-        super(MicrosoftVisionAPIAdultExtractor, self).__init__(features=['Adult'],
-                                                               subscription_key=None,
-                                                               location=None,
-                                                               api_version='v1.0')
+    def __init__(self, subscription_key=None, location=None, api_version='v1.0',
+                 rate_limit=None):
+        super(MicrosoftVisionAPIAdultExtractor,
+              self).__init__(features=['Adult'],
+                             subscription_key=subscription_key,
+                             location=location,
+                             api_version=api_version,
+                             rate_limit=rate_limit)

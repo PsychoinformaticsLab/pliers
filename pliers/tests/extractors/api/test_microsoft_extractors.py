@@ -1,3 +1,4 @@
+from pliers import config
 from pliers.extractors import (MicrosoftAPIFaceExtractor,
                                MicrosoftAPIFaceEmotionExtractor,
                                MicrosoftVisionAPIExtractor,
@@ -6,14 +7,17 @@ from pliers.extractors import (MicrosoftAPIFaceExtractor,
                                MicrosoftVisionAPIImageTypeExtractor,
                                MicrosoftVisionAPIColorExtractor,
                                MicrosoftVisionAPIAdultExtractor)
-from pliers.stimuli import ImageStim
+from pliers.extractors import merge_results
+from pliers.stimuli import ImageStim, VideoStim
 import pytest
 from os.path import join
 from ...utils import get_test_data_path
 
 IMAGE_DIR = join(get_test_data_path(), 'image')
+VIDEO_DIR = join(get_test_data_path(), 'video')
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_FACE_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_api_face_extractor():
     ext = MicrosoftAPIFaceExtractor()
@@ -39,6 +43,7 @@ def test_microsoft_api_face_extractor():
     assert res['face_gender'][0] == 'female'
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_FACE_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_api_face_emotion_extractor():
     ext = MicrosoftAPIFaceEmotionExtractor()
@@ -48,7 +53,16 @@ def test_microsoft_api_face_emotion_extractor():
     assert res['face_emotion_happiness'][0] > 0.5
     assert res['face_emotion_anger'][0] < 0.5
 
+    ext = MicrosoftAPIFaceEmotionExtractor(subscription_key='nogood')
+    assert not ext.validate_keys()
+    default = config.get_option('api_key_validation')
+    config.set_option('api_key_validation', True)
+    with pytest.raises(ValueError):
+        ext.transform(img)
+    config.set_option('api_key_validation', default)
 
+
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_vision_api_extractor():
     ext = MicrosoftVisionAPIExtractor()
@@ -69,6 +83,7 @@ def test_microsoft_vision_api_extractor():
     assert 'isAdultContent' not in res.columns
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_vision_api_tag_extractor():
     ext = MicrosoftVisionAPITagExtractor()
@@ -79,6 +94,7 @@ def test_microsoft_vision_api_tag_extractor():
     assert res['apple'][0] > 0.7
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_vision_api_category_extractor():
     ext = MicrosoftVisionAPICategoryExtractor()
@@ -89,6 +105,7 @@ def test_microsoft_vision_api_category_extractor():
     assert res['people_portrait'][0] > 0.5
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_vision_api_type_extractor():
     ext = MicrosoftVisionAPIImageTypeExtractor()
@@ -98,6 +115,7 @@ def test_microsoft_vision_api_type_extractor():
     assert res['clipArtType'][0] == 0
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_vision_api_color_extractor():
     ext = MicrosoftVisionAPIColorExtractor()
@@ -109,9 +127,11 @@ def test_microsoft_vision_api_color_extractor():
     assert not res['isBwImg'][0]
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
 def test_microsoft_vision_api_adult_extractor():
     ext = MicrosoftVisionAPIAdultExtractor()
+    assert ext.validate_keys()
     img = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     res = ext.transform(img).to_df(timing=False, object_id=False)
     assert res.shape == (1, 4)
@@ -121,3 +141,24 @@ def test_microsoft_vision_api_adult_extractor():
     res = ext.transform(img).to_df(timing=False, object_id=False)
     assert res['adultScore'][0] > 0.1
     assert res['racyScore'][0] > 0.1
+
+    ext = MicrosoftVisionAPIAdultExtractor(subscription_key='nogood')
+    assert not ext.validate_keys()
+
+
+@pytest.mark.requires_payment
+@pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")
+def test_microsoft_vision_api_extractor_large():
+    default = config.get_option('allow_large_jobs')
+    default_large = config.get_option('large_job')
+    config.set_option('allow_large_jobs', False)
+    config.set_option('large_job', 3)
+
+    ext = MicrosoftVisionAPITagExtractor()
+
+    video = VideoStim(join(VIDEO_DIR, 'small.mp4'))
+    with pytest.raises(ValueError):
+        merge_results(ext.transform(video))
+
+    config.set_option('allow_large_jobs', default)
+    config.set_option('large_job', default_large)
