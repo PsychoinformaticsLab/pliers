@@ -90,20 +90,24 @@ def test_indico_api_image_extractor():
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
 def test_indico_api_extractor_large():
     default = config.get_option('allow_large_jobs')
+    default_large = config.get_option('large_job')
     config.set_option('allow_large_jobs', False)
+    config.set_option('large_job', 1)
 
-    ext = IndicoAPIImageExtractor(models=['fer', 'content_filtering'])
+    ext = IndicoAPIImageExtractor(models=['fer'])
 
-    images = [ImageStim(join(IMAGE_DIR, 'apple.jpg'))] * 101
+    images = [ImageStim(join(IMAGE_DIR, 'apple.jpg'))] * 2
     with pytest.raises(ValueError):
         merge_results(ext.transform(images))
 
     config.set_option('allow_large_jobs', True)
+
     results = merge_results(ext.transform(images))
     assert 'IndicoAPIImageExtractor#fer_Neutral' in results.columns
-    assert results.shape == (1, 16)  # not 101 cause all the same instance
+    assert results.shape == (1, 15)  # not 2 rows cause all the same instance
 
     config.set_option('allow_large_jobs', default)
+    config.set_option('large_job', default_large)
 
 
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")

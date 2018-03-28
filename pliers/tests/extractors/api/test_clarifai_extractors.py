@@ -51,20 +51,19 @@ def test_clarifai_api_extractor_batch():
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
 def test_clarifai_api_extractor_large():
     default = config.get_option('allow_large_jobs')
+    default_large = config.get_option('large_job')
     config.set_option('allow_large_jobs', False)
+    config.set_option('large_job', 1)
 
     ext = ClarifaiAPIExtractor()
-    video = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
-    with pytest.raises(ValueError):
-        merge_results(ext.transform(video))
-
-    images = [ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))] * 101
+    images = [ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))] * 2
     with pytest.raises(ValueError):
         merge_results(ext.transform(images))
 
     config.set_option('allow_large_jobs', True)
     results = merge_results(ext.transform(images))
     assert 'ClarifaiAPIExtractor#apple' in results.columns
-    assert results.shape == (1, 29)  # not 101 cause all the same instance
+    assert results.shape == (1, 29)  # not 2 cause all the same instance
 
     config.set_option('allow_large_jobs', default)
+    config.set_option('large_job', default_large)
