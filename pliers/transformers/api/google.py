@@ -22,6 +22,8 @@ class GoogleAPITransformer(APITransformer):
       api_version (str): API version to use.
       max_results (int): Max number of results per page.
       num_retries (int): Number of times to retry query on failure.
+      rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
     '''
 
     _env_keys = 'GOOGLE_APPLICATION_CREDENTIALS'

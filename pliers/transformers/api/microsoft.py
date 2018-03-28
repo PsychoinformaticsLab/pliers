@@ -19,6 +19,8 @@ class MicrosoftAPITransformer(APITransformer):
             Microsoft when you first created the key.
             Examples include: westus, westcentralus, eastus
         api_version (str): API version to use.
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
     '''
 
     _log_attributes = ('subscription_key', 'location', 'api_version')

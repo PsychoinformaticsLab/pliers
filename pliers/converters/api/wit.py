@@ -20,6 +20,8 @@ class SpeechRecognitionAPIConverter(APITransformer, AudioToTextConverter):
     Args:
         api_key (str): API key. Must be passed explicitly or stored in
             the environment variable specified in the _env_keys field.
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
     '''
 
     _log_attributes = ('api_key', 'recognize_method')

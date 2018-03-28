@@ -22,6 +22,8 @@ class IndicoAPIExtractor(APITransformer, BatchTransformerMixin, Extractor):
         api_key (str): A valid API key for the Indico API. Only needs to be
             passed the first time the extractor is initialized.
         models (list): The names of the Indico models to use.
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
     '''
 
     _log_attributes = ('api_key', 'models', 'model_names')

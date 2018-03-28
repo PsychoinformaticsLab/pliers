@@ -30,6 +30,8 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
             be separated by (i.e. the unit each TextStim in the ComplexTextStim
             elements should be). Currently, only 'words' or 'phrases' are
             supported.
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
     '''
 
     _env_keys = ('IBM_USERNAME', 'IBM_PASSWORD')

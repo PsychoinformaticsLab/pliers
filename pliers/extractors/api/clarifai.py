@@ -12,7 +12,6 @@ from pliers.extractors.base import ExtractorResult
 from pliers.transformers import BatchTransformerMixin
 from pliers.transformers.api import APITransformer
 from pliers.utils import listify, attempt_to_import, verify_dependencies
-from six.moves.urllib.parse import urlparse
 import pandas as pd
 
 clarifai_client = attempt_to_import('clarifai.rest.client', 'clarifai_client',
@@ -39,6 +38,8 @@ class ClarifaiAPIExtractor(APITransformer, BatchTransformerMixin,
             number of label predictions returned.
         select_concepts (list): List of concepts (strings) to query from the
             API. For example, ['food', 'animal'].
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
     '''
 
     _log_attributes = ('api_key', 'model', 'model_name', 'min_value',

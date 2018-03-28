@@ -8,7 +8,21 @@ from pliers.transformers import MicrosoftVisionAPITransformer
 class MicrosoftAPITextConverter(MicrosoftVisionAPITransformer,
                                 ImageToTextConverter):
 
-    ''' Detects text within images using the Microsoft Vision API. '''
+    ''' Detects text within images using the Microsoft Vision API.
+
+    Args:
+        language (str): Target language to detect in the image.
+        subscription_key (str): A valid subscription key for Microsoft Cognitive
+            Services. Only needs to be passed the first time the extractor is
+            initialized.
+        location (str): Region the subscription key has been registered in.
+            It will be the first part of the endpoint URL suggested by
+            Microsoft when you first created the key.
+            Examples include: westus, westcentralus, eastus
+        api_version (str): API version to use.
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
+    '''
 
     api_method = 'ocr'
     _log_attributes = ('subscription_key', 'api_version', 'language')
