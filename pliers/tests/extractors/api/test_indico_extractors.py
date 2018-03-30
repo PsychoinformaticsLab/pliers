@@ -96,7 +96,8 @@ def test_indico_api_extractor_large():
 
     ext = IndicoAPIImageExtractor(models=['fer'])
 
-    images = [ImageStim(join(IMAGE_DIR, 'apple.jpg'))] * 2
+    images = [ImageStim(join(IMAGE_DIR, 'apple.jpg')),
+              ImageStim(join(IMAGE_DIR, 'obama.jpg'))]
     with pytest.raises(ValueError):
         merge_results(ext.transform(images))
 
@@ -104,7 +105,7 @@ def test_indico_api_extractor_large():
 
     results = merge_results(ext.transform(images))
     assert 'IndicoAPIImageExtractor#fer_Neutral' in results.columns
-    assert results.shape == (1, 15)  # not 2 rows cause all the same instance
+    assert results.shape == (2, 15)
 
     config.set_option('allow_large_jobs', default)
     config.set_option('large_job', default_large)
@@ -114,8 +115,7 @@ def test_indico_api_extractor_large():
 def test_indico_api_extractor_rate_limit():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     stim2 = ImageStim(join(IMAGE_DIR, 'obama.jpg'))
-    ext = IndicoAPIImageExtractor(models=['fer'], rate_limit=5)
-    ext._batch_size = 1
+    ext = IndicoAPIImageExtractor(models=['image_features'], rate_limit=5, batch_size=1)
     t1 = time.time()
     ext.transform([stim, stim2])
     t2 = time.time()

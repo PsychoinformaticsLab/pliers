@@ -30,7 +30,8 @@ class IndicoAPIExtractor(APITransformer, BatchTransformerMixin, Extractor):
     _env_keys = 'INDICO_APP_KEY'
     VERSION = '1.0'
 
-    def __init__(self, api_key=None, models=None, rate_limit=None):
+    def __init__(self, api_key=None, models=None, rate_limit=None,
+                 batch_size=None):
         verify_dependencies(['indicoio'])
         if api_key is None:
             try:
@@ -54,7 +55,8 @@ class IndicoAPIExtractor(APITransformer, BatchTransformerMixin, Extractor):
         self.model_names = models
         self.models = [getattr(indicoio, model) for model in models]
         self.names = models
-        super(IndicoAPIExtractor, self).__init__(rate_limit=rate_limit)
+        super(IndicoAPIExtractor, self).__init__(rate_limit=rate_limit,
+                                                 batch_size=batch_size)
 
     @property
     def api_keys(self):
@@ -100,12 +102,14 @@ class IndicoAPITextExtractor(TextExtractor, IndicoAPIExtractor):
     sentiment extraction.
     '''
 
-    def __init__(self, api_key=None, models=None, rate_limit=None):
+    def __init__(self, api_key=None, models=None, rate_limit=None,
+                 batch_size=None):
         verify_dependencies(['indicoio'])
         self.allowed_models = indicoio.TEXT_APIS.keys()
         super(IndicoAPITextExtractor, self).__init__(api_key=api_key,
                                                      models=models,
-                                                     rate_limit=rate_limit)
+                                                     rate_limit=rate_limit,
+                                                     batch_size=batch_size)
 
 
 class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
@@ -114,9 +118,11 @@ class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
     facial emotion recognition or content filtering.
     '''
 
-    def __init__(self, api_key=None, models=None, rate_limit=None):
+    def __init__(self, api_key=None, models=None, rate_limit=None,
+                 batch_size=None):
         verify_dependencies(['indicoio'])
         self.allowed_models = indicoio.IMAGE_APIS.keys()
         super(IndicoAPIImageExtractor, self).__init__(api_key=api_key,
                                                       models=models,
-                                                      rate_limit=rate_limit)
+                                                      rate_limit=rate_limit,
+                                                      batch_size=batch_size)

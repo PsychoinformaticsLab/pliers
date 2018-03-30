@@ -28,7 +28,7 @@ class GoogleAPITransformer(APITransformer):
     _log_attributes = ('discovery_file', 'api_version')
 
     def __init__(self, discovery_file=None, api_version='v1', max_results=100,
-                 num_retries=3, rate_limit=None):
+                 num_retries=3, rate_limit=None, **kwargs):
         verify_dependencies(['googleapiclient', 'oauth_client'])
         if discovery_file is None:
             if 'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ:
@@ -52,7 +52,8 @@ class GoogleAPITransformer(APITransformer):
         self.max_results = max_results
         self.num_retries = num_retries
         self.api_version = api_version
-        super(GoogleAPITransformer, self).__init__(rate_limit=rate_limit)
+        super(GoogleAPITransformer, self).__init__(rate_limit=rate_limit,
+                                                   **kwargs)
 
     @property
     def api_keys(self):
@@ -66,6 +67,15 @@ class GoogleVisionAPITransformer(GoogleAPITransformer, BatchTransformerMixin):
 
     api_name = 'vision'
     _batch_size = 1
+
+    def __init__(self, discovery_file=None, api_version='v1', max_results=100,
+                 num_retries=3, rate_limit=None, batch_size=None):
+        super(GoogleVisionAPITransformer, self).__init__(discovery_file=discovery_file,
+                                                         api_version=api_version,
+                                                         max_results=max_results,
+                                                         num_retries=num_retries,
+                                                         rate_limit=rate_limit,
+                                                         batch_size=batch_size)
 
     def _query_api(self, request):
         request_obj = self.service.images() \

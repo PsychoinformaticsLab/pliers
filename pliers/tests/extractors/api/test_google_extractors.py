@@ -15,6 +15,8 @@ from os.path import join
 from ...utils import get_test_data_path
 import numpy as np
 
+IMAGE_DIR = join(get_test_data_path(), 'image')
+
 
 @pytest.mark.requires_payment
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
@@ -84,7 +86,7 @@ def test_google_vision_face_batch():
     stim_files = [join(get_test_data_path(), 'image', '%s.jpg' % s)
                   for s in stims]
     stims = [ImageStim(s) for s in stim_files]
-    ext = GoogleVisionAPIFaceExtractor()
+    ext = GoogleVisionAPIFaceExtractor(batch_size=5)
     result = ext.transform(stims)
     result = merge_results(result, format='wide', extractor_names=False,
                            handle_annotations='first')
@@ -161,18 +163,22 @@ def test_google_vision_api_web_entities():
 def test_google_vision_api_extractor_large():
     default = config.get_option('allow_large_jobs')
     default_large = config.get_option('large_job')
+    default_cache = config.get_option('cache_transformers')
     config.set_option('allow_large_jobs', False)
     config.set_option('large_job', 1)
+    config.set_option('cache_transformers', False)
 
     ext = GoogleVisionAPILabelExtractor()
-    images = [ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))] * 2
+    images = [ImageStim(join(IMAGE_DIR, 'apple.jpg')),
+              ImageStim(join(IMAGE_DIR, 'obama.jpg'))]
     with pytest.raises(ValueError):
         merge_results(ext.transform(images))
 
     config.set_option('allow_large_jobs', True)
     results = merge_results(ext.transform(images))
     assert 'GoogleVisionAPILabelExtractor#apple' in results.columns
-    assert results.shape == (1, 16)  # not 2 cause all the same instance
+    assert results.shape == (2, 36)
 
     config.set_option('allow_large_jobs', default)
     config.set_option('large_job', default_large)
+    config.set_option('cache_transformers', default_cache)
