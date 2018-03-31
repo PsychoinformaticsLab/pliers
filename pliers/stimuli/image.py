@@ -38,7 +38,7 @@ class ImageStim(Stim):
             filename = url
         self.data = data
         super(ImageStim, self).__init__(filename, onset=onset,
-                                        duration=duration)
+                                        duration=duration, url=url)
 
     def save(self, path):
         imsave(path, self.data)

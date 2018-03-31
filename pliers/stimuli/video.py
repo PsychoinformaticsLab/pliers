@@ -75,7 +75,8 @@ class VideoFrameCollectionStim(Stim):
         self.n_frames = len(self.frame_index)
         super(VideoFrameCollectionStim, self).__init__(filename,
                                                        onset=onset,
-                                                       duration=duration)
+                                                       duration=duration,
+                                                       url=url)
 
     def _load_clip(self):
         audio_fps = AudioStim.get_sampling_rate(self.filename)

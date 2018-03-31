@@ -93,6 +93,11 @@ def test_microsoft_vision_api_tag_extractor():
     assert 'apple' in res.columns
     assert res['apple'][0] > 0.7
 
+    url = 'https://tuition.utexas.edu/sites/all/themes/tuition/logo.png'
+    stim = ImageStim(url=url)
+    result = ext.transform(stim).to_df()
+    assert result['plate'][0] > 0.1  # doesn't give great labels
+
 
 @pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")

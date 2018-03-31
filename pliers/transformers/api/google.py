@@ -22,6 +22,8 @@ class GoogleAPITransformer(APITransformer):
       api_version (str): API version to use.
       max_results (int): Max number of results per page.
       num_retries (int): Number of times to retry query on failure.
+      rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
     '''
 
     _env_keys = 'GOOGLE_APPLICATION_CREDENTIALS'
@@ -65,6 +67,19 @@ class GoogleAPITransformer(APITransformer):
 
 class GoogleVisionAPITransformer(GoogleAPITransformer, BatchTransformerMixin):
 
+    ''' Base class for transformers using the Google Vision API.
+
+    Args:
+        discovery_file (str): path to discovery file containing Google
+            application credentials.
+        api_version (str): API version to use.
+        max_results (int): Max number of results per page.
+        num_retries (int): Number of times to retry query on failure.
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
+        batch_size (int): Number of stims to send per batched API request.
+    '''
+
     api_name = 'vision'
     _batch_size = 1
 
@@ -85,14 +100,20 @@ class GoogleVisionAPITransformer(GoogleAPITransformer, BatchTransformerMixin):
     def _build_request(self, stims):
         request = []
         for image in stims:
-            with image.get_filename() as filename:
-                with open(filename, 'rb') as f:
-                    img_data = f.read()
+            image_desc = {}
+            if image.url:
+                image_desc['source'] = {
+                    'imageUri': image.url
+                }
+            else:
+                with image.get_filename() as filename:
+                    with open(filename, 'rb') as f:
+                        img_data = f.read()
+                image_desc['content'] = base64.b64encode(img_data).decode()
 
-            content = base64.b64encode(img_data).decode()
             request.append(
                 {
-                    'image': {'content': content},
+                    'image': image_desc,
                     'features': [{
                         'type': self.request_type,
                         'maxResults': self.max_results,

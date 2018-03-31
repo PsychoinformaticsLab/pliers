@@ -19,6 +19,8 @@ class MicrosoftAPITransformer(APITransformer):
             Microsoft when you first created the key.
             Examples include: westus, westcentralus, eastus
         api_version (str): API version to use.
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
     '''
 
     _log_attributes = ('subscription_key', 'location', 'api_version')
@@ -56,7 +58,11 @@ class MicrosoftAPITransformer(APITransformer):
 
     def check_valid_keys(self):
         try:
-            self._send_request('', {})
+            headers = {
+                'Content-Type': 'application/octet-stream',
+                'Ocp-Apim-Subscription-Key': self.subscription_key
+            }
+            self._send_request('', headers=headers, params={})
             return True
         except Exception as e:
             if 'too small' in str(e):
@@ -69,18 +75,24 @@ class MicrosoftAPITransformer(APITransformer):
                 raise e
 
     def _query_api(self, stim, params):
-        with stim.get_filename() as filename:
-            with open(filename, 'rb') as fp:
-                data = fp.read()
-
-        return self._send_request(data, params)
-
-    def _send_request(self, data, params):
         headers = {
-            'Content-Type': 'application/octet-stream',
             'Ocp-Apim-Subscription-Key': self.subscription_key
         }
+        if stim.url:
+            headers['Content-Type'] = 'application/json'
+            data = None
+            json = {'url': stim.url}
+        else:
+            headers['Content-Type'] = 'application/octet-stream'
+            with stim.get_filename() as filename:
+                with open(filename, 'rb') as fp:
+                    data = fp.read()
+            json = None
 
+        return self._send_request(data=data, json=json, headers=headers,
+                                  params=params)
+
+    def _send_request(self, data=None, json=None, headers=None, params=None):
         url = BASE_URL.format(location=self.location,
                               api=self.api_name,
                               version=self.api_version,
@@ -89,7 +101,8 @@ class MicrosoftAPITransformer(APITransformer):
         response = requests.post(url=url,
                                  headers=headers,
                                  params=params,
-                                 data=data)
+                                 data=data,
+                                 json=json)
         response = response.json()
         if 'error' in response:
             raise Exception(response['error']['message'])
