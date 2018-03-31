@@ -272,15 +272,16 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
     _log_attributes = ('vectorizer',)
     _batch_size = sys.maxsize
 
-    def __init__(self, vectorizer=None, *args, **kwargs):
+    def __init__(self, vectorizer=None, *vectorizer_args, **vectorizer_kwargs):
         verify_dependencies(['sklearn_text'])
         if isinstance(vectorizer, sklearn_text.VectorizerMixin):
             self.vectorizer = vectorizer
         elif isinstance(vectorizer, str):
             vec = getattr(sklearn_text, vectorizer)
-            self.vectorizer = vec(*args, **kwargs)
+            self.vectorizer = vec(*vectorizer_args, **vectorizer_kwargs)
         else:
-            self.vectorizer = sklearn_text.CountVectorizer(*args, **kwargs)
+            self.vectorizer = sklearn_text.CountVectorizer(*vectorizer_args,
+                                                           **vectorizer_kwargs)
         super(TextVectorizerExtractor, self).__init__()
 
     def _extract(self, stims):
