@@ -22,6 +22,8 @@ class IndicoAPIExtractor(APITransformer, BatchTransformerMixin, Extractor):
         api_key (str): A valid API key for the Indico API. Only needs to be
             passed the first time the extractor is initialized.
         models (list): The names of the Indico models to use.
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
     '''
 
     _log_attributes = ('api_key', 'models', 'model_names')
@@ -73,8 +75,11 @@ class IndicoAPIExtractor(APITransformer, BatchTransformerMixin, Extractor):
                 # If valid key, a data error (None passed) is expected here
                 return True
 
+    def _get_tokens(self, stims):
+        return [stim.data for stim in stims if stim.data is not None]
+
     def _extract(self, stims):
-        tokens = [stim.data for stim in stims if stim.data is not None]
+        tokens = self._get_tokens(stims)
         scores = [model(tokens) for model in self.models]
 
         results = []
@@ -120,3 +125,12 @@ class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
         super(IndicoAPIImageExtractor, self).__init__(api_key=api_key,
                                                       models=models,
                                                       rate_limit=rate_limit)
+
+    def _get_tokens(self, stims):
+        toks = []
+        for s in stims:
+            if s.url:
+                toks.append(s.url)
+            elif s.data is not None:
+                toks.append(s.data)
+        return toks

@@ -35,7 +35,8 @@ class TextStim(Stim):
             text = urlopen(url).read()
         self.text = text
         name = 'text[%s]' % text[:40]  # Truncate at 40 chars
-        super(TextStim, self).__init__(filename, onset, duration, order, name)
+        super(TextStim, self).__init__(filename, onset, duration, order,
+                                       name=name, url=url)
 
     @property
     def data(self):
