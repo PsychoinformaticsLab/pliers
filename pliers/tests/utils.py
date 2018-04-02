@@ -4,7 +4,7 @@ from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.transformers import BatchTransformerMixin
 import numpy as np
 from copy import deepcopy
-
+import pandas as pd
 
 def get_test_data_path():
     """Returns the path to test datasets """
@@ -50,3 +50,11 @@ class DummyBatchExtractor(BatchTransformerMixin, Extractor):
         for s in stims:
             results.append(ExtractorResult([[len(s.name)]], s, self))
         return results
+
+class ClashingFeatureExtractor(DummyExtractor):
+
+    def _to_df(self, result, **kwargs):
+        names = ['feature_{}'.format(i+1) for i in range(result._data.shape[1] - 1)]
+        names += ['order'] # Clashing feature name
+
+        return pd.DataFrame(result._data, columns=names)

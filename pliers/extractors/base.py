@@ -124,6 +124,11 @@ class ExtractorResult(object):
         durations = np.nan if self.duration is None else self.duration
         orders = np.nan if self.order is None else self.order
 
+        # If any features clash with protected keys, append underscore
+        protected = ['onset', 'order', 'duration', 'extractor', 'stim_name', \
+                     'class', 'filename', 'history', 'source_file']
+        df = df.rename(columns={k: k + '_' for k in protected})
+
         index_cols = []
 
         # Generally we leave it to Extractors to properly track the number of
