@@ -1,5 +1,5 @@
 from os.path import join
-from ..utils import get_test_data_path, DummyExtractor
+from ..utils import get_test_data_path, DummyExtractor, ClashingFeatureExtractor
 from pliers.extractors import (LengthExtractor,
                                BrightnessExtractor,
                                SharpnessExtractor,
@@ -37,6 +37,17 @@ def test_implicit_stim_iteration():
     assert len(results) == 2
     assert isinstance(results[0], ExtractorResult)
 
+def test_clashing_key_rename():
+    image_dir = join(get_test_data_path(), 'image')
+    stim1 = ImageStim(join(image_dir, 'apple.jpg'))
+
+    cf = ClashingFeatureExtractor()
+    results = cf.transform(stim1)
+    df = results.to_df()
+    expected_keys = ['order', 'duration', 'onset', 'object_id',
+                     'feature_1', 'feature_2', 'order_']
+    for k in expected_keys:
+        assert k in df.columns
 
 def test_implicit_stim_conversion():
     image_dir = join(get_test_data_path(), 'image')
