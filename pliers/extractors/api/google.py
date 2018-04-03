@@ -1,7 +1,10 @@
 ''' Google API-based feature extraction classes. '''
 
+import base64
 from pliers.extractors.image import ImageExtractor
-from pliers.transformers import GoogleVisionAPITransformer
+from pliers.extractors.video import VideoExtractor
+from pliers.transformers import (GoogleVisionAPITransformer,
+                                 GoogleAPITransformer)
 from pliers.extractors.base import ExtractorResult
 import numpy as np
 import pandas as pd
@@ -132,3 +135,50 @@ class GoogleVisionAPIWebEntitiesExtractor(GoogleVisionAPIExtractor):
                 if 'description' in entity and 'score' in entity:
                     data_dict[entity['description']] = entity['score']
         return pd.DataFrame([data_dict])
+
+
+class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
+
+    api_name = 'videointelligence'
+
+    def _query_api(self, request):
+        request_obj = self.service.videos() \
+            .annotate(body=request)
+        return request_obj.execute(num_retries=self.num_retries)
+
+    def _query_operations(self, name):
+        request_obj = self.service.operations().get(name=name)
+        return request_obj.execute(num_retries=self.num_retries)
+
+    def _build_request(self, stim):
+        with stim.get_filename() as filename:
+            with open(filename, 'rb') as f:
+                vid_data = f.read()
+
+        content = base64.b64encode(vid_data).decode()
+        request = {
+            'inputContent': content,
+            'features': ['LABEL_DETECTION']
+        }
+
+        return request
+
+    def _extract(self, stim):
+        op_request = self._build_request(stim)
+        operation = self._query_api(op_request)
+
+        response = self._query_operations(operation['name'])
+        while 'done' not in response:
+            response = self._query_operations(operation['name'])
+
+        return ExtractorResult(response, stim, self)
+
+    def _to_df(self, result):
+        response = result._data
+        print(response.keys())
+        print(response['response'].keys())
+        for annotation in response['response']['annotationResults']:
+            print(annotation)
+            print(annotation.keys())  # 'segmentLabelAnnotations', 'shotLabelAnnotations'
+
+        return response
