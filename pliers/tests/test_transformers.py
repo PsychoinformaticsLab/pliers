@@ -65,6 +65,9 @@ def test_parallelization():
 
 
 def test_batch_transformer():
+    cache_default = config.get_option('cache_transformers')
+    config.set_option('cache_transformers', False)
+
     img1 = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
     img2 = ImageStim(join(get_test_data_path(), 'image', 'button.jpg'))
     img3 = ImageStim(join(get_test_data_path(), 'image', 'obama.jpg'))
@@ -76,6 +79,30 @@ def test_batch_transformer():
     res2 = merge_results(ext.transform([img1, img2, img3]))
     assert ext.num_calls == 3
     assert res.equals(res2)
+
+    config.set_option('cache_transformers', cache_default)
+
+
+def test_batch_transformer_caching():
+    cache_default = config.get_option('cache_transformers')
+    config.set_option('cache_transformers', True)
+
+    img1 = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
+    ext = DummyBatchExtractor(name='penguin')
+    res = ext.transform(img1).to_df(timing=False, object_id=False)
+    assert ext.num_calls == 1
+    assert res.shape == (1, 1)
+
+    img2 = ImageStim(join(get_test_data_path(), 'image', 'button.jpg'))
+    img3 = ImageStim(join(get_test_data_path(), 'image', 'obama.jpg'))
+    res2 = ext.transform([img1, img2, img2, img3, img3, img1, img2])
+    assert ext.num_calls == 3
+    assert len(res2) == 7
+    assert res2[0] == res2[5] and res2[1] == res2[2] and res2[3] == res2[4]
+    res2 = merge_results(res2)
+    assert res2.shape == (3, 10)
+
+    config.set_option('cache_transformers', cache_default)
 
 
 def test_validation_levels(caplog):

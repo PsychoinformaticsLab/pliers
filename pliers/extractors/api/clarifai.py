@@ -40,6 +40,7 @@ class ClarifaiAPIExtractor(APITransformer, BatchTransformerMixin,
             API. For example, ['food', 'animal'].
         rate_limit (int): The minimum number of seconds required between
             transform calls on this Transformer.
+        batch_size (int): Number of stims to send per batched API request.
     '''
 
     _log_attributes = ('api_key', 'model', 'model_name', 'min_value',
@@ -49,7 +50,8 @@ class ClarifaiAPIExtractor(APITransformer, BatchTransformerMixin,
     VERSION = '1.0'
 
     def __init__(self, api_key=None, model='general-v1.3', min_value=None,
-                 max_concepts=None, select_concepts=None, rate_limit=None):
+                 max_concepts=None, select_concepts=None, rate_limit=None,
+                 batch_size=None):
         verify_dependencies(['clarifai_client'])
         if api_key is None:
             try:
@@ -74,7 +76,8 @@ class ClarifaiAPIExtractor(APITransformer, BatchTransformerMixin,
             select_concepts = listify(select_concepts)
             self.select_concepts = [clarifai_client.Concept(concept_name=n)
                                     for n in select_concepts]
-        super(ClarifaiAPIExtractor, self).__init__(rate_limit=rate_limit)
+        super(ClarifaiAPIExtractor, self).__init__(rate_limit=rate_limit,
+                                                   batch_size=batch_size)
 
     @property
     def api_keys(self):
