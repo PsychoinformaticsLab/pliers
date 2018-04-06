@@ -8,6 +8,8 @@ from pliers.transformers import (GoogleVisionAPITransformer,
 from pliers.extractors.base import ExtractorResult
 import numpy as np
 import pandas as pd
+import logging
+import time
 
 
 class GoogleVisionAPIExtractor(GoogleVisionAPITransformer, ImageExtractor):
@@ -139,11 +141,44 @@ class GoogleVisionAPIWebEntitiesExtractor(GoogleVisionAPIExtractor):
 
 class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
 
+    ''' Extracts object features from videos using the Google Vision Video
+    Intelligence API.
+
+    Args:
+        features (list): List of features to extract
+        config (dict): JSON
+        timeout (int): Number of seconds to wait for video intelligence
+            operation to finish. Defaults to 90 seconds.
+        discovery_file (str): path to discovery file containing Google
+            application credentials.
+        api_version (str): API version to use.
+        max_results (int): Max number of results per page.
+        num_retries (int): Number of times to retry query on failure.
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
+    '''
+
     api_name = 'videointelligence'
+    _log_attributes = ('discovery_file', 'api_version', 'features', 'config')
+
+    def __init__(self, features=['LABEL_DETECTION', 'SHOT_CHANGE_DETECTION',
+                                 'EXPLICIT_CONTENT_DETECTION'],
+                 segments=None, config=None, timeout=90, discovery_file=None,
+                 api_version='v1', max_results=100, num_retries=3,
+                 rate_limit=None):
+        self.features = features
+        self.segments = segments
+        self.config = config
+        self.timeout = timeout
+        super(GoogleVideoIntelligenceAPIExtractor,
+              self).__init__(discovery_file=discovery_file,
+                             api_version=api_version,
+                             max_results=max_results,
+                             num_retries=num_retries,
+                             rate_limit=rate_limit)
 
     def _query_api(self, request):
-        request_obj = self.service.videos() \
-            .annotate(body=request)
+        request_obj = self.service.videos().annotate(body=request)
         return request_obj.execute(num_retries=self.num_retries)
 
     def _query_operations(self, name):
@@ -155,10 +190,14 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
             with open(filename, 'rb') as f:
                 vid_data = f.read()
 
-        content = base64.b64encode(vid_data).decode()
+        context = self.config if self.config else {}
+        if self.segments:
+            context['segments'] = self.segments
+
         request = {
-            'inputContent': content,
-            'features': ['LABEL_DETECTION']
+            'inputContent': base64.b64encode(vid_data).decode(),
+            'features': self.features,
+            'videoContext': context
         }
 
         return request
@@ -167,9 +206,18 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
         op_request = self._build_request(stim)
         operation = self._query_api(op_request)
 
+        operation_start = time.time()
         response = self._query_operations(operation['name'])
-        while 'done' not in response:
+        while 'done' not in response and \
+              (time.time() - operation_start) < self.timeout:
             response = self._query_operations(operation['name'])
+            time.sleep(1)
+
+        if (time.time() - operation_start) >= self.timeout:
+            msg = "The extraction reached the timeout limit of %f, which means "\
+                  "the API may not have finished analyzing the video and the "\
+                  "results may be empty or incomplete." % self.timeout
+            logging.warning(msg)
 
         return ExtractorResult(response, stim, self)
 
@@ -180,5 +228,67 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
         for annotation in response['response']['annotationResults']:
             print(annotation)
             print(annotation.keys())  # 'segmentLabelAnnotations', 'shotLabelAnnotations'
+            # ['segmentLabelAnnotations', 'shotLabelAnnotations', 'shotAnnotations', 'explicitAnnotation']
 
         return response
+
+
+class GoogleVideoAPILabelDetectionExtractor(GoogleVideoIntelligenceAPIExtractor):
+
+    ''' Extracts image labels using the Google Video Intelligence API '''
+
+    def __init__(self, mode='SHOT_MODE', stationary_camera=False, segments=None,
+                 timeout=90, discovery_file=None, api_version='v1',
+                 max_results=100, num_retries=3, rate_limit=None):
+        config = {
+            'labelDetectionConfig': {
+                'labelDetectionMode': mode
+                'stationaryCamera': stationary_camera
+            }
+        }
+        super(GoogleVideoAPILabelDetectionExtractor,
+              self).__init__(features=['LABEL_DETECTION'],
+                             config=config,
+                             timeout=timeout,
+                             discovery_file=discovery_file,
+                             api_version=api_version,
+                             max_results=max_results,
+                             num_retries=num_retries,
+                             rate_limit=rate_limit)
+
+
+class GoogleVideoAPIShotDetectionExtractor(GoogleVideoIntelligenceAPIExtractor):
+
+    ''' Extracts shot changes using the Google Video Intelligence API '''
+
+    def __init__(self, segments=None, config=None, timeout=90,
+                 discovery_file=None, api_version='v1', max_results=100,
+                 num_retries=3, rate_limit=None):
+        super(GoogleVideoAPIShotDetectionExtractor,
+              self).__init__(features=['SHOT_CHANGE_DETECTION'],
+                             timeout=timeout,
+                             discovery_file=discovery_file,
+                             api_version=api_version,
+                             max_results=max_results,
+                             num_retries=num_retries,
+                             rate_limit=rate_limit)
+
+
+class GoogleVideoAPIExplicitDetectionExtractor(GoogleVideoIntelligenceAPIExtractor):
+
+    ''' Extracts explicit content using the Google Video Intelligence API '''
+
+    def __init__(self, segments=None, config=None, timeout=90,
+                 discovery_file=None, api_version='v1', max_results=100,
+                 num_retries=3, rate_limit=None):
+        super(GoogleVideoAPIExplicitDetectionExtractor,
+              self).__init__(features=['EXPLICIT_CONTENT_DETECTION'],
+                             segments=segments,
+                             config=config,
+                             timeout=timeout,
+                             discovery_file=discovery_file,
+                             api_version=api_version,
+                             max_results=max_results,
+                             num_retries=num_retries,
+                             rate_limit=rate_limit)
+
