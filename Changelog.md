@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.3 (April 7, 2018)
+This is a minor release that adds several new features and bug fixes:
+* A number improvements to API transformers (custom marker for unit tests; key validation; large job limits; etc.; see #270)
+* Enhance API transformers to work from remote URLs if available, without requiring local file download (#282)
+* Protected timing variable names to prevent collisions in `to_df` calls (#281)
+* Add caching to transformers that inherit from `BatchTransformerMixin` (#283)
+* Fixes to update utility (#273)
+* Updated docstrings (#282)
+
 ## 0.2.2 (March 1, 2018)
 This is a minor release that adds several new features and bug fixes:
 * Support for several Microsoft Vision services, including the Face API and Vision API (#259)
