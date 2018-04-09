@@ -48,7 +48,7 @@ class Transformer(with_metaclass(ABCMeta)):
         @wraps(transform)
         def wrapper(self, stim, *args, **kwargs):
             use_cache = config.get_option('cache_transformers') \
-                and isinstance(stim, Stim)
+                and isinstance(stim, (Stim, string_types))
             if use_cache:
                 key = hash((hash(self), hash(stim)))
                 if key in _cache:
