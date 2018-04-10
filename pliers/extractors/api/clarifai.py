@@ -105,7 +105,7 @@ class ClarifaiAPIExtractor(APITransformer):
 class ClarifaiAPIImageExtractor(ClarifaiAPIExtractor, BatchTransformerMixin,
                                 ImageExtractor):
 
-    _batch_size = 128
+    _batch_size = 32
 
     def _extract(self, stims):
         verify_dependencies(['clarifai_client'])
