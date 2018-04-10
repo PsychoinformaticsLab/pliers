@@ -3,10 +3,9 @@ from ...utils import get_test_data_path
 from pliers import config
 from pliers.extractors import ClarifaiAPIExtractor
 from pliers.extractors.base import merge_results
-from pliers.stimuli import ImageStim, VideoStim
+from pliers.stimuli import ImageStim
 import numpy as np
 import pytest
-import time
 
 IMAGE_DIR = join(get_test_data_path(), 'image')
 
@@ -33,6 +32,12 @@ def test_clarifai_api_extractor():
     assert result.shape == (1, 6)
     assert 'cat' in result.columns and 'dog' in result.columns
 
+    url = 'https://tuition.utexas.edu/sites/all/themes/tuition/logo.png'
+    stim = ImageStim(url=url)
+    result = ClarifaiAPIExtractor(max_concepts=5).transform(stim).to_df()
+    assert result.shape == (1, 9)
+    assert result['symbol'][0] > 0.8
+
     ext = ClarifaiAPIExtractor(api_key='nogood')
     assert not ext.validate_keys()
 
@@ -56,14 +61,15 @@ def test_clarifai_api_extractor_large():
     config.set_option('large_job', 1)
 
     ext = ClarifaiAPIExtractor()
-    images = [ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))] * 2
+    images = [ImageStim(join(IMAGE_DIR, 'apple.jpg')),
+              ImageStim(join(IMAGE_DIR, 'obama.jpg'))]
     with pytest.raises(ValueError):
         merge_results(ext.transform(images))
 
     config.set_option('allow_large_jobs', True)
     results = merge_results(ext.transform(images))
     assert 'ClarifaiAPIExtractor#apple' in results.columns
-    assert results.shape == (1, 29)  # not 2 cause all the same instance
+    assert results.shape == (2, 49)
 
     config.set_option('allow_large_jobs', default)
     config.set_option('large_job', default_large)

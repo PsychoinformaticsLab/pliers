@@ -15,15 +15,25 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
     image using the Microsoft Azure Cognitive Services API.
 
     Args:
-        face_id (bool): return faceIds of the detected faces or not. The
+        face_id (bool): Return faceIds of the detected faces or not. The
             default value is False.
-        landmarks (str): return face landmarks of the detected faces or
+        landmarks (str): Return face landmarks of the detected faces or
             not. The default value is False.
-        attributes (list): one or more specified face attributes as strings.
+        attributes (list): One or more specified face attributes as strings.
             Supported face attributes include accessories, age, blur, emotion,
             exposure, facialHair, gender, glasses, hair, headPose, makeup,
             noise, occlusion, and smile. Note that each attribute has
             additional computational and time cost.
+        subscription_key (str): A valid subscription key for Microsoft Cognitive
+            Services. Only needs to be passed the first time the extractor is
+            initialized.
+        location (str): Region the subscription key has been registered in.
+            It will be the first part of the endpoint URL suggested by
+            Microsoft when you first created the key.
+            Examples include: westus, westcentralus, eastus
+        api_version (str): API version to use.
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
     '''
 
     api_name = 'face'
@@ -116,11 +126,21 @@ class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
     ''' Base MicrosoftVisionAPIExtractor class.
 
     Args:
-        features (list): one or more specified vision features as strings.
+        features (list): One or more specified vision features as strings.
             Supported vision features include Tags, Categories, ImageType,
             Color, and Adult. Note that each attribute has additional
             computational and time cost. By default extracts all visual
             features from an image.
+        subscription_key (str): A valid subscription key for Microsoft Cognitive
+            Services. Only needs to be passed the first time the extractor is
+            initialized.
+        location (str): Region the subscription key has been registered in.
+            It will be the first part of the endpoint URL suggested by
+            Microsoft when you first created the key.
+            Examples include: westus, westcentralus, eastus
+        api_version (str): API version to use.
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
     '''
 
     api_method = 'analyze'
@@ -149,14 +169,15 @@ class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
         data_dict = {}
         for feat in self.features:
             feat = feat[0].lower() + feat[1:]
-            if feat == 'tags':
-                for tag in result._data[feat]:
-                    data_dict[tag['name']] = tag['confidence']
-            elif feat == 'categories':
-                for cat in result._data[feat]:
-                    data_dict[cat['name']] = cat['score']
-            else:
-                data_dict.update(result._data[feat])
+            if feat in result._data:
+                if feat == 'tags':
+                    for tag in result._data[feat]:
+                        data_dict[tag['name']] = tag['confidence']
+                elif feat == 'categories':
+                    for cat in result._data[feat]:
+                        data_dict[cat['name']] = cat['score']
+                else:
+                    data_dict.update(result._data[feat])
         return pd.DataFrame([data_dict.values()], columns=data_dict.keys())
 
 

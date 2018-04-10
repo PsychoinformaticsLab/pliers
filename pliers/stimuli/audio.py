@@ -54,7 +54,7 @@ class AudioStim(Stim):
             self.data = self.data.mean(axis=1)
 
         super(AudioStim, self).__init__(
-            filename, onset=onset, duration=duration, order=order)
+            filename, onset=onset, duration=duration, order=order, url=url)
 
     @staticmethod
     def get_sampling_rate(filename):

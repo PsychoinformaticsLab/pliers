@@ -33,13 +33,14 @@ class Stim(with_metaclass(ABCMeta)):
     '''
 
     def __init__(self, filename=None, onset=None, duration=None, order=None,
-                 name=None):
+                 name=None, url=None):
 
         self.filename = filename
         self.onset = onset
         self.duration = duration
         self.order = order
         self._history = None
+        self.url = url
 
         if name is None:
             name = '' if self.filename is None else basename(self.filename)

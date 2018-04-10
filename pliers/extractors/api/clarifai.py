@@ -39,6 +39,9 @@ class ClarifaiAPIExtractor(APITransformer):
             number of label predictions returned.
         select_concepts (list): List of concepts (strings) to query from the
             API. For example, ['food', 'animal'].
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
+        batch_size (int): Number of stims to send per batched API request.
     '''
 
     _log_attributes = ('api_key', 'model', 'model_name', 'min_value',
@@ -47,7 +50,8 @@ class ClarifaiAPIExtractor(APITransformer):
     VERSION = '1.0'
 
     def __init__(self, api_key=None, model='general-v1.3', min_value=None,
-                 max_concepts=None, select_concepts=None, rate_limit=None):
+                 max_concepts=None, select_concepts=None, rate_limit=None,
+                 batch_size=None):
         verify_dependencies(['clarifai_client'])
         if api_key is None:
             try:
@@ -72,7 +76,8 @@ class ClarifaiAPIExtractor(APITransformer):
             select_concepts = listify(select_concepts)
             self.select_concepts = [clarifai_client.Concept(concept_name=n)
                                     for n in select_concepts]
-        super(ClarifaiAPIExtractor, self).__init__(rate_limit=rate_limit)
+        super(ClarifaiAPIExtractor, self).__init__(rate_limit=rate_limit,
+                                                   batch_size=batch_size)
 
     @property
     def api_keys(self):
@@ -86,8 +91,7 @@ class ClarifaiAPIExtractor(APITransformer):
         moc = clarifai_client.ModelOutputConfig(min_value=self.min_value,
                                                 max_concepts=self.max_concepts,
                                                 select_concepts=self.select_concepts)
-        output_config = moc
-        model_output_info = clarifai_client.ModelOutputInfo(output_config=output_config)
+        model_output_info = clarifai_client.ModelOutputInfo(output_config=moc)
         tags = self.model.predict(objects, model_output_info=model_output_info)
         return tags['outputs']
 
@@ -108,8 +112,13 @@ class ClarifaiAPIImageExtractor(ClarifaiAPIExtractor, BatchTransformerMixin,
 
         # ExitStack lets us use filename context managers simultaneously
         with ExitStack() as stack:
-            files = [stack.enter_context(s.get_filename()) for s in stims]
-            imgs = [clarifai_client.Image(filename=filename) for filename in files]
+            imgs = []
+            for s in stims:
+                if s.url:
+                    imgs.append(clarifai_client.Image(url=s.url))
+                else:
+                    f = stack.enter_context(s.get_filename())
+                    imgs.append(clarifai_client.Image(filename=f))
             outputs = self._query_api(imgs)
 
         extractions = []

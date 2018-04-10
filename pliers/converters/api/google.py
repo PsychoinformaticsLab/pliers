@@ -22,6 +22,13 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
         speech_contexts (list): A list of a list of favored phrases or words
             to assist the API. The inner list is a sequence of word tokens,
             each outer element is a potential context.
+        discovery_file (str): path to discovery file containing Google
+            application credentials.
+        api_version (str): API version to use.
+        max_results (int): Max number of results per page.
+        num_retries (int): Number of times to retry query on failure.
+        rate_limit (int): The minimum number of seconds required between
+                transform calls on this Transformer.
     '''
 
     api_name = 'speech'
@@ -55,14 +62,13 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
             data = f.read()
         os.remove(tmp)
 
-        content = base64.b64encode(data).decode()
         if self.speech_contexts:
             speech_contexts = [{'phrases': c} for c in self.speech_contexts]
         else:
             speech_contexts = []
         request = {
             'audio': {
-                'content': content
+                'content': base64.b64encode(data).decode()
             },
             'config': {
                 'encoding': 'FLAC',

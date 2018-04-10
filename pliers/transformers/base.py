@@ -235,11 +235,38 @@ class BatchTransformerMixin(Transformer):
         batches = batch_iterable(stims, self._batch_size)
         results = []
         for batch in progress_bar_wrapper(batches):
-            res = self._transform(batch, *args, **kwargs)
+            use_cache = config.get_option('cache_transformers')
+            target_inds = {}
+            non_cached = []
+            for stim in batch:
+                key = hash((hash(self), hash(stim)))
+                # If using the cache, only transform stims that aren't in the
+                # cache and haven't already appeared in the batch
+                if not (use_cache and (key in _cache or key in target_inds)):
+                    target_inds[key] = len(non_cached)
+                    non_cached.append(stim)
+
+            # _transform will likely fail if given an empty list
+            if len(non_cached) > 0:
+                batch_results = self._transform(non_cached, *args, **kwargs)
+            else:
+                batch_results = []
+
             for i, stim in enumerate(batch):
-                res[i] = _log_transformation(stim, res[i], self)
-                self._propagate_context(stim, res[i])
-            results.extend(res)
+                key = hash((hash(self), hash(stim)))
+                # Use the target index to get the result from batch_results
+                if key in target_inds:
+                    result = batch_results[target_inds[key]]
+                    result = _log_transformation(stim, result, self)
+                    self._propagate_context(stim, result)
+                    if use_cache:
+                        if isgenerator(result):
+                            result = list(result)
+                        _cache[key] = result
+                    results.append(result)
+                # Otherwise, the result should be in the cache
+                else:
+                    results.append(_cache[key])
         return results
 
     def _transform(self, stim, *args, **kwargs):
