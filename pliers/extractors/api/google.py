@@ -247,19 +247,18 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
 
     def _to_df(self, result):
         response = result._data['response']
-        print(response)
         data_dicts = []
         for r in response.get('annotationResults', []):
             for key, res in r.items():
                 if 'Label' in key:
                     for annot in res:
-                        features = [annot['entity']['description']]
+                        feats = [annot['entity']['description']]
                         for category in annot.get('categoryEntities', []):
-                            features.append('category_%s' % category['description'])
+                            feats.append('category_' + category['description'])
                         if key == 'frameLabelAnnotations':
-                            data_dicts.extend(self._parse_frame_annotation(features, annot, 'confidence'))
+                            data_dicts.extend(self._parse_frame_annotation(feats, annot, 'confidence'))
                         else:
-                            data_dicts.extend(self._parse_label_annotation(features, annot))
+                            data_dicts.extend(self._parse_label_annotation(feats, annot))
                 elif key == 'shotAnnotations':
                     for shot in res:
                         onset, duration = self._get_onset_duration(shot)
@@ -269,7 +268,8 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
                             'shot': 1.0
                         })
                 elif key == 'explicitAnnotation':
-                    data_dicts.extend(self._parse_frame_annotation(['pornographyLikelihood'], res, 'pornographyLikelihood'))
+                    feature = 'pornographyLikelihood'
+                    data_dicts.extend(self._parse_frame_annotation([feature], res, feature))
 
         return pd.DataFrame(data_dicts)
 
