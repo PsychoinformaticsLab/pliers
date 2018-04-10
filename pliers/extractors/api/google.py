@@ -221,16 +221,57 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
 
         return ExtractorResult(response, stim, self)
 
-    def _to_df(self, result):
-        response = result._data
-        print(response.keys())
-        print(response['response'].keys())
-        for annotation in response['response']['annotationResults']:
-            print(annotation)
-            print(annotation.keys())  # 'segmentLabelAnnotations', 'shotLabelAnnotations'
-            # ['segmentLabelAnnotations', 'shotLabelAnnotations', 'shotAnnotations', 'explicitAnnotation']
+    def _enumerate_across_features(self, features, onset, duration, score):
+        return [{'onset': onset, 'duration': duration, f: score} for f in features]
 
-        return response
+    def _parse_frame_annotation(self, features, annotation, score_key):
+        data_dicts = []
+        for frame in annotation['frames']:
+            onset = float(frame['timeOffset'][:-1])
+            score = frame[score_key]
+            data_dicts.extend(self._enumerate_across_features(features, onset, 1.0, score))
+        return data_dicts
+
+    def _get_onset_duration(self, timing_json):
+        onset = float(timing_json['startTimeOffset'][:-1])
+        end = float(timing_json['endTimeOffset'][:-1])
+        return onset, (end - onset)
+
+    def _parse_label_annotation(self, features, label):
+        data_dicts = []
+        for segment in label['segments']:
+            onset, duration = self._get_onset_duration(segment['segment'])
+            score = segment['confidence']
+            data_dicts.extend(self._enumerate_across_features(features, onset, duration, score))
+        return data_dicts
+
+    def _to_df(self, result):
+        response = result._data['response']
+        print(response)
+        data_dicts = []
+        for r in response.get('annotationResults', []):
+            for key, res in r.items():
+                if 'Label' in key:
+                    for annot in res:
+                        features = [annot['entity']['description']]
+                        for category in annot.get('categoryEntities', []):
+                            features.append('category_%s' % category['description'])
+                        if key == 'frameLabelAnnotations':
+                            data_dicts.extend(self._parse_frame_annotation(features, annot, 'confidence'))
+                        else:
+                            data_dicts.extend(self._parse_label_annotation(features, annot))
+                elif key == 'shotAnnotations':
+                    for shot in res:
+                        onset, duration = self._get_onset_duration(shot)
+                        data_dicts.append({
+                            'onset': onset,
+                            'duration': duration,
+                            'shot': 1.0
+                        })
+                elif key == 'explicitAnnotation':
+                    data_dicts.extend(self._parse_frame_annotation(['pornographyLikelihood'], res, 'pornographyLikelihood'))
+
+        return pd.DataFrame(data_dicts)
 
 
 class GoogleVideoAPILabelDetectionExtractor(GoogleVideoIntelligenceAPIExtractor):
@@ -242,12 +283,13 @@ class GoogleVideoAPILabelDetectionExtractor(GoogleVideoIntelligenceAPIExtractor)
                  max_results=100, num_retries=3, rate_limit=None):
         config = {
             'labelDetectionConfig': {
-                'labelDetectionMode': mode
+                'labelDetectionMode': mode,
                 'stationaryCamera': stationary_camera
             }
         }
         super(GoogleVideoAPILabelDetectionExtractor,
               self).__init__(features=['LABEL_DETECTION'],
+                             segments=segments,
                              config=config,
                              timeout=timeout,
                              discovery_file=discovery_file,
@@ -266,6 +308,8 @@ class GoogleVideoAPIShotDetectionExtractor(GoogleVideoIntelligenceAPIExtractor):
                  num_retries=3, rate_limit=None):
         super(GoogleVideoAPIShotDetectionExtractor,
               self).__init__(features=['SHOT_CHANGE_DETECTION'],
+                             segments=segments,
+                             config=config,
                              timeout=timeout,
                              discovery_file=discovery_file,
                              api_version=api_version,
