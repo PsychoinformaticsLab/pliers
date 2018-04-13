@@ -26,7 +26,7 @@ clarifai_client = attempt_to_import('clarifai.rest.client', 'clarifai_client',
 
 class ClarifaiAPIExtractor(APITransformer):
 
-    ''' Uses the Clarifai API to extract tags of images.
+    ''' Uses the Clarifai API to extract tags of visual stimuli.
 
     Args:
         api_key (str): A valid API_KEY for the Clarifai API. Only needs to be
@@ -41,7 +41,6 @@ class ClarifaiAPIExtractor(APITransformer):
             API. For example, ['food', 'animal'].
         rate_limit (int): The minimum number of seconds required between
             transform calls on this Transformer.
-        batch_size (int): Number of stims to send per batched API request.
     '''
 
     _log_attributes = ('api_key', 'model', 'model_name', 'min_value',
@@ -76,8 +75,7 @@ class ClarifaiAPIExtractor(APITransformer):
             select_concepts = listify(select_concepts)
             self.select_concepts = [clarifai_client.Concept(concept_name=n)
                                     for n in select_concepts]
-        super(ClarifaiAPIExtractor, self).__init__(rate_limit=rate_limit,
-                                                   batch_size=batch_size)
+        super(ClarifaiAPIExtractor, self).__init__(rate_limit=rate_limit)
 
     @property
     def api_keys(self):
@@ -105,7 +103,37 @@ class ClarifaiAPIExtractor(APITransformer):
 class ClarifaiAPIImageExtractor(ClarifaiAPIExtractor, BatchTransformerMixin,
                                 ImageExtractor):
 
+    ''' Uses the Clarifai API to extract tags of images.
+
+    Args:
+        api_key (str): A valid API_KEY for the Clarifai API. Only needs to be
+            passed the first time the extractor is initialized.
+        model (str): The name of the Clarifai model to use. If None, defaults
+            to the general image tagger.
+        min_value (float): A value between 0.0 and 1.0 indicating the minimum
+            confidence required to return a prediction. Defaults to 0.0.
+        max_concepts (int): A value between 0 and 200 indicating the maximum
+            number of label predictions returned.
+        select_concepts (list): List of concepts (strings) to query from the
+            API. For example, ['food', 'animal'].
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
+        batch_size (int): Number of stims to send per batched API request.
+    '''
+
     _batch_size = 32
+
+    def __init__(self, api_key=None, model='general-v1.3', min_value=None,
+                 max_concepts=None, select_concepts=None, rate_limit=None,
+                 batch_size=None):
+        super(ClarifaiAPIImageExtractor,
+              self).__init__(api_key=api_key,
+                             model=model,
+                             min_value=min_value,
+                             max_concepts=max_concepts,
+                             select_concepts=select_concepts,
+                             rate_limit=rate_limit,
+                             batch_size=batch_size)
 
     def _extract(self, stims):
         verify_dependencies(['clarifai_client'])
@@ -140,17 +168,23 @@ class ClarifaiAPIVideoExtractor(ClarifaiAPIExtractor, VideoExtractor):
         return ExtractorResult(outputs, stim, self)
 
     def _to_df(self, result):
-        rows = []
-        for frame_res in result._data[0]['data']['frames']:
-            data_dict = self._parse_annotations(frame_res)
-            data_dict['onset_'] = frame_res['frame_info']['time'] / 1000.0
-            frame_num = frame_res['frame_info']['index']
-            if frame_num == 0:
-                est_duration = 0.0
+        onsets = []
+        durations = []
+        data = []
+        frames = result._data[0]['data']['frames']
+        for i, frame_res in enumerate(frames):
+            data.append(self._parse_annotations(frame_res))
+            onset = frame_res['frame_info']['time'] / 1000.0
+            if (i + 1) == len(frames):
+                end = result.stim.duration
+                print(end)
             else:
-                est_duration = data_dict['onset_'] / float(frame_num)
-            data_dict['duration_'] = min(est_duration,
-                                         result.stim.duration - data_dict['onset_'])
-            data_dict['order_'] = frame_num
-            rows.append(data_dict)
-        return pd.DataFrame(rows)
+                end = frames[i+1]['frame_info']['time'] / 1000.0
+            onsets.append(onset)
+            durations.append(end - onset)
+
+        result._onsets = onsets
+        result._durations = durations
+        df = pd.DataFrame(data)
+        result.features = list(df.columns)
+        return df

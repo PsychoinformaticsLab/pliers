@@ -1,11 +1,16 @@
-from .clarifai import ClarifaiAPIExtractor
+from .clarifai import (ClarifaiAPIImageExtractor,
+                       ClarifaiAPIVideoExtractor)
 from .indico import (IndicoAPITextExtractor,
                      IndicoAPIImageExtractor)
 from .google import (GoogleVisionAPIFaceExtractor,
                      GoogleVisionAPILabelExtractor,
                      GoogleVisionAPIPropertyExtractor,
                      GoogleVisionAPISafeSearchExtractor,
-                     GoogleVisionAPIWebEntitiesExtractor)
+                     GoogleVisionAPIWebEntitiesExtractor,
+                     GoogleVideoIntelligenceAPIExtractor,
+                     GoogleVideoAPILabelDetectionExtractor,
+                     GoogleVideoAPIShotDetectionExtractor,
+                     GoogleVideoAPIExplicitDetectionExtractor)
 from .microsoft import (MicrosoftAPIFaceExtractor,
                         MicrosoftAPIFaceEmotionExtractor,
                         MicrosoftVisionAPIExtractor,
@@ -16,7 +21,8 @@ from .microsoft import (MicrosoftAPIFaceExtractor,
                         MicrosoftVisionAPIAdultExtractor)
 
 __all__ = [
-    'ClarifaiAPIExtractor',
+    'ClarifaiAPIImageExtractor',
+    'ClarifaiAPIVideoExtractor',
     'IndicoAPITextExtractor',
     'IndicoAPIImageExtractor',
     'GoogleVisionAPIFaceExtractor',
@@ -24,6 +30,10 @@ __all__ = [
     'GoogleVisionAPIPropertyExtractor',
     'GoogleVisionAPISafeSearchExtractor',
     'GoogleVisionAPIWebEntitiesExtractor',
+    'GoogleVideoIntelligenceAPIExtractor',
+    'GoogleVideoAPILabelDetectionExtractor',
+    'GoogleVideoAPIShotDetectionExtractor',
+    'GoogleVideoAPIExplicitDetectionExtractor',
     'MicrosoftAPIFaceExtractor',
     'MicrosoftAPIFaceEmotionExtractor',
     'MicrosoftVisionAPIExtractor',

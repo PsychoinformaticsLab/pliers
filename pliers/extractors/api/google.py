@@ -243,7 +243,10 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
         for segment in label['segments']:
             onset, duration = self._get_onset_duration(segment['segment'])
             score = segment['confidence']
-            data.extend(self._enumerate_features(features, onset, duration, score))
+            data.extend(self._enumerate_features(features,
+                                                 onset,
+                                                 duration,
+                                                 score))
         return data
 
     def _parse_frame(self, features, annotation, score_key, max_duration):
@@ -257,7 +260,10 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
                 end = float(frames[i+1]['timeOffset'][:-1])
             duration = end - onset
             score = frame[score_key]
-            data.extend(self._enumerate_features(features, onset, duration, score))
+            data.extend(self._enumerate_features(features,
+                                                 onset,
+                                                 duration,
+                                                 score))
         return data
 
     def _to_df(self, result):
@@ -272,8 +278,12 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
                         for category in annot.get('categoryEntities', []):
                             feats.append('category_' + category['description'])
                         if key == 'frameLabelAnnotations':
-                            data.extend(self._parse_frame(feats, annot, 'confidence', duration))
+                            data.extend(self._parse_frame(feats,
+                                                          annot,
+                                                          'confidence',
+                                                          duration))
                         else:
+                            # Good for shot or segment labels
                             data.extend(self._parse_label(feats, annot))
                 elif key == 'shotAnnotations':
                     for shot in res:
@@ -285,7 +295,10 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
                         })
                 elif key == 'explicitAnnotation':
                     feature = 'pornographyLikelihood'
-                    data.extend(self._parse_frame([feature], res, feature, duration))
+                    data.extend(self._parse_frame([feature],
+                                                  res,
+                                                  feature,
+                                                  duration))
 
         df = pd.DataFrame(data)
         result._onsets = df['onset']
