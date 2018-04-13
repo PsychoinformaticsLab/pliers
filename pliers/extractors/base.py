@@ -157,6 +157,7 @@ class ExtractorResult(object):
 
         if format == 'long':
             df = df.melt(index_cols, var_name='feature')
+            df = df.dropna(subset=['value'])
 
         if extractor_name:
             name = self.extractor.name
