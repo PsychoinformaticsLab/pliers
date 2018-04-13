@@ -120,9 +120,13 @@ class ExtractorResult(object):
                             for i in range(data.shape[1])]
             df = pd.DataFrame(data, columns=features)
 
-        onsets = np.nan if self.onset is None else self.onset
-        durations = np.nan if self.duration is None else self.duration
-        orders = np.nan if self.order is None else self.order
+
+        onsets = getattr(self, '_onsets', self.onset)
+        onsets = np.nan if onsets is None else onsets
+        durations = getattr(self, '_durations', self.duration)
+        durations = np.nan if durations is None else durations
+        orders = getattr(self, '_orders', self.order)
+        orders = np.nan if orders is None else orders
 
         # If any features clash with protected keys, append underscore
         protected = ['onset', 'order', 'duration', 'extractor', 'stim_name', \
@@ -153,6 +157,7 @@ class ExtractorResult(object):
             df.insert(0, 'onset', onsets)
             df.insert(0, 'duration', durations)
             df.insert(0, 'order', orders)
+            df = df.sort_values('onset')
             index_cols.extend(['onset', 'order', 'duration'])
 
         if format == 'long':

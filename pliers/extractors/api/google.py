@@ -146,6 +146,7 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
 
     Args:
         features (list): List of features to extract
+        segments (list): JSON
         config (dict): JSON
         timeout (int): Number of seconds to wait for video intelligence
             operation to finish. Defaults to 90 seconds.
@@ -206,6 +207,10 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
         op_request = self._build_request(stim)
         operation = self._query_api(op_request)
 
+        msg = "Beginning video extraction with a timeout of %fs. Even for "\
+              "small videos, full extraction may take awhile." % self.timeout
+        logging.warning(msg)
+
         operation_start = time.time()
         response = self._query_operations(operation['name'])
         while 'done' not in response and \
@@ -214,7 +219,7 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
             time.sleep(1)
 
         if (time.time() - operation_start) >= self.timeout:
-            msg = "The extraction reached the timeout limit of %f, which means "\
+            msg = "The extraction reached the timeout limit of %fs, which means "\
                   "the API may not have finished analyzing the video and the "\
                   "results may be empty or incomplete." % self.timeout
             logging.warning(msg)
@@ -271,7 +276,10 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
                     feature = 'pornographyLikelihood'
                     data_dicts.extend(self._parse_frame_annotation([feature], res, feature))
 
-        return pd.DataFrame(data_dicts)
+        df = pd.DataFrame(data_dicts)
+        result._onsets = df['onset']
+        result._durations = df['duration']
+        return df.drop(['onset', 'duration'], axis=1)
 
 
 class GoogleVideoAPILabelDetectionExtractor(GoogleVideoIntelligenceAPIExtractor):
