@@ -219,40 +219,51 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
             time.sleep(1)
 
         if (time.time() - operation_start) >= self.timeout:
-            msg = "The extraction reached the timeout limit of %fs, which means "\
-                  "the API may not have finished analyzing the video and the "\
-                  "results may be empty or incomplete." % self.timeout
+            msg = "The extraction reached the timeout limit of %fs, which "\
+                  "means the API may not have finished analyzing the video "\
+                  "and the results may be empty or incomplete." % self.timeout
             logging.warning(msg)
 
         return ExtractorResult(response, stim, self)
 
-    def _enumerate_across_features(self, features, onset, duration, score):
-        return [{'onset': onset, 'duration': duration, f: score} for f in features]
-
-    def _parse_frame_annotation(self, features, annotation, score_key):
-        data_dicts = []
-        for frame in annotation['frames']:
-            onset = float(frame['timeOffset'][:-1])
-            score = frame[score_key]
-            data_dicts.extend(self._enumerate_across_features(features, onset, 1.0, score))
-        return data_dicts
+    def _enumerate_features(self, features, onset, duration, score):
+        return [{
+            'onset': onset,
+            'duration': duration,
+            f: score
+        } for f in features]
 
     def _get_onset_duration(self, timing_json):
         onset = float(timing_json['startTimeOffset'][:-1])
         end = float(timing_json['endTimeOffset'][:-1])
         return onset, (end - onset)
 
-    def _parse_label_annotation(self, features, label):
-        data_dicts = []
+    def _parse_label(self, features, label):
+        data = []
         for segment in label['segments']:
             onset, duration = self._get_onset_duration(segment['segment'])
             score = segment['confidence']
-            data_dicts.extend(self._enumerate_across_features(features, onset, duration, score))
-        return data_dicts
+            data.extend(self._enumerate_features(features, onset, duration, score))
+        return data
+
+    def _parse_frame(self, features, annotation, score_key, max_duration):
+        data = []
+        frames = annotation['frames']
+        for i, frame in enumerate(frames):
+            onset = float(frame['timeOffset'][:-1])
+            if (i + 1) == len(frames):
+                end = max_duration
+            else:
+                end = float(frames[i+1]['timeOffset'][:-1])
+            duration = end - onset
+            score = frame[score_key]
+            data.extend(self._enumerate_features(features, onset, duration, score))
+        return data
 
     def _to_df(self, result):
         response = result._data['response']
-        data_dicts = []
+        duration = result.stim.duration
+        data = []
         for r in response.get('annotationResults', []):
             for key, res in r.items():
                 if 'Label' in key:
@@ -261,25 +272,27 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
                         for category in annot.get('categoryEntities', []):
                             feats.append('category_' + category['description'])
                         if key == 'frameLabelAnnotations':
-                            data_dicts.extend(self._parse_frame_annotation(feats, annot, 'confidence'))
+                            data.extend(self._parse_frame(feats, annot, 'confidence', duration))
                         else:
-                            data_dicts.extend(self._parse_label_annotation(feats, annot))
+                            data.extend(self._parse_label(feats, annot))
                 elif key == 'shotAnnotations':
                     for shot in res:
                         onset, duration = self._get_onset_duration(shot)
-                        data_dicts.append({
+                        data.append({
                             'onset': onset,
                             'duration': duration,
                             'shot': 1.0
                         })
                 elif key == 'explicitAnnotation':
                     feature = 'pornographyLikelihood'
-                    data_dicts.extend(self._parse_frame_annotation([feature], res, feature))
+                    data.extend(self._parse_frame([feature], res, feature, duration))
 
-        df = pd.DataFrame(data_dicts)
+        df = pd.DataFrame(data)
         result._onsets = df['onset']
         result._durations = df['duration']
-        return df.drop(['onset', 'duration'], axis=1)
+        df = df.drop(['onset', 'duration'], axis=1)
+        result.features = list(df.columns)
+        return df
 
 
 class GoogleVideoAPILabelDetectionExtractor(GoogleVideoIntelligenceAPIExtractor):
