@@ -223,6 +223,11 @@ def test_google_video_api_extractor(caplog):
         assert result['park'][0] > 0.5
         assert result['shot'][0] == 1.0
 
+
+@pytest.mark.long_test
+@pytest.mark.requires_payment
+@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
+def test_google_video_api_extractor2(caplog):
     segments = [{'startTimeOffset': '0.1s', 'endTimeOffset': '0.2s'},
                 {'startTimeOffset': '0.3s', 'endTimeOffset': '0.4s'}]
     ext = GoogleVideoIntelligenceAPIExtractor(timeout=500, segments=segments,

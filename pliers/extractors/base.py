@@ -122,9 +122,9 @@ class ExtractorResult(object):
 
         if hasattr(self, '_onsets'):
             onsets = np.array(self._onsets)
-            onsets += self.onset if self.onset else 0.0
+            onsets += 0.0 if self.onset is None else self.onset
         else:
-            onsets = self.onset if self.onset else np.nan
+            onsets = np.nan if self.onset is None else self.onset
         durations = getattr(self, '_durations', self.duration)
         durations = np.nan if durations is None else durations
         orders = getattr(self, '_orders', self.order)
