@@ -120,9 +120,11 @@ class ExtractorResult(object):
                             for i in range(data.shape[1])]
             df = pd.DataFrame(data, columns=features)
 
-
-        onsets = getattr(self, '_onsets', self.onset)
-        onsets = np.nan if onsets is None else onsets
+        if hasattr(self, '_onsets'):
+            onsets = np.array(self._onsets)
+            onsets += self.onset if self.onset else 0.0
+        else:
+            onsets = self.onset if self.onset else np.nan
         durations = getattr(self, '_durations', self.duration)
         durations = np.nan if durations is None else durations
         orders = getattr(self, '_orders', self.order)

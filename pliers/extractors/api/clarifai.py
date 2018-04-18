@@ -177,7 +177,6 @@ class ClarifaiAPIVideoExtractor(ClarifaiAPIExtractor, VideoExtractor):
             onset = frame_res['frame_info']['time'] / 1000.0
             if (i + 1) == len(frames):
                 end = result.stim.duration
-                print(end)
             else:
                 end = frames[i+1]['frame_info']['time'] / 1000.0
             onsets.append(onset)

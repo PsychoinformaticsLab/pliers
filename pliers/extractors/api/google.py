@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import logging
 import time
+from collections import defaultdict
 
 
 class GoogleVisionAPIExtractor(GoogleVisionAPITransformer, ImageExtractor):
@@ -145,11 +146,24 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
     Intelligence API.
 
     Args:
-        features (list): List of features to extract
-        segments (list): JSON
-        config (dict): JSON
+        features (list): List of features to extract. LABEL_DETECTION extracts
+            tags present throughout the provided segments (full video if none
+            provided) as well as throughout the shots (depending on config).
+            SHOT_CHANGE_DETECTION extracts a shot feature with onsets and
+            durations corresponding to shot changes in the video.
+            EXPLICIT_CONTENT_DETECTION extracts any frame onsets of explicit
+            material.
+        segments (list): List of JSON objects or dictionaries. Each dictionary
+            should contain a startTimeOffset and an endTimeOffset field with
+            timestamps of the format XX.XXs marking the desired segments upon
+            which to extract features.
+        config (dict): JSON object representing the desired configuration for
+            extraction. See the Google Cloud Video Intelligence documentation
+            for more details.
         timeout (int): Number of seconds to wait for video intelligence
             operation to finish. Defaults to 90 seconds.
+        request_rate (int): Number of seconds to wait between polling the
+            extraction operation for completion.
         discovery_file (str): path to discovery file containing Google
             application credentials.
         api_version (str): API version to use.
@@ -160,17 +174,19 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
     '''
 
     api_name = 'videointelligence'
-    _log_attributes = ('discovery_file', 'api_version', 'features', 'config')
+    _log_attributes = ('discovery_file', 'api_version', 'features', 'segments',
+                       'config', 'timeout', 'request_rate')
 
     def __init__(self, features=['LABEL_DETECTION', 'SHOT_CHANGE_DETECTION',
                                  'EXPLICIT_CONTENT_DETECTION'],
-                 segments=None, config=None, timeout=90, discovery_file=None,
-                 api_version='v1', max_results=100, num_retries=3,
-                 rate_limit=None):
+                 segments=None, config=None, timeout=90, request_rate=5,
+                 discovery_file=None, api_version='v1', max_results=100,
+                 num_retries=3, rate_limit=None):
         self.features = features
         self.segments = segments
         self.config = config
         self.timeout = timeout
+        self.request_rate = request_rate
         super(GoogleVideoIntelligenceAPIExtractor,
               self).__init__(discovery_file=discovery_file,
                              api_version=api_version,
@@ -216,7 +232,7 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
         while 'done' not in response and \
               (time.time() - operation_start) < self.timeout:
             response = self._query_operations(operation['name'])
-            time.sleep(1)
+            time.sleep(self.request_rate)
 
         if (time.time() - operation_start) >= self.timeout:
             msg = "The extraction reached the timeout limit of %fs, which "\
@@ -226,50 +242,32 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
 
         return ExtractorResult(response, stim, self)
 
-    def _enumerate_features(self, features, onset, duration, score):
-        return [{
-            'onset': onset,
-            'duration': duration,
-            f: score
-        } for f in features]
-
     def _get_onset_duration(self, timing_json):
         onset = float(timing_json['startTimeOffset'][:-1])
         end = float(timing_json['endTimeOffset'][:-1])
         return onset, (end - onset)
 
-    def _parse_label(self, features, label):
-        data = []
-        for segment in label['segments']:
+    def _parse_label(self, data, features, label):
+        for segment in label.get('segments', []):
             onset, duration = self._get_onset_duration(segment['segment'])
             score = segment['confidence']
-            data.extend(self._enumerate_features(features,
-                                                 onset,
-                                                 duration,
-                                                 score))
-        return data
+            data[(onset, duration)].update({f: score for f in features})
 
-    def _parse_frame(self, features, annotation, score_key, max_duration):
-        data = []
-        frames = annotation['frames']
+    def _parse_frame(self, data, features, annotation, score_key, max_time):
+        frames = annotation.get('frames', [])
         for i, frame in enumerate(frames):
             onset = float(frame['timeOffset'][:-1])
             if (i + 1) == len(frames):
-                end = max_duration
+                end = max_time
             else:
                 end = float(frames[i+1]['timeOffset'][:-1])
             duration = end - onset
             score = frame[score_key]
-            data.extend(self._enumerate_features(features,
-                                                 onset,
-                                                 duration,
-                                                 score))
-        return data
+            data[(onset, duration)].update({f: score for f in features})
 
     def _to_df(self, result):
-        response = result._data['response']
-        duration = result.stim.duration
-        data = []
+        response = result._data.get('response', {})
+        data = defaultdict(dict)
         for r in response.get('annotationResults', []):
             for key, res in r.items():
                 if 'Label' in key:
@@ -278,32 +276,28 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
                         for category in annot.get('categoryEntities', []):
                             feats.append('category_' + category['description'])
                         if key == 'frameLabelAnnotations':
-                            data.extend(self._parse_frame(feats,
-                                                          annot,
-                                                          'confidence',
-                                                          duration))
+                            self._parse_frame(data, feats, annot, 'confidence',
+                                              result.stim.duration)
                         else:
                             # Good for shot or segment labels
-                            data.extend(self._parse_label(feats, annot))
+                            self._parse_label(data, feats, annot)
                 elif key == 'shotAnnotations':
                     for shot in res:
                         onset, duration = self._get_onset_duration(shot)
-                        data.append({
-                            'onset': onset,
-                            'duration': duration,
+                        data[(onset, duration)].update({
                             'shot': 1.0
                         })
                 elif key == 'explicitAnnotation':
                     feature = 'pornographyLikelihood'
-                    data.extend(self._parse_frame([feature],
-                                                  res,
-                                                  feature,
-                                                  duration))
+                    self._parse_frame(data, [feature], res, feature,
+                                      result.stim.duration)
 
-        df = pd.DataFrame(data)
-        result._onsets = df['onset']
-        result._durations = df['duration']
-        df = df.drop(['onset', 'duration'], axis=1)
+        df = pd.DataFrame(list(data.values()))
+        # If multiple confidences were parsed, uses the last one
+        if len(data) > 0:
+            onsets, durations = zip(*list(data.keys()))
+            result._onsets = onsets
+            result._durations = durations
         result.features = list(df.columns)
         return df
 
@@ -313,8 +307,9 @@ class GoogleVideoAPILabelDetectionExtractor(GoogleVideoIntelligenceAPIExtractor)
     ''' Extracts image labels using the Google Video Intelligence API '''
 
     def __init__(self, mode='SHOT_MODE', stationary_camera=False, segments=None,
-                 timeout=90, discovery_file=None, api_version='v1',
-                 max_results=100, num_retries=3, rate_limit=None):
+                 timeout=90, request_rate=5, discovery_file=None,
+                 api_version='v1', max_results=100, num_retries=3,
+                 rate_limit=None):
         config = {
             'labelDetectionConfig': {
                 'labelDetectionMode': mode,
@@ -326,6 +321,7 @@ class GoogleVideoAPILabelDetectionExtractor(GoogleVideoIntelligenceAPIExtractor)
                              segments=segments,
                              config=config,
                              timeout=timeout,
+                             request_rate=request_rate,
                              discovery_file=discovery_file,
                              api_version=api_version,
                              max_results=max_results,
@@ -337,7 +333,7 @@ class GoogleVideoAPIShotDetectionExtractor(GoogleVideoIntelligenceAPIExtractor):
 
     ''' Extracts shot changes using the Google Video Intelligence API '''
 
-    def __init__(self, segments=None, config=None, timeout=90,
+    def __init__(self, segments=None, config=None, timeout=90, request_rate=5,
                  discovery_file=None, api_version='v1', max_results=100,
                  num_retries=3, rate_limit=None):
         super(GoogleVideoAPIShotDetectionExtractor,
@@ -345,6 +341,7 @@ class GoogleVideoAPIShotDetectionExtractor(GoogleVideoIntelligenceAPIExtractor):
                              segments=segments,
                              config=config,
                              timeout=timeout,
+                             request_rate=request_rate,
                              discovery_file=discovery_file,
                              api_version=api_version,
                              max_results=max_results,
@@ -356,7 +353,7 @@ class GoogleVideoAPIExplicitDetectionExtractor(GoogleVideoIntelligenceAPIExtract
 
     ''' Extracts explicit content using the Google Video Intelligence API '''
 
-    def __init__(self, segments=None, config=None, timeout=90,
+    def __init__(self, segments=None, config=None, timeout=90, request_rate=5,
                  discovery_file=None, api_version='v1', max_results=100,
                  num_retries=3, rate_limit=None):
         super(GoogleVideoAPIExplicitDetectionExtractor,
@@ -364,6 +361,7 @@ class GoogleVideoAPIExplicitDetectionExtractor(GoogleVideoIntelligenceAPIExtract
                              segments=segments,
                              config=config,
                              timeout=timeout,
+                             request_rate=request_rate,
                              discovery_file=discovery_file,
                              api_version=api_version,
                              max_results=max_results,
