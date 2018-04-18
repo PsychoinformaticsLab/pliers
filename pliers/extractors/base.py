@@ -159,7 +159,7 @@ class ExtractorResult(object):
             df.insert(0, 'onset', onsets)
             df.insert(0, 'duration', durations)
             df.insert(0, 'order', orders)
-            df = df.sort_values('onset')
+            df = df.sort_values('onset').reset_index(drop=True)
             index_cols.extend(['onset', 'order', 'duration'])
 
         if format == 'long':

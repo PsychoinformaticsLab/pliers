@@ -232,6 +232,7 @@ def test_google_video_api_extractor2(caplog):
                 {'startTimeOffset': '0.3s', 'endTimeOffset': '0.4s'}]
     ext = GoogleVideoIntelligenceAPIExtractor(timeout=500, segments=segments,
                                     features=['EXPLICIT_CONTENT_DETECTION'])
+    stim = VideoStim(join(VIDEO_DIR, 'park.mp4'))
     result = ext.transform(stim).to_df()
     log_message = caplog.records[-1].message
     incomplete = (log_message == ("The extraction reached the timeout limit of"
@@ -327,7 +328,7 @@ def test_google_video_api_explicit_extractor(caplog):
                 " %fs, which means the API may not have finished analyzing the"
                 " video and the results may be empty or incomplete." % 90))
     if not incomplete:
-        assert result.shape[2] == 5
+        assert result.shape[1] == 5
         assert result['onset'][0] >= 4.2
         assert 'pornographyLikelihood' in result.columns
         assert 'UNLIKELY' in result['pornographyLikelihood'][0]
