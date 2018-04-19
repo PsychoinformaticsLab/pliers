@@ -228,8 +228,8 @@ def test_google_video_api_extractor(caplog):
 @pytest.mark.requires_payment
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_video_api_extractor2(caplog):
-    segments = [{'startTimeOffset': '0.1s', 'endTimeOffset': '0.2s'},
-                {'startTimeOffset': '0.3s', 'endTimeOffset': '0.4s'}]
+    segments = [{'startTimeOffset': '0.1s', 'endTimeOffset': '0.3s'},
+                {'startTimeOffset': '0.3s', 'endTimeOffset': '0.45s'}]
     ext = GoogleVideoIntelligenceAPIExtractor(timeout=500, segments=segments,
                                     features=['EXPLICIT_CONTENT_DETECTION'])
     stim = VideoStim(join(VIDEO_DIR, 'park.mp4'))
@@ -283,7 +283,7 @@ def test_google_video_api_label_extractor(caplog):
         assert np.isnan(result['cat'][1])
         assert result['cat'][2] > 0.5
         assert np.isnan(result['clock'][2])
-        assert result['clock'][1] > 0.5
+        assert result['clock'][1] > 0.5 or result['clock'][0] > 0.5
 
 
 @pytest.mark.requires_payment
