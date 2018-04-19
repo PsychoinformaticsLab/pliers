@@ -240,8 +240,8 @@ def test_google_video_api_extractor2(caplog):
                 " video and the results may be empty or incomplete." % 500))
     if not incomplete:
         assert result.shape == (2, 5)
-        assert result['onset'][0] == 0.1
-        assert result['onset'][1] == 0.3
+        assert result['onset'][0] > 0.1 and result['onset'][0] < 0.3
+        assert result['onset'][1] > 0.3 and result['onset'][1] < 0.45
         assert 'UNLIKELY' in result['pornographyLikelihood'][0]
 
 
