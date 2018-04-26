@@ -221,7 +221,7 @@ def test_google_video_api_extractor(caplog):
         assert result['duration'][0] > 0.5 and result['duration'][0] < 0.6
         assert result['category_plant'][0] > 0.5
         assert result['park'][0] > 0.5
-        assert result['shot'][0] == 1.0
+        assert result['shot_id'][0] == 0
 
 
 @pytest.mark.long_test
@@ -300,8 +300,8 @@ def test_google_video_api_shot_extractor(caplog):
         assert result.shape == (1, 5)
         assert result['onset'][0] == 0.0
         assert np.isclose(result['duration'][0], stim.duration, 0.1)
-        assert 'shot' in result.columns
-        assert result['shot'][0] == 1.0
+        assert 'shot_id' in result.columns
+        assert result['shot_id'][0] == 0
 
     ext = GoogleVideoAPIShotDetectionExtractor()
     stim = VideoStim(join(VIDEO_DIR, 'shot_change.mp4'))
@@ -313,8 +313,8 @@ def test_google_video_api_shot_extractor(caplog):
     if not incomplete:
         assert result.shape == (2, 5)
         assert np.isclose(result['onset'][1], 3.2, 0.1)
-        assert 'shot' in result.columns
-        assert result['shot'][1] == 1.0
+        assert 'shot_id' in result.columns
+        assert result['shot_id'][1] == 1
 
 
 @pytest.mark.requires_payment

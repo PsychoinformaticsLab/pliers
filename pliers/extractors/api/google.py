@@ -282,10 +282,10 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
                             # Good for shot or segment labels
                             self._parse_label(data, feats, annot)
                 elif key == 'shotAnnotations':
-                    for shot in res:
+                    for i, shot in enumerate(res):
                         onset, duration = self._get_onset_duration(shot)
                         data[(onset, duration)].update({
-                            'shot': 1.0
+                            'shot_id': i
                         })
                 elif key == 'explicitAnnotation':
                     feature = 'pornographyLikelihood'

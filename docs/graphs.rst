@@ -87,7 +87,7 @@ The second element in each tuple contains any children nodes-—i.e., nodes to w
 	nodes = [
 	    (FrameSamplingFilter(hertz=2),
 	    	['GoogleVisionAPIFaceExtractor',
-	    	 'ClarifaiAPIExtractor',
+	    	 'ClarifaiAPIImageExtractor',
 	    	 'GoogleVisionAPILabelExtractor'])
 	]
 
