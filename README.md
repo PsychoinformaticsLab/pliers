@@ -23,6 +23,11 @@ Each of the above tasks can typically be accomplished in 2 - 3 lines of code wit
 
 In a nutshell, pliers provides an extremely high-level, unified interface to a very large number of feature extraction tools that span a wide range of modalities.
 
+## How to cite
+If you use pliers in your work, please cite both the pliers GitHub repository (http://github.com/tyarkoni/pliers) and the following paper:
+
+> McNamara, Q., De La Vega, A., & Yarkoni, T. (2017, August). [Developing a comprehensive framework for multimodal feature extraction](https://dl.acm.org/citation.cfm?id=3098075). In Proceedings of the 23rd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (pp. 1567-1574). ACM.
+
 ## Documentation
 
 The official pliers documentation is quite thorough, and contains a comprehensive [quickstart](http://tyarkoni.github.io/pliers/quickstart.html) doc (also available below), [user guide](http://tyarkoni.github.io/pliers/) and complete [API Reference](http://tyarkoni.github.io/pliers/reference.html).
