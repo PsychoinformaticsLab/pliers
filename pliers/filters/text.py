@@ -139,8 +139,11 @@ class PunctuationRemovalFilter(TokenRemovalFilter):
 
     ''' Removes punctuation from a TextStim. '''
 
-    def __init__(self, tokens=string.punctuation):
-        super(PunctuationRemovalFilter, self).__init__(tokens)
+    def _filter(self, stim):
+        text = stim.text
+        for c in string.punctuation:
+            text = text.replace(c, '')
+        return TextStim(stim.filename, text)
 
 
 class LowerCasingFilter(TextFilter):
