@@ -146,7 +146,8 @@ Extractors (:mod:`pliers.extractors`)
  	:template: _class.rst
 
   BrightnessExtractor
-  ClarifaiAPIExtractor
+  ClarifaiAPIImageExtractor
+  ClarifaiAPIVideoExtractor
   FaceRecognitionFaceEncodingsExtractor
   FaceRecognitionFaceLandmarksExtractor
   FaceRecognitionFaceLocationsExtractor

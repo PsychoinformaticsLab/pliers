@@ -70,7 +70,7 @@ At present, pliers implements several dozen |Extractor| classes that span a wide
  	:template: _class.rst
 
   BrightnessExtractor
-  ClarifaiAPIExtractor
+  ClarifaiAPIImageExtractor
   FaceRecognitionFaceEncodingsExtractor
   FaceRecognitionFaceLandmarksExtractor
   FaceRecognitionFaceLocationsExtractor
@@ -120,7 +120,7 @@ At present, pliers implements several dozen |Extractor| classes that span a wide
 
   FarnebackOpticalFlowExtractor
 
-Note that, in practice, the number of features one can extract using the above classes is extremely large, because many of these Extractors return open-ended feature sets that are determined by the contents of the input |Stim| and/or the specified initialization arguments. For example, most of the image-labeling Extractors that rely on deep learning-based services (e.g., |GoogleVisionAPILabelExtractor| and |ClarifaiAPIExtractor|) will return feature information for any of the top N objects detected in the image. And the |PredefinedDictionaryExtractor| provides a standardized interface to a large number of online word lookup dictionaries (e.g., word norms for written frequency, age-of-acquisition, emotionality ratings, etc.).
+Note that, in practice, the number of features one can extract using the above classes is extremely large, because many of these Extractors return open-ended feature sets that are determined by the contents of the input |Stim| and/or the specified initialization arguments. For example, most of the image-labeling Extractors that rely on deep learning-based services (e.g., |GoogleVisionAPILabelExtractor| and |ClarifaiAPIImageExtractor|) will return feature information for any of the top N objects detected in the image. And the |PredefinedDictionaryExtractor| provides a standardized interface to a large number of online word lookup dictionaries (e.g., word norms for written frequency, age-of-acquisition, emotionality ratings, etc.).
 
 Working with Extractor results
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

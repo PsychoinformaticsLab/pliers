@@ -60,7 +60,9 @@ While installing pliers itself is usually straightforward, setting up some of th
 +---------------------------------------+-----------------------------------------------------------------------------------------------------+--------------------------------------+--------------------------------+---------------------------------------+
 | IndicoAPIExtractor                    | `Indico.io API <https://indico.io>`__                                                               | INDICO\_APP\_KEY                     | API key                        | 45f9f8a56e4194d3dce858db1e5c3ae4      |
 +---------------------------------------+-----------------------------------------------------------------------------------------------------+--------------------------------------+--------------------------------+---------------------------------------+
-| ClarifaiAPIExtractor                  | `Clarifai image recognition API <https://clarifai.com>`__                                           | CLARIFAI\_API\_KEY                   | API key                        | 168ed02e137459ead66c3a661be7b784      |
+| ClarifaiAPIImageExtractor             | `Clarifai image recognition API <https://clarifai.com>`__                                           | CLARIFAI\_API\_KEY                   | API key                        | 168ed02e137459ead66c3a661be7b784      |
++---------------------------------------+-----------------------------------------------------------------------------------------------------+--------------------------------------+--------------------------------+---------------------------------------+
+| ClarifaiAPIVideoExtractor             | `Clarifai video tagging API <https://clarifai.com>`__                                               | CLARIFAI\_API\_KEY                   | API key                        | 168ed02e137459ead66c3a661be7b784      |
 +---------------------------------------+-----------------------------------------------------------------------------------------------------+--------------------------------------+--------------------------------+---------------------------------------+
 
 \* Note that this is not the plaintext e-mail or username for your IBM services account
@@ -69,9 +71,9 @@ Once you've obtained API keys for the services you intend to use, there are two 
 
 ::
 
-    from pliers.extractors import ClarifaiAPIExtractor
-    ext = ClarifaiAPIExtractor(app_id='my_clarifai_app_id',
-                               app_secret='my_clarifai_app_secret')
+    from pliers.extractors import ClarifaiAPIImageExtractor
+    ext = ClarifaiAPIImageExtractor(app_id='my_clarifai_app_id',
+                                    app_secret='my_clarifai_app_secret')
 
 Alternatively, you can store the appropriate values as environment variables, in which case you can initialize a Transformer without any arguments. This latter approach is generally preferred, as it doesn't require you to hardcode potentially sensitive values into your code. The mandatory environment variable names for each service are listed in the table above.
 

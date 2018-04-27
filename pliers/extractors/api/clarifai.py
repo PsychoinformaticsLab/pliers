@@ -8,6 +8,7 @@ try:
 except Exception as e:
     from contextlib2 import ExitStack
 from pliers.extractors.image import ImageExtractor
+from pliers.extractors.video import VideoExtractor
 from pliers.extractors.base import ExtractorResult
 from pliers.transformers import BatchTransformerMixin
 from pliers.transformers.api import APITransformer
@@ -19,13 +20,13 @@ clarifai_client = attempt_to_import('clarifai.rest.client', 'clarifai_client',
                                      'Concept',
                                      'ModelOutputConfig',
                                      'ModelOutputInfo',
-                                     'Image'])
+                                     'Image',
+                                     'Video'])
 
 
-class ClarifaiAPIExtractor(APITransformer, BatchTransformerMixin,
-                           ImageExtractor):
+class ClarifaiAPIExtractor(APITransformer):
 
-    ''' Uses the Clarifai API to extract tags of images.
+    ''' Uses the Clarifai API to extract tags of visual stimuli.
 
     Args:
         api_key (str): A valid API_KEY for the Clarifai API. Only needs to be
@@ -40,12 +41,10 @@ class ClarifaiAPIExtractor(APITransformer, BatchTransformerMixin,
             API. For example, ['food', 'animal'].
         rate_limit (int): The minimum number of seconds required between
             transform calls on this Transformer.
-        batch_size (int): Number of stims to send per batched API request.
     '''
 
     _log_attributes = ('api_key', 'model', 'model_name', 'min_value',
                        'max_concepts', 'select_concepts')
-    _batch_size = 128
     _env_keys = ('CLARIFAI_API_KEY',)
     VERSION = '1.0'
 
@@ -76,8 +75,7 @@ class ClarifaiAPIExtractor(APITransformer, BatchTransformerMixin,
             select_concepts = listify(select_concepts)
             self.select_concepts = [clarifai_client.Concept(concept_name=n)
                                     for n in select_concepts]
-        super(ClarifaiAPIExtractor, self).__init__(rate_limit=rate_limit,
-                                                   batch_size=batch_size)
+        super(ClarifaiAPIExtractor, self).__init__(rate_limit=rate_limit)
 
     @property
     def api_keys(self):
@@ -86,12 +84,59 @@ class ClarifaiAPIExtractor(APITransformer, BatchTransformerMixin,
     def check_valid_keys(self):
         return self.api is not None
 
-    def _extract(self, stims):
+    def _query_api(self, objects):
         verify_dependencies(['clarifai_client'])
         moc = clarifai_client.ModelOutputConfig(min_value=self.min_value,
                                                 max_concepts=self.max_concepts,
                                                 select_concepts=self.select_concepts)
         model_output_info = clarifai_client.ModelOutputInfo(output_config=moc)
+        tags = self.model.predict(objects, model_output_info=model_output_info)
+        return tags['outputs']
+
+    def _parse_annotations(self, annotation):
+        data_dict = {}
+        for tag in annotation['data']['concepts']:
+            data_dict[tag['name']] = tag['value']
+        return data_dict
+
+
+class ClarifaiAPIImageExtractor(ClarifaiAPIExtractor, BatchTransformerMixin,
+                                ImageExtractor):
+
+    ''' Uses the Clarifai API to extract tags of images.
+
+    Args:
+        api_key (str): A valid API_KEY for the Clarifai API. Only needs to be
+            passed the first time the extractor is initialized.
+        model (str): The name of the Clarifai model to use. If None, defaults
+            to the general image tagger.
+        min_value (float): A value between 0.0 and 1.0 indicating the minimum
+            confidence required to return a prediction. Defaults to 0.0.
+        max_concepts (int): A value between 0 and 200 indicating the maximum
+            number of label predictions returned.
+        select_concepts (list): List of concepts (strings) to query from the
+            API. For example, ['food', 'animal'].
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
+        batch_size (int): Number of stims to send per batched API request.
+    '''
+
+    _batch_size = 32
+
+    def __init__(self, api_key=None, model='general-v1.3', min_value=None,
+                 max_concepts=None, select_concepts=None, rate_limit=None,
+                 batch_size=None):
+        super(ClarifaiAPIImageExtractor,
+              self).__init__(api_key=api_key,
+                             model=model,
+                             min_value=min_value,
+                             max_concepts=max_concepts,
+                             select_concepts=select_concepts,
+                             rate_limit=rate_limit,
+                             batch_size=batch_size)
+
+    def _extract(self, stims):
+        verify_dependencies(['clarifai_client'])
 
         # ExitStack lets us use filename context managers simultaneously
         with ExitStack() as stack:
@@ -102,15 +147,43 @@ class ClarifaiAPIExtractor(APITransformer, BatchTransformerMixin,
                 else:
                     f = stack.enter_context(s.get_filename())
                     imgs.append(clarifai_client.Image(filename=f))
-            tags = self.model.predict(imgs, model_output_info=model_output_info)
+            outputs = self._query_api(imgs)
 
-        extracted = []
-        for i, resp in enumerate(tags['outputs']):
-            extracted.append(ExtractorResult(resp, stims[i], self))
-        return extracted
+        extractions = []
+        for i, resp in enumerate(outputs):
+            extractions.append(ExtractorResult(resp, stims[i], self))
+        return extractions
 
     def _to_df(self, result):
-        data_dict = {}
-        for tag in result._data['data']['concepts']:
-            data_dict[tag['name']] = tag['value']
-        return pd.DataFrame([data_dict])
+        return pd.DataFrame([self._parse_annotations(result._data)])
+
+
+class ClarifaiAPIVideoExtractor(ClarifaiAPIExtractor, VideoExtractor):
+
+    def _extract(self, stim):
+        verify_dependencies(['clarifai_client'])
+        with stim.get_filename() as filename:
+            vids = [clarifai_client.Video(filename=filename)]
+            outputs = self._query_api(vids)
+        return ExtractorResult(outputs, stim, self)
+
+    def _to_df(self, result):
+        onsets = []
+        durations = []
+        data = []
+        frames = result._data[0]['data']['frames']
+        for i, frame_res in enumerate(frames):
+            data.append(self._parse_annotations(frame_res))
+            onset = frame_res['frame_info']['time'] / 1000.0
+            if (i + 1) == len(frames):
+                end = result.stim.duration
+            else:
+                end = frames[i+1]['frame_info']['time'] / 1000.0
+            onsets.append(onset)
+            durations.append(end - onset)
+
+        result._onsets = onsets
+        result._durations = durations
+        df = pd.DataFrame(data)
+        result.features = list(df.columns)
+        return df
