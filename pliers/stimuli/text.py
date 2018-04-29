@@ -109,7 +109,7 @@ class ComplexTextStim(Stim):
         self._elements = []
 
         if filename is not None:
-            if filename.endswith("srt"):
+            if filename.endswith('srt'):
                 self._from_srt(filename)
             else:
                 self._from_file(filename, columns, default_duration)
@@ -145,13 +145,25 @@ class ComplexTextStim(Stim):
                 elem = TextStim(filename, r['text'], r['onset'], duration)
             self._elements.append(elem)
 
-    def save(self, path):
-        with open(path, 'w') as f:
-            f.write('onset\ttext\tduration\n')
+    def save(self, path, format=None):
+        if path.endswith('srt'):
+            from pysrt import SubRipFile, SubRipItem, SubRipTime
+            from datetime import time
+
+            out = SubRipFile()
             for elem in self._elements:
-                f.write('{}\t{}\t{}\n'.format(elem.onset,
-                                              elem.text,
-                                              elem.duration))
+                start = time(*self._to_tup(elem.onset))
+                end = time(*self._to_tup(elem.onset + elem.duration))
+                item = SubRipItem(0, start, end, elem.text)
+                out.append(item)
+            out.save(path)
+        else:
+            with open(path, 'w') as f:
+                f.write('onset\ttext\tduration\n')
+                for elem in self._elements:
+                    f.write('{}\t{}\t{}\n'.format(elem.onset,
+                                                  elem.text,
+                                                  elem.duration))
 
     def _from_srt(self, filename):
         import pysrt
@@ -182,6 +194,15 @@ class ComplexTextStim(Stim):
             offset = 0.0 if self.onset is None else self.onset
             elem.onset = offset if elem.onset is None else offset + elem.onset
             yield elem
+
+    def _to_tup(self, sec):
+        hours = int(sec / 3600)
+        sec = sec % 3600
+        mins = int(sec / 60)
+        sec = sec % 60
+        secs = int(sec)
+        microsecs = int((sec - secs) * 1000000)
+        return hours, mins, secs, microsecs
 
     def _to_sec(self, tup):
         hours, mins, secs, msecs = tup
