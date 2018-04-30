@@ -145,7 +145,7 @@ class ComplexTextStim(Stim):
                 elem = TextStim(filename, r['text'], r['onset'], duration)
             self._elements.append(elem)
 
-    def save(self, path, format=None):
+    def save(self, path):
         if path.endswith('srt'):
             from pysrt import SubRipFile, SubRipItem, SubRipTime
             from datetime import time

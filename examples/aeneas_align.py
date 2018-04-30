@@ -1,10 +1,17 @@
-from pliers.converters import VideoToAudioConverter
-from pliers.filters import TemporalTrimmingFilter, PunctuationRemovalFilter, LowerCasingFilter, TokenizingFilter
+from pliers.filters import (TemporalTrimmingFilter,
+                            PunctuationRemovalFilter,
+                            LowerCasingFilter,
+                            TokenizingFilter,
+                            AeneasForcedAlignmentFilter)
 from pliers.filters.text import TextFilter
-from pliers.filters.audio import AeneasForcedAlignmentFilter
-from pliers.stimuli import AudioStim, TextStim, ComplexTextStim, TranscribedAudioCompoundStim, VideoStim
+from pliers.stimuli import (AudioStim,
+                            TextStim,
+                            ComplexTextStim,
+                            TranscribedAudioCompoundStim)
 from pliers.graph import Graph
 import re
+import sys
+
 
 class SpeakerFilter(TextFilter):
 
@@ -17,48 +24,56 @@ class SpeakerFilter(TextFilter):
         return TextStim(text=filtered)
 
 
-def align_transcript(audio_file, transcript_file)
-    STIM_DIR = '/Users/quinnmac/Documents/NeuralComputation/project/stims/'
-
-    # Audio preprocessing
-    vid = VideoStim(STIM_DIR + 'Merlin.mp4')
-    aud = VideoToAudioConverter().transform(vid)
-    aud = TemporalTrimmingFilter(start=40.5).transform(aud)
-    print('Done with audio preprocessing, duration: ' + str(aud.duration))
-
+def preprocess_text(transcript_file):
     # Transcript preprocessing
-    txt = ComplexTextStim(STIM_DIR + 'transcription/subtitles.srt')
+    txt = ComplexTextStim(transcript_file)
     txt_preproc = Graph()
-    txt_preproc.add_nodes([SpeakerFilter(), LowerCasingFilter(), PunctuationRemovalFilter()],  mode='vertical')
+    txt_preproc.add_nodes([SpeakerFilter(),
+                           LowerCasingFilter(),
+                           PunctuationRemovalFilter()],
+                          mode='vertical')
     txt = ComplexTextStim(elements=txt_preproc.transform(txt, merge=False))
-    print('Done with text preprocessing')
+    return txt
+
+def align_transcript(audio_file, transcript_file, output_file, level='word',
+                     preprocess=True):
+    # Load stimuli
+    aud = AudioStim(audio_file)
+    if preprocess:
+        txt = preprocess_text(transcript_file)
+    else:
+        txt = ComplexTextStim(transcript_file)
 
     # Perform alignment
     aligner = AeneasForcedAlignmentFilter()
-    if word_level:
-        final_transcript = []
+    if level == 'word':
+        # Segment the audio file into phrase chunks, align words within each chunk
+        final = []
         for fragment in txt:
             if fragment.text == '':
                 continue
             end = fragment.onset + fragment.duration
             if end > aud.duration:
                 break
-            crop_filter = TemporalTrimmingFilter(start=fragment.onset, end=end)
+            crop_filter = TemporalTrimmingFilter(start=fragment.onset,
+                                                 end=end)
             audio_segment = crop_filter.transform(aud)
             fragment.onset = 0.0
-            words = ComplexTextStim(onset=crop_filter.start, elements=TokenizingFilter().transform(fragment))
+            words = ComplexTextStim(onset=crop_filter.start,
+                                    elements=TokenizingFilter().transform(fragment))
             stim = TranscribedAudioCompoundStim(audio_segment, words)
             new_transcribed = aligner.transform(stim)
-            final_transcript.extend(new_transcribed.get_stim(ComplexTextStim).elements)
-        result = ComplexTextStim(elements=final_transcript)
+            final.extend(new_transcribed.get_stim(ComplexTextStim).elements)
+        result = ComplexTextStim(elements=final)
     else:
         stim = TranscribedAudioCompoundStim(aud, txt)
         result = aligner.transform(stim).get_stim(ComplexTextStim)
 
-    result.save(STIM_DIR + 'transcription/aeneas_exact_transcript.txt')
-    result.to_srt(STIM_DIR + 'transcription/aeneas_exact_transcript.srt')
-    print('Done with forced alignment')
+    result.save(output_file)
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
-        print('Usage: python aeneas_align.py <audio_file> <srt_file> <word_leve>')
+    if len(sys.argv) != 5:
+        print('Usage: python aeneas_align.py <audio_file> <srt_file> <output_srt_path> <level>')
+
+    align_transcript(*sys.argv[1:])
+    print('Done with forced alignment')
