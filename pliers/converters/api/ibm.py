@@ -65,7 +65,7 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
             self._send_request(request)
             return True
         except Exception as e:
-            if 'Unauthorized' in str(e):
+            if 'Not Authorized' in str(e):
                 return False
             else:
                 raise e

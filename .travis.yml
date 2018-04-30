@@ -35,7 +35,8 @@ before_install:
 install:
 - sudo apt-get install libboost-python-dev
 - pip install --upgrade --ignore-installed setuptools
-- pip install python-magic coveralls pytest-cov pysrt xlrd clarifai pytesseract
+- pip install python-magic coveralls pytest-cov pysrt xlrd pytesseract
+- pip install clarifai==2.1.0
 - pip install moviepy==0.2.2.13
 - pip install SpeechRecognition IndicoIo pygraphviz sklearn python-twitter gensim
   google-compute-engine librosa face_recognition google-api-python-client

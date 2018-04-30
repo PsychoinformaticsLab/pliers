@@ -5,6 +5,10 @@ from pliers.extractors import (GoogleVisionAPIFaceExtractor,
                                GoogleVisionAPIPropertyExtractor,
                                GoogleVisionAPISafeSearchExtractor,
                                GoogleVisionAPIWebEntitiesExtractor,
+                               GoogleVideoIntelligenceAPIExtractor,
+                               GoogleVideoAPILabelDetectionExtractor,
+                               GoogleVideoAPIShotDetectionExtractor,
+                               GoogleVideoAPIExplicitDetectionExtractor,
                                ExtractorResult,
                                merge_results)
 from pliers.extractors.api.google import GoogleVisionAPIExtractor
@@ -16,6 +20,7 @@ from ...utils import get_test_data_path
 import numpy as np
 
 IMAGE_DIR = join(get_test_data_path(), 'image')
+VIDEO_DIR = join(get_test_data_path(), 'video')
 
 
 @pytest.mark.requires_payment
@@ -95,7 +100,7 @@ def test_google_vision_face_batch():
     assert result['joyLikelihood'][0] == 'VERY_LIKELY'
     assert result['joyLikelihood'][1] == 'VERY_LIKELY'
 
-    video = VideoStim(join(get_test_data_path(), 'video', 'obama_speech.mp4'))
+    video = VideoStim(join(VIDEO_DIR, 'obama_speech.mp4'))
     conv = FrameSamplingFilter(every=10)
     video = conv.transform(video)
     result = ext.transform(video)
@@ -103,7 +108,7 @@ def test_google_vision_face_batch():
     assert 'joyLikelihood' in result.columns
     assert result.shape == (22, 139)
 
-    video = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
+    video = VideoStim(join(VIDEO_DIR, 'small.mp4'))
     video = conv.transform(video)
     result = ext.transform(video)
     result = merge_results(result, format='wide', extractor_names=False)
@@ -187,3 +192,143 @@ def test_google_vision_api_extractor_large():
     config.set_option('allow_large_jobs', default)
     config.set_option('large_job', default_large)
     config.set_option('cache_transformers', default_cache)
+
+
+@pytest.mark.long_test
+@pytest.mark.requires_payment
+@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
+def test_google_video_api_extractor(caplog):
+    ext = GoogleVideoIntelligenceAPIExtractor(timeout=1)
+    stim = VideoStim(join(VIDEO_DIR, 'park.mp4'))
+    result = ext.transform(stim)
+
+    log_message = caplog.records[-1].message
+    assert log_message == ("The extraction reached the timeout limit of %fs, "
+                  "which means the API may not have finished analyzing the "
+                  "video and the results may be empty or incomplete." % 1.0)
+
+    ext = GoogleVideoIntelligenceAPIExtractor(timeout=500,
+                                              features=['LABEL_DETECTION',
+                                                    'SHOT_CHANGE_DETECTION'])
+    result = ext.transform(stim).to_df()
+    log_message = caplog.records[-1].message
+    incomplete = (log_message == ("The extraction reached the timeout limit of"
+                " %fs, which means the API may not have finished analyzing the"
+                " video and the results may be empty or incomplete." % 500))
+    if not incomplete:
+        assert result.shape == (1, 31)
+        assert result['onset'][0] == 0.0
+        assert result['duration'][0] > 0.5 and result['duration'][0] < 0.6
+        assert result['category_plant'][0] > 0.5
+        assert result['park'][0] > 0.5
+        assert result['shot_id'][0] == 0
+
+
+@pytest.mark.long_test
+@pytest.mark.requires_payment
+@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
+def test_google_video_api_extractor2(caplog):
+    segments = [{'startTimeOffset': '0.1s', 'endTimeOffset': '0.3s'},
+                {'startTimeOffset': '0.3s', 'endTimeOffset': '0.45s'}]
+    ext = GoogleVideoIntelligenceAPIExtractor(timeout=500, segments=segments,
+                                    features=['EXPLICIT_CONTENT_DETECTION'])
+    stim = VideoStim(join(VIDEO_DIR, 'park.mp4'))
+    result = ext.transform(stim).to_df()
+    log_message = caplog.records[-1].message
+    incomplete = (log_message == ("The extraction reached the timeout limit of"
+                " %fs, which means the API may not have finished analyzing the"
+                " video and the results may be empty or incomplete." % 500))
+    if not incomplete:
+        assert result.shape == (2, 5)
+        assert result['onset'][0] > 0.1 and result['onset'][0] < 0.3
+        assert result['onset'][1] > 0.3 and result['onset'][1] < 0.45
+        assert 'UNLIKELY' in result['pornographyLikelihood'][0]
+
+
+@pytest.mark.requires_payment
+@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
+def test_google_video_api_label_extractor(caplog):
+    ext = GoogleVideoAPILabelDetectionExtractor(mode='FRAME_MODE',
+                                                stationary_camera=True)
+    stim = VideoStim(join(VIDEO_DIR, 'small.mp4'))
+    ex_result = ext.transform(stim)
+    log_message = caplog.records[-1].message
+    incomplete = (log_message == ("The extraction reached the timeout limit of"
+            " %fs, which means the API may not have finished analyzing the"
+            " video and the results may be empty or incomplete." % 90))
+    if not incomplete:
+        result = ex_result.to_df()
+        assert result.shape == (7, 25)
+        assert 'category_toy' in result.columns
+        assert result['toy'][0] > 0.5
+        assert np.isclose(result['duration'][0], stim.duration, 0.1)
+        result = ex_result.to_df(format='long')
+        assert 'pornographyLikelihood' not in result['feature']
+        assert np.nan not in result['value']
+
+    ext = GoogleVideoAPILabelDetectionExtractor(mode='SHOT_MODE')
+    stim = VideoStim(join(VIDEO_DIR, 'shot_change.mp4'))
+    ex_result = ext.transform(stim)
+    log_message = caplog.records[-1].message
+    incomplete = (log_message == ("The extraction reached the timeout limit of"
+            " %fs, which means the API may not have finished analyzing the"
+            " video and the results may be empty or incomplete." % 90))
+    if not incomplete:
+        raw = ex_result.raw['response']['annotationResults'][0]
+        assert 'shotLabelAnnotations' in raw
+        result = ex_result.to_df()
+        assert result.shape == (3, 17)
+        assert result['onset'][1] == 0.0
+        assert np.isclose(result['onset'][2], 3.2, 0.1)
+        assert np.isnan(result['cat'][1])
+        assert result['cat'][2] > 0.5
+        assert np.isnan(result['clock'][2])
+        assert result['clock'][1] > 0.5 or result['clock'][0] > 0.5
+
+
+@pytest.mark.requires_payment
+@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
+def test_google_video_api_shot_extractor(caplog):
+    ext = GoogleVideoAPIShotDetectionExtractor(request_rate=3)
+    stim = VideoStim(join(VIDEO_DIR, 'small.mp4'))
+    result = ext.transform(stim).to_df()
+    log_message = caplog.records[-1].message
+    incomplete = (log_message == ("The extraction reached the timeout limit of"
+                " %fs, which means the API may not have finished analyzing the"
+                " video and the results may be empty or incomplete." % 90))
+    if not incomplete:
+        assert result.shape == (1, 5)
+        assert result['onset'][0] == 0.0
+        assert np.isclose(result['duration'][0], stim.duration, 0.1)
+        assert 'shot_id' in result.columns
+        assert result['shot_id'][0] == 0
+
+    ext = GoogleVideoAPIShotDetectionExtractor()
+    stim = VideoStim(join(VIDEO_DIR, 'shot_change.mp4'))
+    result = ext.transform(stim).to_df()
+    log_message = caplog.records[-1].message
+    incomplete = (log_message == ("The extraction reached the timeout limit of"
+                " %fs, which means the API may not have finished analyzing the"
+                " video and the results may be empty or incomplete." % 90))
+    if not incomplete:
+        assert result.shape == (2, 5)
+        assert np.isclose(result['onset'][1], 3.2, 0.1)
+        assert 'shot_id' in result.columns
+        assert result['shot_id'][1] == 1
+
+
+@pytest.mark.requires_payment
+@pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
+def test_google_video_api_explicit_extractor(caplog):
+    ext = GoogleVideoAPIExplicitDetectionExtractor(request_rate=3)
+    stim = VideoStim(join(VIDEO_DIR, 'small.mp4'), onset=4.2)
+    result = ext.transform(stim).to_df()
+    log_message = caplog.records[-1].message
+    incomplete = (log_message == ("The extraction reached the timeout limit of"
+                " %fs, which means the API may not have finished analyzing the"
+                " video and the results may be empty or incomplete." % 90))
+    if not incomplete:
+        assert result.shape[1] == 5
+        assert result['onset'][0] >= 4.2
+        assert 'pornographyLikelihood' in result.columns
+        assert 'UNLIKELY' in result['pornographyLikelihood'][0]

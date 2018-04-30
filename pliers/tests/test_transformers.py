@@ -132,6 +132,32 @@ def test_validation_levels(caplog):
     config.set_option('cache_transformers', cache_default)
 
 
+def test_caching():
+    cache_default = config.get_option('cache_transformers')
+    config.set_option('cache_transformers', True)
+
+    img1 = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
+    ext = DummyExtractor()
+    res = ext.transform(img1)
+    assert ext.num_calls == 1
+    res2 = ext.transform(img1)
+    assert ext.num_calls == 1
+    assert res == res2
+    config.set_option('cache_transformers', False)
+    res3 = ext.transform(img1)
+    assert ext.num_calls == 2
+    assert res != res3
+
+    config.set_option('cache_transformers', True)
+    ext.num_calls = 0
+    res = ext.transform(join(get_test_data_path(), 'image', 'apple.jpg'))
+    assert ext.num_calls == 1
+    res2 = ext.transform(join(get_test_data_path(), 'image', 'apple.jpg'))
+    assert ext.num_calls == 1
+    assert res == res2
+
+    config.set_option('cache_transformers', cache_default)
+
 def test_versioning():
     ext = DummyBatchExtractor()
     assert ext.VERSION == '0.1'

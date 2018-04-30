@@ -28,10 +28,12 @@ class DummyExtractor(Extractor):
             self.name = name
         self.n_rows = n_rows
         self.n_cols = n_cols
+        self.num_calls = 0
 
     def _extract(self, stim):
         data = np.random.randint(0, 1000, (self.n_rows, self.n_cols))
         onsets = np.arange(self.n_rows)
+        self.num_calls += 1
         return ExtractorResult(data, stim, deepcopy(self), onsets=onsets)
 
 
