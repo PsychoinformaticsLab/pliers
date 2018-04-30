@@ -381,7 +381,7 @@ def test_adding_nodes():
     txt = TextStim(text='the.best.text.')
     results = graph.run(txt, merge=False)
     assert len(results) == 1
-    assert results[0].to_df()['text_length'][0] == 13
+    assert results[0].to_df()['text_length'][0] == 11
 
     with pytest.raises(ValueError):
         graph.add_nodes(['LengthExtractor'], mode='invalid')
