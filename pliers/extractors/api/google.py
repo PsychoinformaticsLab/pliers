@@ -109,7 +109,9 @@ class GoogleVisionAPIPropertyExtractor(GoogleVisionAPIExtractor):
         data_dict = {}
         for color in colors:
             rgb = color['color']
-            data_dict[(rgb['red'], rgb['green'], rgb['blue'])] = color['score']
+            key = [rgb.get('red', 0), rgb.get('green', 0), rgb.get('blue', 0)]
+            key = ', '.join([str(v) for v in key])
+            data_dict[key] = color['score']
         return pd.DataFrame([data_dict])
 
 
@@ -367,4 +369,3 @@ class GoogleVideoAPIExplicitDetectionExtractor(GoogleVideoIntelligenceAPIExtract
                              max_results=max_results,
                              num_retries=num_retries,
                              rate_limit=rate_limit)
-
