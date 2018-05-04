@@ -215,3 +215,8 @@ class ComplexTextStim(Stim):
         for i, t in enumerate(tokens):
             self._elements.append(TextStim(text=t, onset=None, duration=None,
                                   order=i))
+
+    @property
+    def _hash_contents(self):
+        return (' '.join([e.text for e in self._elements]),
+                self.onset, self.duration, self.order, self.history)

@@ -6,7 +6,8 @@ from pliers.stimuli import (VideoStim, VideoFrameStim, ComplexTextStim,
                             TweetStimFactory,
                             TweetStim)
 from pliers.stimuli.base import Stim, _get_stim_class
-from pliers.extractors import BrightnessExtractor, LengthExtractor
+from pliers.extractors import (BrightnessExtractor, LengthExtractor,
+                               ComplexTextExtractor)
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.download import download_nltk_data
 import numpy as np
@@ -57,6 +58,12 @@ def test_image_stim(dummy_iter_extractor):
     stim = ImageStim(filename)
     assert stim.data.shape == (288, 420, 3)
 
+def test_complex_text_hash():
+    stims = [ComplexTextStim(text='yeah'), ComplexTextStim(text='buddy')]
+    ext = ComplexTextExtractor()
+    res = ext.transform(stims)
+
+    assert res[0]._data != res[1]._data
 
 def test_video_stim():
     ''' Test VideoStim functionality. '''
