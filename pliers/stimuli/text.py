@@ -217,6 +217,9 @@ class ComplexTextStim(Stim):
                                   order=i))
 
     @property
+    def data(self):
+        return ' '.join([e.text for e in self._elements])
+
+    @property
     def _hash_contents(self):
-        return (' '.join([e.text for e in self._elements]),
-                self.onset, self.duration, self.order, self.history)
+        return (self.data, self.onset, self.duration, self.order, self.history)
