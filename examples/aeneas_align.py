@@ -35,6 +35,7 @@ def preprocess_text(transcript_file):
     txt = ComplexTextStim(elements=txt_preproc.transform(txt, merge=False))
     return txt
 
+
 def align_transcript(audio_file, transcript_file, output_file, level='word',
                      preprocess=True):
     # Load stimuli
@@ -47,7 +48,7 @@ def align_transcript(audio_file, transcript_file, output_file, level='word',
     # Perform alignment
     aligner = AeneasForcedAlignmentFilter()
     if level == 'word':
-        # Segment the audio file into phrase chunks, align words within each chunk
+        # Segment audio file into phrase chunks, align words within each chunk
         final = []
         for fragment in txt:
             if fragment.text == '':
@@ -59,8 +60,9 @@ def align_transcript(audio_file, transcript_file, output_file, level='word',
                                                  end=end)
             audio_segment = crop_filter.transform(aud)
             fragment.onset = 0.0
+            words = TokenizingFilter().transform(fragment)
             words = ComplexTextStim(onset=crop_filter.start,
-                                    elements=TokenizingFilter().transform(fragment))
+                                    elements=words)
             stim = TranscribedAudioCompoundStim(audio_segment, words)
             new_transcribed = aligner.transform(stim)
             final.extend(new_transcribed.get_stim(ComplexTextStim).elements)
@@ -70,6 +72,7 @@ def align_transcript(audio_file, transcript_file, output_file, level='word',
         result = aligner.transform(stim).get_stim(ComplexTextStim)
 
     result.save(output_file)
+
 
 if __name__ == '__main__':
     if len(sys.argv) != 5:

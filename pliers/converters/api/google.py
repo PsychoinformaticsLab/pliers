@@ -19,9 +19,8 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
         language_code (str): The language of the supplied AudioStim.
         profanity_filter (bool): If set to True, will ask Google to try and
             filter out profanity from the resulting Text.
-        speech_contexts (list): A list of a list of favored phrases or words
-            to assist the API. The inner list is a sequence of word tokens,
-            each outer element is a potential context.
+        speech_contexts (list): A list of favored phrases or words
+            to assist the API.
         discovery_file (str): path to discovery file containing Google
             application credentials.
         api_version (str): API version to use.
@@ -63,7 +62,7 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
         os.remove(tmp)
 
         if self.speech_contexts:
-            speech_contexts = [{'phrases': c} for c in self.speech_contexts]
+            speech_contexts = [{'phrases': self.speech_contexts}]
         else:
             speech_contexts = []
         request = {
