@@ -42,3 +42,7 @@ class ImageStim(Stim):
 
     def save(self, path):
         imsave(path, self.data)
+
+    @property
+    def _hash_contents(self):
+        return (self.data.tobytes(), self.onset, self.duration, self.order, self.history)
