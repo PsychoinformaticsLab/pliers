@@ -70,13 +70,9 @@ class Stim(with_metaclass(ABCMeta)):
     def history(self, history):
         self._history = history
 
-    @property
-    def _hash_contents(self):
-        return (self.filename, self.name, self.onset, self.duration,
-                     self.order, self.history)
-
     def __hash__(self):
-        return hash(self._hash_contents)
+        return hash((self.filename, self.name, self.onset, self.duration,
+                     self.order, self.history))
 
 
 def _get_stim_class(name):
