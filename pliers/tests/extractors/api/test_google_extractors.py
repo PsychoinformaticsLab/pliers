@@ -245,6 +245,7 @@ def test_google_video_api_extractor2(caplog):
         assert 'UNLIKELY' in result['pornographyLikelihood'][0]
 
 
+@pytest.mark.long_test
 @pytest.mark.requires_payment
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_video_api_label_extractor(caplog):
@@ -286,6 +287,7 @@ def test_google_video_api_label_extractor(caplog):
         assert result['clock'][1] > 0.5 or result['clock'][0] > 0.5
 
 
+@pytest.mark.long_test
 @pytest.mark.requires_payment
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_video_api_shot_extractor(caplog):
@@ -317,6 +319,7 @@ def test_google_video_api_shot_extractor(caplog):
         assert result['shot_id'][1] == 1
 
 
+@pytest.mark.long_test
 @pytest.mark.requires_payment
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_video_api_explicit_extractor(caplog):

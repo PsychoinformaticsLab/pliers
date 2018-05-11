@@ -57,6 +57,7 @@ class FrameSamplingFilter(VideoFilter):
         frame_index = sorted(list(set(video.frame_index).intersection(new_idx)))
 
         return VideoFrameCollectionStim(filename=video.filename,
+                                        clip=video.clip,
                                         frame_index=frame_index)
 
 
