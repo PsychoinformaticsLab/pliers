@@ -3,7 +3,8 @@ of one type as input and return a `Stim` of the same type as output (but with
 some changes to its data).
 '''
 
-from .audio import AudioTrimmingFilter
+from .audio import (AudioTrimmingFilter,
+                    AeneasForcedAlignmentFilter)
 from .base import TemporalTrimmingFilter
 from .image import (ImageCroppingFilter,
                     PillowImageFilter)
@@ -18,6 +19,7 @@ from .video import (FrameSamplingFilter,
 
 __all__ = [
     'AudioTrimmingFilter',
+    'AeneasForcedAlignmentFilter',
     'TemporalTrimmingFilter',
     'ImageCroppingFilter',
     'PillowImageFilter',

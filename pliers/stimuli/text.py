@@ -5,7 +5,10 @@ import pandas as pd
 from six import string_types
 from six.moves.urllib.request import urlopen
 from pliers.support.decorators import requires_nltk_corpus
+from pliers.utils import attempt_to_import, verify_dependencies
 from .base import Stim
+
+pysrt = attempt_to_import('pysrt')
 
 
 class TextStim(Stim):
@@ -109,7 +112,7 @@ class ComplexTextStim(Stim):
         self._elements = []
 
         if filename is not None:
-            if filename.endswith("srt"):
+            if filename.endswith('srt'):
                 self._from_srt(filename)
             else:
                 self._from_file(filename, columns, default_duration)
@@ -146,15 +149,27 @@ class ComplexTextStim(Stim):
             self._elements.append(elem)
 
     def save(self, path):
-        with open(path, 'w') as f:
-            f.write('onset\ttext\tduration\n')
+        if path.endswith('srt'):
+            verify_dependencies(['pysrt'])
+            from pysrt import SubRipFile, SubRipItem
+            from datetime import time
+
+            out = SubRipFile()
             for elem in self._elements:
-                f.write('{}\t{}\t{}\n'.format(elem.onset,
-                                              elem.text,
-                                              elem.duration))
+                start = time(*self._to_tup(elem.onset))
+                end = time(*self._to_tup(elem.onset + elem.duration))
+                out.append(SubRipItem(0, start, end, elem.text))
+            out.save(path)
+        else:
+            with open(path, 'w') as f:
+                f.write('onset\ttext\tduration\n')
+                for elem in self._elements:
+                    f.write('{}\t{}\t{}\n'.format(elem.onset,
+                                                  elem.text,
+                                                  elem.duration))
 
     def _from_srt(self, filename):
-        import pysrt
+        verify_dependencies(['pysrt'])
 
         data = pysrt.open(filename)
         list_ = [[] for _ in data]
@@ -182,6 +197,15 @@ class ComplexTextStim(Stim):
             offset = 0.0 if self.onset is None else self.onset
             elem.onset = offset if elem.onset is None else offset + elem.onset
             yield elem
+
+    def _to_tup(self, sec):
+        hours = int(sec / 3600)
+        sec = sec % 3600
+        mins = int(sec / 60)
+        sec = sec % 60
+        secs = int(sec)
+        microsecs = int((sec - secs) * 1000000)
+        return hours, mins, secs, microsecs
 
     def _to_sec(self, tup):
         hours, mins, secs, msecs = tup

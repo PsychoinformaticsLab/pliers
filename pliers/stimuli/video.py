@@ -135,7 +135,7 @@ class VideoFrameCollectionStim(Stim):
             frames.
         '''
         # IMPORTANT WARNING: saves entire source video
-        self.clip.write_videofile(path)
+        self.clip.write_videofile(path, audio_fps=self.clip.audio.fps)
 
 
 class VideoStim(VideoFrameCollectionStim):

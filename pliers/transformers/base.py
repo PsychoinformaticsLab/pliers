@@ -94,7 +94,8 @@ class Transformer(with_metaclass(ABCMeta)):
         # If stims is a CompoundStim and the Transformer is expecting a single
         # input type, extract all matching stims
         if isinstance(stims, CompoundStim) and not isinstance(self._input_type, tuple):
-            stims = stims.get_stim(self._input_type, return_all=True)
+            if not isinstance(stims, self._input_type):
+                stims = stims.get_stim(self._input_type, return_all=True)
             if not stims:
                 raise ValueError("No stims of class %s found in the provided"
                                  "CompoundStim instance." % self._input_type)
@@ -162,7 +163,8 @@ class Transformer(with_metaclass(ABCMeta)):
         optional = tuple(listify(self._optional_input_type))
 
         if isinstance(stim, CompoundStim):
-            return stim.has_types(mandatory) or \
+            return isinstance(stim, mandatory) or \
+                stim.has_types(mandatory) or \
                 (not mandatory and stim.has_types(optional, False))
 
         if len(mandatory) > 1:
