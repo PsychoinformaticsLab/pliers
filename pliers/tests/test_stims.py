@@ -12,10 +12,8 @@ from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.download import download_nltk_data
 import numpy as np
 from os.path import join, exists
-import os
 import pandas as pd
 import pytest
-import tempfile
 
 
 class DummyExtractor(Extractor):
@@ -58,12 +56,14 @@ def test_image_stim(dummy_iter_extractor):
     stim = ImageStim(filename)
     assert stim.data.shape == (288, 420, 3)
 
+
 def test_complex_text_hash():
     stims = [ComplexTextStim(text='yeah'), ComplexTextStim(text='buddy')]
     ext = ComplexTextExtractor()
     res = ext.transform(stims)
 
     assert res[0]._data != res[1]._data
+
 
 def test_video_stim():
     ''' Test VideoStim functionality. '''
@@ -102,6 +102,15 @@ def test_video_stim():
     assert isinstance(f3.onset, float)
     assert f3.duration > 0.0
     assert f3.data.shape == (240, 320, 3)
+
+
+def test_video_frame_stim():
+    filename = join(get_test_data_path(), 'video', 'small.mp4')
+    video = VideoStim(filename, onset=4.2)
+    frame = VideoFrameStim(video, 42)
+    assert frame.onset == (5.6)
+    assert np.array_equal(frame.data, video.get_frame(index=42).data)
+    assert frame.name == 'frame[42]'
 
 
 def test_audio_stim():
