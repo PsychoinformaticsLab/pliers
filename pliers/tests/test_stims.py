@@ -87,8 +87,13 @@ def test_video_stim():
     f2 = video.get_frame(index=100)
     assert isinstance(f2, VideoFrameStim)
     assert isinstance(f2.onset, float)
-    assert f2.onset > 4.2
+    assert f2.onset > 7.5
     f2.data.shape == (320, 560, 3)
+    f2_copy = video.get_frame(onset=3.33334)
+    assert isinstance(f2, VideoFrameStim)
+    assert isinstance(f2.onset, float)
+    assert f2.onset > 7.5
+    assert np.array_equal(f2.data, f2_copy.data)
 
     # Try another video
     filename = join(get_test_data_path(), 'video', 'obama_speech.mp4')

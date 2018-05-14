@@ -21,6 +21,7 @@ def test_frame_sampling_video_filter():
     conv = FrameSamplingFilter(every=3)
     derived = conv.transform(video)
     assert derived.n_frames == math.ceil(video.n_frames / 3.0)
+    assert derived.duration == video.duration
     first = next(f for f in derived)
     assert type(first) == VideoFrameStim
     assert first.name == 'frame[0]'
@@ -28,6 +29,8 @@ def test_frame_sampling_video_filter():
     assert first.duration == 3 * (1 / 30.0)
     second = [f for f in derived][1]
     assert second.onset == 4.3
+    with pytest.raises(TypeError):
+        assert derived.get_frame(onset=1.0)
 
     # Should refilter from original frames
     conv = FrameSamplingFilter(hertz=15)

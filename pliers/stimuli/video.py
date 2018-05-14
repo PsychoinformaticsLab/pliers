@@ -69,10 +69,9 @@ class VideoFrameCollectionStim(Stim):
         self.height = self.clip.h
         if frame_index:
             self.frame_index = frame_index
-            duration = len(frame_index) / float(self.fps)
         else:
             self.frame_index = range(int(ceil(self.fps * self.clip.duration)))
-            duration = self.clip.duration
+        duration = self.clip.duration
         self.n_frames = len(self.frame_index)
         super(VideoFrameCollectionStim, self).__init__(filename,
                                                        onset=onset,
@@ -92,15 +91,12 @@ class VideoFrameCollectionStim(Stim):
     def frames(self):
         return (f for f in self)
 
-    def get_frame(self, index=None, onset=None):
+    def get_frame(self, index):
         ''' Get video frame at the specified index.
 
         Args:
             index (int): Positional index of the desired frame.
-            onset (float): Onset (in seconds) of the desired frame.
         '''
-        if onset:
-            index = int(onset * self.fps)
 
         frame_num = self.frame_index[index]
         onset = float(frame_num) / self.fps
@@ -158,3 +154,16 @@ class VideoStim(VideoFrameCollectionStim):
                                         onset=onset,
                                         url=url,
                                         clip=clip)
+
+    def get_frame(self, index=None, onset=None):
+        ''' Overrides the default behavior by giving access to the onset
+        argument.
+
+        Args:
+            index (int): Positional index of the desired frame.
+            onset (float): Onset (in seconds) of the desired frame.
+        '''
+        if onset:
+            index = int(onset * self.fps)
+
+        return super(VideoStim, self).get_frame(index)
