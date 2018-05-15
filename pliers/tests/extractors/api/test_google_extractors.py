@@ -187,7 +187,7 @@ def test_google_vision_api_extractor_large():
     config.set_option('allow_large_jobs', True)
     results = merge_results(ext.transform(images))
     assert 'GoogleVisionAPILabelExtractor#apple' in results.columns
-    assert results.shape == (2, 36)
+    assert results.shape == (2, 32)
 
     config.set_option('allow_large_jobs', default)
     config.set_option('large_job', default_large)

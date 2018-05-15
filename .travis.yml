@@ -43,7 +43,7 @@ install:
 before_script:
 - python -m pliers.support.download
 script:
-- py.test -m --pyargs pliers --cov-report term-missing --cov=pliers
+- py.test --pyargs pliers --cov-report term-missing --cov=pliers
 after_success:
 - coveralls
 before_cache:
