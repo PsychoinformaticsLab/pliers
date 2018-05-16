@@ -14,6 +14,8 @@ import numpy as np
 from os.path import join, exists
 import pandas as pd
 import pytest
+import tempfile
+import os
 
 
 class DummyExtractor(Extractor):
@@ -150,6 +152,9 @@ def test_complex_text_stim():
     assert len(stim.elements) == 4
     assert stim.elements[2].duration == 0.1
 
+    assert stim._to_sec((1.0, 42, 3, 0)) == 6123
+    assert stim._to_tup(6123) == (1.0, 42, 3, 0)
+
 
 def test_complex_stim_from_text():
     textfile = join(get_test_data_path(), 'text', 'scandal.txt')
@@ -260,20 +265,20 @@ def test_get_filename():
     assert not exists(filename)
 
 
-# def test_save():
-#     text_dir = join(get_test_data_path(), 'text')
-#     complextext_stim = ComplexTextStim(join(text_dir, 'complex_stim_no_header.txt'),
-#                                        columns='ot', default_duration=0.2)
-#     text_stim = TextStim(text='hello')
-#     video_stim = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
-#     audio_stim = AudioStim(join(get_test_data_path(), 'audio', 'crowd.mp3'))
-#     image_stim = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
-#     stims = [complextext_stim, text_stim, video_stim, audio_stim, image_stim]
-#     for s in stims:
-#         path = tempfile.mktemp() + s._default_file_extension
-#         s.save(path)
-#         assert exists(path)
-#         os.remove(path)
+def test_save():
+    cts_file = join(get_test_data_path(), 'text', 'complex_stim_no_header.txt')
+    complextext_stim = ComplexTextStim(cts_file, columns='ot',
+                                       default_duration=0.2)
+    text_stim = TextStim(text='hello')
+    audio_stim = AudioStim(join(get_test_data_path(), 'audio', 'crowd.mp3'))
+    image_stim = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
+    # Video gives travis problems
+    stims = [complextext_stim, text_stim, audio_stim, image_stim]
+    for s in stims:
+        path = tempfile.mktemp() + s._default_file_extension
+        s.save(path)
+        assert exists(path)
+        os.remove(path)
 
 
 @pytest.mark.skipif("'TWITTER_ACCESS_TOKEN_KEY' not in os.environ")
