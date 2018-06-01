@@ -148,6 +148,7 @@ def test_complex_text_stim():
     stim = ComplexTextStim(join(text_dir, 'complex_stim_no_header.txt'),
                            columns='ot', default_duration=0.2, onset=4.2)
     assert stim.elements[2].onset == 38.2
+    assert stim.elements[1].onset == 24.2
     stim = ComplexTextStim(join(text_dir, 'complex_stim_with_header.txt'))
     assert len(stim.elements) == 4
     assert stim.elements[2].duration == 0.1

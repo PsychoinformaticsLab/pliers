@@ -195,8 +195,10 @@ class ComplexTextStim(Stim):
         """ Iterate text elements. """
         for elem in self._elements:
             offset = 0.0 if self.onset is None else self.onset
-            elem.onset = offset if elem.onset is None else offset + elem.onset
-            yield elem
+            # Calculate element onset relative to this stimulus
+            rel_onset = offset if elem.onset is None else offset + elem.onset
+            yield TextStim(elem.filename, elem.text, rel_onset, elem.duration,
+                           elem.order)
 
     def _to_tup(self, sec):
         hours = int(sec / 3600)
