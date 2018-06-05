@@ -2,6 +2,7 @@
 
 import nltk
 import string
+import re
 
 from six import string_types
 from nltk import stem
@@ -135,14 +136,13 @@ class TokenRemovalFilter(TextFilter):
         return TextStim(stim.filename, text)
 
 
-class PunctuationRemovalFilter(TokenRemovalFilter):
+class PunctuationRemovalFilter(TextFilter):
 
     ''' Removes punctuation from a TextStim. '''
 
     def _filter(self, stim):
-        text = stim.text
-        for c in string.punctuation:
-            text = text.replace(c, '')
+        pattern = '[%s]' % re.escape(string.punctuation)
+        text = re.sub(pattern, '', stim.text)
         return TextStim(stim.filename, text)
 
 

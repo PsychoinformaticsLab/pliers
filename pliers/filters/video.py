@@ -1,9 +1,13 @@
 ''' Filters that operate on TextStim inputs. '''
 
 from pliers.stimuli.video import VideoStim, VideoFrameCollectionStim
+from pliers.utils import attempt_to_import, verify_dependencies
 from .base import Filter, TemporalTrimmingFilter
 
 import numpy as np
+
+
+cv2 = attempt_to_import('cv2')
 
 
 class VideoFilter(Filter):
@@ -13,14 +17,7 @@ class VideoFilter(Filter):
     _input_type = VideoStim
 
 
-class VideoFrameFilter(Filter):
-
-    ''' Base class for all VideoFrameFilters. '''
-
-    _input_type = VideoFrameCollectionStim
-
-
-class FrameSamplingFilter(VideoFrameFilter):
+class FrameSamplingFilter(Filter):
 
     ''' Samples frames from video stimuli, to improve efficiency.
 
@@ -31,6 +28,7 @@ class FrameSamplingFilter(VideoFrameFilter):
          with the next frame
     '''
 
+    _input_type = VideoFrameCollectionStim
     _log_attributes = ('every', 'hertz', 'top_n')
     VERSION = '1.0'
 
@@ -56,7 +54,7 @@ class FrameSamplingFilter(VideoFrameFilter):
             new_idx = np.arange(0, video.n_frames, interval).astype(int)
             new_idx = list(new_idx)
         elif self.top_n is not None:
-            import cv2
+            verify_dependencies(['cv2'])
             diffs = []
             for i, img in enumerate(video.frames):
                 if i == 0:
