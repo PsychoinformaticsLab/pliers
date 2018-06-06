@@ -69,6 +69,7 @@ def test_tensor_flow_inception_v3_extractor():
 
 
 def test_face_recognition_landmarks_extractor():
+    pytest.importorskip('face_recognition')
     ext = FaceRecognitionFaceLandmarksExtractor()
     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'thai_people.jpg',
                                          'obama.jpg']]
@@ -84,6 +85,7 @@ def test_face_recognition_landmarks_extractor():
 
 
 def test_face_recognition_encodings_extractor():
+    pytest.importorskip('face_recognition')
     ext = FaceRecognitionFaceEncodingsExtractor()
     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'thai_people.jpg',
                                          'obama.jpg']]
@@ -99,6 +101,7 @@ def test_face_recognition_encodings_extractor():
 
 
 def test_face_recognition_locations_extractor():
+    pytest.importorskip('face_recognition')
     ext = FaceRecognitionFaceLocationsExtractor()
     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'thai_people.jpg',
                                          'obama.jpg']]

@@ -1,17 +1,23 @@
 ''' Filters that operate on TextStim inputs. '''
 
-from pliers.stimuli.video import VideoFrameCollectionStim
+from pliers.stimuli.video import VideoStim, VideoFrameCollectionStim
+from pliers.utils import attempt_to_import, verify_dependencies
 from .base import Filter, TemporalTrimmingFilter
+
+import numpy as np
+
+
+cv2 = attempt_to_import('cv2')
 
 
 class VideoFilter(Filter):
 
     ''' Base class for all VideoFilters. '''
 
-    _input_type = VideoFrameCollectionStim
+    _input_type = VideoStim
 
 
-class FrameSamplingFilter(VideoFilter):
+class FrameSamplingFilter(Filter):
 
     ''' Samples frames from video stimuli, to improve efficiency.
 
@@ -22,6 +28,7 @@ class FrameSamplingFilter(VideoFilter):
          with the next frame
     '''
 
+    _input_type = VideoFrameCollectionStim
     _log_attributes = ('every', 'hertz', 'top_n')
     VERSION = '1.0'
 
@@ -36,28 +43,33 @@ class FrameSamplingFilter(VideoFilter):
         super(FrameSamplingFilter, self).__init__()
 
     def _filter(self, video):
+        if not isinstance(video, VideoStim):
+            raise TypeError('Currently, frame sampling is only supported for '
+                            'complete VideoStim inputs.')
+
         if self.every is not None:
-            new_idx = range(int(video.fps * video.clip.duration))[::self.every]
+            new_idx = range(video.n_frames)[::self.every]
         elif self.hertz is not None:
-            interval = int(video.fps / self.hertz)
-            new_idx = range(int(video.fps * video.clip.duration))[::interval]
+            interval = video.fps / float(self.hertz)
+            new_idx = np.arange(0, video.n_frames, interval).astype(int)
+            new_idx = list(new_idx)
         elif self.top_n is not None:
-            import cv2
+            verify_dependencies(['cv2'])
             diffs = []
             for i, img in enumerate(video.frames):
                 if i == 0:
                     last = img
                     continue
-                diffs.append(sum(cv2.sumElems(cv2.absdiff(last.data, img.data))))
+                pixel_diffs = cv2.sumElems(cv2.absdiff(last.data, img.data))
+                diffs.append(sum(pixel_diffs))
                 last = img
             new_idx = sorted(range(len(diffs)),
                              key=lambda i: diffs[i],
                              reverse=True)[:self.top_n]
 
-        frame_index = sorted(list(set(video.frame_index).intersection(new_idx)))
-
         return VideoFrameCollectionStim(filename=video.filename,
-                                        frame_index=frame_index)
+                                        clip=video.clip,
+                                        frame_index=new_idx)
 
 
 class VideoTrimmingFilter(TemporalTrimmingFilter, VideoFilter):

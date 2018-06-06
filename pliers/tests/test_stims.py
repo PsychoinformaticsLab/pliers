@@ -12,10 +12,10 @@ from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.download import download_nltk_data
 import numpy as np
 from os.path import join, exists
-import os
 import pandas as pd
 import pytest
 import tempfile
+import os
 
 
 class DummyExtractor(Extractor):
@@ -58,12 +58,14 @@ def test_image_stim(dummy_iter_extractor):
     stim = ImageStim(filename)
     assert stim.data.shape == (288, 420, 3)
 
+
 def test_complex_text_hash():
     stims = [ComplexTextStim(text='yeah'), ComplexTextStim(text='buddy')]
     ext = ComplexTextExtractor()
     res = ext.transform(stims)
 
     assert res[0]._data != res[1]._data
+
 
 def test_video_stim():
     ''' Test VideoStim functionality. '''
@@ -87,8 +89,13 @@ def test_video_stim():
     f2 = video.get_frame(index=100)
     assert isinstance(f2, VideoFrameStim)
     assert isinstance(f2.onset, float)
-    assert f2.onset > 4.2
+    assert f2.onset > 7.5
     f2.data.shape == (320, 560, 3)
+    f2_copy = video.get_frame(onset=3.33334)
+    assert isinstance(f2, VideoFrameStim)
+    assert isinstance(f2.onset, float)
+    assert f2.onset > 7.5
+    assert np.array_equal(f2.data, f2_copy.data)
 
     # Try another video
     filename = join(get_test_data_path(), 'video', 'obama_speech.mp4')
@@ -102,6 +109,15 @@ def test_video_stim():
     assert isinstance(f3.onset, float)
     assert f3.duration > 0.0
     assert f3.data.shape == (240, 320, 3)
+
+
+def test_video_frame_stim():
+    filename = join(get_test_data_path(), 'video', 'small.mp4')
+    video = VideoStim(filename, onset=4.2)
+    frame = VideoFrameStim(video, 42)
+    assert frame.onset == (5.6)
+    assert np.array_equal(frame.data, video.get_frame(index=42).data)
+    assert frame.name == 'frame[42]'
 
 
 def test_audio_stim():
@@ -132,9 +148,13 @@ def test_complex_text_stim():
     stim = ComplexTextStim(join(text_dir, 'complex_stim_no_header.txt'),
                            columns='ot', default_duration=0.2, onset=4.2)
     assert stim.elements[2].onset == 38.2
+    assert stim.elements[1].onset == 24.2
     stim = ComplexTextStim(join(text_dir, 'complex_stim_with_header.txt'))
     assert len(stim.elements) == 4
     assert stim.elements[2].duration == 0.1
+
+    assert stim._to_sec((1.0, 42, 3, 0)) == 6123
+    assert stim._to_tup(6123) == (1.0, 42, 3, 0)
 
 
 def test_complex_stim_from_text():
@@ -246,20 +266,20 @@ def test_get_filename():
     assert not exists(filename)
 
 
-# def test_save():
-#     text_dir = join(get_test_data_path(), 'text')
-#     complextext_stim = ComplexTextStim(join(text_dir, 'complex_stim_no_header.txt'),
-#                                        columns='ot', default_duration=0.2)
-#     text_stim = TextStim(text='hello')
-#     video_stim = VideoStim(join(get_test_data_path(), 'video', 'small.mp4'))
-#     audio_stim = AudioStim(join(get_test_data_path(), 'audio', 'crowd.mp3'))
-#     image_stim = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
-#     stims = [complextext_stim, text_stim, video_stim, audio_stim, image_stim]
-#     for s in stims:
-#         path = tempfile.mktemp() + s._default_file_extension
-#         s.save(path)
-#         assert exists(path)
-#         os.remove(path)
+def test_save():
+    cts_file = join(get_test_data_path(), 'text', 'complex_stim_no_header.txt')
+    complextext_stim = ComplexTextStim(cts_file, columns='ot',
+                                       default_duration=0.2)
+    text_stim = TextStim(text='hello')
+    audio_stim = AudioStim(join(get_test_data_path(), 'audio', 'crowd.mp3'))
+    image_stim = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
+    # Video gives travis problems
+    stims = [complextext_stim, text_stim, audio_stim, image_stim]
+    for s in stims:
+        path = tempfile.mktemp() + s._default_file_extension
+        s.save(path)
+        assert exists(path)
+        os.remove(path)
 
 
 @pytest.mark.skipif("'TWITTER_ACCESS_TOKEN_KEY' not in os.environ")

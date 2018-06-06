@@ -6,8 +6,8 @@ from pliers.utils import attempt_to_import, verify_dependencies
 
 
 googleapiclient = attempt_to_import('googleapiclient', fromlist=['discovery'])
-oauth_client = attempt_to_import('oauth2client.client', 'oauth_client',
-                                 ['GoogleCredentials'])
+google_auth = attempt_to_import('google.oauth2', 'google_auth',
+                                fromlist=['service_account'])
 
 
 DISCOVERY_URL = 'https://{api}.googleapis.com/$discovery/rest?version={apiVersion}'
@@ -31,7 +31,7 @@ class GoogleAPITransformer(APITransformer):
 
     def __init__(self, discovery_file=None, api_version='v1', max_results=100,
                  num_retries=3, rate_limit=None, **kwargs):
-        verify_dependencies(['googleapiclient', 'oauth_client'])
+        verify_dependencies(['googleapiclient', 'google_auth'])
         if discovery_file is None:
             if 'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ:
                 raise ValueError("No Google application credentials found. "
@@ -43,8 +43,8 @@ class GoogleAPITransformer(APITransformer):
 
         self.discovery_file = discovery_file
         try:
-            self.credentials = oauth_client.GoogleCredentials.from_stream(
-                discovery_file)
+            self.credentials = google_auth.service_account.Credentials\
+                .from_service_account_file(discovery_file)
             self.service = googleapiclient.discovery.build(
                 self.api_name, api_version, credentials=self.credentials,
                 discoveryServiceUrl=DISCOVERY_URL)
