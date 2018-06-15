@@ -8,6 +8,7 @@ from pliers.transformers import (GoogleAPITransformer,
                                  GoogleVisionAPITransformer,
                                  GoogleAPITransformer)
 from pliers.extractors.base import ExtractorResult
+from pliers.utils import flatten_dict
 import numpy as np
 import pandas as pd
 import logging
@@ -447,9 +448,6 @@ class GoogleLanguageAPIExtractor(GoogleAPITransformer, TextExtractor):
         response = self._query_api(request)
         return ExtractorResult(response, stim, self)
 
-    def _prefix_keys(self, current_dict, prefix):
-        return { '%s_%s' % (prefix, k) : v for k, v in current_dict.items()}
-
     def _get_span(self, text_json):
         offset = text_json['text']['beginOffset']
         content = text_json['text']['content']
@@ -466,47 +464,40 @@ class GoogleLanguageAPIExtractor(GoogleAPITransformer, TextExtractor):
 
         if 'extractDocumentSentiment' in self.features:
             sentiment = response['documentSentiment']
-            document_data.update(self._prefix_keys(sentiment, 'sentiment'))
+            document_data.update(flatten_dict(sentiment, 'sentiment'))
 
             # Sentence level sentiment
             for sentence in response.get('sentences', []):
                 sentence_data = self._get_span(sentence)
-                sentiment = self._prefix_keys(sentiment, 'sentiment')
-                sentence_data.update()
+                sentiment = sentence['sentiment']
+                sentence_data.update(flatten_dict(sentiment, 'sentiment'))
                 data.append(sentence_data)
 
         for category in response.get('categories'):
             document_data['category_%s' % category['name']] = category['confidence']
 
-        # Include in df only if there are document-level features
+        # Include only if there are document-level features
         if document_data:
             data.append(document_data)
 
-        # Entity level features
+        # Entity-level features
         # TODO: use mention-specific data
         for entity in response.get('entities', []):
-            mentions = []
-            entity_data = {}
-            for k, v in entity.items():
-                if k == 'mentions':
-                    mentions = [self._get_span(m) for m in v]
-                elif k == 'sentiment':
-                    entity_data.update(self._prefix_keys(v, 'sentiment'))
-                elif k != 'name':  # avoid redundancy with 'text' field
-                    entity_data['entity_%s' % k] = v
+            entity_copy = entity.copy()
+            mentions = entity_copy.pop('mentions', [])
+            entity_copy.pop('name', None)
 
             for m in mentions:
-                m.update(entity_data)
-                data.append(m)
+                entity_data = self._get_span(m)
+                entity_data.update(flatten_dict(entity_copy))
+                data.append(entity_data)
 
-        # Token level syntax features
+        # Token-level syntax features
         for token in response.get('tokens', []):
             token_data = self._get_span(token)
             token_data['lemma'] = token['lemma']
-            pos_data = self._prefix_keys(token['partOfSpeech'], 'token')
-            token_data.update(pos_data)
-            dep_data = self._prefix_keys(token['dependencyEdge'], 'dependency')
-            token_data.update(dep_data)
+            token_data.update(token['partOfSpeech'])
+            token_data.update(flatten_dict(token['dependencyEdge'], 'dependency'))
             data.append(token_data)
 
         df = pd.DataFrame(data)

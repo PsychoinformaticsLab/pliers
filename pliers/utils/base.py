@@ -27,6 +27,21 @@ def flatten(l):
             yield el
 
 
+def flatten_dict(d, parent_key='', sep='_'):
+    ''' Flattens a multi-level dictionary into a single level by concatenating
+    nested keys with the char provided in the sep argument. 
+
+    Solution from https://stackoverflow.com/questions/6027558/flatten-nested-python-dictionaries-compressing-keys'''
+    items = []
+    for k, v in d.items():
+        new_key = parent_key + sep + k if parent_key else k
+        if isinstance(v, collections.MutableMapping):
+            items.extend(flatten(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+
+
 def batch_iterable(l, n):
     ''' Chunks iterable into n sized batches
     Solution from: http://stackoverflow.com/questions/1915170/split-a-generator-iterable-every-n-items-in-python-splitevery'''
