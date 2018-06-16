@@ -380,13 +380,10 @@ class GoogleLanguageAPIExtractor(GoogleAPITransformer, TextExtractor):
     Google Natural Language API.
 
     Args:
-        features (list): List of features to extract. LABEL_DETECTION extracts
-            tags present throughout the provided segments (full video if none
-            provided) as well as throughout the shots (depending on config).
-            SHOT_CHANGE_DETECTION extracts a shot feature with onsets and
-            durations corresponding to shot changes in the video.
-            EXPLICIT_CONTENT_DETECTION extracts any frame onsets of explicit
-            material.
+        features (list): List of features (str) to extract. Available
+            features: extractSyntax, extractEntities, extractDocumentSentiment,
+            extractEntitySentiment, and classifyText. See Google Natural
+            Language API documentation for more details.
         language (str): The ISO-639-1 or BCP-47 identifier for the document
             language. If None is provided, API auto-detects the language.
         is_html (bool): When True, the document's text is expected to be
@@ -486,10 +483,11 @@ class GoogleLanguageAPIExtractor(GoogleAPITransformer, TextExtractor):
             entity_copy = entity.copy()
             mentions = entity_copy.pop('mentions', [])
             entity_copy.pop('name', None)
+            entity_copy = flatten_dict(entity_copy)
 
             for m in mentions:
                 entity_data = self._get_span(m)
-                entity_data.update(flatten_dict(entity_copy))
+                entity_data.update(entity_copy)
                 data.append(entity_data)
 
         # Token-level syntax features

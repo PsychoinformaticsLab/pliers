@@ -1,6 +1,6 @@
 from pliers.stimuli import VideoStim
 from pliers.filters import FrameSamplingFilter
-from pliers.utils import batch_iterable
+from pliers.utils import batch_iterable, flatten_dict
 from pliers import config
 from types import GeneratorType
 from .utils import get_test_data_path
@@ -45,3 +45,11 @@ def test_batch_iterable():
     second_half = next(res)
     assert isinstance(second_half, list)
     assert second_half == [5, 6, 7, 8]
+
+
+def test_flatten_dict():
+    d = { 'a' : 5, 'b' : { 'c' : 6, 'd' : 1 } }
+    res = flatten_dict(d)
+    assert res == { 'a' : 5, 'b_c' : 6, 'b_d' : 1}
+    res = flatten_dict(d, 'prefix', '.')
+    assert res == { 'prefix.a' : 5, 'prefix.b.c' : 6, 'prefix.b.d' : 1}

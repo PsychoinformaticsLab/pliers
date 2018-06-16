@@ -147,7 +147,7 @@ class ExtractorResult(object):
             index = pd.Series(onsets).astype(str) + '_' + \
                 pd.Series(durations).astype(str)
             if object_id is True or (object_id == 'auto' and
-                                     len(set(index)) > 1):
+                                     len(set(index)) < len(df)):
                 ids = np.arange(len(df)) if len(index) == 1 \
                     else df.groupby(index).cumcount()
                 df.insert(0, 'object_id', ids)
