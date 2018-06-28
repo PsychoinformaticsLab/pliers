@@ -1,5 +1,6 @@
 ''' Wit.ai API-based Converters '''
 
+import logging
 import os
 from abc import abstractproperty
 from pliers.stimuli.text import ComplexTextStim
@@ -73,5 +74,6 @@ class WitTranscriptionConverter(SpeechRecognitionAPIConverter):
         try:
             urlopen(request)
             return True
-        except HTTPError:
+        except HTTPError as e:
+            logging.warn(str(e))
             return False

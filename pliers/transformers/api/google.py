@@ -1,4 +1,5 @@
 import base64
+import logging
 import os
 from pliers.transformers import BatchTransformerMixin
 from pliers.transformers.api import APITransformer
@@ -48,7 +49,8 @@ class GoogleAPITransformer(APITransformer):
             self.service = googleapiclient.discovery.build(
                 self.api_name, api_version, credentials=self.credentials,
                 discoveryServiceUrl=DISCOVERY_URL)
-        except:
+        except Exception as e:
+            logging.warn(str(e))
             self.credentials = None
             self.service = None
         self.max_results = max_results

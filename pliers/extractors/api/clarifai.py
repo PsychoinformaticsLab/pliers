@@ -2,6 +2,7 @@
 Extractors that interact with the Clarifai API.
 '''
 
+import logging
 import os
 try:
     from contextlib import ExitStack
@@ -64,7 +65,8 @@ class ClarifaiAPIExtractor(APITransformer):
         try:
             self.api = clarifai_client.ClarifaiApp(api_key=api_key)
             self.model = self.api.models.get(model)
-        except clarifai_client.ApiError:
+        except clarifai_client.ApiError as e:
+            logging.warn(str(e))
             self.api = None
             self.model = None
         self.model_name = model

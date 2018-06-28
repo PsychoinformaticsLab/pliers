@@ -1,5 +1,6 @@
 ''' Stimuli that are inherently associated with remote resources. '''
 
+import logging
 import os
 
 from .base import load_stims
@@ -70,7 +71,8 @@ class TweetStimFactory(APIDependent):
         try:
             self.api.VerifyCredentials()
             return True
-        except twitter.error.TwitterError:
+        except twitter.error.TwitterError as e:
+            logging.warn(str(e))
             return False
 
     def get_status(self, status_id):

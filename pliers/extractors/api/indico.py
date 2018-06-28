@@ -2,6 +2,7 @@
 Extractors that interact with the Indico API.
 '''
 
+import logging
 import os
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.text import TextExtractor
@@ -73,6 +74,7 @@ class IndicoAPIExtractor(APITransformer, BatchTransformerMixin, Extractor):
             api.api_handler(None, None, self.model_names[0])
         except IndicoError as e:
             if str(e) == 'Invalid API key':
+                logging.warn(str(e))
                 return False
             else:
                 # If valid key, a data error (None passed) is expected here
