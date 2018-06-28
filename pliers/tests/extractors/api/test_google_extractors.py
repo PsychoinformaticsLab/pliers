@@ -351,12 +351,25 @@ def test_google_video_api_explicit_extractor(caplog):
 @pytest.mark.skipif("'GOOGLE_APPLICATION_CREDENTIALS' not in os.environ")
 def test_google_language_api_extractor():
     verify_dependencies(['googleapiclient'])
-    ext = GoogleLanguageAPIExtractor()
+    ext = GoogleLanguageAPIExtractor(features=['classifyText',
+                                               'extractEntities'])
     stim = TextStim(text='hello world')
 
     with pytest.raises(googleapiclient.errors.HttpError):
         # Should fail because too few tokens
         ext.transform(stim)
+
+    stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
+    result = ext.transform(stim).to_df(timing=False, object_id='auto')
+    assert result.shape == (43, 10)
+    assert 'category_/Books & Literature' in result.columns
+    assert result['category_/Books & Literature'][0] > 0.5
+    irene = result[result['text'] == 'Irene Adler']
+    assert (irene['type'] == 'PERSON').all()
+    assert not irene['metadata_wikipedia_url'].isna().any()
+    # Document row shouldn't have entity features, and vice versa
+    assert np.isnan(result.iloc[0]['text'])
+    assert np.isnan(result.iloc[1]['category_/Books & Literature']).all()
 
 
 @pytest.mark.requires_payment
@@ -401,6 +414,25 @@ def test_google_language_api_syntax_extractor():
     ext = GoogleLanguageAPISyntaxExtractor()
     stim = TextStim(join(TEXT_DIR, 'sample_text_with_entities.txt'))
     result = ext.transform(stim).to_df(timing=False, object_id='auto')
+    assert result.shape == (32, 20)
+    his = result[result['text'] == 'his']
+    assert (his['person'] == 'THIRD').all()
+    assert (his['gender'] == 'MASCULINE').all()
+    assert (his['case'] == 'GENITIVE').all()
+    their = result[result['text'] == 'their']
+    assert (their['person'] == 'THIRD').all()
+    assert (their['number'] == 'PLURAL').all()
+    love = result[result['text'] == 'love']
+    assert (love['tag'] == 'VERB').all()
+    assert (love['mood'] == 'INDICATIVE').all()
+    headquartered = result[result['text'] == 'headquartered']
+    assert (headquartered['tense'] == 'PAST').all()
+    assert (headquartered['lemma'] == 'headquarter').all()
+    google = result[result['text'] == 'Google']
+    assert (google['proper'] == 'PROPER').all()
+    assert (google['tag'] == 'NOUN').all()
+    assert (google['dependency_label'] == 'NSUBJ').all()
+    assert (google['dependency_headTokenIndex'] == 7).all()
 
 
 @pytest.mark.requires_payment
@@ -425,3 +457,9 @@ def test_google_language_api_entity_sentiment_extractor():
     ext = GoogleLanguageAPIEntitySentimentExtractor()
     stim = TextStim(join(TEXT_DIR, 'sample_text_with_entities.txt'))
     result = ext.transform(stim).to_df(timing=False, object_id='auto')
+    # Produces same result as entity extractor with sentiment columns
+    assert result.shape == (10, 11)
+    assert result['text'][8] == 'phones'
+    assert result['type'][8] == 'CONSUMER_GOOD'
+    assert 'sentiment_score' in result.columns
+    assert result['sentiment_score'][8] > 0.6 # 'love their ... phones'

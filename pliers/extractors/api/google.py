@@ -471,14 +471,14 @@ class GoogleLanguageAPIExtractor(GoogleAPITransformer, TextExtractor):
                 data.append(sentence_data)
 
         for category in response.get('categories'):
-            document_data['category_%s' % category['name']] = category['confidence']
+            key = 'category_%s' % category['name']
+            document_data[key] = category['confidence']
 
         # Include only if there are document-level features
         if document_data:
             data.append(document_data)
 
         # Entity-level features
-        # TODO: use mention-specific data
         for entity in response.get('entities', []):
             entity_copy = entity.copy()
             mentions = entity_copy.pop('mentions', [])
@@ -488,6 +488,9 @@ class GoogleLanguageAPIExtractor(GoogleAPITransformer, TextExtractor):
             for m in mentions:
                 entity_data = self._get_span(m)
                 entity_data.update(entity_copy)
+                # Overwrite top-level sentiment with mention-level
+                sentiment = m.get('sentiment', {})
+                entity_data.update(flatten_dict(sentiment, 'sentiment'))
                 data.append(entity_data)
 
         # Token-level syntax features
@@ -495,7 +498,8 @@ class GoogleLanguageAPIExtractor(GoogleAPITransformer, TextExtractor):
             token_data = self._get_span(token)
             token_data['lemma'] = token['lemma']
             token_data.update(token['partOfSpeech'])
-            token_data.update(flatten_dict(token['dependencyEdge'], 'dependency'))
+            dependency = flatten_dict(token['dependencyEdge'], 'dependency')
+            token_data.update(dependency)
             data.append(token_data)
 
         df = pd.DataFrame(data)
@@ -580,7 +584,8 @@ class GoogleLanguageAPITextCategoryExtractor(GoogleLanguageAPIExtractor):
 class GoogleLanguageAPIEntitySentimentExtractor(GoogleLanguageAPIExtractor):
 
     ''' Extracts sentiment of entities found in text using the Google Language
-    API '''
+    API. Produces identical results to the entity extractor but with additional
+    sentiment analysis. '''
 
     def __init__(self, language=None, is_html=False, discovery_file=None,
                  api_version='v1', max_results=100, num_retries=3,
