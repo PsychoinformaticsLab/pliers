@@ -3,6 +3,7 @@
 import os
 import base64
 import json
+import logging
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.utils import attempt_to_import, verify_dependencies
 from pliers.converters.audio import AudioToTextConverter
@@ -66,6 +67,7 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
             return True
         except Exception as e:
             if 'Not Authorized' in str(e):
+                logging.warn(str(e))
                 return False
             else:
                 raise e

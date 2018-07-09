@@ -2,10 +2,13 @@
 
 import base64
 from pliers.extractors.image import ImageExtractor
+from pliers.extractors.text import TextExtractor
 from pliers.extractors.video import VideoExtractor
-from pliers.transformers import (GoogleVisionAPITransformer,
+from pliers.transformers import (GoogleAPITransformer,
+                                 GoogleVisionAPITransformer,
                                  GoogleAPITransformer)
 from pliers.extractors.base import ExtractorResult
+from pliers.utils import flatten_dict
 import numpy as np
 import pandas as pd
 import logging
@@ -364,6 +367,233 @@ class GoogleVideoAPIExplicitDetectionExtractor(GoogleVideoIntelligenceAPIExtract
                              config=config,
                              timeout=timeout,
                              request_rate=request_rate,
+                             discovery_file=discovery_file,
+                             api_version=api_version,
+                             max_results=max_results,
+                             num_retries=num_retries,
+                             rate_limit=rate_limit)
+
+
+class GoogleLanguageAPIExtractor(GoogleAPITransformer, TextExtractor):
+
+    ''' Extracts natural language features from text documents using the
+    Google Natural Language API.
+
+    Args:
+        features (list): List of features (str) to extract. Available
+            features: extractSyntax, extractEntities, extractDocumentSentiment,
+            extractEntitySentiment, and classifyText. See Google Natural
+            Language API documentation for more details.
+        language (str): The ISO-639-1 or BCP-47 identifier for the document
+            language. If None is provided, API auto-detects the language.
+        is_html (bool): When True, the document's text is expected to be
+            HTML. Otherwise, plain text is assumed.
+        discovery_file (str): path to discovery file containing Google
+            application credentials.
+        api_version (str): API version to use.
+        max_results (int): Max number of results per page.
+        num_retries (int): Number of times to retry query on failure.
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
+    '''
+
+    api_name = 'language'
+    _log_attributes = ('discovery_file', 'api_version', 'features',
+                       'language', 'is_html')
+
+    def __init__(self, features=['extractSyntax',
+                                 'extractEntities',
+                                 'extractDocumentSentiment',
+                                 'extractEntitySentiment',
+                                 'classifyText'],
+                 language=None, is_html=False, discovery_file=None,
+                 api_version='v1', max_results=100,
+                 num_retries=3, rate_limit=None):
+        self.features = features
+        self.language = language
+        self.is_html = is_html
+        super(GoogleLanguageAPIExtractor,
+              self).__init__(discovery_file=discovery_file,
+                             api_version=api_version,
+                             max_results=max_results,
+                             num_retries=num_retries,
+                             rate_limit=rate_limit)
+
+    def _query_api(self, request):
+        request_obj = self.service.documents().annotateText(body=request)
+        return request_obj.execute(num_retries=self.num_retries)
+
+    def _build_request(self, stim):
+        document = {
+            'type' : 'HTML' if self.is_html else 'PLAIN_TEXT',
+            'content' : stim.text
+        }
+
+        if self.language:
+            document['language'] = self.language
+
+        request = {
+            'document': document,
+            'features': { f : True for f in self.features },
+            'encodingType': 'UTF32'
+        }
+
+        return request
+
+    def _extract(self, stim):
+        request = self._build_request(stim)
+        response = self._query_api(request)
+        return ExtractorResult(response, stim, self)
+
+    def _get_span(self, text_json):
+        offset = text_json['text']['beginOffset']
+        content = text_json['text']['content']
+        return { 'begin_char_index' : offset,
+                 'end_char_index' : offset + len(content),
+                 'text' : content }
+
+    def _to_df(self, result):
+        response = result._data
+        data = []
+
+        # One row/object for all document-level features
+        document_data = {}
+
+        if 'extractDocumentSentiment' in self.features:
+            sentiment = response['documentSentiment']
+            document_data.update(flatten_dict(sentiment, 'sentiment'))
+
+            # Sentence level sentiment
+            for sentence in response.get('sentences', []):
+                sentence_data = self._get_span(sentence)
+                sentiment = sentence['sentiment']
+                sentence_data.update(flatten_dict(sentiment, 'sentiment'))
+                data.append(sentence_data)
+
+        for category in response.get('categories'):
+            key = 'category_%s' % category['name']
+            document_data[key] = category['confidence']
+
+        # Include only if there are document-level features
+        if document_data:
+            data.append(document_data)
+
+        # Entity-level features
+        for entity in response.get('entities', []):
+            entity_copy = entity.copy()
+            mentions = entity_copy.pop('mentions', [])
+            entity_copy.pop('name', None)
+            entity_copy = flatten_dict(entity_copy)
+
+            for m in mentions:
+                entity_data = self._get_span(m)
+                entity_data.update(entity_copy)
+                # Overwrite top-level sentiment with mention-level
+                sentiment = m.get('sentiment', {})
+                entity_data.update(flatten_dict(sentiment, 'sentiment'))
+                data.append(entity_data)
+
+        # Token-level syntax features
+        for token in response.get('tokens', []):
+            token_data = self._get_span(token)
+            token_data['lemma'] = token['lemma']
+            token_data.update(token['partOfSpeech'])
+            dependency = flatten_dict(token['dependencyEdge'], 'dependency')
+            token_data.update(dependency)
+            data.append(token_data)
+
+        df = pd.DataFrame(data)
+        df['language'] = response['language']
+        return df
+
+
+class GoogleLanguageAPIEntityExtractor(GoogleLanguageAPIExtractor):
+
+    ''' Extracts entity labels in text using the Google Language API '''
+
+    def __init__(self, language=None, is_html=False, discovery_file=None,
+                 api_version='v1', max_results=100, num_retries=3,
+                 rate_limit=None):
+        super(GoogleLanguageAPIEntityExtractor,
+              self).__init__(features=['extractEntities'],
+                             language=language,
+                             is_html=is_html,
+                             discovery_file=discovery_file,
+                             api_version=api_version,
+                             max_results=max_results,
+                             num_retries=num_retries,
+                             rate_limit=rate_limit)
+
+
+class GoogleLanguageAPISentimentExtractor(GoogleLanguageAPIExtractor):
+
+    ''' Extracts sentiment of text using the Google Language API '''
+
+    def __init__(self, language=None, is_html=False, discovery_file=None,
+                 api_version='v1', max_results=100, num_retries=3,
+                 rate_limit=None):
+        super(GoogleLanguageAPISentimentExtractor,
+              self).__init__(features=['extractDocumentSentiment'],
+                             language=language,
+                             is_html=is_html,
+                             discovery_file=discovery_file,
+                             api_version=api_version,
+                             max_results=max_results,
+                             num_retries=num_retries,
+                             rate_limit=rate_limit)
+
+
+class GoogleLanguageAPISyntaxExtractor(GoogleLanguageAPIExtractor):
+
+    ''' Extracts syntax properties of text using the Google Language API '''
+
+    def __init__(self, language=None, is_html=False, discovery_file=None,
+                 api_version='v1', max_results=100, num_retries=3,
+                 rate_limit=None):
+        super(GoogleLanguageAPISyntaxExtractor,
+              self).__init__(features=['extractSyntax'],
+                             language=language,
+                             is_html=is_html,
+                             discovery_file=discovery_file,
+                             api_version=api_version,
+                             max_results=max_results,
+                             num_retries=num_retries,
+                             rate_limit=rate_limit)
+
+
+class GoogleLanguageAPITextCategoryExtractor(GoogleLanguageAPIExtractor):
+
+    ''' Extracts document category using the Google Language API.
+    See the API documentation for the taxonomy of categories:
+    https://cloud.google.com/natural-language/docs/categories '''
+
+    def __init__(self, language=None, is_html=False, discovery_file=None,
+                 api_version='v1', max_results=100, num_retries=3,
+                 rate_limit=None):
+        super(GoogleLanguageAPITextCategoryExtractor,
+              self).__init__(features=['classifyText'],
+                             language=language,
+                             is_html=is_html,
+                             discovery_file=discovery_file,
+                             api_version=api_version,
+                             max_results=max_results,
+                             num_retries=num_retries,
+                             rate_limit=rate_limit)
+
+
+class GoogleLanguageAPIEntitySentimentExtractor(GoogleLanguageAPIExtractor):
+
+    ''' Extracts sentiment of entities found in text using the Google Language
+    API. Produces identical results to the entity extractor but with additional
+    sentiment analysis. '''
+
+    def __init__(self, language=None, is_html=False, discovery_file=None,
+                 api_version='v1', max_results=100, num_retries=3,
+                 rate_limit=None):
+        super(GoogleLanguageAPIEntitySentimentExtractor,
+              self).__init__(features=['extractEntitySentiment'],
+                             language=language,
+                             is_html=is_html,
                              discovery_file=discovery_file,
                              api_version=api_version,
                              max_results=max_results,
