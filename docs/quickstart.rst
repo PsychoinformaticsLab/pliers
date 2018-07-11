@@ -17,6 +17,8 @@ We output the result as a pandas DataFrame; the 'face_locations' column contains
 ::
 
 	from pliers.extractors import FaceRecognitionFaceLocationsExtractor
+	from os.path import join
+	from pliers.tests.utils import get_test_data_path
 
 	# A picture of Barack Obama
 	image = join(get_test_data_path(), 'image', 'obama.jpg')
