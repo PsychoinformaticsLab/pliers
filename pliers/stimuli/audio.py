@@ -2,10 +2,7 @@
 
 from .base import Stim
 from moviepy.audio.io.AudioFileClip import AudioFileClip
-
-import os
-import re
-import subprocess
+from moviepy.video.io.ffmpeg_reader import ffmpeg_parse_infos
 
 
 class AudioStim(Stim):
@@ -56,44 +53,14 @@ class AudioStim(Stim):
         super(AudioStim, self).__init__(
             filename, onset=onset, duration=duration, order=order, url=url)
 
-    @staticmethod
-    def get_sampling_rate(filename):
-        ''' Use FFMPEG to get the sampling rate, most of this code was
-        adapted from the moviepy codebase '''
-        cmd = ['ffmpeg', '-i', filename]
-
-        with open(os.devnull, 'rb') as devnull:
-            creationflags = 0x08000000 if os.name == 'nt' else 0
-            p = subprocess.Popen(cmd,
-                                 stdin=devnull,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE,
-                                 creationflags=creationflags)
-
-        _, p_err = p.communicate()
-        del p
-
-        lines = p_err.decode('utf8').splitlines()
-        if 'No such file or directory' in lines[-1]:
-            raise IOError(('Error: the file %s could not be found.\n'
-                           'Please check that you entered the correct '
-                           'path.') % filename)
-
-        lines_audio = [l for l in lines if ' Audio: ' in l]
-
-        if lines_audio:
-            line = lines_audio[0]
-            try:
-                match = re.search(' [0-9]* Hz', line)
-                return int(line[match.start() + 1:match.end() - 3])
-            except Exception as e:
-                pass
-
-        # Return a sensible default
-        return 44100
-
     def _load_clip(self):
         self.clip = AudioFileClip(self.filename, fps=self.sampling_rate)
+
+    @staticmethod
+    def get_sampling_rate(filename):
+        ''' Use moviepy/FFMPEG to get the sampling rate '''
+        infos = ffmpeg_parse_infos(filename)
+        return infos.get('audio_fps', 44100)
 
     def __getstate__(self):
         d = self.__dict__.copy()
