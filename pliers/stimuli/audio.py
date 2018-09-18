@@ -60,7 +60,10 @@ class AudioStim(Stim):
     def get_sampling_rate(filename):
         ''' Use moviepy/FFMPEG to get the sampling rate '''
         infos = ffmpeg_parse_infos(filename)
-        return infos.get('audio_fps', 44100)
+        fps = infos.get('audio_fps', 44100)
+        if fps == 'unknown':
+            fps = 44100
+        return fps
 
     def __getstate__(self):
         d = self.__dict__.copy()
