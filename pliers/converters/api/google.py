@@ -90,7 +90,7 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
             raise Exception(response['error']['message'])
 
         offset = 0.0 if stim.onset is None else stim.onset
-	words = []
+        words = []
         if 'results' in response:
             for result in response['results']:
                 transcription = result['alternatives'][0]
