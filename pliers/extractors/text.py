@@ -1,7 +1,8 @@
 '''
 Extractors that operate primarily or exclusively on Text stimuli.
 '''
-
+import sys
+#sys.path.insert(0,'C:\\Users\\jayee\\Documents\\Tal-Pliers\\pliers' )
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.exceptions import PliersError
@@ -13,8 +14,15 @@ import numpy as np
 import pandas as pd
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-import sys
+
+import re
+import spacy
+from spacy.cli.download import download as spacy_download
+import logging
 from six import string_types
+
+
+
 
 keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
                                  ['KeyedVectors'])
@@ -153,6 +161,20 @@ class LengthExtractor(TextExtractor):
     def _extract(self, stim):
         return ExtractorResult(np.array([[len(stim.text.strip())]]), stim,
                                self, features=['text_length'])
+
+
+class LowerCaseSpecialCharStripExtractor(TextExtractor):
+
+    ''' Strips the text of the special characters and converts to lower case. '''
+
+    VERSION = '1.0'
+
+    def _extract(self, stim):
+        
+        string=re.sub('[^ a-zA-Z0-9]', '', stim)
+        string=string.lower()
+        return ExtractorResult(np.array(string), stim,
+                               self, features=['text_stripped'])
 
 
 class NumUniqueWordsExtractor(TextExtractor):
@@ -313,3 +335,38 @@ class VADERSentimentExtractor(TextExtractor):
         features = ['sentiment_' + k for k in scores.keys()]
         return ExtractorResult([list(scores.values())], stim, self,
                                features=features)
+
+class SpaCyExtractor(TextExtractor):
+    
+    def __init__(self, model='en_core_web_sm', features=None):
+        #verify_dependencies(['spacy'])
+        try: 
+            nlp = spacy.load('en_core_web_sm')
+        except ImportError:
+            logging.warning("Spacy Models ('en_core_web_sm') not found. Downloading and installing")
+            spacy_download("en_core_web_sm-2.0.0/en_core_web_sm-2.0.0.tar.gz")
+           
+            
+            
+    def _extract(self, stim):
+        #make lowercase, remove puntuations:
+        stim=LowerCaseSpecialCharStripExtractor._extract(stim)
+        features=[[]]
+        inputTxt=nlp(stim)
+        #taking the sentiment value for example 
+        print(inputTxt)
+        for i in inputTxt:
+            features.append(i, i.sentiment)
+            
+        return ExtractorResult(features, stim,
+                               self, features=['sentiment_value'])
+
+            
+            
+            
+        
+            
+
+
+    
+    
