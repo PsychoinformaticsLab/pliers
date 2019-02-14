@@ -39,6 +39,7 @@ install:
 - pip install clarifai==2.1.0
 - pip install SpeechRecognition IndicoIo pygraphviz sklearn python-twitter gensim
   google-compute-engine librosa face_recognition google-api-python-client
+- pip install spacy
 before_script:
 - python -m pliers.support.download
 script:
