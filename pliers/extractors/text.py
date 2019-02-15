@@ -16,7 +16,6 @@ import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import os
 import re
-from spacy.cli.download import download as spacy_download
 import logging
 from six import string_types
 
@@ -342,42 +341,42 @@ class SpaCyExtractor(TextExtractor):
         verify_dependencies(['spacy'])
         try: 
             print(model)
-            model_na=model[:2]
+            model_na = model[:2]
             self.model = spacy.load(model_na)
             self.features= features
             print('loaded model: ',self.model )
         except (ImportError, IOError, OSError) as e:
-            logging.error("Spacy Models ('"+model+"') not found. Downloading and installing")
-            #spacy_download.download_model("en_core_web_sm-2.0.0/en_core_web_sm-2.0.0.tar.gz")
+            logging.error("Spacy Models ('{ "+model+" }') not found. Downloading and installing")
+           
             os.system('python -m spacy download '+model)
             
         super(SpaCyExtractor, self).__init__()
            
             
             
+        
     def _extract(self, stim):
+         
+         input_Txt=self.model(stim.text)
+         features_list = []
+         
+         order_list = list(range(1,len(input_Txt)+1)) 
         
-        inputTxt=self.model(stim.text)
-        features_list=[]
-        #taking the sentiment value for example 
-    
-        if self.features==None:
-            features=['raw_text', 'text','lemma', 'pos', 'tag', 'syntactic_dependancy', 'shape', 'alpha', 'stop' ]
-        
-        for token in inputTxt:
-            arr=[]
-            arr.extend((token, token.text, token.lemma_, token.pos_, token.tag_, token.dep_,
-                  token.shape_, token.is_alpha, token.is_stop))
-            features_list.append(arr)
+         if self.features is None:
+             self.features = ['text','lemma', 'pos_', 'tag_', 'dep_', 'shape_', 'is_alpha', 'is_stop', 'is_punct', 
+                       'sentiment', 'is_ascii', 'is_digit']
             
-        #print(features_list)  
-        return ExtractorResult(features_list, stim,
-                               self, features=features)
-
+         for token in input_Txt:
+             arr = []
+             
+             for feat in self.features:
+                 arr.append(getattr(token, feat))
+             features_list.append(arr)
+     
+         #print(features_list)  
+         return ExtractorResult(features_list, stim,
+                                   self, features=self.features, orders=order_list)           
             
-            
-            
-        
             
         
 
