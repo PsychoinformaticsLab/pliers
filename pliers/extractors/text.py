@@ -26,7 +26,7 @@ keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
                                  ['KeyedVectors'])
 sklearn_text = attempt_to_import('sklearn.feature_extraction.text', 'sklearn_text',
                                  ['VectorizerMixin', 'CountVectorizer'])
-spacy=attempt_to_import('spacy')
+spacy = attempt_to_import('spacy')
 
 class TextExtractor(Extractor):
 
@@ -168,9 +168,8 @@ class LowerCaseSpecialCharStripExtractor(TextExtractor):
     VERSION = '1.0'
 
     def _extract(self, stim):
-        
-        string=re.sub('[^ a-zA-Z0-9]', '', stim.text)
-        string=string.lower()
+        string = re.sub('[^ a-zA-Z0-9]', '', stim.text)
+        string = string.lower()
         return ExtractorResult(np.array(string), stim.text,
                                self, features=['text_stripped'])
 
@@ -334,51 +333,122 @@ class VADERSentimentExtractor(TextExtractor):
         return ExtractorResult([list(scores.values())], stim, self,
                                features=features)
 
-class SpaCyExtractor(TextExtractor):
 
-    
+class SpaCyTokenExtractor(TextExtractor):
+    '''
+    Uses SpaCy to extract features from text. Extracts features for every word(token) in a sentence.
+    Features returned are:
+     text : Verbatim text content.(unicode)
+     lemma_ : Base form of the token, with no inflectional suffixes.(unicode)
+     pos_ : Coarse-grained part-of-speech.(unicode)
+     tag_ : Fine-grained part-of-speech.(unicode)
+     dep_ : Syntactic dependency relation.(unicode)
+     shape_ : Transform of the tokens's string, to show orthographic features. For example, "Xxxx" or "dd".(unicode)
+     is_alpha : Does the token consist of alphabetic characters? (bool)
+     is_stop : Is the token part of a "stop list"? (bool)
+     is_punct : Is the token punctuation?(bool)
+     sentiment : A scalar value indicating the positivity or negativity of the token.(float)
+     is_ascii : Does the token consist of ASCII characters?(bool)
+     is_digit : Does the token consist of digits?(bool)
+    '''
+
     def __init__(self, model='en_core_web_sm', features=None):
         verify_dependencies(['spacy'])
-        try: 
-            print(model)
+        try:
+            self.model = spacy.load(model)
+
+            print('loaded model: ', self.model)
+        except (ImportError, IOError, OSError) as e:
+            logging.error(
+                "Spacy Models ('{ "+model+" }') not found. Downloading and installing")
+
+            os.system('python -m spacy download '+model)
+
+        if self.model is None:
+            self.model = spacy.load('en')
+        else:
             model_na = model[:2]
             self.model = spacy.load(model_na)
-            self.features= features
-            print('loaded model: ',self.model )
-        except (ImportError, IOError, OSError) as e:
-            logging.error("Spacy Models ('{ "+model+" }') not found. Downloading and installing")
-           
-            os.system('python -m spacy download '+model)
-            
-        super(SpaCyExtractor, self).__init__()
-           
-            
-            
-        
+
+        self.features = features
+        super(SpaCyTokenExtractor, self).__init__()
+
     def _extract(self, stim):
-         
-         input_Txt=self.model(stim.text)
+
+         input_txt = self.model(stim.text)
          features_list = []
-         
-         order_list = list(range(1,len(input_Txt)+1)) 
-        
+
+         order_list = list(range(1, len(input_txt)+1))
+
          if self.features is None:
-             self.features = ['text','lemma', 'pos_', 'tag_', 'dep_', 'shape_', 'is_alpha', 'is_stop', 'is_punct', 
-                       'sentiment', 'is_ascii', 'is_digit']
-            
-         for token in input_Txt:
+             self.features = ['text', 'lemma', 'pos_', 'tag_', 'dep_', 'shape_', 'is_alpha', 'is_stop',
+                              'is_punct', 'sentiment', 'is_ascii', 'is_digit']
+
+         for token in input_txt:
              arr = []
-             
+
              for feat in self.features:
                  arr.append(getattr(token, feat))
              features_list.append(arr)
-     
-         #print(features_list)  
-         return ExtractorResult(features_list, stim,
-                                   self, features=self.features, orders=order_list)           
-            
-            
-        
 
-    
-    
+         #print(features_list)
+         return ExtractorResult(features_list, stim,
+                                self, features=self.features, orders=order_list)
+
+
+class SpaCyDocExtractor(TextExtractor):
+    '''
+     Uses SpaCy to extract features from text. A Doc is a sequence of Token  objects. 
+     Access sentences and named entities, export annotations to numpy arrays, 
+      losslessly serialize to compressed binary strings. 
+     
+     Features returned are:
+     text : A unicode representation of the document text. (unicode)
+     is_tagged: A flag indicating that the document has been part-of-speech tagged. (bool)
+     is_parsed: A flag indicating that the document has been syntactically parsed. (bool)
+     is_sentenced: A flag indicating that sentence boundaries have been applied to the document. (bool)
+     sentiment: The document's positivity/negativity score, if available. (float)
+    '''
+
+    def __init__(self, model='en_core_web_sm', features=None):
+        verify_dependencies(['spacy'])
+        try:
+            self.model = spacy.load(model)
+
+            print('loaded model: ', self.model)
+        except (ImportError, IOError, OSError) as e:
+            logging.error(
+                "Spacy Models ('{ "+model+" }') not found. Downloading and installing")
+
+            os.system('python -m spacy download '+model)
+
+        if self.model is None:
+            self.model = spacy.load('en')
+        else:
+            model_na = model[:2]
+            self.model = spacy.load(model_na)
+
+        self.features = features
+        super(SpaCyDocExtractor, self).__init__()
+
+    def _extract(self, stim):
+
+         input_txt = self.model(stim.text)
+         features_list = []
+         sentences = list(input_txt.sents)
+         order_list = list(range(1, len(sentences)+1))
+
+         if self.features is None:
+             self.features = ['text', 'is_tagged',
+                              'is_parsed', 'is_sentenced', 'sentiment']
+
+         for doc in sentences:
+             doc = doc.as_doc()
+             arr = []
+             for feat in self.features:
+                 arr.append(getattr(doc, feat))
+             features_list.append(arr)
+
+         #print(features_list)
+         return ExtractorResult(features_list, stim,
+                                self, features=self.features, orders=order_list)
