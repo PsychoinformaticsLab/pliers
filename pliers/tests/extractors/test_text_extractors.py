@@ -5,7 +5,9 @@ from pliers.extractors import (DictionaryExtractor,
                                PredefinedDictionaryExtractor,
                                TextVectorizerExtractor,
                                WordEmbeddingExtractor,
-                               VADERSentimentExtractor)
+                               VADERSentimentExtractor,
+                               SpaCyTokenExtractor,
+                               SpaCyDocExtractor)
 from pliers.extractors.base import merge_results
 from pliers.stimuli import TextStim, ComplexTextStim
 from ..utils import get_test_data_path
@@ -154,3 +156,40 @@ def test_vader_sentiment_extractor():
     assert result2['sentiment_neg'][0] == 0.0
     assert result2['sentiment_neu'][0] == 0.248
     assert result2['sentiment_compound'][0] == 0.8439
+
+def test_SpaCy_Token_Extractor():
+    
+    stim=TextStim(text='This is a test.')
+    text=SpaCyTokenExtractor()
+    assert text.model is not None
+    
+    text2=SpaCyTokenExtractor(model='fr_core_news_md')
+    assert text2.model == 'fr_core_news_md'
+    
+    result=text.transform(stim).to_df()
+    assert result['text'][0] == 'This'
+    assert result['pos_'][0] == 'DET'
+    assert result['text'][3] == 'test'
+    assert result['pos_'][3] == 'NOUN'
+    assert result['dep_'][2] == 'det'
+    assert result['pos_'][4] == 'PUNCT'
+
+    
+    
+    
+def test_SpaCy_Doc_Extractor():
+    stim=TextStim(text='This is a test. And we are testing again. This should be quite interesting. Tests are totally fun.')
+    text=SpaCyDocExtractor()
+    assert text.model is not None
+    
+    text2=SpaCyDocExtractor(model='fr_core_news_md')
+    assert text2.model == 'fr_core_news_md'
+    
+    result=text.transform(stim).to_df()
+    assert result['text'][0] == True
+    assert result['is_tagged'][0] == True
+    assert result['sentiment'][3] == 0.0
+    assert result['text'][1] == True
+    assert result['is_tagged'][2] == True
+    assert result['sentiment'][4] == 0.0
+    

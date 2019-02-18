@@ -363,12 +363,9 @@ class SpaCyTokenExtractor(TextExtractor):
                 "Spacy Models ('{ "+model+" }') not found. Downloading and installing")
 
             os.system('python -m spacy download '+model)
-
-        if self.model is None:
-            self.model = spacy.load('en')
-        else:
             model_na = model[:2]
             self.model = spacy.load(model_na)
+
 
         self.features = features
         super(SpaCyTokenExtractor, self).__init__()
@@ -399,9 +396,6 @@ class SpaCyTokenExtractor(TextExtractor):
 class SpaCyDocExtractor(TextExtractor):
     '''
      Uses SpaCy to extract features from text. A Doc is a sequence of Token  objects. 
-     Access sentences and named entities, export annotations to numpy arrays, 
-      losslessly serialize to compressed binary strings. 
-     
      Features returned are:
      text : A unicode representation of the document text. (unicode)
      is_tagged: A flag indicating that the document has been part-of-speech tagged. (bool)
@@ -421,12 +415,9 @@ class SpaCyDocExtractor(TextExtractor):
                 "Spacy Models ('{ "+model+" }') not found. Downloading and installing")
 
             os.system('python -m spacy download '+model)
-
-        if self.model is None:
-            self.model = spacy.load('en')
-        else:
             model_na = model[:2]
             self.model = spacy.load(model_na)
+
 
         self.features = features
         super(SpaCyDocExtractor, self).__init__()
