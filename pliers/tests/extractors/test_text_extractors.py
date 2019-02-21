@@ -15,6 +15,7 @@ from ..utils import get_test_data_path
 import numpy as np
 from os.path import join
 import pytest
+import spacy
 
 TEXT_DIR = join(get_test_data_path(), 'text')
 
@@ -163,17 +164,74 @@ def test_SpaCy_Token_Extractor():
     text=SpaCyTokenExtractor()
     assert text.model is not None
     
-    text2=SpaCyTokenExtractor(model='fr_core_news_md')
-    assert text2.model == 'fr_core_news_md'
+    text2=SpaCyTokenExtractor(model='en_core_web_sm')
+    assert isinstance(text2.model, spacy.lang.en.English)
     
     result=text.transform(stim).to_df()
     assert result['text'][0] == 'This'
+    assert result['lemma_'][0] == 'this'
     assert result['pos_'][0] == 'DET'
-    assert result['text'][3] == 'test'
-    assert result['pos_'][3] == 'NOUN'
+    assert result['tag_'][0] == 'DT'
+    assert result['dep_'][0] == 'nsubj'
+    assert result['shape_'][0] == 'Xxxx'
+    assert result['is_alpha'][0] == 'True'
+    assert result['is_stop'][0] == 'False'
+    assert result['is_punct'][0] == 'False'
+    assert result['is_ascii'][0] == 'True'
+    assert result['is_digit'][0] == 'False'
+    assert result['sentiment'][0] == '0.0'
+    
+    assert result['text'][1] == 'is'
+    assert result['lemma_'][1] == 'be'
+    assert result['pos_'][1] == 'VERB'
+    assert result['tag_'][1] == 'VBZ'
+    assert result['dep_'][1] == 'ROOT'
+    assert result['shape_'][1] == 'xx'
+    assert result['is_alpha'][1] == 'True'
+    assert result['is_stop'][1] == 'True'
+    assert result['is_punct'][1] == 'False'
+    assert result['is_ascii'][1] == 'True'
+    assert result['is_digit'][1] == 'False'
+    assert result['sentiment'][1] == '0.0'
+    
+    assert result['text'][2] == 'a'
+    assert result['lemma_'][2] == 'a'
+    assert result['pos_'][2] == 'DET'
+    assert result['tag_'][2] == 'DT'
     assert result['dep_'][2] == 'det'
+    assert result['shape_'][2] == 'x'
+    assert result['is_alpha'][2] == 'True'
+    assert result['is_stop'][2] == 'True'
+    assert result['is_punct'][2] == 'False'
+    assert result['is_ascii'][2] == 'True'
+    assert result['is_digit'][2] == 'False'
+    assert result['sentiment'][2] == '0.0'
+    
+    assert result['text'][3] == 'test'
+    assert result['lemma_'][3] == 'test'
+    assert result['pos_'][3] == 'NOUN'
+    assert result['tag_'][3] == 'NN'
+    assert result['dep_'][3] == 'attr'
+    assert result['shape_'][3] == 'xxxx'
+    assert result['is_alpha'][3] == 'True'
+    assert result['is_stop'][3] == 'False'
+    assert result['is_punct'][3] == 'False'
+    assert result['is_ascii'][3] == 'True'
+    assert result['is_digit'][3] == 'False'
+    assert result['sentiment'][3] == '0.0'
+    
+    assert result['text'][4] == '.'
+    assert result['lemma_'][4] == '.'
     assert result['pos_'][4] == 'PUNCT'
-
+    assert result['tag_'][4] == '.'
+    assert result['dep_'][4] == 'punct'
+    assert result['shape_'][4] == '.'
+    assert result['is_alpha'][4] == 'False'
+    assert result['is_stop'][4] == 'False'
+    assert result['is_punct'][4] == 'True'
+    assert result['is_ascii'][4] == 'True'
+    assert result['is_digit'][4] == 'False'
+    assert result['sentiment'][4] == '0.0'
     
     
     
@@ -181,15 +239,28 @@ def test_SpaCy_Doc_Extractor():
     stim=TextStim(text='This is a test. And we are testing again. This should be quite interesting. Tests are totally fun.')
     text=SpaCyDocExtractor()
     assert text.model is not None
-    
-    text2=SpaCyDocExtractor(model='fr_core_news_md')
-    assert text2.model == 'fr_core_news_md'
+
+    text2=SpaCyTokenExtractor(model='en_core_web_sm')
+    assert isinstance(text2.model, spacy.lang.en.English)
     
     result=text.transform(stim).to_df()
-    assert result['text'][0] == True
-    assert result['is_tagged'][0] == True
-    assert result['sentiment'][3] == 0.0
-    assert result['text'][1] == True
-    assert result['is_tagged'][2] == True
-    assert result['sentiment'][4] == 0.0
+    assert result['text'][0]=='This is a test. '
+    assert result['is_parsed'][0], "[is_parsed][0] is not true. "
+    assert result['is_tagged'][0], "[is_tagged][0] is not true. "
+    assert result['is_sentenced'][0], "[is_sentenced][0] is not true. "
     
+    assert result['text'][1]=='And we are testing again. '
+    assert result['is_parsed'][1], "[is_parsed][1] is not true. "
+    assert result['is_tagged'][1], "[is_tagged][1] is not true. "
+    assert result['is_sentenced'][1], "[is_sentenced][1] is not true. "
+     
+    assert result['text'][2]=='This should be quite interesting. '
+    assert result['is_parsed'][2], "[is_parsed][1] is not true. "
+    assert result['is_tagged'][2], "[is_tagged][1] is not true. "
+    assert result['is_sentenced'][2], "[is_sentenced][1] is not true. "
+
+    assert result['text'][3]=='Tests are totally fun.'
+    assert result['is_parsed'][3], "[is_parsed][1] is not true. "
+    assert result['is_tagged'][3], "[is_tagged][1] is not true. "
+    assert result['is_sentenced'][3], "[is_sentenced][1] is not true. "
+        
