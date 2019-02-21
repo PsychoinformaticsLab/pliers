@@ -15,147 +15,148 @@ from ..utils import get_test_data_path
 import numpy as np
 from os.path import join
 import pytest
+import spacy
 
 TEXT_DIR = join(get_test_data_path(), 'text')
 
 
-def test_text_extractor():
-    stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
-                           columns='to', default_duration=1)
-    td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
-                             variables=['length', 'frequency'])
-    assert td.data.shape == (7, 2)
-    result = td.transform(stim)[2].to_df()
-    assert result['duration'][0] == 1
-    assert result.shape == (1, 6)
-    assert np.isclose(result['frequency'][0], 11.729, 1e-5)
-
-
-def test_text_length_extractor():
-    stim = TextStim(text='hello world', onset=4.2, duration=1)
-    ext = LengthExtractor()
-    result = ext.transform(stim).to_df()
-    assert 'text_length' in result.columns
-    assert result['text_length'][0] == 11
-    assert result['onset'][0] == 4.2
-    assert result['duration'][0] == 1
-
-
-def test_unique_words_extractor():
-    stim = TextStim(text='hello hello world')
-    ext = NumUniqueWordsExtractor()
-    result = ext.transform(stim).to_df()
-    assert 'num_unique_words' in result.columns
-    assert result['num_unique_words'][0] == 2
-
-
-def test_dictionary_extractor():
-    td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
-                             variables=['length', 'frequency'])
-    assert td.data.shape == (7, 2)
-
-    stim = TextStim(text='annotation')
-    result = td.transform(stim).to_df()
-    assert np.isnan(result['onset'][0])
-    assert 'length' in result.columns
-    assert result['length'][0] == 10
-
-    stim2 = TextStim(text='some')
-    result = td.transform(stim2).to_df()
-    assert np.isnan(result['onset'][0])
-    assert 'frequency' in result.columns
-    assert np.isnan(result['frequency'][0])
-
-
-def test_predefined_dictionary_extractor():
-    stim = TextStim(text='enormous')
-    td = PredefinedDictionaryExtractor(['aoa/Freq_pm'])
-    result = td.transform(stim).to_df()
-    assert result.shape == (1, 5)
-    assert 'aoa_Freq_pm' in result.columns
-    assert np.isclose(result['aoa_Freq_pm'][0], 10.313725, 1e-5)
-
-
-def test_part_of_speech_extractor():
-    import nltk
-    nltk.download('tagsets')
-    stim = ComplexTextStim(join(TEXT_DIR, 'complex_stim_with_header.txt'))
-    result = merge_results(PartOfSpeechExtractor().transform(stim),
-                           format='wide', extractor_names=False)
-    assert result.shape == (4, 54)
-    assert result['NN'].sum() == 1
-    result = result.sort_values('onset')
-    assert result['VBD'].iloc[3] == 1
-
-
-def test_word_embedding_extractor():
-    pytest.importorskip('gensim')
-    stims = [TextStim(text='this'), TextStim(text='sentence')]
-    ext = WordEmbeddingExtractor(join(TEXT_DIR, 'simple_vectors.bin'),
-                                 binary=True)
-    result = merge_results(ext.transform(stims), extractor_names='multi',
-                           format='wide')
-    assert ('WordEmbeddingExtractor', 'embedding_dim99') in result.columns
-    assert 0.001091 in result[('WordEmbeddingExtractor', 'embedding_dim0')]
-
-    unk = TextStim(text='nowaythisinvocab')
-    result = ext.transform(unk).to_df()
-    assert result['embedding_dim10'][0] == 0.0
-
-    ones = np.ones(100)
-    ext = WordEmbeddingExtractor(join(TEXT_DIR, 'simple_vectors.bin'),
-                                 binary=True, unk_vector=ones)
-    result = ext.transform(unk).to_df()
-    assert result['embedding_dim10'][0] == 1.0
-
-    ext = WordEmbeddingExtractor(join(TEXT_DIR, 'simple_vectors.bin'),
-                                 binary=True, unk_vector='random')
-    result = ext.transform(unk).to_df()
-    assert result['embedding_dim10'][0] <= 1.0
-    assert result['embedding_dim10'][0] >= -1.0
-
-    ext = WordEmbeddingExtractor(join(TEXT_DIR, 'simple_vectors.bin'),
-                                 binary=True, unk_vector='nothing')
-    result = ext.transform(unk).to_df()
-    assert result['embedding_dim10'][0] == 0.0
-
-
-def test_vectorizer_extractor():
-    pytest.importorskip('sklearn')
-    stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
-    result = TextVectorizerExtractor().transform(stim).to_df()
-    assert 'woman' in result.columns
-    assert result['woman'][0] == 3
-
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    custom_vectorizer = TfidfVectorizer()
-    ext = TextVectorizerExtractor(vectorizer=custom_vectorizer)
-    stim2 = TextStim(join(TEXT_DIR, 'simple_text.txt'))
-    result = merge_results(ext.transform([stim, stim2]), format='wide',
-                           extractor_names='multi')
-    assert ('TextVectorizerExtractor', 'woman') in result.columns
-    assert 0.129568189476 in result[('TextVectorizerExtractor', 'woman')]
-
-    ext = TextVectorizerExtractor(vectorizer='CountVectorizer',
-                                  analyzer='char_wb',
-                                  ngram_range=(2, 2))
-    result = ext.transform(stim).to_df()
-    assert 'wo' in result.columns
-    assert result['wo'][0] == 6
-
-
-def test_vader_sentiment_extractor():
-    stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
-    ext = VADERSentimentExtractor()
-    result = ext.transform(stim).to_df()
-    assert result['sentiment_neu'][0] == 0.752
-
-    stim2 = TextStim(text='VADER is smart, handsome, and funny!')
-    result2 = ext.transform(stim2).to_df()
-    assert result2['sentiment_pos'][0] == 0.752
-    assert result2['sentiment_neg'][0] == 0.0
-    assert result2['sentiment_neu'][0] == 0.248
-    assert result2['sentiment_compound'][0] == 0.8439
+#def test_text_extractor():
+#    stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
+#                           columns='to', default_duration=1)
+#    td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
+#                             variables=['length', 'frequency'])
+#    assert td.data.shape == (7, 2)
+#    result = td.transform(stim)[2].to_df()
+#    assert result['duration'][0] == 1
+#    assert result.shape == (1, 6)
+#    assert np.isclose(result['frequency'][0], 11.729, 1e-5)
+#
+#
+#def test_text_length_extractor():
+#    stim = TextStim(text='hello world', onset=4.2, duration=1)
+#    ext = LengthExtractor()
+#    result = ext.transform(stim).to_df()
+#    assert 'text_length' in result.columns
+#    assert result['text_length'][0] == 11
+#    assert result['onset'][0] == 4.2
+#    assert result['duration'][0] == 1
+#
+#
+#def test_unique_words_extractor():
+#    stim = TextStim(text='hello hello world')
+#    ext = NumUniqueWordsExtractor()
+#    result = ext.transform(stim).to_df()
+#    assert 'num_unique_words' in result.columns
+#    assert result['num_unique_words'][0] == 2
+#
+#
+#def test_dictionary_extractor():
+#    td = DictionaryExtractor(join(TEXT_DIR, 'test_lexical_dictionary.txt'),
+#                             variables=['length', 'frequency'])
+#    assert td.data.shape == (7, 2)
+#
+#    stim = TextStim(text='annotation')
+#    result = td.transform(stim).to_df()
+#    assert np.isnan(result['onset'][0])
+#    assert 'length' in result.columns
+#    assert result['length'][0] == 10
+#
+#    stim2 = TextStim(text='some')
+#    result = td.transform(stim2).to_df()
+#    assert np.isnan(result['onset'][0])
+#    assert 'frequency' in result.columns
+#    assert np.isnan(result['frequency'][0])
+#
+#
+#def test_predefined_dictionary_extractor():
+#    stim = TextStim(text='enormous')
+#    td = PredefinedDictionaryExtractor(['aoa/Freq_pm'])
+#    result = td.transform(stim).to_df()
+#    assert result.shape == (1, 5)
+#    assert 'aoa_Freq_pm' in result.columns
+#    assert np.isclose(result['aoa_Freq_pm'][0], 10.313725, 1e-5)
+#
+#
+#def test_part_of_speech_extractor():
+#    import nltk
+#    nltk.download('tagsets')
+#    stim = ComplexTextStim(join(TEXT_DIR, 'complex_stim_with_header.txt'))
+#    result = merge_results(PartOfSpeechExtractor().transform(stim),
+#                           format='wide', extractor_names=False)
+#    assert result.shape == (4, 54)
+#    assert result['NN'].sum() == 1
+#    result = result.sort_values('onset')
+#    assert result['VBD'].iloc[3] == 1
+#
+#
+#def test_word_embedding_extractor():
+#    pytest.importorskip('gensim')
+#    stims = [TextStim(text='this'), TextStim(text='sentence')]
+#    ext = WordEmbeddingExtractor(join(TEXT_DIR, 'simple_vectors.bin'),
+#                                 binary=True)
+#    result = merge_results(ext.transform(stims), extractor_names='multi',
+#                           format='wide')
+#    assert ('WordEmbeddingExtractor', 'embedding_dim99') in result.columns
+#    assert 0.001091 in result[('WordEmbeddingExtractor', 'embedding_dim0')]
+#
+#    unk = TextStim(text='nowaythisinvocab')
+#    result = ext.transform(unk).to_df()
+#    assert result['embedding_dim10'][0] == 0.0
+#
+#    ones = np.ones(100)
+#    ext = WordEmbeddingExtractor(join(TEXT_DIR, 'simple_vectors.bin'),
+#                                 binary=True, unk_vector=ones)
+#    result = ext.transform(unk).to_df()
+#    assert result['embedding_dim10'][0] == 1.0
+#
+#    ext = WordEmbeddingExtractor(join(TEXT_DIR, 'simple_vectors.bin'),
+#                                 binary=True, unk_vector='random')
+#    result = ext.transform(unk).to_df()
+#    assert result['embedding_dim10'][0] <= 1.0
+#    assert result['embedding_dim10'][0] >= -1.0
+#
+#    ext = WordEmbeddingExtractor(join(TEXT_DIR, 'simple_vectors.bin'),
+#                                 binary=True, unk_vector='nothing')
+#    result = ext.transform(unk).to_df()
+#    assert result['embedding_dim10'][0] == 0.0
+#
+#
+#def test_vectorizer_extractor():
+#    pytest.importorskip('sklearn')
+#    stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
+#    result = TextVectorizerExtractor().transform(stim).to_df()
+#    assert 'woman' in result.columns
+#    assert result['woman'][0] == 3
+#
+#    from sklearn.feature_extraction.text import TfidfVectorizer
+#    custom_vectorizer = TfidfVectorizer()
+#    ext = TextVectorizerExtractor(vectorizer=custom_vectorizer)
+#    stim2 = TextStim(join(TEXT_DIR, 'simple_text.txt'))
+#    result = merge_results(ext.transform([stim, stim2]), format='wide',
+#                           extractor_names='multi')
+#    assert ('TextVectorizerExtractor', 'woman') in result.columns
+#    assert 0.129568189476 in result[('TextVectorizerExtractor', 'woman')]
+#
+#    ext = TextVectorizerExtractor(vectorizer='CountVectorizer',
+#                                  analyzer='char_wb',
+#                                  ngram_range=(2, 2))
+#    result = ext.transform(stim).to_df()
+#    assert 'wo' in result.columns
+#    assert result['wo'][0] == 6
+#
+#
+#def test_vader_sentiment_extractor():
+#    stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
+#    ext = VADERSentimentExtractor()
+#    result = ext.transform(stim).to_df()
+#    assert result['sentiment_neu'][0] == 0.752
+#
+#    stim2 = TextStim(text='VADER is smart, handsome, and funny!')
+#    result2 = ext.transform(stim2).to_df()
+#    assert result2['sentiment_pos'][0] == 0.752
+#    assert result2['sentiment_neg'][0] == 0.0
+#    assert result2['sentiment_neu'][0] == 0.248
+#    assert result2['sentiment_compound'][0] == 0.8439
 
 def test_SpaCy_Token_Extractor():
     
@@ -163,17 +164,74 @@ def test_SpaCy_Token_Extractor():
     text=SpaCyTokenExtractor()
     assert text.model is not None
     
-    text2=SpaCyTokenExtractor(model='fr_core_news_md')
-    assert text2.model == 'fr_core_news_md'
+    text2=SpaCyTokenExtractor(model='en_core_web_sm')
+    assert isinstance(text2.model, spacy.lang.en.English)
     
     result=text.transform(stim).to_df()
     assert result['text'][0] == 'This'
+    assert result['lemma_'][0] == 'this'
     assert result['pos_'][0] == 'DET'
-    assert result['text'][3] == 'test'
-    assert result['pos_'][3] == 'NOUN'
+    assert result['tag_'][0] == 'DT'
+    assert result['dep_'][0] == 'nsubj'
+    assert result['shape_'][0] == 'Xxxx'
+    assert result['is_alpha'][0] == 'True'
+    assert result['is_stop'][0] == 'False'
+    assert result['is_punct'][0] == 'False'
+    assert result['is_ascii'][0] == 'True'
+    assert result['is_digit'][0] == 'False'
+    assert result['sentiment'][0] == '0.0'
+    
+    assert result['text'][1] == 'is'
+    assert result['lemma_'][1] == 'be'
+    assert result['pos_'][1] == 'VERB'
+    assert result['tag_'][1] == 'VBZ'
+    assert result['dep_'][1] == 'ROOT'
+    assert result['shape_'][1] == 'xx'
+    assert result['is_alpha'][1] == 'True'
+    assert result['is_stop'][1] == 'True'
+    assert result['is_punct'][1] == 'False'
+    assert result['is_ascii'][1] == 'True'
+    assert result['is_digit'][1] == 'False'
+    assert result['sentiment'][1] == '0.0'
+    
+    assert result['text'][2] == 'a'
+    assert result['lemma_'][2] == 'a'
+    assert result['pos_'][2] == 'DET'
+    assert result['tag_'][2] == 'DT'
     assert result['dep_'][2] == 'det'
+    assert result['shape_'][2] == 'x'
+    assert result['is_alpha'][2] == 'True'
+    assert result['is_stop'][2] == 'True'
+    assert result['is_punct'][2] == 'False'
+    assert result['is_ascii'][2] == 'True'
+    assert result['is_digit'][2] == 'False'
+    assert result['sentiment'][2] == '0.0'
+    
+    assert result['text'][3] == 'test'
+    assert result['lemma_'][3] == 'test'
+    assert result['pos_'][3] == 'NOUN'
+    assert result['tag_'][3] == 'NN'
+    assert result['dep_'][3] == 'attr'
+    assert result['shape_'][3] == 'xxxx'
+    assert result['is_alpha'][3] == 'True'
+    assert result['is_stop'][3] == 'False'
+    assert result['is_punct'][3] == 'False'
+    assert result['is_ascii'][3] == 'True'
+    assert result['is_digit'][3] == 'False'
+    assert result['sentiment'][3] == '0.0'
+    
+    assert result['text'][4] == '.'
+    assert result['lemma_'][4] == '.'
     assert result['pos_'][4] == 'PUNCT'
-
+    assert result['tag_'][4] == '.'
+    assert result['dep_'][4] == 'punct'
+    assert result['shape_'][4] == '.'
+    assert result['is_alpha'][4] == 'False'
+    assert result['is_stop'][4] == 'False'
+    assert result['is_punct'][4] == 'True'
+    assert result['is_ascii'][4] == 'True'
+    assert result['is_digit'][4] == 'False'
+    assert result['sentiment'][4] == '0.0'
     
     
     
@@ -181,15 +239,28 @@ def test_SpaCy_Doc_Extractor():
     stim=TextStim(text='This is a test. And we are testing again. This should be quite interesting. Tests are totally fun.')
     text=SpaCyDocExtractor()
     assert text.model is not None
-    
-    text2=SpaCyDocExtractor(model='fr_core_news_md')
-    assert text2.model == 'fr_core_news_md'
+
+    text2=SpaCyTokenExtractor(model='en_core_web_sm')
+    assert isinstance(text2.model, spacy.lang.en.English)
     
     result=text.transform(stim).to_df()
-    assert result['text'][0] == True
-    assert result['is_tagged'][0] == True
-    assert result['sentiment'][3] == 0.0
-    assert result['text'][1] == True
-    assert result['is_tagged'][2] == True
-    assert result['sentiment'][4] == 0.0
+    assert result['text'][0]=='This is a test. '
+    assert result['is_parsed'][0], "[is_parsed][0] is not true. "
+    assert result['is_tagged'][0], "[is_tagged][0] is not true. "
+    assert result['is_sentenced'][0], "[is_sentenced][0] is not true. "
     
+    assert result['text'][1]=='And we are testing again. '
+    assert result['is_parsed'][1], "[is_parsed][1] is not true. "
+    assert result['is_tagged'][1], "[is_tagged][1] is not true. "
+    assert result['is_sentenced'][1], "[is_sentenced][1] is not true. "
+     
+    assert result['text'][2]=='This should be quite interesting. '
+    assert result['is_parsed'][2], "[is_parsed][1] is not true. "
+    assert result['is_tagged'][2], "[is_tagged][1] is not true. "
+    assert result['is_sentenced'][2], "[is_sentenced][1] is not true. "
+
+    assert result['text'][3]=='Tests are totally fun.'
+    assert result['is_parsed'][3], "[is_parsed][1] is not true. "
+    assert result['is_tagged'][3], "[is_tagged][1] is not true. "
+    assert result['is_sentenced'][3], "[is_sentenced][1] is not true. "
+        
