@@ -2,6 +2,7 @@
 Extractors that operate primarily or exclusively on Text stimuli.
 '''
 import sys
+#sys.path.insert(0,'C:\\Users\\jayee\\Documents\\Tal-Pliers\\pliers' )
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.exceptions import PliersError
@@ -339,7 +340,7 @@ class SpaCyTokenExtractor(TextExtractor):
     
     Args:
         
-    features  are:
+    features(list):A list of strings giving the names of spaCy token features to extract. Available names are:  
          text : Verbatim text content.(unicode)
          lemma_ : Base form of the token, with no inflectional suffixes.(unicode)
          pos_ : Coarse-grained part-of-speech.(unicode)
@@ -353,7 +354,7 @@ class SpaCyTokenExtractor(TextExtractor):
          is_ascii : Does the token consist of ASCII characters?(bool)
          is_digit : Does the token consist of digits?(bool)
      
-    models: refer to Spacy Documentation @ https://spacy.io/usage/models
+    models(string): refer to Spacy Documentation @ https://spacy.io/usage/models
     
      
     '''
@@ -364,8 +365,8 @@ class SpaCyTokenExtractor(TextExtractor):
             self.model = spacy.load(model)
 
         except (ImportError, IOError, OSError) as e:
-            logging.error(
-                "Spacy Models ('{ "+model+" }') not found. Downloading and installing")
+            logging.warning(
+                "Spacy Models ('{}') not found. Downloading and installing".format(model))
 
             os.system('python -m spacy download '+model)
             self.model = spacy.load(model)
@@ -393,8 +394,6 @@ class SpaCyTokenExtractor(TextExtractor):
                  arr.append(getattr(token, feat))
              features_list.append(arr)
 
-#         print('self.model type:',type(self.model))
-#         print(isinstance(self.model, spacy.lang.en.English))
          return ExtractorResult(features_list, stim,
                                 self, features=self.features, orders=order_list)
 
@@ -403,14 +402,14 @@ class SpaCyDocExtractor(TextExtractor):
     '''
      Uses SpaCy to extract features from text. A Doc is a sequence of Token  objects. 
      Args:
-         features are:
+         features(list): A list of strings giving the names of spaCy Doc features to extract. Available names are:  
              text : A unicode representation of the document text. (unicode)
              is_tagged: A flag indicating that the document has been part-of-speech tagged. (bool)
              is_parsed: A flag indicating that the document has been syntactically parsed. (bool)
              is_sentenced: A flag indicating that sentence boundaries have been applied to the document. (bool)
              sentiment: The document's positivity/negativity score, if available. (float)
         
-        models: refer to Spacy Documentation @ https://spacy.io/usage/models
+        models(string): refer to Spacy Documentation @ https://spacy.io/usage/models
     '''
 
     def __init__(self, model='en_core_web_sm', features=None):
@@ -420,8 +419,8 @@ class SpaCyDocExtractor(TextExtractor):
             logging.info('loaded model: ', self.model)
 
         except (ImportError, IOError, OSError) as e:
-            logging.error(
-                "Spacy Models ('{ "+model+" }') not found. Downloading and installing")
+            logging.warning(
+                "Spacy Models ('{}') not found. Downloading and installing".format(model))
 
             os.system('python -m spacy download '+model)
             self.model = spacy.load(model)
@@ -448,6 +447,7 @@ class SpaCyDocExtractor(TextExtractor):
              for feat in self.features:
                  arr.append(getattr(doc, feat))
              features_list.append(arr)
+
 
          return ExtractorResult(features_list, stim,
                                 self, features=self.features, orders=order_list)
