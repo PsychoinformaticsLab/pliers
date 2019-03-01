@@ -344,9 +344,13 @@ class SpaCyExtractor(TextExtractor):
     
     Args:
         
+<<<<<<< HEAD
     features(list):
         A list of strings giving the names of spaCy token features to extract. Available names for extractor_type ='Token' are: 
             
+=======
+    features(list):A list of strings giving the names of spaCy token features to extract. Available names are:  
+>>>>>>> 7f3233e3e9b964c0bce318cbbd73098af1093588
          text : Verbatim text content.(unicode)
          lemma_ : Base form of the token, with no inflectional suffixes.(unicode)
          pos_ : Coarse-grained part-of-speech.(unicode)
@@ -359,6 +363,7 @@ class SpaCyExtractor(TextExtractor):
          sentiment : A scalar value indicating the positivity or negativity of the token.(float)
          is_ascii : Does the token consist of ASCII characters?(bool)
          is_digit : Does the token consist of digits?(bool)
+<<<<<<< HEAD
          
          
         A list of strings giving the names of spaCy Doc features to extract. Available names for extractor_type ='Doc' are:  
@@ -374,6 +379,12 @@ class SpaCyExtractor(TextExtractor):
         'Token' = extract features from a sentence by analyzing every word.
         'Doc' = extract features from a group/paragraph of sentences by analyzing every sentence.
   
+=======
+     
+    models(string): refer to Spacy Documentation @ https://spacy.io/usage/models
+    
+     
+>>>>>>> 7f3233e3e9b964c0bce318cbbd73098af1093588
     '''
     
     
@@ -390,8 +401,19 @@ class SpaCyExtractor(TextExtractor):
             os.system('python -m spacy download '+model)
             self.model = spacy.load(model)
             
+<<<<<<< HEAD
             
         self.features=features
+=======
+        if features is None: 
+             self.features = ['text', 'lemma_', 'pos_', 'tag_', 'dep_', 'shape_', 'is_alpha', 'is_stop',
+                              'is_punct', 'sentiment', 'is_ascii', 'is_digit']
+             
+        else:
+            self.features = features
+
+        super(SpaCyTokenExtractor, self).__init__()
+>>>>>>> 7f3233e3e9b964c0bce318cbbd73098af1093588
 
             
         if extractor_type is None: 
@@ -405,6 +427,7 @@ class SpaCyExtractor(TextExtractor):
         
         
     def _extract(self, stim):
+<<<<<<< HEAD
    
         features_list = []
         input_txt = self.model(stim.text)
@@ -444,5 +467,72 @@ class SpaCyExtractor(TextExtractor):
                  
         return ExtractorResult(features_list, stim,
                                 self, features=self.features, orders=order_list)
+=======
+
+         input_txt = self.model(stim.text)
+         features_list = []
+
+         order_list = list(range(1, len(input_txt)+1))
+
+         for token in input_txt:
+             arr = []
+
+             for feat in self.features:
+                 arr.append(getattr(token, feat))
+             features_list.append(arr)
+
+         return ExtractorResult(features_list, stim,
+                                self, features=self.features, orders=order_list)
 
 
+class SpaCyDocExtractor(TextExtractor):
+    '''
+     Uses SpaCy to extract features from text. A Doc is a sequence of Token  objects. 
+     Args:
+         features(list): A list of strings giving the names of spaCy Doc features to extract. Available names are:  
+             text : A unicode representation of the document text. (unicode)
+             is_tagged: A flag indicating that the document has been part-of-speech tagged. (bool)
+             is_parsed: A flag indicating that the document has been syntactically parsed. (bool)
+             is_sentenced: A flag indicating that sentence boundaries have been applied to the document. (bool)
+             sentiment: The document's positivity/negativity score, if available. (float)
+        
+        models(string): refer to Spacy Documentation @ https://spacy.io/usage/models
+    '''
+
+    def __init__(self, model='en_core_web_sm', features=None):
+        verify_dependencies(['spacy'])
+        try:
+            self.model = spacy.load(model)
+            logging.info('loaded model: ', self.model)
+
+        except (ImportError, IOError, OSError) as e:
+            logging.warning(
+                "Spacy Models ('{}') not found. Downloading and installing".format(model))
+
+            os.system('python -m spacy download '+model)
+            self.model = spacy.load(model)
+
+        if features is None: 
+             self.features = ['text', 'is_tagged',
+                      'is_parsed', 'is_sentenced', 'sentiment']
+        else:
+            self.features = features
+            
+        super(SpaCyDocExtractor, self).__init__()
+
+    def _extract(self, stim):
+
+         input_txt = self.model(stim.text)
+         features_list = []
+         sentences = list(input_txt.sents)
+         order_list = list(range(1, len(sentences)+1))
+
+>>>>>>> 7f3233e3e9b964c0bce318cbbd73098af1093588
+
+
+<<<<<<< HEAD
+=======
+
+         return ExtractorResult(features_list, stim,
+                                self, features=self.features, orders=order_list)
+>>>>>>> 7f3233e3e9b964c0bce318cbbd73098af1093588

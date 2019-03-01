@@ -241,6 +241,7 @@ def test_SpaCy_Doc_Extractor():
 
     text2=SpaCyTokenExtractor(model='en_core_web_sm')
     assert isinstance(text2.model, spacy.lang.en.English)
+<<<<<<< HEAD
     
     result=text.transform(stim).to_df()
     assert result['text'][0]=='This is a test. '
@@ -343,6 +344,10 @@ def test_SpaCyExtractor():
     text=SpaCyExtractor(extractor_type='Doc')
     
     result=text.transform(stim2).to_df()
+=======
+    
+    result=text.transform(stim).to_df()
+>>>>>>> 7f3233e3e9b964c0bce318cbbd73098af1093588
     assert result['text'][0]=='This is a test. '
     assert result['is_parsed'][0], "[is_parsed][0] is not true. "
     assert result['is_tagged'][0], "[is_tagged][0] is not true. "
@@ -361,4 +366,9 @@ def test_SpaCyExtractor():
     assert result['text'][3]=='Tests are totally fun.'
     assert result['is_parsed'][3], "[is_parsed][1] is not true. "
     assert result['is_tagged'][3], "[is_tagged][1] is not true. "
+<<<<<<< HEAD
     assert result['is_sentenced'][3], "[is_sentenced][1] is not true. "
+=======
+    assert result['is_sentenced'][3], "[is_sentenced][1] is not true. "
+        
+>>>>>>> 7f3233e3e9b964c0bce318cbbd73098af1093588
