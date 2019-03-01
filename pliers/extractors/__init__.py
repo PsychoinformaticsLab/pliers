@@ -57,7 +57,7 @@ from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
                    NumUniqueWordsExtractor, PartOfSpeechExtractor,
                    WordEmbeddingExtractor, TextVectorizerExtractor,
-                   VADERSentimentExtractor, SpaCyTokenExtractor, SpaCyDocExtractor)
+                   VADERSentimentExtractor, SpaCyExtractor)
 from .video import (FarnebackOpticalFlowExtractor)
 
 __all__ = [
@@ -126,6 +126,5 @@ __all__ = [
     'TextVectorizerExtractor',
     'VADERSentimentExtractor',
     'merge_results', 
-    'SpaCyTokenExtractor',
-    'SpaCyDocExtractor'
+    'SpaCyExtractor'
 ]
