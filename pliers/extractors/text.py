@@ -1,7 +1,8 @@
 '''
 Extractors that operate primarily or exclusively on Text stimuli.
 '''
-
+import sys
+#sys.path.insert(0,'C:\\Users\\jayee\\Documents\\Tal-Pliers\\pliers' )
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.exceptions import PliersError
@@ -13,14 +14,19 @@ import numpy as np
 import pandas as pd
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-import sys
+import os
+import re
+import logging
 from six import string_types
+
+
+
 
 keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
                                  ['KeyedVectors'])
 sklearn_text = attempt_to_import('sklearn.feature_extraction.text', 'sklearn_text',
                                  ['VectorizerMixin', 'CountVectorizer'])
-
+spacy = attempt_to_import('spacy')
 
 class TextExtractor(Extractor):
 
@@ -153,6 +159,19 @@ class LengthExtractor(TextExtractor):
     def _extract(self, stim):
         return ExtractorResult(np.array([[len(stim.text.strip())]]), stim,
                                self, features=['text_length'])
+
+
+class LowerCaseSpecialCharStripExtractor(TextExtractor):
+
+    ''' Strips the text of the special characters and converts to lower case. '''
+
+    VERSION = '1.0'
+
+    def _extract(self, stim):
+        string = re.sub('[^ a-zA-Z0-9]', '', stim.text)
+        string = string.lower()
+        return ExtractorResult(np.array(string), stim.text,
+                               self, features=['text_stripped'])
 
 
 class NumUniqueWordsExtractor(TextExtractor):
@@ -313,3 +332,117 @@ class VADERSentimentExtractor(TextExtractor):
         features = ['sentiment_' + k for k in scores.keys()]
         return ExtractorResult([list(scores.values())], stim, self,
                                features=features)
+
+
+
+class SpaCyExtractor(TextExtractor):
+    
+    ''' A generic class for Spacy Text extractors 
+    
+   
+    Uses SpaCy to extract features from text. Extracts features for every word(token) in a sentence.
+    
+    Args:
+        
+    features(list):
+        A list of strings giving the names of spaCy token features to extract. Available names for extractor_type ='Token' are: 
+            
+         text : Verbatim text content.(unicode)
+         lemma_ : Base form of the token, with no inflectional suffixes.(unicode)
+         pos_ : Coarse-grained part-of-speech.(unicode)
+         tag_ : Fine-grained part-of-speech.(unicode)
+         dep_ : Syntactic dependency relation.(unicode)
+         shape_ : Transform of the tokens's string, to show orthographic features. For example, "Xxxx" or "dd".(unicode)
+         is_alpha : Does the token consist of alphabetic characters? (bool)
+         is_stop : Is the token part of a "stop list"? (bool)
+         is_punct : Is the token punctuation?(bool)
+         sentiment : A scalar value indicating the positivity or negativity of the token.(float)
+         is_ascii : Does the token consist of ASCII characters?(bool)
+         is_digit : Does the token consist of digits?(bool)
+         
+         
+        A list of strings giving the names of spaCy Doc features to extract. Available names for extractor_type ='Doc' are:  
+         text : A unicode representation of the document text. (unicode)
+         is_tagged: A flag indicating that the document has been part-of-speech tagged. (bool)
+         is_parsed: A flag indicating that the document has been syntactically parsed. (bool)
+         is_sentenced: A flag indicating that sentence boundaries have been applied to the document. (bool)
+         sentiment: The document's positivity/negativity score, if available. (float)
+     
+    models(string): refer to Spacy Documentation @ https://spacy.io/usage/models
+    
+    extractor_type(string):
+        'Token' = extract features from a sentence by analyzing every word.
+        'Doc' = extract features from a group/paragraph of sentences by analyzing every sentence.
+  
+    '''
+    
+    
+    def __init__(self, model='en_core_web_sm', extractor_type=None, features=None):
+        verify_dependencies(['spacy'])
+        try:
+            self.model = spacy.load(model)
+            logging.info('loaded model: ', self.model)
+
+        except (ImportError, IOError, OSError) as e:
+            logging.warning(
+                "Spacy Models ('{}') not found. Downloading and installing".format(model))
+
+            os.system('python -m spacy download '+model)
+            self.model = spacy.load(model)
+            
+            
+        self.features=features
+
+            
+        if extractor_type is None: 
+             self.extractor_type = 'Token'
+        else:
+            self.extractor_type = extractor_type
+          
+            
+            
+        super(SpaCyExtractor, self).__init__()
+        
+        
+    def _extract(self, stim):
+   
+        features_list = []
+        input_txt = self.model(stim.text)
+        order_list = []
+        
+        if self.extractor_type=='Token':
+            
+            order_list = list(range(1, len(input_txt)+1))
+            
+            if self.features is None:
+                self.features = ['text', 'lemma_', 'pos_', 'tag_', 'dep_', 'shape_', 'is_alpha', 'is_stop',
+                              'is_punct', 'sentiment', 'is_ascii', 'is_digit']
+
+
+            for token in input_txt:
+                arr = []
+                for feat in self.features:
+                    arr.append(getattr(token, feat))
+                features_list.append(arr)
+            
+        elif self.extractor_type=='Doc':
+
+             sentences = list(input_txt.sents)
+             order_list = list(range(1, len(sentences)+1))
+             if self.features is None:
+                 self.features = ['text', 'is_tagged',
+                              'is_parsed', 'is_sentenced', 'sentiment']
+             for doc in sentences:
+                 doc = doc.as_doc()
+                 arr = []
+                 for feat in self.features:
+                     arr.append(getattr(doc, feat))
+                 features_list.append(arr)
+                 
+        else:
+            logging.error('Invalid extractor_type input.')
+                 
+        return ExtractorResult(features_list, stim,
+                                self, features=self.features, orders=order_list)
+
+
