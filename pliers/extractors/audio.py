@@ -167,7 +167,7 @@ class LibrosaFeatureExtractor(AudioExtractor):
                 y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
                 **self.librosa_kwargs)
             
-        elif self._feature in[ 'tempo']:
+        elif self._feature in[ 'tempo', 'beat_track']:
             return getattr(librosa.beat, self._feature)(
                 y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
                 **self.librosa_kwargs)
@@ -189,23 +189,20 @@ class LibrosaFeatureExtractor(AudioExtractor):
 
     def _extract(self, stim):
         
-#        if self._feature=='beat_track':
-#            tempo,beats= self._get_values(stim)
-#            n_frames = len(beats)
-#        else:
+
         values = self._get_values(stim)
+
+        
+        if self._feature=='beat_track':
+            beats=np.array(values[1])
+            values=beats
+            
         values = values.T
         n_frames = len(values)
                 
-#        
-#        values = self._get_values(stim)
-#        values = values.T
-#        feature_names = listify(self.get_feature_names())
-        feature_names = self.get_feature_names()
-        print('feature_names:', feature_names)
-        print('values shape:', values.shape)
-        
-#        n_frames = len(values)
+
+        feature_names = listify(self.get_feature_names())
+
         onsets = librosa.frames_to_time(range(n_frames),
                                         sr=stim.sampling_rate,
                                         hop_length=self.hop_length)
@@ -213,16 +210,7 @@ class LibrosaFeatureExtractor(AudioExtractor):
         onsets = onsets + stim.onset if stim.onset else onsets
         
         durations = [self.hop_length / float(stim.sampling_rate)] * n_frames
-#        
-#        if self._feature=='beat_track':
-#            feats=[]
-#            feats.append(tempo)
-#            feats.append(beats)
-#            return ExtractorResult(feats, stim, self, features=feature_names,
-#                                   onsets=onsets, durations=durations,
-#                                   orders=list(range(n_frames))) 
-#        else:
-#            
+           
         return ExtractorResult(values, stim, self, features=feature_names,
                                onsets=onsets, durations=durations,
                                orders=list(range(n_frames)))
@@ -250,7 +238,7 @@ class SpectralBandwidthExtractor(LibrosaFeatureExtractor):
 
 class SpectralFlatnessExtractor(LibrosaFeatureExtractor):
 
-    ''' Extracts the p'th-order spectral flatness (or tonality coefficient)  from audio using the
+    ''' Computes the spectral flatness from audio using the
     Librosa library.
 
     For details on argument specification visit:
@@ -273,7 +261,6 @@ class SpectralContrastExtractor(LibrosaFeatureExtractor):
             n_bands=n_bands, **kwargs)
 
     def get_feature_names(self):
-        print('in get feat names func')
         abc= ['spectral_contrast_band_%d' % i
                 for i in range(self.n_bands + 1)]
         return abc
@@ -328,7 +315,7 @@ class RMSExtractor(LibrosaFeatureExtractor):
     
 class OnsetDetectExtractor(LibrosaFeatureExtractor):
 
-    ''' Detects the onset (onset_detect) from audio using the Librosa
+    ''' Detects the basic onset (onset_detect) from audio using the Librosa
     library.
 
     For details on argument specification visit:
@@ -338,7 +325,7 @@ class OnsetDetectExtractor(LibrosaFeatureExtractor):
     
 class TempoExtractor(LibrosaFeatureExtractor):
 
-    ''' Detects the onset (onset_detect) from audio using the Librosa
+    ''' Detects the tempo (tempo) from audio using the Librosa
     library.
 
     For details on argument specification visit:
@@ -346,19 +333,21 @@ class TempoExtractor(LibrosaFeatureExtractor):
 
     _feature = 'tempo'
     
-#class BeatTrackExtractor(LibrosaFeatureExtractor):
-#
-#    ''' Detects the onset (onset_detect) from audio using the Librosa
-#    library.
-#
-#    For details on argument specification visit:
-#    https://librosa.github.io/librosa/feature.html.'''
-#
-#    _feature = 'beat_track'
+class BeatTrackExtractor(LibrosaFeatureExtractor):
+
+    ''' Dynamic programming beat tracker (beat_track) from audio using the Librosa
+    library.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/feature.html.'''
+
+    _feature = 'beat_track'
+
+
 
 class OnsetStrengthMultiExtractor(LibrosaFeatureExtractor):
 
-    ''' Detects the onset (onset_detect) from audio using the Librosa
+    '''Computes the spectral flux onset strength envelope across multiple channels (onset_strength_multi) from audio using the Librosa
     library.
 
     For details on argument specification visit:
@@ -495,37 +484,4 @@ class TempogramExtractor(LibrosaFeatureExtractor):
 
     def get_feature_names(self):
         return ['tempo_%d' % i for i in range(self.win_length)]
-
-
-    
-class TimeStretchExtractor(LibrosaFeatureExtractor):
-
-    ''' Time-stretch an audio series by a fixed rate using the Librosa
-    library.
-
-    For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
-
-    _feature = 'time_stretch'
-    
-    def __init__(self, rate=1.0, **kwargs):
-        print('in time stretch init')
-        self.rate = rate
-        super(TimeStretchExtractor, self).__init__(rate=rate, **kwargs)
-        
-class PitchShiftExtractor(LibrosaFeatureExtractor):
-
-    ''' Pitch-shift the waveform by n_steps half-steps using the Librosa
-    library.
-
-    For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
-
-    _feature = 'pitch_shift'
-    
-    def __init__(self, n_steps=2, bins_per_octave=1, **kwargs):
-
-        self.n_steps=n_steps 
-        self.bins_per_octave=bins_per_octave
-        super(PitchShiftExtractor, self).__init__(n_steps=n_steps, bins_per_octave=bins_per_octave , **kwargs)
 
