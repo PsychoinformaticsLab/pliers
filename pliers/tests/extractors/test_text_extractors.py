@@ -160,7 +160,7 @@ def test_vader_sentiment_extractor():
     
 def test_SpaCyExtractor():
     stim=TextStim(text='This is a test.')
-    text=SpaCyExtractor(extractor_type='Token')
+    text=SpaCyExtractor(extractor_type='token')
     assert text.model is not None
     
     text2=SpaCyExtractor(model='en_core_web_sm')
@@ -234,7 +234,7 @@ def test_SpaCyExtractor():
     
     
     stim2=TextStim(text='This is a test. And we are testing again. This should be quite interesting. Tests are totally fun.')
-    text=SpaCyExtractor(extractor_type='Doc')
+    text=SpaCyExtractor(extractor_type='doc')
     
     result=text.transform(stim2).to_df()
     assert result['text'][0]=='This is a test. '
