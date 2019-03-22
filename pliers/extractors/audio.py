@@ -172,14 +172,10 @@ class LibrosaFeatureExtractor(AudioExtractor):
                 y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
                 **self.librosa_kwargs)
             
-        elif self._feature in['time_stretch']:
-            return getattr(librosa.effects, self._feature)(
-                y=stim.data, rate=self.rate
-                **self.librosa_kwargs)
             
-        elif self._feature in[ 'pitch_shift']:
+        elif self._feature in[ 'harmonic', 'percussive']:
             return getattr(librosa.effects, self._feature)(
-                y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
+                y=stim.data,
                 **self.librosa_kwargs)
         else:
             return getattr(librosa.feature, self._feature)(
@@ -196,6 +192,7 @@ class LibrosaFeatureExtractor(AudioExtractor):
         if self._feature=='beat_track':
             beats=np.array(values[1])
             values=beats
+            
             
         values = values.T
         n_frames = len(values)
@@ -485,3 +482,21 @@ class TempogramExtractor(LibrosaFeatureExtractor):
     def get_feature_names(self):
         return ['tempo_%d' % i for i in range(self.win_length)]
 
+
+class HarmonicExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts the harmonic elements from an audio time-series using the Librosa library.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/effect.html.'''
+
+    _feature = 'harmonic'
+
+class PercussiveExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts the percussive elements from an audio time-series using the Librosa library.
+
+    For details on argument specification visit:
+    https://librosa.github.io/librosa/effect.html.'''
+
+    _feature = 'percussive'
