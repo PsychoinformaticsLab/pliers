@@ -14,6 +14,7 @@ from pliers.utils import isiterable
 import pandas as pd
 import os
 import tempfile
+import base64
 
 
 class Stim(with_metaclass(ABCMeta)):
@@ -165,6 +166,16 @@ def load_stims(source, dtype=None, fail_silently=False):
         return stims
 
     return stims[0]
+
+
+def _get_bytestring(stim, encoding='utf-8'):
+    if stim._bytestring is None:
+        with stim.get_filename() as filename:
+            with open(filename, 'rb') as f:
+                data = f.read()
+                stim._bytestring = base64.b64encode(data).decode(encoding=encoding)
+
+    return stim._bytestring
 
 
 def _log_transformation(source, result, trans=None, implicit=False):

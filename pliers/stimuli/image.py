@@ -9,7 +9,7 @@ import six
 import io
 import numpy as np
 from functools import lru_cache
-import base64
+from .base import _get_bytestring
 
 
 class ImageStim(Stim):
@@ -59,10 +59,4 @@ class ImageStim(Stim):
 
         Returns: A string.
         '''
-        if self._bytestring is None:
-            with self.get_filename() as filename:
-                with open(filename, 'rb') as f:
-                    data = f.read()
-                    self._bytestring = base64.b64encode(data).decode(encoding=encoding)
-
-        return self._bytestring
+        return _get_bytestring(self, encoding)
