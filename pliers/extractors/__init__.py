@@ -47,7 +47,15 @@ from .audio import (LibrosaFeatureExtractor,
                     MelspectrogramExtractor,
                     MFCCExtractor,
                     TonnetzExtractor,
-                    TempogramExtractor)
+                    TempogramExtractor,
+                    RMSExtractor,
+                    SpectralFlatnessExtractor,
+                    OnsetDetectExtractor,
+                    OnsetStrengthMultiExtractor,
+                    TempoExtractor,
+                    BeatTrackExtractor,
+                    HarmonicExtractor,
+                    PercussiveExtractor)
 from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
                     VibranceExtractor, FaceRecognitionFaceEncodingsExtractor,
                     FaceRecognitionFaceLandmarksExtractor,
@@ -126,5 +134,13 @@ __all__ = [
     'TextVectorizerExtractor',
     'VADERSentimentExtractor',
     'merge_results', 
-    'SpaCyExtractor'
+    'SpaCyExtractor',
+    'RMSExtractor',
+    'SpectralFlatnessExtractor'
+    'OnsetDetectExtractor',
+    'OnsetStrengthMultiExtractor',
+    'TempoExtractor',
+    'BeatTrackExtractor',
+    'HarmonicExtractor',
+    'PercussiveExtractor'
 ]
