@@ -16,6 +16,7 @@ import pandas as pd
 import pytest
 import tempfile
 import os
+import base64
 
 
 class DummyExtractor(Extractor):
@@ -57,6 +58,18 @@ def test_image_stim(dummy_iter_extractor):
     filename = join(get_test_data_path(), 'image', 'apple.jpg')
     stim = ImageStim(filename)
     assert stim.data.shape == (288, 420, 3)
+
+
+def test_image_stim_bytestring():
+    path = join(get_test_data_path(), 'image', 'apple.jpg')
+    img = ImageStim(path)
+    assert img._bytestring is None
+    bs = img.get_bytestring()
+    assert isinstance(bs, str)
+    assert img._bytestring is not None
+    raw = bs.encode()
+    with open(path, 'rb') as f:
+        assert raw == base64.b64encode(f.read())
 
 
 def test_complex_text_hash():

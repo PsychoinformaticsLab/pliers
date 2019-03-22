@@ -8,6 +8,8 @@ from scipy.misc import imsave
 import six
 import io
 import numpy as np
+from functools import lru_cache
+import base64
 
 
 class ImageStim(Stim):
@@ -37,6 +39,7 @@ class ImageStim(Stim):
             data = np.array(img)
             filename = url
         self.data = data
+        self._bytestring = None
         super(ImageStim, self).__init__(filename, onset=onset,
                                         duration=duration, url=url)
 
@@ -46,3 +49,20 @@ class ImageStim(Stim):
     def __hash__(self):
         return hash((self.data.tobytes(), self.onset, self.duration,
                      self.order, self.history))
+    
+
+    def get_bytestring(self, encoding='utf-8'):
+        ''' Return the image data as a bytestring.
+
+        Args:
+            encoding (str): Encoding to use. Defaults to utf-8.
+
+        Returns: A string.
+        '''
+        if self._bytestring is None:
+            with self.get_filename() as filename:
+                with open(filename, 'rb') as f:
+                    data = f.read()
+                    self._bytestring = base64.b64encode(data).decode(encoding=encoding)
+
+        return self._bytestring
