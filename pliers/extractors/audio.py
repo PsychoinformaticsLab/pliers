@@ -233,6 +233,7 @@ class SpectralBandwidthExtractor(LibrosaFeatureExtractor):
 
     _feature = 'spectral_bandwidth'
 
+
 class SpectralFlatnessExtractor(LibrosaFeatureExtractor):
 
     ''' Computes the spectral flatness from audio using the
@@ -242,6 +243,7 @@ class SpectralFlatnessExtractor(LibrosaFeatureExtractor):
     https://librosa.github.io/librosa/feature.html.'''
 
     _feature = 'spectral_flatness'
+
 
 class SpectralContrastExtractor(LibrosaFeatureExtractor):
 
@@ -290,16 +292,6 @@ class PolyFeaturesExtractor(LibrosaFeatureExtractor):
         return ['coefficient_%d' % i for i in range(self.order + 1)]
 
 
-class RMSEExtractor(LibrosaFeatureExtractor):
-
-    ''' Extracts root mean square (RMS) energy from audio using the Librosa
-    library.
-
-    For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
-
-    _feature = 'rmse'
-
 class RMSExtractor(LibrosaFeatureExtractor):
 
     ''' Extracts root mean square (RMS) from audio using the Librosa
@@ -309,7 +301,8 @@ class RMSExtractor(LibrosaFeatureExtractor):
     https://librosa.github.io/librosa/feature.html.'''
 
     _feature = 'rms'
-    
+
+
 class OnsetDetectExtractor(LibrosaFeatureExtractor):
 
     ''' Detects the basic onset (onset_detect) from audio using the Librosa
@@ -319,7 +312,8 @@ class OnsetDetectExtractor(LibrosaFeatureExtractor):
     https://librosa.github.io/librosa/feature.html.'''
 
     _feature = 'onset_detect'
-    
+
+
 class TempoExtractor(LibrosaFeatureExtractor):
 
     ''' Detects the tempo (tempo) from audio using the Librosa
@@ -329,7 +323,8 @@ class TempoExtractor(LibrosaFeatureExtractor):
     https://librosa.github.io/librosa/feature.html.'''
 
     _feature = 'tempo'
-    
+
+
 class BeatTrackExtractor(LibrosaFeatureExtractor):
 
     ''' Dynamic programming beat tracker (beat_track) from audio using the Librosa
@@ -339,7 +334,6 @@ class BeatTrackExtractor(LibrosaFeatureExtractor):
     https://librosa.github.io/librosa/feature.html.'''
 
     _feature = 'beat_track'
-
 
 
 class OnsetStrengthMultiExtractor(LibrosaFeatureExtractor):
@@ -491,6 +485,7 @@ class HarmonicExtractor(LibrosaFeatureExtractor):
     https://librosa.github.io/librosa/effect.html.'''
 
     _feature = 'harmonic'
+
 
 class PercussiveExtractor(LibrosaFeatureExtractor):
 
