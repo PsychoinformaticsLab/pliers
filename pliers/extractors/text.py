@@ -161,19 +161,6 @@ class LengthExtractor(TextExtractor):
                                self, features=['text_length'])
 
 
-class LowerCaseSpecialCharStripExtractor(TextExtractor):
-
-    ''' Strips the text of the special characters and converts to lower case. '''
-
-    VERSION = '1.0'
-
-    def _extract(self, stim):
-        string = re.sub('[^ a-zA-Z0-9]', '', stim.text)
-        string = string.lower()
-        return ExtractorResult(np.array(string), stim.text,
-                               self, features=['text_stripped'])
-
-
 class NumUniqueWordsExtractor(TextExtractor):
 
     ''' Extracts the number of unique words used in the text. '''
