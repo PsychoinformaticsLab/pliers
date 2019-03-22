@@ -5,7 +5,7 @@ python-twitter
 gensim
 google-api-python-client
 IndicoIo
-librosa
+librosa>=0.6.3
 matplotlib
 opencv-python
 pathos
