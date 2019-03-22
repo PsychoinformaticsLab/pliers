@@ -22,7 +22,9 @@ from pliers.extractors import (LibrosaFeatureExtractor,
                                OnsetDetectExtractor,
                                OnsetStrengthMultiExtractor,
                                TempoExtractor,
-                               BeatTrackExtractor)
+                               BeatTrackExtractor,
+                               HarmonicExtractor,
+                               PercussiveExtractor)
 from pliers.stimuli import (ComplexTextStim, AudioStim,
                             TranscribedAudioCompoundStim)
 import numpy as np
@@ -253,7 +255,7 @@ def test_rms_extractor():
     
 def test_spectral_flatness_extractor():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
-    ext = RMSExtractor()
+    ext = SpectralFlatnessExtractor()
     df = ext.transform(audio).to_df()
     assert df.shape == (1221, 5)
     assert np.isclose(df['onset'][10], 0.464399)
@@ -328,3 +330,36 @@ def test_beat_track_extractor():
     assert np.isclose(df['duration'][101], 0.04644)
     assert np.isclose(df['beat_track'][101], 1195)
     
+def test_harmonic_extractor():
+    audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
+    ext = HarmonicExtractor()
+    df = ext.transform(audio).to_df()
+    assert df.shape == (624786, 5)
+    assert np.isclose(df['onset'][8], 0.371519)
+    assert np.isclose(df['duration'][8], 0.04644)
+    assert np.isclose(df['harmonic'][8], -0.026663)
+    
+    assert np.isclose(df['onset'][19], 0.882358)
+    assert np.isclose(df['duration'][19], 0.04644)
+    assert np.isclose(df['harmonic'][19], 0.031422)
+    
+    assert np.isclose(df['onset'][29], 1.346757)
+    assert np.isclose(df['duration'][29], 0.04644)
+    assert np.isclose(df['harmonic'][29], -0.004497)
+    
+def test_percussion_extractor():
+    audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
+    ext = PercussiveExtractor()
+    df = ext.transform(audio).to_df()
+    assert df.shape == (624786, 5)
+    assert np.isclose(df['onset'][9], 0.417959)
+    assert np.isclose(df['duration'][9], 0.04644)
+    assert np.isclose(df['percussive'][9], 0.028902)
+    
+    assert np.isclose(df['onset'][17], 0.789478)
+    assert np.isclose(df['duration'][17], 0.04644)
+    assert np.isclose(df['percussive'][17], -0.031428)
+    
+    assert np.isclose(df['onset'][29], 1.346757)
+    assert np.isclose(df['duration'][29], 0.04644)
+    assert np.isclose(df['percussive'][29], 0.004497)
