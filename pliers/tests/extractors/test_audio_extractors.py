@@ -251,7 +251,7 @@ def test_rms_extractor():
     
     assert np.isclose(df['onset'][1219], 56.610249)
     assert np.isclose(df['duration'][1219], 0.04644)
-    assert np.isclose(df['rms'][1219], 0.001348)
+    assert np.isclose(df['rms'][1219], 0.001348, rtol = 1e-03)
     
 def test_spectral_flatness_extractor():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
@@ -268,7 +268,7 @@ def test_spectral_flatness_extractor():
     
     assert np.isclose(df['onset'][1215], 56.424490)
     assert np.isclose(df['duration'][1215], 0.04644)
-    assert np.isclose(df['spectral_flatness'][1215], 0.034936)
+    assert np.isclose(df['spectral_flatness'][1215], 0.0349364)
     
 def test_onset_detect_extractor():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
@@ -279,7 +279,7 @@ def test_onset_detect_extractor():
     assert np.isclose(df['duration'][1], 0.04644)
     assert np.isclose(df['onset_detect'][1], 56)
     
-    assert np.isclose(df['onset'][5], 1.232200)
+    assert np.isclose(df['onset'][5], 0.232200)
     assert np.isclose(df['duration'][5], 0.04644)
     assert np.isclose(df['onset_detect'][5], 85)
     
@@ -292,7 +292,7 @@ def test_onset_multi_extractor():
     ext = OnsetStrengthMultiExtractor()
     df = ext.transform(audio).to_df()
     assert df.shape == (1221, 5)
-    assert np.isclose(df['onset'][10], 0.046440)
+    assert np.isclose(df['onset'][10], 0.464399)
     assert np.isclose(df['duration'][10], 0.04644)
     assert np.isclose(df['onset_strength_multi'][10], 0.821330)
     
@@ -300,7 +300,7 @@ def test_onset_multi_extractor():
     assert np.isclose(df['duration'][15], 0.04644)
     assert np.isclose(df['onset_strength_multi'][15], 0.430218)
     
-    assert np.isclose(df['onset'][1218], 5.563810)
+    assert np.isclose(df['onset'][1218], 56.563810)
     assert np.isclose(df['duration'][1218], 0.04644)
     assert np.isclose(df['onset_strength_multi'][1218], 0.058071)
     
@@ -337,15 +337,15 @@ def test_harmonic_extractor():
     assert df.shape == (624786, 5)
     assert np.isclose(df['onset'][8], 0.371519)
     assert np.isclose(df['duration'][8], 0.04644)
-    assert np.isclose(df['harmonic'][8], -0.026663)
+    assert np.isclose(df['harmonic'][8], -0.026663, rtol = 1e-4)
     
     assert np.isclose(df['onset'][19], 0.882358)
     assert np.isclose(df['duration'][19], 0.04644)
-    assert np.isclose(df['harmonic'][19], 0.031422)
+    assert np.isclose(df['harmonic'][19], 0.031422, rtol = 1e-4)
     
     assert np.isclose(df['onset'][29], 1.346757)
     assert np.isclose(df['duration'][29], 0.04644)
-    assert np.isclose(df['harmonic'][29], -0.004497)
+    assert np.isclose(df['harmonic'][29], -0.004497, rtol = 1e-4)
     
 def test_percussion_extractor():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
@@ -354,12 +354,12 @@ def test_percussion_extractor():
     assert df.shape == (624786, 5)
     assert np.isclose(df['onset'][9], 0.417959)
     assert np.isclose(df['duration'][9], 0.04644)
-    assert np.isclose(df['percussive'][9], 0.028902)
+    assert np.isclose(df['percussive'][9], 0.028902, rtol = 1e-4)
     
     assert np.isclose(df['onset'][17], 0.789478)
     assert np.isclose(df['duration'][17], 0.04644)
-    assert np.isclose(df['percussive'][17], -0.031428)
+    assert np.isclose(df['percussive'][17], -0.031428, rtol = 1e-4)
     
     assert np.isclose(df['onset'][29], 1.346757)
     assert np.isclose(df['duration'][29], 0.04644)
-    assert np.isclose(df['percussive'][29], 0.004497)
+    assert np.isclose(df['percussive'][29], 0.004497, rtol = 1e-4)
