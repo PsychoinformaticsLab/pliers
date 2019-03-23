@@ -284,7 +284,7 @@ def test_get_filename():
         assert exists(filename)
     assert not exists(filename)
 
-    url = 'https://tuition.utexas.edu/sites/all/themes/tuition/logo.png'
+    url = 'https://via.placeholder.com/350x150'
     image = ImageStim(url=url)
     with image.get_filename() as filename:
         assert exists(filename)
