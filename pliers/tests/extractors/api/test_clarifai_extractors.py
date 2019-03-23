@@ -34,11 +34,11 @@ def test_clarifai_api_extractor():
     assert result.shape == (1, 6)
     assert 'cat' in result.columns and 'dog' in result.columns
 
-    url = 'https://tuition.utexas.edu/sites/all/themes/tuition/logo.png'
+    url = 'https://via.placeholder.com/350x150'
     stim = ImageStim(url=url)
     result = ClarifaiAPIImageExtractor(max_concepts=5).transform(stim).to_df()
     assert result.shape == (1, 9)
-    assert result['symbol'][0] > 0.8
+    assert result['graphic'][0] > 0.8
 
     ext = ClarifaiAPIImageExtractor(api_key='nogood')
     assert not ext.validate_keys()

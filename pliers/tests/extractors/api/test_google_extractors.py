@@ -137,7 +137,7 @@ def test_google_vision_api_label_extractor():
     assert 'apple' in result.columns
     assert result['apple'][0] > 0.75
 
-    url = 'https://tuition.utexas.edu/sites/all/themes/tuition/logo.png'
+    url = 'https://via.placeholder.com/350x150'
     stim = ImageStim(url=url)
     result = ext.transform(stim).to_df()
     assert result['orange'][0] > 0.7
