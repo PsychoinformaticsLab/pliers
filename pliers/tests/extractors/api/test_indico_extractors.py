@@ -89,7 +89,7 @@ def test_indico_api_image_extractor():
     url = 'https://via.placeholder.com/350x150'
     stim = ImageStim(url=url)
     result = ext.transform(stim).to_df()
-    assert result['fer_Neutral'][0] > 0.1
+    assert result['fer_Neutral'][0] > 0.
 
 
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
