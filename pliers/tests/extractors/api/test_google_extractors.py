@@ -140,7 +140,6 @@ def test_google_vision_api_label_extractor():
     url = 'https://via.placeholder.com/350x150'
     stim = ImageStim(url=url)
     result = ext.transform(stim).to_df()
-    print(result.columns.tolist())
     assert result['Text'][0] > 0.9
 
     ext = GoogleVisionAPILabelExtractor(discovery_file='nogood')
@@ -152,7 +151,6 @@ def test_google_vision_api_label_extractor():
 def test_google_vision_api_properties_extractor():
     ext = GoogleVisionAPIPropertyExtractor(num_retries=5)
     filename = join(get_test_data_path(), 'image', 'apple.jpg')
-    print(filename)
     stim = ImageStim(filename)
     result = ext.transform(stim).to_df()
     assert '158, 13, 29' in result.columns
