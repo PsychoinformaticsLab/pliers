@@ -96,7 +96,8 @@ def test_word_embedding_extractor():
     result = merge_results(ext.transform(stims), extractor_names='multi',
                            format='wide')
     assert ('WordEmbeddingExtractor', 'embedding_dim99') in result.columns
-    assert 0.001091 in result[('WordEmbeddingExtractor', 'embedding_dim0')]
+    assert np.allclose(0.0010911,
+                       result[('WordEmbeddingExtractor', 'embedding_dim0')][0])
 
     unk = TextStim(text='nowaythisinvocab')
     result = ext.transform(unk).to_df()
@@ -134,7 +135,8 @@ def test_vectorizer_extractor():
     result = merge_results(ext.transform([stim, stim2]), format='wide',
                            extractor_names='multi')
     assert ('TextVectorizerExtractor', 'woman') in result.columns
-    assert 0.129568189476 in result[('TextVectorizerExtractor', 'woman')]
+    assert np.allclose(0.129568189476,
+                       result[('TextVectorizerExtractor', 'woman')][0])
 
     ext = TextVectorizerExtractor(vectorizer='CountVectorizer',
                                   analyzer='char_wb',
