@@ -117,24 +117,6 @@ def test_polyfeatures_extractor():
     assert np.isclose(df['coefficient_3'][2], 12.32108)
 
 
-def test_rmse_extractor():
-    audio = AudioStim(join(AUDIO_DIR, 'barber.wav'),
-                      onset=1.0)
-    ext = RMSEExtractor()
-    df = ext.transform(audio).to_df()
-    assert df.shape == (1221, 5)
-    assert np.isclose(df['onset'][1], 1.04644)
-    assert np.isclose(df['duration'][0], 0.04644)
-    assert np.isclose(df['rmse'][0], 0.25663)
-
-    ext2 = RMSEExtractor(frame_length=1024, hop_length=256, center=False)
-    df = ext2.transform(audio).to_df()
-    assert df.shape == (2437, 5)
-    assert np.isclose(df['onset'][1], 1.02322)
-    assert np.isclose(df['duration'][0], 0.02322)
-    assert np.isclose(df['rmse'][0], 0.25649)
-
-
 def test_zcr_extractor():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'),
                       onset=2.0)
