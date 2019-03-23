@@ -134,13 +134,14 @@ def test_google_vision_api_label_extractor():
     filename = join(get_test_data_path(), 'image', 'apple.jpg')
     stim = ImageStim(filename)
     result = ext.transform(stim).to_df()
-    assert 'apple' in result.columns
-    assert result['apple'][0] > 0.75
+    assert 'Apple' in result.columns
+    assert result['Apple'][0] > 0.75
 
     url = 'https://via.placeholder.com/350x150'
     stim = ImageStim(url=url)
     result = ext.transform(stim).to_df()
-    assert result['orange'][0] > 0.7
+    print(result.columns.tolist())
+    assert result['Text'][0] > 0.9
 
     ext = GoogleVisionAPILabelExtractor(discovery_file='nogood')
     assert not ext.validate_keys()
@@ -151,6 +152,7 @@ def test_google_vision_api_label_extractor():
 def test_google_vision_api_properties_extractor():
     ext = GoogleVisionAPIPropertyExtractor(num_retries=5)
     filename = join(get_test_data_path(), 'image', 'apple.jpg')
+    print(filename)
     stim = ImageStim(filename)
     result = ext.transform(stim).to_df()
     assert '158, 13, 29' in result.columns
@@ -196,7 +198,7 @@ def test_google_vision_api_extractor_large():
 
     config.set_option('allow_large_jobs', True)
     results = merge_results(ext.transform(images))
-    assert 'GoogleVisionAPILabelExtractor#apple' in results.columns
+    assert 'GoogleVisionAPILabelExtractor#Apple' in results.columns
     assert results.shape == (2, 32)
 
     config.set_option('allow_large_jobs', default)
