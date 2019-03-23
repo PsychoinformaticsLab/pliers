@@ -150,6 +150,7 @@ class VideoStim(VideoFrameCollectionStim):
     '''
 
     def __init__(self, filename=None, onset=None, url=None, clip=None):
+        self._bytestring = None
         super(VideoStim, self).__init__(filename=filename,
                                         onset=onset,
                                         url=url,

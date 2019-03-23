@@ -124,6 +124,18 @@ def test_video_stim():
     assert f3.data.shape == (240, 320, 3)
 
 
+def test_video_stim_bytestring():
+    path = join(get_test_data_path(), 'video', 'small.mp4')
+    vid = VideoStim(path)
+    assert vid._bytestring is None
+    bs = vid.get_bytestring()
+    assert isinstance(bs, str)
+    assert vid._bytestring is not None
+    raw = bs.encode()
+    with open(path, 'rb') as f:
+        assert raw == base64.b64encode(f.read())
+
+
 def test_video_frame_stim():
     filename = join(get_test_data_path(), 'video', 'small.mp4')
     video = VideoStim(filename, onset=4.2)
