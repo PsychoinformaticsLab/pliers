@@ -8,9 +8,9 @@ from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.utils import attempt_to_import, verify_dependencies
 from pliers.converters.audio import AudioToTextConverter
 from pliers.transformers.api import APITransformer
-from six.moves.urllib.parse import urlencode
-from six.moves.urllib.request import Request, urlopen
-from six.moves.urllib.error import URLError, HTTPError
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
 
 sr = attempt_to_import('speech_recognition', 'sr')
 
@@ -33,14 +33,16 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
             supported.
         rate_limit (int): The minimum number of seconds required between
             transform calls on this Transformer.
+        model (str): The model to use for speech recognition (e.g., 'en-US',
+            'zh-CN', etc.). Don't include the "_BroadbandModel" suffix. 
     '''
 
     _env_keys = ('IBM_USERNAME', 'IBM_PASSWORD')
-    _log_attributes = ('username', 'password', 'resolution')
+    _log_attributes = ('username', 'password', 'resolution', 'model')
     VERSION = '1.0'
 
     def __init__(self, username=None, password=None, resolution='words',
-                 rate_limit=None):
+                 rate_limit=None, model='en-US'):
         verify_dependencies(['sr'])
         if username is None or password is None:
             try:
@@ -53,6 +55,7 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
         self.username = username
         self.password = password
         self.resolution = resolution
+        self.model = model
         super(IBMSpeechAPIConverter, self).__init__(rate_limit=rate_limit)
 
     @property
@@ -119,7 +122,7 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
             convert_rate=None if clip.sample_rate >= 16000 else 16000,
             convert_width=None if clip.sample_width >= 2 else 2
         )
-        model = "{0}_BroadbandModel".format("en-US")
+        model = "{0}_BroadbandModel".format(self.model)
         url = "https://stream.watsonplatform.net/speech-to-text/api/v1/recognize?{0}".format(urlencode({
             "profanity_filter": "false",
             "continuous": "true",
