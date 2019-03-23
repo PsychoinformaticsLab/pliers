@@ -1,10 +1,9 @@
 ''' Classes that represent images. '''
 
 from .base import Stim
-from scipy.misc import imread
+from imageio import imread, imsave
 from PIL import Image
 from six.moves.urllib.request import urlopen
-from scipy.misc import imsave
 import six
 import io
 import numpy as np
@@ -32,7 +31,7 @@ class ImageStim(Stim):
     def __init__(self, filename=None, onset=None, duration=None, data=None,
                  url=None):
         if data is None and isinstance(filename, six.string_types):
-            data = imread(filename, mode='RGB')
+            data = imread(filename, pilmode='RGB')
         if url is not None:
             img = Image.open(io.BytesIO(urlopen(url).read()))
             img = img.convert(mode='RGB')

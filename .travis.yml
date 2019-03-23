@@ -3,7 +3,7 @@ dist: trusty
 env:
   global:
   - CONDA_DEPS="pip pytest numpy pillow pandas requests scipy nltk six tqdm seaborn opencv
-    matplotlib pathos tensorflow contextlib2"
+    matplotlib pathos tensorflow contextlib2 imageio"
 matrix:
   include:
   - os: linux
