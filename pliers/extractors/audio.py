@@ -1,11 +1,11 @@
 ''' Extractors that operate on AudioStim inputs. '''
-
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.text import ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.utils import attempt_to_import, verify_dependencies, listify
 import numpy as np
 from scipy import fft
+from abc import ABCMeta
 
 librosa = attempt_to_import('librosa')
 
@@ -137,7 +137,7 @@ class MeanAmplitudeExtractor(Extractor):
                                orders=orders)
 
 
-class LibrosaFeatureExtractor(AudioExtractor):
+class LibrosaFeatureExtractor(AudioExtractor, metaclass=ABCMeta):
 
     ''' A generic class for audio extractors using the librosa library. '''
 
@@ -171,8 +171,7 @@ class LibrosaFeatureExtractor(AudioExtractor):
             return getattr(librosa.beat, self._feature)(
                 y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
                 **self.librosa_kwargs)
-            
-            
+
         elif self._feature in[ 'harmonic', 'percussive']:
             return getattr(librosa.effects, self._feature)(
                 y=stim.data,
@@ -182,21 +181,16 @@ class LibrosaFeatureExtractor(AudioExtractor):
                 y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
                 **self.librosa_kwargs)
 
-
     def _extract(self, stim):
         
-
         values = self._get_values(stim)
 
-        
         if self._feature=='beat_track':
             beats=np.array(values[1])
             values=beats
-            
-            
+
         values = values.T
         n_frames = len(values)
-                
 
         feature_names = listify(self.get_feature_names())
 
