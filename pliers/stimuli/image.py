@@ -3,8 +3,7 @@
 from .base import Stim
 from imageio import imread, imsave
 from PIL import Image
-from six.moves.urllib.request import urlopen
-import six
+from urllib.request import urlopen
 import io
 import numpy as np
 from functools import lru_cache
@@ -30,7 +29,7 @@ class ImageStim(Stim):
 
     def __init__(self, filename=None, onset=None, duration=None, data=None,
                  url=None):
-        if data is None and isinstance(filename, six.string_types):
+        if data is None and isinstance(filename, str):
             data = imread(filename, pilmode='RGB')
         if url is not None:
             img = Image.open(io.BytesIO(urlopen(url).read()))
