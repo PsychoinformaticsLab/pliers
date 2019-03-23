@@ -328,5 +328,5 @@ def merge_results(results, format='wide', timing=True, metadata=True,
                              "format is 'long', extractor_names must be "
                              "one of 'drop', 'prepend', or 'column'.")
         data.columns = pd.MultiIndex.from_tuples(
-            [list(c).split('#') for c in data.columns])
+            [c.split('#') for c in data.columns])
     return data
