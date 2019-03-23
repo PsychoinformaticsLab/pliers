@@ -1,4 +1,3 @@
-import base64
 import logging
 import os
 from pliers.transformers import BatchTransformerMixin
@@ -108,10 +107,7 @@ class GoogleVisionAPITransformer(GoogleAPITransformer, BatchTransformerMixin):
                     'imageUri': image.url
                 }
             else:
-                with image.get_filename() as filename:
-                    with open(filename, 'rb') as f:
-                        img_data = f.read()
-                image_desc['content'] = base64.b64encode(img_data).decode()
+                image_desc['content'] = image.get_bytestring()
 
             request.append(
                 {

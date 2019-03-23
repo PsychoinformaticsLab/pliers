@@ -1,6 +1,5 @@
 ''' Google API-based feature extraction classes. '''
 
-import base64
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.text import TextExtractor
 from pliers.extractors.video import VideoExtractor
@@ -208,16 +207,13 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
         return request_obj.execute(num_retries=self.num_retries)
 
     def _build_request(self, stim):
-        with stim.get_filename() as filename:
-            with open(filename, 'rb') as f:
-                vid_data = f.read()
 
         context = self.config if self.config else {}
         if self.segments:
             context['segments'] = self.segments
 
         request = {
-            'inputContent': base64.b64encode(vid_data).decode(),
+            'inputContent': stim.get_bytestring(),
             'features': self.features,
             'videoContext': context
         }
