@@ -12,8 +12,12 @@ matrix:
     - MINICONDA_URL="https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh"
   - os: linux
     env:
-    - PYTHON_VERSION=2.7
-    - MINICONDA_URL="https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh"
+    - PYTHON_VERSION=3.6
+    - MINICONDA_URL="https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+  - os: linux
+    env:
+    - PYTHON_VERSION=3.7
+    - MINICONDA_URL="https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh"
 before_install:
 - openssl aes-256-cbc -K $encrypted_a0a62c26415d_key -iv $encrypted_a0a62c26415d_iv
   -in pliers/tests/credentials/google.json.enc -out pliers/tests/credentials/google.json -d || true
