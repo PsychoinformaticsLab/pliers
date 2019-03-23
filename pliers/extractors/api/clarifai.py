@@ -182,7 +182,15 @@ class ClarifaiAPIVideoExtractor(ClarifaiAPIExtractor, VideoExtractor):
             else:
                 end = frames[i+1]['frame_info']['time'] / 1000.0
             onsets.append(onset)
-            durations.append(end - onset)
+            # NOTE: As of Clarifai API v2 and client library 2.6.1, the API
+            # returns more frames than it should—at least for some videos.
+            # E.g., given a 5.5 second clip, it may return 7 frames, with the
+            # last beginning at 6000 ms. Since this appears to be a problem on
+            # the Clarifai end, and it's not actually clear how they're getting
+            # this imaginary frame (I'm guessing it's the very last frame?),
+            # we're not going to do anything about it here, except to make sure
+            # that durations aren't negative.
+            durations.append(max([end - onset, 0]))
 
         result._onsets = onsets
         result._durations = durations
