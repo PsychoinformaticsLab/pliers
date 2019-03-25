@@ -34,8 +34,8 @@ before_install:
 install:
 - sudo apt-get install libboost-python-dev
 - pip install --upgrade --ignore-installed setuptools
-- pip install -r --upgrade requirements.txt
-- pip install -r --upgrade optional-dependencies.txt
+- pip install -r requirements.txt --upgrade
+- pip install -r optional-dependencies.txt --upgrade 
 - pip install --upgrade coveralls pytest-cov
 
 before_script:
