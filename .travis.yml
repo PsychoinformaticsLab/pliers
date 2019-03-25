@@ -33,15 +33,15 @@ before_install:
 - conda config --add channels conda-forge
 - conda update -y conda
 - rm -rf /home/travis/miniconda/envs/test-env
-- conda create -q -n test-env python=$PYTHON_VERSION $CONDA_DEPS
+- conda create -q -n test-env python=$PYTHON_VERSION
 - source activate test-env
 install:
 - sudo apt-get install libboost-python-dev
 - pip install --upgrade --ignore-installed setuptools
-- pip install python-magic moviepy coveralls pytest-cov pysrt xlrd pytesseract
-- pip install SpeechRecognition IndicoIo pygraphviz sklearn python-twitter gensim
-  google-compute-engine librosa face_recognition google-api-python-client spacy
-  clarifai tensorflow
+- pip install -r requirements.txt
+- pip install -r optional-dependencies.txt
+- pip install coveralls pytest-cov
+
 before_script:
 - python -m pliers.support.download
 script:
