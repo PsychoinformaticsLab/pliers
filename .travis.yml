@@ -42,7 +42,7 @@ before_script:
 - python -m pliers.support.download
 - python -m spacy download en_core_web_sm
 script:
-- py.test --pyargs pliers --cov-report term-missing --cov=pliers -m "no requirespayment"
+- py.test --pyargs pliers --cov-report term-missing --cov=pliers -m "not requirespayment"
 after_success:
 - coveralls
 before_cache:
