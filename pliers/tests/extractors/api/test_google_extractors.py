@@ -269,7 +269,7 @@ def test_google_video_api_label_extractor(caplog):
             " video and the results may be empty or incomplete." % 90))
     if not incomplete:
         result = ex_result.to_df()
-        assert result.shape == (7, 25)
+        assert result.shape[1] > 20
         assert 'category_toy' in result.columns
         assert result['toy'][0] > 0.5
         assert np.isclose(result['duration'][0], stim.duration, 0.1)
@@ -288,7 +288,7 @@ def test_google_video_api_label_extractor(caplog):
         raw = ex_result.raw['response']['annotationResults'][0]
         assert 'shotLabelAnnotations' in raw
         result = ex_result.to_df()
-        assert result.shape == (3, 17)
+        assert result.shape[1] > 10
         assert result['onset'][1] == 0.0
         assert np.isclose(result['onset'][2], 3.2, 0.1)
         assert np.isnan(result['cat'][1])

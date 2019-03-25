@@ -234,7 +234,7 @@ def test_spacy_extractor():
     assert result['is_digit'][4] == 'False'
     assert result['sentiment'][4] == '0.0'
     
-    
+
     stim2=TextStim(text='This is a test. And we are testing again. This should be quite interesting. Tests are totally fun.')
     text=SpaCyExtractor(extractor_type='doc')
     

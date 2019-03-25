@@ -69,7 +69,6 @@ def test_implicit_stim_conversion2():
     stim = AudioStim(join(audio_dir, 'homer.wav'), onset=4.2)
     ext = LengthExtractor()
     result = ext.transform(stim)
-    print(result)
     first_word = result[0].to_df()
     assert 'text_length' in first_word.columns
     assert first_word['text_length'][0] > 0
