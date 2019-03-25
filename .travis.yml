@@ -3,17 +3,20 @@ dist: trusty
 env:
   global:
   - CONDA_DEPS="pip pytest numpy pillow pandas requests scipy nltk six tqdm seaborn opencv
-    matplotlib pathos tensorflow contextlib2 imageio"
+    matplotlib pathos contextlib2 imageio"
+language: python
 matrix:
   include:
   - os: linux
     env:
     - PYTHON_VERSION=3.5
     - MINICONDA_URL="https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+    python: 3.5
   - os: linux
     env:
     - PYTHON_VERSION=3.6
     - MINICONDA_URL="https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+    python: 3.6
 before_install:
 - openssl aes-256-cbc -K $encrypted_a0a62c26415d_key -iv $encrypted_a0a62c26415d_iv
   -in pliers/tests/credentials/google.json.enc -out pliers/tests/credentials/google.json -d || true
@@ -38,7 +41,7 @@ install:
 - pip install python-magic moviepy coveralls pytest-cov pysrt xlrd pytesseract
 - pip install SpeechRecognition IndicoIo pygraphviz sklearn python-twitter gensim
   google-compute-engine librosa face_recognition google-api-python-client spacy
-  clarifai
+  clarifai tensorflow
 before_script:
 - python -m pliers.support.download
 script:
@@ -48,5 +51,6 @@ after_success:
 before_cache:
 - conda clean --tarballs --packages --index-cache
 cache:
+  pip: true
   directories:
   - "$HOME/miniconda"
