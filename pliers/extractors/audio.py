@@ -155,7 +155,7 @@ class LibrosaFeatureExtractor(AudioExtractor, metaclass=ABCMeta):
         return self._feature
 
     def _get_values(self, stim):
-        if self._feature in ['rmse', 'zero_crossing_rate', 'rms', 'spectral_flatness']:
+        if self._feature in ['zero_crossing_rate', 'rms', 'spectral_flatness']:
             return getattr(librosa.feature, self._feature)(
                 y=stim.data, hop_length=self.hop_length, **self.librosa_kwargs)
         elif self._feature == 'tonnetz':

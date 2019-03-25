@@ -82,7 +82,6 @@ __all__ = [
     'SpectralContrastExtractor',
     'SpectralRolloffExtractor',
     'PolyFeaturesExtractor',
-    'RMSEExtractor',
     'ZeroCrossingRateExtractor',
     'ChromaSTFTExtractor',
     'ChromaCQTExtractor',

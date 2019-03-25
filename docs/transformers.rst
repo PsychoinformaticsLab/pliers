@@ -52,7 +52,7 @@ At present, pliers implements several dozen |Extractor| classes that span a wide
   MelspectrogramExtractor
   MFCCExtractor
   PolyFeaturesExtractor
-  RMSEExtractor
+  RMSExtractor
   SpectralCentroidExtractor
   SpectralBandwidthExtractor
   SpectralContrastExtractor

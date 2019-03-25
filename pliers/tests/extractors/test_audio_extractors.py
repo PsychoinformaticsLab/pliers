@@ -62,12 +62,12 @@ def test_mean_amplitude_extractor():
 
 def test_librosa_extractor():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
-    ext = LibrosaFeatureExtractor(feature='rmse')
+    ext = LibrosaFeatureExtractor(feature='rms')
     df = ext.transform(audio).to_df()
     assert df.shape == (1221, 5)
     assert np.isclose(df['onset'][1], 0.04644)
     assert np.isclose(df['duration'][0], 0.04644)
-    assert np.isclose(df['rmse'][0], 0.25663)
+    assert np.isclose(df['rms'][0], 0.25663)
 
 
 def test_spectral_extractors():
