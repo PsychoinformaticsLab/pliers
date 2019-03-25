@@ -160,7 +160,7 @@ def test_vader_sentiment_extractor():
     assert result2['sentiment_compound'][0] == 0.8439
 
     
-def test_SpaCyExtractor():
+def test_spacy_extractor():
     stim=TextStim(text='This is a test.')
     text=SpaCyExtractor(extractor_type='token')
     assert text.model is not None
