@@ -12,6 +12,7 @@ IMAGE_DIR = join(get_test_data_path(), 'image')
 VIDEO_DIR = join(get_test_data_path(), 'video')
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
 def test_clarifai_api_extractor():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
@@ -44,6 +45,7 @@ def test_clarifai_api_extractor():
     assert not ext.validate_keys()
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
 def test_clarifai_api_extractor_batch():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
@@ -55,6 +57,7 @@ def test_clarifai_api_extractor_batch():
         results['ClarifaiAPIImageExtractor#apple'][1] > 0.5
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
 def test_clarifai_api_extractor_large():
     default = config.get_option('allow_large_jobs')
@@ -77,6 +80,7 @@ def test_clarifai_api_extractor_large():
     config.set_option('large_job', default_large)
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
 def test_clarifai_api_video_extractor():
     stim = VideoStim(join(VIDEO_DIR, 'small.mp4'))

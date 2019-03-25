@@ -12,6 +12,7 @@ import time
 IMAGE_DIR = join(get_test_data_path(), 'image')
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
 def test_indico_api_text_extractor():
 
@@ -54,6 +55,7 @@ def test_indico_api_text_extractor():
     assert not ext.validate_keys()
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
 def test_indico_api_image_extractor():
     ext = IndicoAPIImageExtractor(api_key=os.environ['INDICO_APP_KEY'],
@@ -92,6 +94,7 @@ def test_indico_api_image_extractor():
     assert result['fer_Neutral'][0] > 0.
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
 def test_indico_api_extractor_large():
     default = config.get_option('allow_large_jobs')
@@ -116,6 +119,7 @@ def test_indico_api_extractor_large():
     config.set_option('large_job', default_large)
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'INDICO_APP_KEY' not in os.environ")
 def test_indico_api_extractor_rate_limit():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
