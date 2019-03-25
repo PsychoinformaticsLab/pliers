@@ -1,9 +1,5 @@
 sudo: required
 dist: trusty
-env:
-  global:
-  - CONDA_DEPS="pip pytest numpy pillow pandas requests scipy nltk six tqdm seaborn opencv
-    matplotlib pathos contextlib2 imageio"
 language: python
 matrix:
   include:
@@ -38,9 +34,9 @@ before_install:
 install:
 - sudo apt-get install libboost-python-dev
 - pip install --upgrade --ignore-installed setuptools
-- pip install -r requirements.txt
-- pip install -r optional-dependencies.txt
-- pip install coveralls pytest-cov
+- pip install -r --upgrade requirements.txt
+- pip install -r --upgrade optional-dependencies.txt
+- pip install --upgrade coveralls pytest-cov
 
 before_script:
 - python -m pliers.support.download
