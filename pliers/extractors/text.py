@@ -351,7 +351,7 @@ class SpaCyExtractor(TextExtractor):
             logging.warning("Spacy Models ('{}') not found. Downloading and"
                             "installing".format(model))
 
-            os.system('python -m spacy download {}'.format(model))
+            spacy.cli.download(model)
             self.model = spacy.load(model)
 
         logging.info('Loaded model: {}'.format(self.model))
