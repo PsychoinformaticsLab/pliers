@@ -37,10 +37,10 @@ install:
 - pip install -r requirements.txt --upgrade
 - pip install -r optional-dependencies.txt --upgrade 
 - pip install --upgrade coveralls pytest-cov
-- python -m spacy download en_core_web_sm
 
 before_script:
 - python -m pliers.support.download
+- python -m spacy download en_core_web_sm
 script:
 - py.test --pyargs pliers --cov-report term-missing --cov=pliers -m "no requirespayment"
 after_success:
