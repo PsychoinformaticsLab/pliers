@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 import logging
 import time
+import warnings
+import os
 from collections import defaultdict
 
 
@@ -211,6 +213,14 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
         context = self.config if self.config else {}
         if self.segments:
             context['segments'] = self.segments
+
+        with stim.get_filename() as filename:
+            size = os.path.getsize(filename)
+            LIMIT = 524288000
+            if size > LIMIT:
+                warnings.warn("Video file is very large ({} bytes) and may "
+                              "exceed the Google Video Intelligence payload "
+                              "limit ({} bytes).".format(size, LIMIT))
 
         request = {
             'inputContent': stim.get_bytestring(),
