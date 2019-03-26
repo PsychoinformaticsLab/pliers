@@ -12,6 +12,7 @@ IMAGE_DIR = join(get_test_data_path(), 'image')
 VIDEO_DIR = join(get_test_data_path(), 'video')
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
 def test_clarifai_api_extractor():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
@@ -34,16 +35,17 @@ def test_clarifai_api_extractor():
     assert result.shape == (1, 6)
     assert 'cat' in result.columns and 'dog' in result.columns
 
-    url = 'https://tuition.utexas.edu/sites/all/themes/tuition/logo.png'
+    url = 'https://via.placeholder.com/350x150'
     stim = ImageStim(url=url)
     result = ClarifaiAPIImageExtractor(max_concepts=5).transform(stim).to_df()
     assert result.shape == (1, 9)
-    assert result['symbol'][0] > 0.8
+    assert result['graphic'][0] > 0.8
 
     ext = ClarifaiAPIImageExtractor(api_key='nogood')
     assert not ext.validate_keys()
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
 def test_clarifai_api_extractor_batch():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
@@ -55,6 +57,7 @@ def test_clarifai_api_extractor_batch():
         results['ClarifaiAPIImageExtractor#apple'][1] > 0.5
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
 def test_clarifai_api_extractor_large():
     default = config.get_option('allow_large_jobs')
@@ -77,14 +80,20 @@ def test_clarifai_api_extractor_large():
     config.set_option('large_job', default_large)
 
 
+@pytest.mark.requires_payment
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
 def test_clarifai_api_video_extractor():
     stim = VideoStim(join(VIDEO_DIR, 'small.mp4'))
     ext = ClarifaiAPIVideoExtractor()
     assert ext.validate_keys()
     result = ext.transform(stim).to_df()
-    assert result.shape == (6, 27)
+    # This should actually be 6, in principle, because the clip is < 6 seconds,
+    # but the Clarifai API is doing weird things. See comment in
+    # ClarifaiAPIVideoExtractor._to_df() for further explanation.
+    assert result.shape[1] == 29
+    assert result.shape[0] in (6, 7)
     assert result['toy'][0] > 0.5
     assert result['onset'][1] == 1.0
     assert result['duration'][0] == 1.0
-    assert np.isclose(result['duration'][5], 0.57)
+    # because of the behavior described above—handle both cases
+    assert np.isclose(result['duration'][5], 0.57) or result['duration'][6] == 0

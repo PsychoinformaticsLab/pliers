@@ -8,6 +8,7 @@ from pliers.stimuli import (ComplexTextStim, ImageStim, VideoStim,
                             AudioStim)
 from pliers.support.download import download_nltk_data
 from pliers.extractors.base import ExtractorResult, merge_results
+from pliers import config
 import numpy as np
 import pytest
 
@@ -61,6 +62,9 @@ def test_implicit_stim_conversion():
 
 @pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
 def test_implicit_stim_conversion2():
+    def_conv = config.get_option('default_converters')
+    config.set_option('default_converters',
+        {'AudioStim->TextStim': ('WitTranscriptionConverter',)})
     audio_dir = join(get_test_data_path(), 'audio')
     stim = AudioStim(join(audio_dir, 'homer.wav'), onset=4.2)
     ext = LengthExtractor()
@@ -69,6 +73,7 @@ def test_implicit_stim_conversion2():
     assert 'text_length' in first_word.columns
     assert first_word['text_length'][0] > 0
     assert first_word['onset'][0] >= 4.2
+    config.set_option('default_converters', def_conv)
 
 
 @pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")

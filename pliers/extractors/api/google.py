@@ -1,6 +1,5 @@
 ''' Google API-based feature extraction classes. '''
 
-import base64
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.text import TextExtractor
 from pliers.extractors.video import VideoExtractor
@@ -13,6 +12,8 @@ import numpy as np
 import pandas as pd
 import logging
 import time
+import warnings
+import os
 from collections import defaultdict
 
 
@@ -208,16 +209,21 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
         return request_obj.execute(num_retries=self.num_retries)
 
     def _build_request(self, stim):
-        with stim.get_filename() as filename:
-            with open(filename, 'rb') as f:
-                vid_data = f.read()
 
         context = self.config if self.config else {}
         if self.segments:
             context['segments'] = self.segments
 
+        with stim.get_filename() as filename:
+            size = os.path.getsize(filename)
+            LIMIT = 524288000
+            if size > LIMIT:
+                warnings.warn("Video file is very large ({} bytes) and may "
+                              "exceed the Google Video Intelligence payload "
+                              "limit ({} bytes).".format(size, LIMIT))
+
         request = {
-            'inputContent': base64.b64encode(vid_data).decode(),
+            'inputContent': stim.get_bytestring(),
             'features': self.features,
             'videoContext': context
         }

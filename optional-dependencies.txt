@@ -4,8 +4,9 @@ face_recognition
 python-twitter
 gensim
 google-api-python-client
+google-compute-engine
 IndicoIo
-librosa
+librosa>=0.6.3
 matplotlib
 opencv-python
 pathos
@@ -15,5 +16,7 @@ pytesseract
 python-twitter
 scikit-learn
 seaborn
+spacy
 SpeechRecognition>=3.6.0
 tensorflow>=1.0.0
+xlrd

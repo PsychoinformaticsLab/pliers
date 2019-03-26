@@ -12,7 +12,8 @@ _config_name = 'pliers_config.json'
 
 _default_converters = {
     'AudioStim->TextStim':
-        ('IBMSpeechAPIConverter', 'WitTranscriptionConverter'),
+        ('GoogleSpeechAPIConverter', 'IBMSpeechAPIConverter',
+         'WitTranscriptionConverter'),
     'ImageStim->TextStim':
         ('GoogleVisionAPITextConverter', 'TesseractConverter')
 }

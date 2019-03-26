@@ -3,7 +3,7 @@
 from __future__ import division
 from math import ceil
 from moviepy.video.io.VideoFileClip import VideoFileClip
-from .base import Stim
+from .base import Stim, _get_bytestring
 from .audio import AudioStim
 from .image import ImageStim
 
@@ -150,6 +150,7 @@ class VideoStim(VideoFrameCollectionStim):
     '''
 
     def __init__(self, filename=None, onset=None, url=None, clip=None):
+        self._bytestring = None
         super(VideoStim, self).__init__(filename=filename,
                                         onset=onset,
                                         url=url,
@@ -167,3 +168,13 @@ class VideoStim(VideoFrameCollectionStim):
             index = int(onset * self.fps)
 
         return super(VideoStim, self).get_frame(index)
+
+    def get_bytestring(self, encoding='utf-8'):
+        ''' Return the video data as a bytestring.
+
+        Args:
+            encoding (str): Encoding to use. Defaults to utf-8.
+
+        Returns: A string.
+        '''
+        return _get_bytestring(self, encoding)

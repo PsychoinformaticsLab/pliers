@@ -1,6 +1,6 @@
 # pliers
 
-A Python 2/3 package for automated feature extraction.
+A Python 3 package for automated feature extraction.
 
 ## Status
 * [![Build Status](https://travis-ci.org/tyarkoni/pliers.svg?branch=master)](https://travis-ci.org/tyarkoni/pliers)

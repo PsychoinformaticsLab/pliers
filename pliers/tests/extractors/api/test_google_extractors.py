@@ -134,13 +134,13 @@ def test_google_vision_api_label_extractor():
     filename = join(get_test_data_path(), 'image', 'apple.jpg')
     stim = ImageStim(filename)
     result = ext.transform(stim).to_df()
-    assert 'apple' in result.columns
-    assert result['apple'][0] > 0.75
+    assert 'Apple' in result.columns
+    assert result['Apple'][0] > 0.75
 
-    url = 'https://tuition.utexas.edu/sites/all/themes/tuition/logo.png'
+    url = 'https://via.placeholder.com/350x150'
     stim = ImageStim(url=url)
     result = ext.transform(stim).to_df()
-    assert result['orange'][0] > 0.7
+    assert result['Text'][0] > 0.9
 
     ext = GoogleVisionAPILabelExtractor(discovery_file='nogood')
     assert not ext.validate_keys()
@@ -196,7 +196,7 @@ def test_google_vision_api_extractor_large():
 
     config.set_option('allow_large_jobs', True)
     results = merge_results(ext.transform(images))
-    assert 'GoogleVisionAPILabelExtractor#apple' in results.columns
+    assert 'GoogleVisionAPILabelExtractor#Apple' in results.columns
     assert results.shape == (2, 32)
 
     config.set_option('allow_large_jobs', default)
@@ -269,7 +269,7 @@ def test_google_video_api_label_extractor(caplog):
             " video and the results may be empty or incomplete." % 90))
     if not incomplete:
         result = ex_result.to_df()
-        assert result.shape == (7, 25)
+        assert result.shape[1] > 20
         assert 'category_toy' in result.columns
         assert result['toy'][0] > 0.5
         assert np.isclose(result['duration'][0], stim.duration, 0.1)
@@ -288,7 +288,7 @@ def test_google_video_api_label_extractor(caplog):
         raw = ex_result.raw['response']['annotationResults'][0]
         assert 'shotLabelAnnotations' in raw
         result = ex_result.to_df()
-        assert result.shape == (3, 17)
+        assert result.shape[1] > 10
         assert result['onset'][1] == 0.0
         assert np.isclose(result['onset'][2], 3.2, 0.1)
         assert np.isnan(result['cat'][1])

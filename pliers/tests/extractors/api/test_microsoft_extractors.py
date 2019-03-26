@@ -68,7 +68,7 @@ def test_microsoft_vision_api_extractor():
     ext = MicrosoftVisionAPIExtractor()
     img = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     res = ext.transform(img).to_df(timing=False, object_id=False)
-    assert res.shape == (1, 16)
+    assert res.shape[1] > 10
     assert 'apple' in res.columns
     assert 'lineDrawingType' in res.columns
     assert 'dominantColors' in res.columns
@@ -76,7 +76,7 @@ def test_microsoft_vision_api_extractor():
 
     ext = MicrosoftVisionAPIExtractor(features=['Color', 'Tags'])
     res = ext.transform(img).to_df(timing=False, object_id=False)
-    assert res.shape == (1, 10)
+    assert res.shape[1] > 10
     assert 'apple' in res.columns
     assert 'lineDrawingType' not in res.columns
     assert 'dominantColors' in res.columns
@@ -93,10 +93,10 @@ def test_microsoft_vision_api_tag_extractor():
     assert 'apple' in res.columns
     assert res['apple'][0] > 0.7
 
-    url = 'https://tuition.utexas.edu/sites/all/themes/tuition/logo.png'
+    url = 'https://via.placeholder.com/350x150'
     stim = ImageStim(url=url)
     result = ext.transform(stim).to_df()
-    assert result['plate'][0] > 0.1  # doesn't give great labels
+    assert result['typography'][0] > 0.1
 
 
 @pytest.mark.requires_payment
@@ -126,7 +126,7 @@ def test_microsoft_vision_api_color_extractor():
     ext = MicrosoftVisionAPIColorExtractor()
     img = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     res = ext.transform(img).to_df(timing=False, object_id=False)
-    assert res.shape == (1, 5)
+    assert res.shape[1] > 3
     assert res['dominantColorForeground'][0] == 'Red'
     assert res['dominantColorBackground'][0] == 'White'
     assert not res['isBwImg'][0]
@@ -144,7 +144,7 @@ def test_microsoft_vision_api_adult_extractor():
 
     img = ImageStim(join(IMAGE_DIR, 'CC0', '3333259349_0177d46bbf_z.jpg'))
     res = ext.transform(img).to_df(timing=False, object_id=False)
-    assert res['adultScore'][0] > 0.1
+    assert 0 < res['adultScore'][0] < 0.2
     assert res['racyScore'][0] > 0.1
 
     ext = MicrosoftVisionAPIAdultExtractor(subscription_key='nogood')

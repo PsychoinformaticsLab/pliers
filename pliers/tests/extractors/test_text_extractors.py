@@ -96,7 +96,8 @@ def test_word_embedding_extractor():
     result = merge_results(ext.transform(stims), extractor_names='multi',
                            format='wide')
     assert ('WordEmbeddingExtractor', 'embedding_dim99') in result.columns
-    assert 0.001091 in result[('WordEmbeddingExtractor', 'embedding_dim0')]
+    assert np.allclose(0.0010911,
+                       result[('WordEmbeddingExtractor', 'embedding_dim0')][0])
 
     unk = TextStim(text='nowaythisinvocab')
     result = ext.transform(unk).to_df()
@@ -134,7 +135,8 @@ def test_vectorizer_extractor():
     result = merge_results(ext.transform([stim, stim2]), format='wide',
                            extractor_names='multi')
     assert ('TextVectorizerExtractor', 'woman') in result.columns
-    assert 0.129568189476 in result[('TextVectorizerExtractor', 'woman')]
+    assert np.allclose(0.129568189476,
+                       result[('TextVectorizerExtractor', 'woman')][0])
 
     ext = TextVectorizerExtractor(vectorizer='CountVectorizer',
                                   analyzer='char_wb',
@@ -158,30 +160,30 @@ def test_vader_sentiment_extractor():
     assert result2['sentiment_compound'][0] == 0.8439
 
     
-def test_SpaCyExtractor():
-    stim=TextStim(text='This is a test.')
-    text=SpaCyExtractor(extractor_type='Token')
-    assert text.model is not None
+def test_spacy_token_extractor():
+    stim = TextStim(text='This is a test.')
+    ext = SpaCyExtractor(extractor_type='token')
+    assert ext.model is not None
     
-    text2=SpaCyExtractor(model='en_core_web_sm')
-    assert isinstance(text2.model, spacy.lang.en.English)
+    ext2 = SpaCyExtractor(model='en_core_web_sm')
+    assert isinstance(ext2.model, spacy.lang.en.English)
     
-    result=text.transform(stim).to_df()
+    result = ext.transform(stim).to_df()
     assert result['text'][0] == 'This'
-    assert result['lemma_'][0] == 'this'
+    assert result['lemma_'][0].lower() == 'this'
     assert result['pos_'][0] == 'DET'
     assert result['tag_'][0] == 'DT'
     assert result['dep_'][0] == 'nsubj'
     assert result['shape_'][0] == 'Xxxx'
     assert result['is_alpha'][0] == 'True'
-    assert result['is_stop'][0] == 'False'
+    assert result['is_stop'][0] == 'True'
     assert result['is_punct'][0] == 'False'
     assert result['is_ascii'][0] == 'True'
     assert result['is_digit'][0] == 'False'
     assert result['sentiment'][0] == '0.0'
     
     assert result['text'][1] == 'is'
-    assert result['lemma_'][1] == 'be'
+    assert result['lemma_'][1].lower() == 'be'
     assert result['pos_'][1] == 'VERB'
     assert result['tag_'][1] == 'VBZ'
     assert result['dep_'][1] == 'ROOT'
@@ -194,7 +196,7 @@ def test_SpaCyExtractor():
     assert result['sentiment'][1] == '0.0'
     
     assert result['text'][2] == 'a'
-    assert result['lemma_'][2] == 'a'
+    assert result['lemma_'][2].lower() == 'a'
     assert result['pos_'][2] == 'DET'
     assert result['tag_'][2] == 'DT'
     assert result['dep_'][2] == 'det'
@@ -207,7 +209,7 @@ def test_SpaCyExtractor():
     assert result['sentiment'][2] == '0.0'
     
     assert result['text'][3] == 'test'
-    assert result['lemma_'][3] == 'test'
+    assert result['lemma_'][3].lower() == 'test'
     assert result['pos_'][3] == 'NOUN'
     assert result['tag_'][3] == 'NN'
     assert result['dep_'][3] == 'attr'
@@ -217,42 +219,22 @@ def test_SpaCyExtractor():
     assert result['is_punct'][3] == 'False'
     assert result['is_ascii'][3] == 'True'
     assert result['is_digit'][3] == 'False'
-    assert result['sentiment'][3] == '0.0'
-    
-    assert result['text'][4] == '.'
-    assert result['lemma_'][4] == '.'
-    assert result['pos_'][4] == 'PUNCT'
-    assert result['tag_'][4] == '.'
-    assert result['dep_'][4] == 'punct'
-    assert result['shape_'][4] == '.'
-    assert result['is_alpha'][4] == 'False'
-    assert result['is_stop'][4] == 'False'
-    assert result['is_punct'][4] == 'True'
-    assert result['is_ascii'][4] == 'True'
-    assert result['is_digit'][4] == 'False'
-    assert result['sentiment'][4] == '0.0'
-    
-    
-    stim2=TextStim(text='This is a test. And we are testing again. This should be quite interesting. Tests are totally fun.')
-    text=SpaCyExtractor(extractor_type='Doc')
-    
-    result=text.transform(stim2).to_df()
-    assert result['text'][0]=='This is a test. '
-    assert result['is_parsed'][0], "[is_parsed][0] is not true. "
-    assert result['is_tagged'][0], "[is_tagged][0] is not true. "
-    assert result['is_sentenced'][0], "[is_sentenced][0] is not true. "
-    
-    assert result['text'][1]=='And we are testing again. '
-    assert result['is_parsed'][1], "[is_parsed][1] is not true. "
-    assert result['is_tagged'][1], "[is_tagged][1] is not true. "
-    assert result['is_sentenced'][1], "[is_sentenced][1] is not true. "
-     
-    assert result['text'][2]=='This should be quite interesting. '
-    assert result['is_parsed'][2], "[is_parsed][1] is not true. "
-    assert result['is_tagged'][2], "[is_tagged][1] is not true. "
-    assert result['is_sentenced'][2], "[is_sentenced][1] is not true. "
+    assert result['sentiment'][3] == '0.0'    
 
+
+def test_spacy_doc_extractor():
+    stim2 = TextStim(text='This is a test. And we are testing again. This '
+                     'should be quite interesting. Tests are totally fun.')
+    ext = SpaCyExtractor(extractor_type='doc')
+    assert ext.model is not None
+    
+    result = ext.transform(stim2).to_df()
+    assert result['text'][0]=='This is a test. '
+    assert result['is_parsed'][0]
+    assert result['is_tagged'][0]
+    assert result['is_sentenced'][0]
+    
     assert result['text'][3]=='Tests are totally fun.'
-    assert result['is_parsed'][3], "[is_parsed][1] is not true. "
-    assert result['is_tagged'][3], "[is_tagged][1] is not true. "
-    assert result['is_sentenced'][3], "[is_sentenced][1] is not true. "
+    assert result['is_parsed'][3]
+    assert result['is_tagged'][3]
+    assert result['is_sentenced'][3]

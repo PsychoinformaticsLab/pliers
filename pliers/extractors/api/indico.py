@@ -11,6 +11,7 @@ from pliers.transformers import BatchTransformerMixin
 from pliers.transformers.api import APITransformer
 from pliers.utils import attempt_to_import, verify_dependencies
 import pandas as pd
+import numpy as np
 
 indicoio = attempt_to_import('indicoio')
 
@@ -84,6 +85,7 @@ class IndicoAPIExtractor(APITransformer, BatchTransformerMixin, Extractor):
         return [stim.data for stim in stims if stim.data is not None]
 
     def _extract(self, stims):
+        stims = list(stims)
         tokens = self._get_tokens(stims)
         scores = [model(tokens) for model in self.models]
 
@@ -157,5 +159,7 @@ class IndicoAPIImageExtractor(ImageExtractor, IndicoAPIExtractor):
             if s.url:
                 toks.append(s.url)
             elif s.data is not None:
-                toks.append(s.data)
+                # IndicoIO breaks if given subclasses of ndarray, and data is
+                # an imageio Image instance, so we explicitly convert.
+                toks.append(np.array(s.data))
         return toks

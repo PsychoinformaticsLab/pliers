@@ -16,6 +16,7 @@ import pandas as pd
 import pytest
 import tempfile
 import os
+import base64
 
 
 class DummyExtractor(Extractor):
@@ -57,6 +58,18 @@ def test_image_stim(dummy_iter_extractor):
     filename = join(get_test_data_path(), 'image', 'apple.jpg')
     stim = ImageStim(filename)
     assert stim.data.shape == (288, 420, 3)
+
+
+def test_image_stim_bytestring():
+    path = join(get_test_data_path(), 'image', 'apple.jpg')
+    img = ImageStim(path)
+    assert img._bytestring is None
+    bs = img.get_bytestring()
+    assert isinstance(bs, str)
+    assert img._bytestring is not None
+    raw = bs.encode()
+    with open(path, 'rb') as f:
+        assert raw == base64.b64encode(f.read())
 
 
 def test_complex_text_hash():
@@ -109,6 +122,18 @@ def test_video_stim():
     assert isinstance(f3.onset, float)
     assert f3.duration > 0.0
     assert f3.data.shape == (240, 320, 3)
+
+
+def test_video_stim_bytestring():
+    path = join(get_test_data_path(), 'video', 'small.mp4')
+    vid = VideoStim(path)
+    assert vid._bytestring is None
+    bs = vid.get_bytestring()
+    assert isinstance(bs, str)
+    assert vid._bytestring is not None
+    raw = bs.encode()
+    with open(path, 'rb') as f:
+        assert raw == base64.b64encode(f.read())
 
 
 def test_video_frame_stim():
@@ -259,7 +284,7 @@ def test_get_filename():
         assert exists(filename)
     assert not exists(filename)
 
-    url = 'https://tuition.utexas.edu/sites/all/themes/tuition/logo.png'
+    url = 'https://via.placeholder.com/350x150'
     image = ImageStim(url=url)
     with image.get_filename() as filename:
         assert exists(filename)
