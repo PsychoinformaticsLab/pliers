@@ -176,7 +176,7 @@ def test_spacy_token_extractor():
     assert result['dep_'][0] == 'nsubj'
     assert result['shape_'][0] == 'Xxxx'
     assert result['is_alpha'][0] == 'True'
-    assert result['is_stop'][0] == 'False'
+    assert result['is_stop'][0] == 'True'
     assert result['is_punct'][0] == 'False'
     assert result['is_ascii'][0] == 'True'
     assert result['is_digit'][0] == 'False'
