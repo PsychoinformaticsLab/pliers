@@ -25,7 +25,19 @@ from .microsoft import (MicrosoftAPIFaceExtractor,
                         MicrosoftVisionAPIImageTypeExtractor,
                         MicrosoftVisionAPIColorExtractor,
                         MicrosoftVisionAPIAdultExtractor)
-
+from .awsRekognition import (AwsRekognitionExtractor,
+                             DetectFaceAWSExtractor,
+                             CompareFaceAWSExtractor, 
+                             DetectLabelsAWSExtractor,
+                             DetectTextAWSExtractor,
+                             DetectModerationLabelsAWSExtractor,
+                             RecognizeCelebritiesAWSExtractor,
+                             CreateCollectionAWSExtractor,
+                             IndexFacesAWSExtractor,
+                             ListFacesAWSExtractor,
+                             SearchFacesAWSExtractor,
+                             SearchFacesByImageAWSExtractor
+                             )
 __all__ = [
     'ClarifaiAPIImageExtractor',
     'ClarifaiAPIVideoExtractor',
@@ -53,5 +65,17 @@ __all__ = [
     'MicrosoftVisionAPICategoryExtractor',
     'MicrosoftVisionAPIImageTypeExtractor',
     'MicrosoftVisionAPIColorExtractor',
-    'MicrosoftVisionAPIAdultExtractor'
+    'MicrosoftVisionAPIAdultExtractor',
+    'AwsRekognitionExtractor',
+    'DetectFaceAWSExtractor',
+    'CompareFaceAWSExtractor',
+    'DetectLabelsAWSExtractor',
+    'DetectTextAWSExtractor',
+    'DetectModerationLabelsAWSExtractor',
+    'RecognizeCelebritiesAWSExtractor',
+    'CreateCollectionAWSExtractor',
+    'IndexFacesAWSExtractor',
+    'ListFacesAWSExtractor',
+    'SearchFacesAWSExtractor',
+    'SearchFacesByImageAWSExtractor'
 ]
