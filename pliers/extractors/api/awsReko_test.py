@@ -25,7 +25,7 @@ class AwsRekognitionExtractor(ImageStim, Extractor):
             self.session = boto3.Session(profile_name=profile_name)
         else:
             self.rekognition = boto3.client('rekognition')
-        
+
         self.extractor_type = extractor_type
 
         super(AwsRekognitionExtractor, self).__init__()
@@ -39,16 +39,15 @@ class AwsRekognitionExtractor(ImageStim, Extractor):
                 'Bytes': img2byte
             }
 
-#            , Attributes=['ALL']
+            #            , Attributes=['ALL']
         )
 
         return response
 
     def _extract(self, stim):
-        
+
         if self.extractor_type is None:
             self.extractor_type = 'detect_face'
-        
 
         values = self._get_values(stim)
 
@@ -98,13 +97,14 @@ class AwsRekognitionExtractor(ImageStim, Extractor):
 class DetectFaceAWSExtractor(AwsRekognitionExtractor):
 
     extractor_type = 'detect_faces'
-    
+
+
 class CompareFaceAWSExtractor(AwsRekognitionExtractor):
-    
+
     extractor_type = 'compare_faces'
 
-    def _extract(self, stim, target_stim, threshold = None, **kwargs):
-            
+    def _extract(self, stim, target_stim, threshold=None, **kwargs):
+
         if threshold is None:
             self.threshold = 70
         else:
@@ -116,271 +116,270 @@ class CompareFaceAWSExtractor(AwsRekognitionExtractor):
                                features=values,
                                )
 #        super(CompareFaceAWSExtractor, self)._extract( **kwargs)
-        
+
     def _get_value(self, stim, target_stim):
 
         source_img2byte = self.img_to_byte(stim)
         target_img2byte = self.img_to_byte(target_stim)
 
         response = getattr(self.rekognition, self.extractor_type)(
-            SourceImage = {
+            SourceImage={
                 'Bytes': source_img2byte
             },
-            TargetImage = {
+            TargetImage={
                 'Bytes': target_img2byte
             },
 
-        SimilarityThreshold = self.threshold,
-            
+            SimilarityThreshold=self.threshold,
+
         )
 
         return response
-    
+
 
 class DetectLabelsAWSExtractor(AwsRekognitionExtractor):
-    
+
     extractor_type = 'detect_labels'
-    
-    def _extract(self, stim, tmax_labels = None, min_confidence = None, **kwargs):
+
+    def _extract(self, stim, tmax_labels=None, min_confidence=None, **kwargs):
 
         if tmax_labels is None:
             self.tmax_labels = 10
         else:
             self.tmax_labels = tmax_labels
-            
+
         if min_confidence is None:
             self.min_confidence = 70
         else:
             self.min_confidence = min_confidence
-            
 
         values = self._get_values(stim)
 
         return ExtractorResult(values, stim, self,
                                features=values,
                                )
-        
+
     def _get_value(self, stim):
 
         source_img2byte = self.img_to_byte(stim)
 
         response = getattr(self.rekognition, self.extractor_type)(
-            SourceImage = {
+            SourceImage={
                 'Bytes': source_img2byte
             },
-            MaxLabels = self.max_labels,
-            MinConfidence = self.min_confidence   
+            MaxLabels=self.max_labels,
+            MinConfidence=self.min_confidence
         )
-        
+
         return response
 
+
 class DetectTextAWSExtractor(AwsRekognitionExtractor):
-    
+
     extractor_type = 'detect_text'
-    
-    
+
+
 class DetectModerationLabelsAWSExtractor(AwsRekognitionExtractor):
-    
+
     extractor_type = 'detect_moderation_labels'
-    
-    def _extract(self, stim, min_confidence = None, **kwargs):
-            
-            
+
+    def _extract(self, stim, min_confidence=None, **kwargs):
+
         if min_confidence is None:
             self.min_confidence = 50
         else:
             self.min_confidence = min_confidence
-            
 
         values = self._get_values(stim)
 
         return ExtractorResult(values, stim, self,
                                features=values,
                                )
-        
+
     def _get_value(self, stim):
 
         source_img2byte = self.img_to_byte(stim)
 
         response = getattr(self.rekognition, self.extractor_type)(
-            SourceImage = {
+            SourceImage={
                 'Bytes': source_img2byte
             },
-            MinConfidence = self.min_confidence   
+            MinConfidence=self.min_confidence
         )
-        
+
         return response
-   
+
 
 class RecognizeCelebritiesAWSExtractor(AwsRekognitionExtractor):
-    
+
     extractor_type = 'recognize_celebrities'
-    
+
+
 class CreateCollectionAWSExtractor(AwsRekognitionExtractor):
-    
-    extractor_type = 'create_collection' 
-    
+
+    extractor_type = 'create_collection'
+
     def _extract(self, collection_id, **kwargs):
         self.collection_id = collection_id
-        
+
         values = self._get_values()
-        
+
         return ExtractorResult(values, collection_id, self,
                                features=values,
                                )
-        
+
     def _get_value(self):
         response = getattr(self.rekognition, self.extractor_type)(
-            CollectionId = self.collection_id
+            CollectionId=self.collection_id
         )
-        
+
         return response
 
+
 class IndexFacesAWSExtractor(AwsRekognitionExtractor):
-    
+
     extractor_type = 'index_faces'
-    
+
     def _extract(self, stim, collection_id, **kwargs):
-          
+
         self.collection_id = collection_id
-        
+
         values = self._get_values(stim)
 
         return ExtractorResult(values, stim, self,
                                features=values,
                                )
-        
+
     def _get_value(self, stim):
 
         source_img2byte = self.img_to_byte(stim)
 
         response = getattr(self.rekognition, self.extractor_type)(
-            SourceImage = {
+            SourceImage={
                 'Bytes': source_img2byte
             },
-                    
+
             CollectionId=self.collection_id
         )
-        
+
         return response
-    
+
 
 class ListFacesAWSExtractor(AwsRekognitionExtractor):
-    
+
     extractor_type = 'list_faces'
-    
-    
+
     def _extract(self, collection_id, **kwargs):
-        
+
         self.collection_id = collection_id
-        
+
         values = self._get_values()
-        
+
         return ExtractorResult(values, collection_id, self,
                                features=values,
                                )
-        
+
     def _get_value(self):
         response = getattr(self.rekognition, self.extractor_type)(
-            CollectionId = self.collection_id
+            CollectionId=self.collection_id
         )
-        
+
         return response
 
+
 class SearchFacesAWSExtractor(AwsRekognitionExtractor):
-    
+
     extractor_type = 'list_faces'
-    
-    
-    def _extract(self, collection_id, face_id, max_faces = None, **kwargs):
-        
+
+    def _extract(self, collection_id, face_id, max_faces=None, **kwargs):
+
         self.collection_id = collection_id
         self.face_id = face_id
-        
+
         self.max_faces = max_faces
-            
+
         values = self._get_values()
-        
+
         return ExtractorResult(values, face_id, self,
                                features=values,
                                )
-        
+
     def _get_value(self):
-        
+
         if self.max_faces is not None:
-            
+
             response = getattr(self.rekognition, self.extractor_type)(
-                CollectionId = self.collection_id, 
-                FaceId = self.face_id, 
-                MaxFaces = self.max_faces
+                CollectionId=self.collection_id,
+                FaceId=self.face_id,
+                MaxFaces=self.max_faces
             )
         else:
-            
+
             response = getattr(self.rekognition, self.extractor_type)(
-                CollectionId = self.collection_id,
-                FaceId = self.face_id
+                CollectionId=self.collection_id,
+                FaceId=self.face_id
             )
-        
+
         return response
 
+
 class SearchFacesByImageAWSExtractor(AwsRekognitionExtractor):
-    
+
     extractor_type = 'search_faces_by_image'
-    
-    
-    def _extract(self, stim, collection_id, face_match_threshold = None, max_faces = None, **kwargs):
-        
+
+    def _extract(self, stim, collection_id, face_match_threshold=None, max_faces=None, **kwargs):
+
         self.collection_id = collection_id
         self.face_match_threshold = face_match_threshold
-        
+
         self.max_faces = max_faces
-            
+
         values = self._get_values(stim)
-        
+
         return ExtractorResult(values, stim, self,
                                features=values,
                                )
-        
+
     def _get_value(self, stim):
-        
+
         source_img2byte = self.img_to_byte(stim)
-        
+
         if self.max_faces is not None:
-            
+
             response = getattr(self.rekognition, self.extractor_type)(
-                CollectionId = self.collection_id, 
-                SourceImage = {
-                'Bytes': source_img2byte
-            },
-                MaxFaces = self.max_faces
+                CollectionId=self.collection_id,
+                SourceImage={
+                    'Bytes': source_img2byte
+                },
+                MaxFaces=self.max_faces
             )
         elif self.face_match_threshold is not None:
-            
+
             response = getattr(self.rekognition, self.extractor_type)(
-                CollectionId = self.collection_id, 
-                SourceImage = {
-                'Bytes': source_img2byte
-            },
-                FaceMatchThreshold = self.face_match_threshold
+                CollectionId=self.collection_id,
+                SourceImage={
+                    'Bytes': source_img2byte
+                },
+                FaceMatchThreshold=self.face_match_threshold
             )
-            
+
         elif self.face_match_threshold is not None and self.max_faces is not None:
-            
+
             response = getattr(self.rekognition, self.extractor_type)(
-                CollectionId = self.collection_id, 
-                SourceImage = {
-                'Bytes': source_img2byte
-            },
-                FaceMatchThreshold = self.face_match_threshold,
-                MaxFaces = self.max_faces
+                CollectionId=self.collection_id,
+                SourceImage={
+                    'Bytes': source_img2byte
+                },
+                FaceMatchThreshold=self.face_match_threshold,
+                MaxFaces=self.max_faces
             )
         else:
-            
+
             response = getattr(self.rekognition, self.extractor_type)(
-                CollectionId = self.collection_id, 
-                SourceImage = {
-                'Bytes': source_img2byte
-            }
+                CollectionId=self.collection_id,
+                SourceImage={
+                    'Bytes': source_img2byte
+                }
             )
-        
+
         return response
