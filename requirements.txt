@@ -9,4 +9,3 @@ scipy>=0.13.3
 imageio>=2.3.0
 six
 tqdm
-contextlib2
