@@ -6,7 +6,6 @@ pandas>=0.20.0
 pillow
 requests
 scipy>=0.13.3
-imageio
+imageio>=2.3.0
 six
 tqdm
-contextlib2
