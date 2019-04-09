@@ -34,7 +34,7 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
         rate_limit (int): The minimum number of seconds required between
             transform calls on this Transformer.
         model (str): The model to use for speech recognition (e.g., 'en-US',
-            'zh-CN', etc.). Don't include the "_BroadbandModel" suffix. 
+            'zh-CN', etc.). Don't include the "_BroadbandModel" suffix.
     '''
 
     _env_keys = ('IBM_USERNAME', 'IBM_PASSWORD')
