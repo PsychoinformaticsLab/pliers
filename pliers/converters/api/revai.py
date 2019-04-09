@@ -69,9 +69,7 @@ class RevAISpeechAPIConverter(APITransformer, AudioToTextConverter):
 
     def _convert(self, audio):
         verify_dependencies(['rev_ai'])
-        offset = 0.0 if audio.onset is None else audio.onset
-
-        msg = "Beginning video extraction with a timeout of %fs. Even for "\
+        msg = "Beginning audio transcription with a timeout of %fs. Even for "\
               "small audios, full transcription may take awhile." % self.timeout
         logging.warning(msg)
 
@@ -105,7 +103,7 @@ class RevAISpeechAPIConverter(APITransformer, AudioToTextConverter):
                     start = e.timestamp
                     end = e.end_timestamp
                     elements.append(TextStim(text=e.value,
-                                             onset=offset+start,
+                                             onset=start,
                                              duration=end-start,
                                              order=order))
                     order += 1
