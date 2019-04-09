@@ -77,7 +77,6 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
 
     def _convert(self, audio):
         verify_dependencies(['sr'])
-        offset = 0.0 if audio.onset is None else audio.onset
 
         with audio.get_filename() as filename:
             with sr.AudioFile(filename) as source:
@@ -100,7 +99,7 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
                         start = entry[1]
                         end = entry[2]
                         elements.append(TextStim(text=text,
-                                                 onset=offset+start,
+                                                 onset=start,
                                                  duration=end-start,
                                                  order=order))
                         order += 1
@@ -109,7 +108,7 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
                     start = timestamps[0][1]
                     end = timestamps[-1][2]
                     elements.append(TextStim(text=text,
-                                             onset=offset+start,
+                                             onset=start,
                                              duration=end-start,
                                              order=order))
                     order += 1
