@@ -61,11 +61,8 @@ class RevAISpeechAPIConverter(APITransformer, AudioToTextConverter):
                              "converter: {}".format(account.balance_seconds))
                 return False
         except Exception as e:
-            if 'Unauthorized' in str(e):
-                logging.warn(str(e))
-                return False
-            else:
-                raise e
+            logging.warn(str(e))
+            return False
 
     def _convert(self, audio):
         verify_dependencies(['rev_ai'])

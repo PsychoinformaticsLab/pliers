@@ -6,7 +6,8 @@ from .api import (WitTranscriptionConverter,
                   IBMSpeechAPIConverter,
                   GoogleSpeechAPIConverter,
                   GoogleVisionAPITextConverter,
-                  MicrosoftAPITextConverter)
+                  MicrosoftAPITextConverter,
+                  RevAISpeechAPIConverter)
 from .base import Converter, get_converter
 from .image import TesseractConverter
 from .iterators import (VideoFrameIterator, VideoFrameCollectionIterator,
@@ -27,6 +28,7 @@ __all__ = [
     'VideoToTextConverter',
     'VideoToComplexTextConverter',
     'VideoToAudioConverter',
+    'RevAISpeechAPIConverter',
     'Converter',
     'get_converter'
 ]

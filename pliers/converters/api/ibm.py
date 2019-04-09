@@ -69,11 +69,8 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
             self._send_request(request)
             return True
         except Exception as e:
-            if 'Not Authorized' in str(e):
-                logging.warn(str(e))
-                return False
-            else:
-                raise e
+            logging.warn(str(e))
+            return False
 
     def _convert(self, audio):
         verify_dependencies(['sr'])
