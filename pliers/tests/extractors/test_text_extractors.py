@@ -159,15 +159,16 @@ def test_vader_sentiment_extractor():
     assert result2['sentiment_neu'][0] == 0.248
     assert result2['sentiment_compound'][0] == 0.8439
 
-    
+
 def test_spacy_token_extractor():
+    pytest.importorskip('spacy')
     stim = TextStim(text='This is a test.')
     ext = SpaCyExtractor(extractor_type='token')
     assert ext.model is not None
-    
+
     ext2 = SpaCyExtractor(model='en_core_web_sm')
     assert isinstance(ext2.model, spacy.lang.en.English)
-    
+
     result = ext.transform(stim).to_df()
     assert result['text'][0] == 'This'
     assert result['lemma_'][0].lower() == 'this'
@@ -181,7 +182,7 @@ def test_spacy_token_extractor():
     assert result['is_ascii'][0] == 'True'
     assert result['is_digit'][0] == 'False'
     assert result['sentiment'][0] == '0.0'
-    
+
     assert result['text'][1] == 'is'
     assert result['lemma_'][1].lower() == 'be'
     assert result['pos_'][1] == 'VERB'
@@ -194,7 +195,7 @@ def test_spacy_token_extractor():
     assert result['is_ascii'][1] == 'True'
     assert result['is_digit'][1] == 'False'
     assert result['sentiment'][1] == '0.0'
-    
+
     assert result['text'][2] == 'a'
     assert result['lemma_'][2].lower() == 'a'
     assert result['pos_'][2] == 'DET'
@@ -207,7 +208,7 @@ def test_spacy_token_extractor():
     assert result['is_ascii'][2] == 'True'
     assert result['is_digit'][2] == 'False'
     assert result['sentiment'][2] == '0.0'
-    
+
     assert result['text'][3] == 'test'
     assert result['lemma_'][3].lower() == 'test'
     assert result['pos_'][3] == 'NOUN'
@@ -219,21 +220,22 @@ def test_spacy_token_extractor():
     assert result['is_punct'][3] == 'False'
     assert result['is_ascii'][3] == 'True'
     assert result['is_digit'][3] == 'False'
-    assert result['sentiment'][3] == '0.0'    
+    assert result['sentiment'][3] == '0.0'
 
 
 def test_spacy_doc_extractor():
+    pytest.importorskip('spacy')
     stim2 = TextStim(text='This is a test. And we are testing again. This '
                      'should be quite interesting. Tests are totally fun.')
     ext = SpaCyExtractor(extractor_type='doc')
     assert ext.model is not None
-    
+
     result = ext.transform(stim2).to_df()
     assert result['text'][0]=='This is a test. '
     assert result['is_parsed'][0]
     assert result['is_tagged'][0]
     assert result['is_sentenced'][0]
-    
+
     assert result['text'][3]=='Tests are totally fun.'
     assert result['is_parsed'][3]
     assert result['is_tagged'][3]

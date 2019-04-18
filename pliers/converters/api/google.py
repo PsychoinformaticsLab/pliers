@@ -89,7 +89,6 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
         if 'error' in response:
             raise Exception(response['error']['message'])
 
-        offset = 0.0 if stim.onset is None else stim.onset
         words = []
         if 'results' in response:
             for result in response['results']:
@@ -98,7 +97,7 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
                     onset = float(w['startTime'][:-1])
                     duration = float(w['endTime'][:-1]) - onset
                     words.append(TextStim(text=w['word'],
-                                          onset=offset + onset,
+                                          onset=onset,
                                           duration=duration))
 
         return ComplexTextStim(elements=words)

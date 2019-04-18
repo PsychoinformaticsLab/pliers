@@ -2,7 +2,7 @@
 Extractors that operate primarily or exclusively on Text stimuli.
 '''
 import sys
-#sys.path.insert(0,'C:\\Users\\jayee\\Documents\\Tal-Pliers\\pliers' )
+
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.exceptions import PliersError
@@ -20,13 +20,12 @@ import logging
 from six import string_types
 
 
-
-
 keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
                                  ['KeyedVectors'])
 sklearn_text = attempt_to_import('sklearn.feature_extraction.text', 'sklearn_text',
                                  ['VectorizerMixin', 'CountVectorizer'])
 spacy = attempt_to_import('spacy')
+
 
 class TextExtractor(Extractor):
 
