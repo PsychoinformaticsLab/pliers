@@ -55,13 +55,40 @@
 
     "subtlexusfrequency": {
         "title": "SUBTLEX US English word frequency for 60,384 words that have a frequency higher than 1",
-        "description_url": "http://www.ugent.be/pp/experimentele-psychologie/en/research/documents/subtlexus/overview.htm",
+        "description_url": "https://www.ugent.be/pp/experimentele-psychologie/en/research/documents/subtlexus",
         "source": "Brysbaert, M., & New, B. (2009). Moving beyond Kučera and Francis: A critical evaluation of current word frequency norms and the introduction of a new and improved word frequency measure for American English. Behavior research methods, 41(4), 977-990.",
-        "url": "https://www.ugent.be/pp/experimentele-psychologie/en/research/documents/subtlexus/subtlexus4.zip/at_download/file",
+        "url": "https://www.ugent.be/pp/experimentele-psychologie/en/research/documents/subtlexus/subtlexus1.zip",
         "license": "",
         "format": "xls",
         "language": "english",
         "columns": ["FREQcount", "CDcount", "FREQlow", "Cdlow", "SUBTLWF",
-                    "Lg10WF", "SUBTLCD", "Lg10CD"]
+                    "Lg10WF", "SUBTLCD", "Lg10CD", "Dom_PoS_SUBTLEX", "Freq_dom_PoS_SUBTLEX", "Percentage_dom_PoS", "All_PoS_SUBTLEX", "All_freqs_SUBTLEX", "Zipf-value"],
+        "column_descriptions": [
+          "Number of times the word appears in the corpus",
+          "The number of films in which the word appears",
+          "The number of times the word appears in the corpus starting with a lowercase letter",
+          "The number of films in which the word appears starting with a lowercase letter",
+          "The word frequency per million words",
+          "This value is based on log10(FREQcount+1)",
+          "Indicates in what percent of the films the word appears",
+          "This value is based on log10(CDcount+1)",
+          "The dominant (most frequent) part of speech of each entry",
+          "The frequency of the dominant part of speech",
+          "The relative frequency of the dominant part of speech",
+          "All parts of speech observed for the entry",
+          "The frequencies of each part of speech",
+          "Zipf frequency"
+        ]
+    },
+
+    "calgarysemanticdecision": {
+        "title": "The Calgary semantic decision project: concrete/abstract decision data for 10,000 English words",
+        "description_url": "https://psyc.ucalgary.ca/languageprocessing/node/22",
+        "source": "Pexman, P. M., Heard, A., Lloyd, E., & Yap, M. J. (2017). The Calgary semantic decision project: concrete/abstract decision data for 10,000 English words. Behavior Research Methods, 49(2), 407-417.",
+        "url": "https://psychology.ucalgary.ca/languageprocessing/sites/psyc.ucalgary.ca.languageprocessing/files/calgary_sdt_itemwise_data.xls",
+        "license": "",
+        "format": "xls",
+        "language": "english",
+        "columns": ["VersionNum", "WordType", "Block", "Word_ID_unique", "RTclean_mean", "RTclean_sd", "Rtclean_n", "zRTclean_mean", "zRTclean_sd", "zRTclean_n", "ACC", "ACC_n", "Concrete_rating"]
     }
 }
