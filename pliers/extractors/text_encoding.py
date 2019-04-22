@@ -87,7 +87,7 @@ class DirectTextExtractorInterface():
     def __init__(self,method="averageWordEmbedding",\
                              embedding="glove",\
                              dimensionality=300 ,\
-                             corpus="6B",\
+                             corpus="42B",\
                              content_only=True,\
                              stopWords=None,\
                              unk_vector=None,\
@@ -104,7 +104,7 @@ class DirectTextExtractorInterface():
             ' from the list provided in README.')
          
         '''checking instance type of the parameters is done'''
-            
+                
         self.method = method
         if self.method.lower() == "averagewordembedding":
             
@@ -141,9 +141,6 @@ class DirectTextExtractorInterface():
             
         elif method.lower() == 'dan':
             self.semvector_object = DANExtractor()
-            
-        elif method.lower() == 'bert':
-            self.semvector_object = BertExtractor()
         
         else:
             raise ValueError('Method: ' + '\"' + method + '\"' ' is not supported. Default is ' + \
@@ -166,9 +163,9 @@ class DirectTextExtractorInterface():
                                   "doc2vec", \
                                   "dan",\
                                   "elmo" ] :
-            stim = [stim]
+        #    stim = [stim]
         
-        return self.semvector_object._embed(stim)
+            return self.semvector_object._embed(stim)
         
 class DirectSentenceExtractor(TextExtractor):
 
@@ -185,7 +182,7 @@ class DirectSentenceExtractor(TextExtractor):
     _version = '0.1'
     prefix = 'embedding_dim'
     _aws_bucket_path = 'https://s3.amazonaws.com/mlt-word-embeddings/'
-    _embedding_model_path = './datasets/embeddings/'
+    _embedding_model_path = '/Users/mit-gablab/work/pliers_python_workspace_orig/pliers_forked_2/datasets/embeddings/'
     _vectors = 'vectors'
     _text = '.txt'
     
@@ -365,12 +362,14 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
             raise ValueError('selected embedding type is not ' + \
                              ' compatible with the embedding method, please check the available.' +\
                              ' embeddings')
+        else:
+            self.embedding = embedding
     
         ''' Check whether the embedding file exist '''
         if embedding == self._fasttext:
             corpus = self._fasttext_corpus
             
-        embedding_input =  embedding + corpus  + str(dimensionality) 
+        embedding_input =  self.embedding + corpus  + str(dimensionality) 
         self._embedding_model_path = os.path.join(self._embedding_model_path,embedding)
         self.embedding_file = self._embedding_model_path + '/'+embedding_input + self._text
 
@@ -384,13 +383,17 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
         super(AverageEmbeddingExtractor, self).__init__()
 
     def _loadModel(self):
+     #   self.embedding_file = '/Users/mit-gablab/work/pliers_python_workspace_orig/pliers_forked_2/datasets/embeddings/glove/glove6B50.txt'
         self.wvModel = keyedvectors.KeyedVectors.load_word2vec_format(self.embedding_file,binary=False,encoding='latin1')
-        print('model loaded')
+        print(self.embedding + ': ' + 'model loaded')
 
     def _getModel(self):
         return self.wvModel 
 
     def _embed(self,stim):
+        
+        if not isinstance(stim,list):
+            stim = [stim]
         
         ''' 
             We only implementing average word embedding'
@@ -411,7 +414,8 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
             numWords = 0
             for embedding in embeddings:
                 if self.content_only == True:
-                    if embedding.stim.data in self.stop_words:
+                    if embedding.stim.data in self.stop_words or \
+                        not embedding.stim.data.isalnum() :
                         continue
             
                     for index,value in enumerate(embedding._data[0]):
@@ -529,150 +533,6 @@ class DANExtractor(DirectSentenceExtractor):
         '''
 
 
-class BertExtractor(DirectSentenceExtractor):
-    
-    '''Currently we have Bert encoding as a service
-        running on Tensorflow Hub.'''
-    
-    #os.environ["TFHUB_CACHE_DIR"] = '/tmp/tfhub/'
-    os.environ["TFHUB_CACHE_DIR"] = '/Users/mit-gablab/work/data_workspace/tfhub/'
-    _hub_path = "https://tfhub.dev/google/bert_uncased_L-12_H-768_A-12/1"
-
-    _method = 'bert'
-    
-    def __init__(self):
-        print ('inside bert class')
-        
-        '''Unlike other methods Bert needs its own Tokenizer'''
-        '''Also, we initialize the encoder inside tf_graph'''
-        
-        self.graph = tf.Graph()
-        with tf.Session(graph = self.graph) as session:
-            self.bert_encoder = hub.Module(self._hub_path,trainable=True)
-            tokenization_info = self.bert_encoder(signature="tokenization_info",\
-                                                  as_dict=True)
-            vocab_file, do_lower_case = session.run([tokenization_info["vocab_file"],
-                                                tokenization_info["do_lower_case"]])
-            self.vocab =   bert.tokenization.load_vocab(vocab_file) 
-        
-            self.tokenizer =  bert.tokenization.FullTokenizer(
-                vocab_file=vocab_file, do_lower_case=do_lower_case)
-        
-        
-      #  self.tokenizer = self.createTokenizer()
-      #  self.processor = run_classifier.MnliProcessor
-        super(BertExtractor, self).__init__()
-    
-    
-    def createTokenizer(self):
-        """Get the vocab file and casing info from the Hub module."""
-        with tf.Graph().as_default():
-            self.bert_encoder = hub.Module(self._hub_path,trainable=True)
-            tokenization_info = self.bert_encoder(signature="tokenization_info",\
-                                                  as_dict=True)
-            with tf.Session() as sess:
-                vocab_file, do_lower_case = sess.run([tokenization_info["vocab_file"],
-                                                tokenization_info["do_lower_case"]])
-                self.vocab =   bert.tokenization.load_vocab(vocab_file) 
-          
-        return bert.tokenization.FullTokenizer(
-          vocab_file=vocab_file, do_lower_case=do_lower_case)
-
-
-    def _embed(self,stim):
-        
-        x_all = ["This here's an example of using the BERT tokenizer"]
-        y_all = ['1']
-        train_InputExamples = []
-
-        for index,x in enumerate(x_all):
-            y = y_all[index]
-            train_InputExample = bert.run_classifier.InputExample(guid=None, # Globally unique ID for bookkeeping, unused in this example
-                            text_a = x, \
-                            text_b = None, \
-                            label = y)
-            
-            train_InputExamples.append(train_InputExample)
-
-        MAX_SEQ_LENGTH = 40
-        features = bert.run_classifier.convert_examples_to_features\
-                    (train_InputExamples, y_all, MAX_SEQ_LENGTH, self.tokenizer)
-
-
-        with tf.Graph().as_default():
-            
-            self.bert_encoder = hub.Module(self._hub_path,trainable=True)
-
-            for feature in features:
-                
-                input_ids = feature.input_ids
-                input_mask = feature.input_mask
-                segment_ids = feature.segment_ids
-                
-                input_ids_tensor = tf.convert_to_tensor([input_ids])
-                input_mask_tensor = tf.convert_to_tensor([input_mask])
-                segment_mask_tensor = tf.convert_to_tensor([segment_ids])
-                
-                
-                bert_inputs = dict(
-                    input_ids=input_ids_tensor,
-                    input_mask=input_mask_tensor,
-                    segment_ids=segment_mask_tensor)
-                bert_outputs = self.bert_encoder(bert_inputs, signature="tokens", as_dict=True)
-                pooled_output = bert_outputs["pooled_output"]
-                sequence_output = bert_outputs["sequence_output"]
-        
-                k =1
-
-        
-    def _embed_2(self,stim):
-        
-        x_all = ["This here's an example of using the BERT tokenizer"]
-        tokens = self.tokenizer.tokenize(x_all[0])
-        input_ids = bert.tokenization.convert_tokens_to_ids(self.vocab,tokens)
-        
-        
-        
-        y_all = ['1']
-        train_InputExamples = []
-        for index,x in enumerate(x_all):
-            y = y_all[index]
-            train_InputExample = bert.run_classifier.InputExample(guid=None, # Globally unique ID for bookkeeping, unused in this example
-                            text_a = x, \
-                            text_b = None, \
-                            label = y)
-            
-            train_InputExamples.append(train_InputExample)
-        
-    #    tokens = self.tokenizer.tokenize()
-        MAX_SEQ_LENGTH = 40
-        features = bert.run_classifier.convert_examples_to_features\
-                    (train_InputExamples, y_all, MAX_SEQ_LENGTH, self.tokenizer)
-        
-#        with tf.Graph().as_default():
-        with tf.Session(graph = self.graph) as session:
-            
-            for feature in features:
-                
-                input_ids = feature.input_ids
-                input_mask = feature.input_mask
-                segment_ids = feature.segment_ids
-                
-                bert_inputs = dict(
-                    input_ids=input_ids,
-                    input_mask=input_mask,
-                    segment_ids=segment_ids)
-                bert_outputs = self.bert_encoder(bert_inputs, signature="tokens", as_dict=True)
-                pooled_output = bert_outputs["pooled_output"]
-                sequence_output = bert_outputs["sequence_output"]
-        
-        
-                k =1
-
-        
-        if not isinstance(stim,list):
-            stim = [stim]
-
 
 
 class ElmoExtractor(DirectSentenceExtractor):
@@ -692,14 +552,15 @@ class ElmoExtractor(DirectSentenceExtractor):
                     
     _method = 'elmo'
     
-    def __init__(self,layer='default'):
+    def __init__(self,layer=None):
         print ('inside elmo class')
 
         self.elmo_encoder = hub.Module(self._hub_path,trainable=True)
-        if layer != 'default':
-            self._layer = layer
-        else:
+        if layer == None:
             self._layer = 'default'
+        else:
+            self._layer = layer
+
             
             
         super(ElmoExtractor, self).__init__()
