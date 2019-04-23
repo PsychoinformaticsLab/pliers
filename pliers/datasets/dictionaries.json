@@ -47,7 +47,7 @@
         "source": "Brysbaert, M., Warriner, A.B., & Kuperman, V. (2014). Concreteness ratings for 40 thousand generally known English word lemmas. Behavior Research Methods, 46, 904-911.",
         "url": "http://crr.ugent.be/papers/Concreteness_ratings_Brysbaert_et_al_BRM.txt",
         "license": "http://creativecommons.org/licenses/by-nc-nd/3.0/deed.en_US",
-        "format": "tsv",
+        "format": "tsv",    
         "language": "english",
         "columns": ["Bigram", "Conc.M", "Conc.SD", "Unknown", "Total",
                     "Percent_known", "SUBTLEX", "Dom_Pos"]
@@ -90,5 +90,41 @@
         "format": "xls",
         "language": "english",
         "columns": ["VersionNum", "WordType", "Block", "Word_ID_unique", "RTclean_mean", "RTclean_sd", "Rtclean_n", "zRTclean_mean", "zRTclean_sd", "zRTclean_n", "ACC", "ACC_n", "Concrete_rating"]
+    },
+
+    "massiveauditorylexicaldecision": {
+        "title": "The Massive Auditory Lexical Decision (MALD) database",
+        "description_url": "http://aphl.artsrn.ualberta.ca/?page_id=827",
+        "source": "Tucker, B. V., Brenner, D., Danielson, D. K., Kelley, M. C., Nenadic, F., & Sims, M. (2019). The Massive Auditory Lexical Decision (MALD) database. Behavior Research Methods.",
+        "doi": "10.3758/s13428-018-1056-1",
+        "url": "https://era.library.ualberta.ca/items/6f793ba5-44a8-4ed9-95a0-3cd7052c10f1/download/e2421732-b28c-427e-afcf-d7668955a33e",
+        "license": "https://creativecommons.org/licenses/by-nc/4.0/",
+        "format": "tsv",
+        "language": "english",
+        "columns": ["WAV", "Pronunciation", "IsWord", "StressPattern", "NumSylls", "NumPhones", "Duration", "OrthUP", "PhonND", "OrthND", "POS", "AllPOS", "FreqSUBTLEX", "FreqCOCA", "FreqCOCAspok", "FreqGoogle", "PhonUP", "StressCat", "Dbet", "PhonLev", "NumMorphs", "OrthLev"],
+        "column_descriptions": [
+            "The name of the sound file.",
+            "Transcription of the item phones in the Arpabet transcription scheme.",
+            "Whether the item is a word or pseudo-word.",
+            "The stress pattern of the word.",
+            "The number of syllables in the item.",
+            "The number of phones in the item.",
+            "The duration of the item in milliseconds.",
+            "The letter index of the orthographic uniqueness point of the item.",
+            "The number of phonological neighbors (one phone edit away).",
+            "The number of orthographic neighbors (one glyph edit away).",
+            "The frequency-dominant part-of-speech of the orthographic form.",
+            "All parts-of-speech of the orthographic wordform.",
+            "The frequency of the orthographic word form (SUBTLEX-US corpus).",
+            "Word frequency in the COCA corpus.",
+            "Word frequency in the spoken language subset of the COCA corpus.",
+            "Word frequency in the Google Unigram corpus.",
+            "The phone index of the phonological uniqueness point of the item.",
+            "The stress category of word items.",
+            "",
+            "Mean phone-level Levenshtein distance from all entries in CMU-A.",
+            "The number of morphemes.",
+            "Mean orthographic Levenshtein distance from all entries in CMU-A."
+        ]
     }
 }
