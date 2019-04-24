@@ -76,6 +76,25 @@ def test_predefined_dictionary_extractor():
     assert np.isclose(result['aoa_Freq_pm'][0], 10.313725, 1e-5)
 
 
+def test_predefined_dictionary_retrieval():
+    variables = [
+        'affect/D.Mean.H',
+        'concreteness/SUBTLEX',
+        'subtlexusfrequency/Zipf-value',
+        'calgarysemanticdecision/RTclean_mean',
+        'massiveauditorylexicaldecision/PhonLev'
+    ]
+    stim = TextStim(text='perhaps')
+    td = PredefinedDictionaryExtractor(variables)
+    result = td.transform(stim).to_df().iloc[0]
+    assert np.isnan(result['affect_D.Mean.H'])
+    assert result['concreteness_SUBTLEX'] == 6939
+    assert result['calgarysemanticdecision_RTclean_mean'] == 954.48
+    assert np.isclose(result['subtlexusfrequency_Zipf-value'], 5.1331936)
+    assert np.isclose(result['massiveauditorylexicaldecision_PhonLev'],
+                      6.65101626)
+
+
 def test_part_of_speech_extractor():
     import nltk
     nltk.download('tagsets')
