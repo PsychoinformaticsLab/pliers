@@ -115,12 +115,16 @@ class PredefinedDictionaryExtractor(DictionaryExtractor):
             a dictionary (defaults to numpy's NaN).
         case_sensitive (bool): If True, entries in the dictionary are treated
             as case-sensitive (e.g., 'John' and 'john' are different words).
+        force_retrieve (bool): If True, the source dictionary will always be
+            retrieved/download, even if it exists locally. If False, a cached
+            local version will be used if it exists.
     '''
 
     _log_attributes = ('variables', 'missing', 'case_sensitive')
     VERSION = '1.0'
 
-    def __init__(self, variables, missing=np.nan, case_sensitive=True):
+    def __init__(self, variables, missing=np.nan, case_sensitive=True,
+                 force_retrieve=False):
 
         self.case_sensitive = case_sensitive
 
@@ -136,7 +140,7 @@ class PredefinedDictionaryExtractor(DictionaryExtractor):
 
         dicts = []
         for k, v in variables.items():
-            d = fetch_dictionary(k)
+            d = fetch_dictionary(k, force_retrieve=force_retrieve)
             if not case_sensitive:
                 d.index = d.index.str.lower()
             if v:
