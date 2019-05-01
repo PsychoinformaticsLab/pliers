@@ -1,42 +1,33 @@
-FROM ubuntu:trusty
+FROM continuumio/miniconda3:4.5.11
 
-RUN apt-get update && apt-get install -y git
-RUN apt-get install -y software-properties-common
-RUN add-apt-repository ppa:joyard-nicolas/ffmpeg -y
-RUN apt-get -qq update
-RUN apt-get install -y ffmpeg tesseract-ocr
-RUN apt-get install -y wget
-RUN apt-get install -y graphviz libgraphviz-dev pkg-config
+ARG DEBIAN_FRONTEND="noninteractive"
 
-ENV MINICONDA_URL "https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh"
-ENV CONDA_DEPS "pip jupyter pytest numpy pandas pillow==2.9.0 requests scipy nltk six tqdm seaborn matplotlib pathos tensorflow contextlib2"
-WORKDIR /root
-ENV MINICONDA $HOME/miniconda
-ENV PATH "$MINICONDA/bin:$PATH"
-RUN wget $MINICONDA_URL -O miniconda.sh;
-RUN bash miniconda.sh -b -f -p $MINICONDA;
-RUN hash -r
-RUN conda info -a
-RUN conda config --set always_yes yes --set changeps1 no
-RUN conda config --add channels conda-forge
-RUN conda update -y conda
-RUN conda create -y -n py35 python=3.5 $CONDA_DEPS
+RUN apt-get -qq update \
+    && apt-get install -yq --no-install-recommends \
+      git \
+      graphviz \
+      libgraphviz-dev \
+      pkg-config \
+      tesseract-ocr \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN /bin/bash -c "source /miniconda/envs/py35/bin/activate py35 \
-  && pip install --upgrade --ignore-installed setuptools \
-  && pip install python-magic coveralls pytest-cov pygraphviz pysrt xlrd clarifai pytesseract moviepy==0.2.2.13 SpeechRecognition IndicoIo sklearn python-twitter gensim oauth2client google-api-python-client google-compute-engine librosa ipython"
+ENV CONDA_DEPS="pip ffmpeg jupyter pytest pygraphviz numpy pandas pillow==2.9.0 requests scipy nltk six tqdm seaborn matplotlib pathos tensorflow contextlib2" \
+    PIP_DEPS="python-magic coveralls pytest-cov pysrt xlrd clarifai pytesseract moviepy==0.2.2.13 SpeechRecognition IndicoIo sklearn python-twitter gensim oauth2client google-api-python-client google-compute-engine librosa ipython"
+RUN conda info -a \
+    && conda config --set always_yes yes --set changeps1 no \
+    && conda config --add channels conda-forge \
+    && conda update -y -q conda \
+    && conda install $CONDA_DEPS \
+    && conda clean --all --yes \
+    && pip install --no-cache-dir $PIP_DEPS \
+    && python -c 'import imageio; imageio.plugins.ffmpeg.download()'
 
-RUN /bin/bash -c 'source /miniconda/envs/py35/bin/activate py35 \
- && python -c "import imageio; imageio.plugins.ffmpeg.download()"'
-
-RUN git clone https://github.com/tyarkoni/pliers.git
 WORKDIR /root/pliers
-RUN /bin/bash -c 'source /miniconda/envs/py35/bin/activate py35 \
- && python setup.py install'
-RUN echo "if (tty -s); then \n\
-    source /miniconda/envs/py35/bin/activate py35\n\
-fi" >> /root/.bashrc
-RUN /bin/bash -c 'source /miniconda/envs/py35/bin/activate py35 \
- && python -m pliers.support.download'
-RUN apt-get install -y curl
+COPY . .
+RUN python setup.py install \
+    && python -m pliers.support.download
+
+WORKDIR /work
+
 CMD ["/bin/bash"]

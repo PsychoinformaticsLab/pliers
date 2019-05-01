@@ -1,0 +1,17 @@
+docker/Dockerfile
+
+*.pyc
+*.DS_Store
+*~
+benchmarks/
+build/
+dist
+dist/*
+*.egg-info
+.cache
+doc/
+TODO.txt
+env.list
+docs/_build/
+docs/generated/
+.pytest_cache/
