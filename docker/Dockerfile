@@ -13,6 +13,8 @@ RUN apt-get update -qq \
     && pip install --no-cache-dir \
         --requirement requirements.txt \
         --requirement optional-dependencies.txt \
+        ipython \
+        notebook \
     && python -m spacy download en_core_web_sm \
     && pip install --no-cache-dir --editable . \
     && rm -rf ~/.cache/pip \
