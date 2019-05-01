@@ -13,7 +13,9 @@ RUN apt-get update -qq \
     && pip install --no-cache-dir \
         --requirement requirements.txt \
         --requirement optional-dependencies.txt \
+    && python -m spacy download en_core_web_sm \
     && pip install --no-cache-dir --editable . \
+    && rm -rf ~/.cache/pip \
     && apt-get autoremove --purge -yq $tmp_pkgs \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
