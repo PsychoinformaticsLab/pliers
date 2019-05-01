@@ -61,10 +61,12 @@ def test_tensorflow_keras_inception_v3_extractor():
     results = ext.transform(imgs)
     df = merge_results(results, format='wide', extractor_names='multi')
     assert df.shape == (2, 19)
-    assert df['TensorFlowKerasInceptionV3Extractor'].loc[
-        0, 'Granny_Smith'] == 0.9737075
-    assert df['TensorFlowKerasInceptionV3Extractor'].loc[
-        1, 'Windsor_tie'] == 0.64234024
+    true = 0.9737075
+    pred = df['TensorFlowKerasInceptionV3Extractor'].loc[0, 'Granny_Smith']
+    np.isclose(true, pred, 1e-05)
+    true = 0.64234024
+    pred = df['TensorFlowKerasInceptionV3Extractor'].loc[1, 'Windsor_tie']
+    np.isclose(true, pred, 1e-05)
     assert 4.2 in df[('onset', np.nan)].values
     assert 1 in df[('duration', np.nan)].values
 
