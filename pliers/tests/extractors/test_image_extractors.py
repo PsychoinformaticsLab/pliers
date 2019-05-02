@@ -4,7 +4,7 @@ from pliers.extractors import (BrightnessExtractor,
                                SharpnessExtractor,
                                VibranceExtractor,
                                SaliencyExtractor,
-                               TensorFlowInceptionV3Extractor,
+                               TensorFlowKerasInceptionV3Extractor,
                                FaceRecognitionFaceLandmarksExtractor,
                                FaceRecognitionFaceLocationsExtractor,
                                FaceRecognitionFaceEncodingsExtractor)
@@ -54,16 +54,19 @@ def test_saliency_extractor():
     assert np.isclose(sf, 0.27461971, 1e-5)
 
 
-def test_tensor_flow_inception_v3_extractor():
+def test_tensorflow_keras_inception_v3_extractor():
     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'obama.jpg']]
     imgs = [ImageStim(im, onset=4.2, duration=1) for im in imgs]
-    ext = TensorFlowInceptionV3Extractor()
+    ext = TensorFlowKerasInceptionV3Extractor()
     results = ext.transform(imgs)
     df = merge_results(results, format='wide', extractor_names='multi')
-    assert len(df) == 2
-    assert ('TensorFlowInceptionV3Extractor', 'Granny Smith') in df.columns
-    assert 0.22610 in df[
-        ('TensorFlowInceptionV3Extractor', 'Windsor tie')].values
+    assert df.shape == (2, 19)
+    true = 0.9737075
+    pred = df['TensorFlowKerasInceptionV3Extractor'].loc[0, 'Granny_Smith']
+    np.isclose(true, pred, 1e-05)
+    true = 0.64234024
+    pred = df['TensorFlowKerasInceptionV3Extractor'].loc[1, 'Windsor_tie']
+    np.isclose(true, pred, 1e-05)
     assert 4.2 in df[('onset', np.nan)].values
     assert 1 in df[('duration', np.nan)].values
 
