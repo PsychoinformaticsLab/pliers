@@ -1,6 +1,7 @@
 from os.path import join
 from ..utils import get_test_data_path
 from pliers.filters import (ImageCroppingFilter,
+                            ImageResizingFilter,
                             PillowImageFilter)
 from pliers.stimuli import ImageStim
 import numpy as np
@@ -25,6 +26,22 @@ def test_image_cropping_filter():
     assert stim2.data.shape == (240, 240, 3)
     new_stim2 = filt2.transform(stim2)
     assert new_stim2.data.shape == (112, 240, 3)
+
+
+def test_image_resizing_filter():
+    stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
+    size = (299, 299)
+    filt = ImageResizingFilter(size=size, maintain_aspect_ratio=False)
+    new_stim = filt.transform(stim)
+    # Test that only 2 pixels are black.
+    assert (new_stim.data == 0).all(-1).sum() < 100
+
+    filt2 = ImageResizingFilter(size=size, maintain_aspect_ratio=True)
+    new_stim = filt2.transform(stim)
+    assert new_stim.data.shape == (*size, 3)
+    # Test that many pixels are now black, because of the black border that is
+    # introduced when maintaining aspect ratio.
+    assert (new_stim.data == 0).all(-1).sum() > 25000
 
 
 def test_pillow_image_filter_filter():
