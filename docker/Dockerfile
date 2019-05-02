@@ -15,12 +15,13 @@ RUN apt-get update -qq \
         --requirement optional-dependencies.txt \
         ipython \
         notebook \
-    && python -m spacy download en_core_web_sm \
     && pip install --no-cache-dir --editable . \
+    && python -m spacy download en_core_web_sm \
     && rm -rf ~/.cache/pip \
     && apt-get autoremove --purge -yq $tmp_pkgs \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --no-user-group --create-home --shell /bin/bash pliers
 USER pliers
+RUN python -m pliers.support.download
 WORKDIR /work
