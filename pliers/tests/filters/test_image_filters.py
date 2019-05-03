@@ -43,6 +43,15 @@ def test_image_resizing_filter():
     # introduced when maintaining aspect ratio.
     assert (new_stim.data == 0).all(-1).sum() > 25000
 
+    assert ImageResizingFilter((24, 24), resample='nearest').resample == 0
+    assert ImageResizingFilter((24, 24), resample='bilinear').resample == 2
+    assert ImageResizingFilter((24, 24), resample='bicubic').resample == 3
+    assert ImageResizingFilter((24, 24), resample='lanczos').resample == 1
+    assert ImageResizingFilter((24, 24), resample='box').resample == 4
+    assert ImageResizingFilter((24, 24), resample='hamming').resample == 5
+    with pytest.raises(ValueError):
+        ImageResizingFilter((24, 24), resample='farthest')
+
 
 def test_pillow_image_filter_filter():
     stim = ImageStim(join(IMAGE_DIR, 'thai_people.jpg'))

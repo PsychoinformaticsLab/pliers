@@ -53,20 +53,31 @@ class ImageResizingFilter(ImageFilter):
             maintaining aspect ratio, and pad the rest with zero values.
             Otherwise, potentially distort the image during resizing to fit the
             new size.
-        resample (int): resampling method. 0 for nearest neighbor, 1 for
-            Lanczos, 2 for bilinear, 3 for bicubic (default), 4 for box, and 5 for
-            hamming. See https://pillow.readthedocs.io/en/5.1.x/handbook/concepts.html#concept-filters
+        resample str: resampling method. One of 'nearest', 'bilinear',
+            'bicubic', 'lanczos', 'box', and 'hamming'. See
+            https://pillow.readthedocs.io/en/5.1.x/handbook/concepts.html#concept-filters
             for more information.
     '''
 
     _log_attributes = ('size', 'maintain_aspect_ratio', 'resample')
     VERSION = '1.0'
 
-    def __init__(self, size, maintain_aspect_ratio=False,
-                 resample=Image.BICUBIC):
+    def __init__(self, size, maintain_aspect_ratio=False, resample='bicubic'):
         self.size = size
         self.maintain_aspect_ratio = maintain_aspect_ratio
-        self.resample = resample
+        resampling_mapping = {
+            'nearest': Image.NEAREST,
+            'bilinear': Image.BILINEAR,
+            'bicubic': Image.BICUBIC,
+            'lanczos': Image.LANCZOS,
+            'box': Image.BOX,
+            'hamming': Image.HAMMING,
+        }
+        if resample.lower() not in resampling_mapping.keys():
+            raise ValueError(
+                "Unknown resampling method '{}'. Allowed values are '{}'"
+                .format(resample, "', '".join(resampling_mapping.keys())))
+        self.resample = resampling_mapping[resample]
         super(ImageResizingFilter, self).__init__()
 
     def _filter(self, stim):
