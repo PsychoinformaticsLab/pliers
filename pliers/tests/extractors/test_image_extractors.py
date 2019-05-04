@@ -69,6 +69,8 @@ def test_tensorflow_keras_application_extractor():
     assert np.isclose(true, pred, 1e-05)
     assert 4.2 in df[('onset', np.nan)].values
     assert 1 in df[('duration', np.nan)].values
+    with pytest.raises(ValueError):
+        TensorFlowKerasApplicationExtractor(architecture='foo')
 
 
 def test_face_recognition_landmarks_extractor():
