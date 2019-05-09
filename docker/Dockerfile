@@ -2,6 +2,7 @@ FROM python:3.6-slim
 ARG DEBIAN_FRONTEND="noninteractive"
 WORKDIR /opt/pliers
 COPY . .
+RUN chmod a+rX -R .
 RUN apt-get update -qq \
     && tmp_pkgs="cmake gcc g++ libc6-dev libgraphviz-dev libmagic-dev make" \
     && apt-get install -yq --no-install-recommends \
