@@ -22,6 +22,9 @@ RUN apt-get update -qq \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --no-user-group --create-home --shell /bin/bash pliers
+# Empty top level directories to facilitate use of the image in singularity
+# on a box with kernel lacking overlay FS support
+RUN mkdir -p /data /backup
 USER pliers
 RUN python -m pliers.support.download
 WORKDIR /work
