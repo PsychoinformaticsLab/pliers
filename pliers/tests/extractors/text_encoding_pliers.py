@@ -32,11 +32,11 @@ def textExtractor(ext,method,inputFile,num=None,fileType=None,embedding_type=Non
     allResults = []
     
     if method == 'dan' or method == 'elmo':
-        allResults.extend(ext._embed(allInputs))
+        allResults.extend(ext._embed(allInputs)._data)
     else:
         for input in allInputs:
             results = ext._embed(input.lower())
-            allResults.append(results)
+            allResults.append(results._data)
             
     return allResults
 
