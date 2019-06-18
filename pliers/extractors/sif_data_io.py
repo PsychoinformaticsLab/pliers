@@ -36,7 +36,7 @@ def getWordmap(textfile):
                     v.append(float(i[j]))
                 except ValueError:
                     '''error in handing non-english'''
-                 #   v.append(float(0))
+                    v.append(float(0))
                     
                     
                 j += 1

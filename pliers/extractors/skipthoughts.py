@@ -23,6 +23,10 @@ profile = False
 #-----------------------------------------------------------------------------#
 path_to_models = './datasets/embeddings/skipthought/'
 path_to_tables = './datasets/embeddings/skipthought/'
+
+path_to_models = '/Users/mit-gablab/work/pliers_python_workspace_orig/pliers_forked_2/datasets/embeddings/skipthought/'
+path_to_tables = '/Users/mit-gablab/work/pliers_python_workspace_orig/pliers_forked_2/datasets/embeddings/skipthought/'
+
 #-----------------------------------------------------------------------------#
 
 path_to_umodel = path_to_models + 'uni_skip.npz'

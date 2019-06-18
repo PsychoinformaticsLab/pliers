@@ -65,10 +65,13 @@ class DirectTextExtractorInterface():
         Dimensionality = “50|100|200|300” [for glove]; 300 
         [for word2vec and dep2vec] (default:50)
 
-        corpus=”6B,” [for glove; default is 6B]. 
-        Note, unlike glove, the other models do not come up with so many choices.
+        corpus=”42B,” [for glove; default is 42B]. 
+        Note, unlike glove, the other models do not come up with so many choices. See README
+        for particular choice of corpus and diemensionality 
 
-        Content_only = True|False [default:Content_only = True]
+        content_only = True|False [default:Content_only = True]
+        
+        binary = True|False [vector in binary or not, applicable for averageembedding]
         
         stopWords= None| list [default: NLTK stop words]
 
@@ -87,8 +90,9 @@ class DirectTextExtractorInterface():
     def __init__(self,method="averageWordEmbedding",\
                              embedding="glove",\
                              dimensionality=300 ,\
-                             corpus="42B",\
+                             corpus="840B",\
                              content_only=True,\
+                             binary=False,\
                              stopWords=None,\
                              unk_vector=None,\
                              layer=None):
@@ -112,6 +116,7 @@ class DirectTextExtractorInterface():
                              dimensionality=dimensionality,\
                              corpus=corpus,\
                              content_only=content_only,\
+                             binary = binary,\
                              stopWords=stopWords)
             
             self.semvector_object._loadModel()
@@ -166,7 +171,7 @@ class DirectTextExtractorInterface():
         #    stim = [stim]
         
             return self.semvector_object._embed(stim)
-        
+
 class DirectSentenceExtractor(TextExtractor):
 
     ''' 
@@ -222,52 +227,27 @@ class DirectSentenceExtractor(TextExtractor):
 
 class SmoothInverseFrequencyExtractor(DirectSentenceExtractor):
     
-    _weightFile = './datasets/embeddings/sif/enwiki_vocab_min200.txt'
+    '''Note, all parameters are default and as used in the 
+        Paper. For more information see:
+        A Simple But Tough-To-Beat Baseline For Sentence
+        Embeddings by Arora et al. ICLR 2017.
+        The code is adapted from https://github.com/PrincetonML/SIF'''
+
+    _weightFile = '/Users/mit-gablab/work/pliers_python_workspace_orig/pliers_forked_2/datasets/embeddings/sif/enwiki_vocab_min200.txt'
     _method = 'sif'
     
-    def __init__(self,embedding='glove',dimensionality=50,\
-               content_only=True,stopWords=None,corpus=None,unk_vector=None):        
+    def __init__(self,embedding='glove',dimensionality=300,\
+               content_only=True,stopWords=None,corpus='840B',unk_vector=None):        
+
         print('inside smooth inverse frequency extractor')
-        '''Note, all parameters are default and as used in the 
-            Paper. For more information see:
-            *A Simple But Tough-To-Beat Baseline For Sentence
-            Embeddings* by Arora et al. ICLR 2017'''
+         
+        '''We use the default embedding (glove) as 
+           used in the original work. So other parameterds
+           do not have any effect'''
+        embedding = 'glove'
+        dimensionality = 300
+        corpus = '6B'
         
-        print ('inside SIF embedding class')
-        
-        if not isinstance(embedding,str):
-            raise ValueError('Type of embedding should be none or selected' + \
-            ' from the list provided')
-        
-        if not isinstance(dimensionality,int):
-            raise ValueError('Embedding dimension should be integer or' + \
-            ' set None to use default')
-        
-        if not isinstance(content_only,bool):
-            raise ValueError('Choice of using content words or not' + \
-             ' should be boolean or' + \
-            ' set None to use default')
-        
-        self.content_only= content_only
-
-        if not isinstance(corpus,str):
-            raise ValueError('Choice of corpus' + \
-             ' should be string or unused')
-
-        self.stop_words = nltk.corpus.stopwords.words('english')
-
-        if not isinstance(stopWords,list):
-            if stopWords !=None:
-                raise ValueError('stopwords should be a list. Default' + \
-                             ' is NLTK-stopwords.')
-        else:
-            self.stop_words =  stopWords  
-        
-        if embedding.lower() not in self._available_word_embeddings:
-            raise ValueError('selected embedding type is not ' + \
-                             ' compatible with the embedding method, please check the available.' +\
-                             ' embeddings')
-    
         ''' Check whether the embedding file exist '''
         
         embedding_input =  embedding + corpus  + str(dimensionality) 
@@ -299,7 +279,10 @@ class SmoothInverseFrequencyExtractor(DirectSentenceExtractor):
         self.embedding_file = embedding_file
         
     def _embed(self,stim):
-        print ('inside sif')
+        
+        if not isinstance(stim,list):
+            stim = [stim]
+        
         x, m = sif_data_io.sentences2idx(stim, self.word_vecs) # x is the array of word indices, m is the binary mask indicating whether there is a word in that location
         w = sif_data_io.seq2weight(x, m, self.weight4ind) # get word weights
             
@@ -307,26 +290,27 @@ class SmoothInverseFrequencyExtractor(DirectSentenceExtractor):
         params = sif_params.sif_params()
         params.rmpc = self.rmpc
             # get SIF embedding
-        embedding_vectors = SIF_embedding.SIF_embedding(self.We, x, w, params) # embedding[i,:] is the embedding for sentence i
+        embedding_vector = SIF_embedding.SIF_embedding(self.We, x, w, params) # embedding[i,:] is the embedding for sentence i
         
-        return embedding_vectors[0]
-        '''
-        num_dims = embedding_vectors.shape[1]
+        num_dims = embedding_vector.shape[1]
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
-        return ExtractorResult([embedding_vectors],
+        return ExtractorResult(embedding_vector[0],
                                stim,
                                self,
                                features=features)
-        '''
+        
 class AverageEmbeddingExtractor(DirectSentenceExtractor):
     
     _available_word_embeddings = ['glove','fasttext','dep2vec','word2vec']
     _aws_bucket_path = 'https://s3.amazonaws.com/mlt-word-embeddings/'
     _fasttext  = 'fasttext'
     _fasttext_corpus = 'C'
+    _word2vec = 'word2vec'
+    _word2vec_corpus = 'google-news'
+
 
     def __init__(self,embedding='glove',dimensionality=300,\
-               content_only=True,stopWords=None,corpus=None,unk_vector=None):
+               content_only=True,stopWords=None,corpus='840B',unk_vector=None,binary=False):
      
         print ('inside average embedding class')
         
@@ -339,12 +323,19 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
             ' set None to use default')
         
         if not isinstance(content_only,bool):
-            raise ValueError('Choice of using content words or not' + \
-             ' should be boolean or' + \
-            ' set None to use default')
+            raise ValueError('Choice of using content word ' + \
+             ' should be boolean (True/False). Default ' + \
+            ' is True.')
+        else:
+            self.content_only=content_only
         
-        self.content_only= content_only
-
+        if not isinstance(binary,bool):
+            raise ValueError('Choice of nature of embedding; ' + \
+             ' should be boolean (True/False). Default ' + \
+            ' is False.')
+        else:
+            self.binary=binary
+        
         if not isinstance(corpus,str):
             raise ValueError('Choice of corpus' + \
              ' should be string or unused')
@@ -352,9 +343,11 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
         self.stop_words = nltk.corpus.stopwords.words('english')
 
         if not isinstance(stopWords,list):
+            
             if stopWords !=None:
                 raise ValueError('stopwords should be a list. Default' + \
-                             ' is NLTK-stopwords.')
+                             ' is NLTK-stopwords. If you don\'t want to use + \
+                                any stopwords use content_only = False instead')
         else:
             self.stop_words =  stopWords  
         
@@ -367,8 +360,23 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
     
         ''' Check whether the embedding file exist '''
         if embedding == self._fasttext:
+            '''for fasttext we only support the following 
+               settings. Thus any other selection (i.e., 
+               dimensionality < 300 or > 300) will be 
+               superseded '''
             corpus = self._fasttext_corpus
-            
+            dimensionality = 300 
+        
+        if embedding == self._word2vec:
+            '''for word2vec we only support the following 
+               settings. Thus any other selection (i.e., 
+               dimensionality < 300 or > 300) will be 
+               superseded '''
+            corpus = self._word2vec_corpus
+            self.binary = True
+            self._text = '.bin'
+            dimensionality = 300 
+        
         embedding_input =  self.embedding + corpus  + str(dimensionality) 
         self._embedding_model_path = os.path.join(self._embedding_model_path,embedding)
         self.embedding_file = self._embedding_model_path + '/'+embedding_input + self._text
@@ -378,13 +386,14 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
                                 ' is missing. Please download ' + \
                                 'the model file(s) via running the following command: ' +\
                                 'python download.py (\'[embedding_name]\'), where [embedding_name] ' +\
-                                'is from [glove,word2vec,fasttext,dep2vec]')
+                                'is from [glove,word2vec,fasttext]. Also see README for ' + \
+                                'the available models.')
 
         super(AverageEmbeddingExtractor, self).__init__()
 
     def _loadModel(self):
      #   self.embedding_file = '/Users/mit-gablab/work/pliers_python_workspace_orig/pliers_forked_2/datasets/embeddings/glove/glove6B50.txt'
-        self.wvModel = keyedvectors.KeyedVectors.load_word2vec_format(self.embedding_file,binary=False,encoding='latin1')
+        self.wvModel = keyedvectors.KeyedVectors.load_word2vec_format(self.embedding_file,binary=self.binary,encoding='latin1')
         print(self.embedding + ': ' + 'model loaded')
 
     def _getModel(self):
@@ -405,7 +414,6 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
             Need to decide whether move the functionality
             to an util class later 
         '''
-        embedding_average_vectors = []
         for s in stim:
             complex_s = ComplexTextStim(text=s.lower())
             embeddings = self.transform(complex_s)
@@ -418,31 +426,34 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
                         not embedding.stim.data.isalnum() :
                         continue
             
-                    for index,value in enumerate(embedding._data[0]):
-                        embedding_average_vector[index] += value
+                for index,value in enumerate(embedding._data[0]):
+                    embedding_average_vector[index] += value
             
-                    numWords+=1
+                numWords+=1
         
             for index in range(num_dims):
                 embedding_average_vector[index] /=  numWords
 
-            embedding_average_vectors.append(embedding_average_vector)
-
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
         
-        return embedding_average_vector
-        '''
-        return ExtractorResult([embedding_average_vectors],
+        #return embedding_average_vector
+        
+        return ExtractorResult(embedding_average_vector,
                                stim,
                                self,
                                features=features)
-        '''
+        
         
 
 class Doc2vecExtractor(DirectSentenceExtractor):
     
+    '''To read about doc2vec method please refer the paper - 
+    Distributed Representations of Sentences and Documents 
+    by Le and Mikolov'''
+    
     _doc2vecEmbedding = 'doc2vec.bin'
     _method = 'doc2vec'
+    
     
     def __init__(self):
         print ('inside Doc2vecExtractor class')
@@ -474,35 +485,32 @@ class Doc2vecExtractor(DirectSentenceExtractor):
         num_dims = embedding_vectors.shape[0]
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
         
-        return embedding_vectors
-        
-      #  return ExtractorResult([embedding_vectors],
-       #                        stim,
-       #                        self,
-       #                        features=features)
+        return ExtractorResult(embedding_vectors,
+                               stim,
+                               self,
+                           features=features)
 
 
 class DANExtractor(DirectSentenceExtractor):
     
     '''Currently we have DAN (Deep Averaging Networks)
         encoding as a service running on Tensorflow Hub.
-        In future we will support training and own
-        implementation.'''
-    import os
-    #os.environ["TFHUB_CACHE_DIR"] = '/tmp/tfhub/'
+    '''
     os.environ["TFHUB_CACHE_DIR"] = '/Users/mit-gablab/work/data_workspace/tfhub/'
-    
-    
-    
     _hub_path = "https://tfhub.dev/google/universal-sentence-encoder/2"
-  #  _hub_path = "/Users/mit-gablab/work/data_workspace/tfhub/2.tar.gz"
     _method = 'dan'
-    
+
     
     def __init__(self):
         self.dan_encoder = hub.Module(self._hub_path)
         super(DANExtractor, self).__init__()
-        
+    
+    def setOSEnv(self,path):
+        '''to use TF hub we need to se the cache'''
+        os.environ["TFHUB_CACHE_DIR"] = path
+        #os.environ["TFHUB_CACHE_DIR"] = '/Users/mit-gablab/work/data_workspace/tfhub/'
+
+    
     def _embed(self,stim):
         
        # stim = [stim]
@@ -519,41 +527,34 @@ class DANExtractor(DirectSentenceExtractor):
         num_dims = (embedding_vectors.get('default')[0]).shape[0]
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
         
-        return embedding_vectors.get('default')
-        
-        '''
-        embedding_dan_vectors = []
-        for index in range(0,len(stim)):
-            embedding_dan_vectors.append(embedding_vectors.get('default')[index])
-        
-        return ExtractorResult([embedding_dan_vectors],
+        embedding_dan_vectors = embedding_vectors.get('default')
+        return ExtractorResult(embedding_dan_vectors,
                                stim,
                                self,
                                features=features)
-        '''
-
-
-
-
+        
 class ElmoExtractor(DirectSentenceExtractor):
     
     '''Currently we have Elmo encoding as a service
         running on Tensorflow Hub. '''
     
-    import os
-    #os.environ["TFHUB_CACHE_DIR"] = '/tmp/tfhub/'
+    '''For more information please refer to the original 
+        paper - Deep contextualized word representations 
+        (Peters et al.). Using TF hub it is feasible
+        to extract the default as well as output from each
+        of Elmos's LSTM networks. We also provide a 
+        mean-pool output from the LSTM networks'''
+    
     os.environ["TFHUB_CACHE_DIR"] = '/Users/mit-gablab/work/data_workspace/tfhub/'
-
-    
     _hub_path = "https://tfhub.dev/google/elmo/2"
-    
- #   _hub_path = "https://tfhub.dev/google/universal-sentence-encoder/2"
-
-                    
     _method = 'elmo'
+    _lstm1 = 'lstm1'
+    _lstm2 = 'lstm2'
+    _both = 'both'
+    _default = 'default'
+    
     
     def __init__(self,layer=None):
-        print ('inside elmo class')
 
         self.elmo_encoder = hub.Module(self._hub_path,trainable=True)
         if layer == None:
@@ -561,8 +562,7 @@ class ElmoExtractor(DirectSentenceExtractor):
         else:
             self._layer = layer
 
-            
-            
+        self._layer = self._lstm1
         super(ElmoExtractor, self).__init__()
         
         
@@ -571,51 +571,46 @@ class ElmoExtractor(DirectSentenceExtractor):
         if not isinstance(stim,list):
             stim = [stim]
         
-        '''different signatures on this function can be used'''
-        '''    
-        tokens_input = [nltk.word_tokenize(s) for s in stim]
-        tokens_length = [len(input) for input in tokens_input]
-        '''
         embeddings = self.elmo_encoder(stim,as_dict=True,signature="default")
         
         default_elmo = embeddings["default"]
         lstm_outputs1 = embeddings["lstm_outputs1"]
         lstm_outputs2 = embeddings["lstm_outputs2"]
         
-        activation2 = tf.reduce_mean(lstm_outputs1, axis=1)
-        activation3 = tf.reduce_mean(lstm_outputs2, axis=1)
-      
-      
-      #  embeddings = self.elmo_encoder(stim,as_dict=True)
-        
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             sess.run(tf.tables_initializer())
             
-            if self._layer == 'default':
+            if self._layer == self._default:
                 embedding_vectors_1 = sess.run(default_elmo)
 
-            elif self._layer == 'lstm1':
+            elif self._layer == self._lstm1:
                 embedding_vectors_1 = sess.run(lstm_outputs1)
                 
-            elif self._layer == 'lstm2':
+            elif self._layer == self._lstm2:
                 embedding_vectors_1 = sess.run(lstm_outputs2)
                 
-            elif self._layer == 'both':
+            elif self._layer == self._both:
                 embedding_vectors_1 = sess.run(lstm_outputs1)
                 embedding_vectors_2 = sess.run(lstm_outputs2)
 
-            
-        '''
-        num_dims = embedding_vectors.shape[2]
+
+        num_dims = embedding_vectors_1.shape[0]
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
-        '''
+
+        if self._layer == self._default: 
+            return ExtractorResult(embedding_vectors_1,
+                               stim,
+                               self,
+                               features=features)
+              
+
         embedding_elmo_vectors = []
         for index in range(0,len(stim)):
             embedding_elmo_vector = embedding_vectors_1[index]
-            if self._layer == 'lstm2' or self._layer == 'lstm1': 
+            if self._layer == self._lstm1 or self._layer == self._lstm2: 
                 embedding_elmo_vector = np.mean(embedding_elmo_vector,axis=0)
-            if self._layer == 'both' : 
+            if self._layer == self._both : 
                 embedding_elmo_vector_2 = embedding_vectors_2[index]
 
                 embedding_elmo_vector = np.concatenate(np.mean(embedding_elmo_vector,axis=0),\
@@ -623,21 +618,24 @@ class ElmoExtractor(DirectSentenceExtractor):
 
             embedding_elmo_vectors.append(embedding_elmo_vector)
             
-        return np.array(embedding_elmo_vectors)
-        '''
-        return ExtractorResult([embedding_elmo_vectors],
+        return ExtractorResult(embedding_elmo_vectors,
                                stim,
                                self,
                                features=features)
-        '''
+        
 
 class SkipThoughtExtractor(DirectSentenceExtractor):
+    
+    '''To learn about skipthought extractor please
+        refer Skip-Thought Vectors paper by Kiros et al.'''
+    
+    '''Note: skipthought is based on Theano 1.0.4 and
+        Numpy <1.16.3 (we are using numpy-1.16.2)'''
     
     _skipthought_files = ['dictionary.txt','utable.npy','btable.npy',\
                           'uni_skip.npz','uni_skip.npz.pkl','bi_skip.npz',\
                           'bi_skip.npz.pkl']
     
-
     _method = 'skipthought'
     
     def __init__(self):
@@ -658,20 +656,16 @@ class SkipThoughtExtractor(DirectSentenceExtractor):
         self.skipthought_model = skipthoughts.load_model()
         self.skipthought_encoder = skipthoughts.Encoder(self.skipthought_model)
 
-      
     def _embed(self,stim):
         
         if not isinstance(stim,list):
             stim = [stim]
 
         embedding_vectors = self.skipthought_encoder.encode(stim,verbose=False)
-        return embedding_vectors[0]
-        '''
+        
         num_dims = embedding_vectors.shape[1]
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
-        return ExtractorResult([embedding_vectors],
+        return ExtractorResult(embedding_vectors[0],
                                stim,
                                self,
                                features=features)
-
-        '''
