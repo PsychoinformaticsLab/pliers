@@ -16,8 +16,6 @@ from pliers.datasets.text import fetch_dictionary
 from pliers.transformers import BatchTransformerMixin
 from pliers.utils import attempt_to_import, verify_dependencies
 from pliers.extractors.text import TextExtractor
-from pliers.extractors import sif_data_io,sif_params,SIF_embedding
-from pliers.extractors import skipthoughts
 
 import gensim
 from fastText import load_model
@@ -41,7 +39,18 @@ import bert
 #from bert import optimization
 #from bert import tokenization
 
-from bert import run_classifier_with_tfhub
+'''bert related helper code'''
+from pliers.extractors import bert_modeling
+from pliers.extractors import bert_tokenization
+from pliers.extractors import bert_extract_features
+
+'''skipthought related helper code '''
+from pliers.extractors import skipthoughts
+
+'''SIF related helper code'''
+from pliers.extractors import sif_data_io,sif_params,SIF_embedding
+
+
 
 embedding_methods = Enum('embedding_methods', 'average_embedding word2vec glove')
 
@@ -146,6 +155,9 @@ class DirectTextExtractorInterface():
             
         elif method.lower() == 'dan':
             self.semvector_object = DANExtractor()
+            
+        elif method.lower() == 'bert':
+            self.semvector_object = BertExtractor()
         
         else:
             raise ValueError('Method: ' + '\"' + method + '\"' ' is not supported. Default is ' + \
@@ -167,7 +179,8 @@ class DirectTextExtractorInterface():
                                   "sif", \
                                   "doc2vec", \
                                   "dan",\
-                                  "elmo" ] :
+                                  "elmo",\
+                                  "bert" ] :
         #    stim = [stim]
         
             return self.semvector_object._embed(stim)
@@ -298,6 +311,8 @@ class SmoothInverseFrequencyExtractor(DirectSentenceExtractor):
                                stim,
                                self,
                                features=features)
+        
+
         
 class AverageEmbeddingExtractor(DirectSentenceExtractor):
     
@@ -533,6 +548,69 @@ class DANExtractor(DirectSentenceExtractor):
                                self,
                                features=features)
         
+class BertExtractor(DirectSentenceExtractor):
+      
+    '''For more information regarding Bert please
+          refer to the original paper - 
+          BERT: Pre-training of Deep Bidirectional Transformers for
+        Language Understanding (Devlin et al.) and
+        code  - https://github.com/google-research/bert
+    ''' 
+    
+    '''we are providing an interface to the 
+          extract_features.py script. For more details (i.e.,
+          choice of Transformer layer) refer to the original paper
+    '''
+    ''' we are using mostly the default parameters for BERT 
+    '''
+    __batch_size = 8
+    __layers = '-1,-2,-3,-4'
+    __max_seq_length = 128
+    __bert_path = '/Users/mit-gablab/work/sw/Bert/bert_uncased_L-12_H-768_A-12/'
+    __bert_config_file = 'bert_config.json'
+    __vocab_file = 'vocab.txt'
+    __do_lower_case = True
+    __num_tpu_cores = 8
+    __master = None
+    __use_tpu = False
+    __init_checkpoint = 'bert_model.ckpt'
+    __use_one_hot_embeddings = False
+        
+    def __init__(self):
+        self.__layer_indexes = [int(x) for x in self.__layers.split(",")]
+
+        self.__bert_config = bert_modeling.BertConfig.from_json_file(self.__bert_path+self.__bert_config_file)
+
+        self.__tokenizer = bert_tokenization.FullTokenizer(
+        vocab_file=self.__bert_path+self.__vocab_file, do_lower_case=self.__do_lower_case)
+
+        super(BertExtractor, self).__init__()
+
+
+    def _embed(self,stim):
+        
+        if not isinstance(stim,list):
+            stim = [stim]
+        
+        embeddings = bert_extract_features.pliers_embedding(self.__layer_indexes,
+                                                            self.__bert_config,
+                                                            self.__tokenizer,
+                                                            stim,
+                                                            self.__batch_size,
+                                                            self.__num_tpu_cores,
+                                                            self.__master,
+                                                            self.__use_tpu,
+                                                            self.__bert_path+self.__init_checkpoint,
+                                                            self.__use_one_hot_embeddings) 
+        
+        num_dims = embeddings[0].shape[0]
+        features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
+
+        return ExtractorResult(embeddings[0],
+                               stim,
+                               self,
+                               features=features)
+ 
 class ElmoExtractor(DirectSentenceExtractor):
     
     '''Currently we have Elmo encoding as a service
