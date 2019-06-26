@@ -593,15 +593,6 @@ class BertExtractor(DirectSentenceExtractor):
             stim = [stim]
         
         embeddings = bert_extract_features.pliers_embedding(self.__layer_indexes,
-                                                            self.__bert_config,
-                                                            self.__tokenizer,
-                                                            stim,
-                                                            self.__batch_size,
-                                                            self.__num_tpu_cores,
-                                                            self.__master,
-                                                            self.__use_tpu,
-                                                            self.__bert_path+self.__init_checkpoint,
-                                                            self.__use_one_hot_embeddings) 
         
         num_dims = embeddings[0].shape[0]
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
