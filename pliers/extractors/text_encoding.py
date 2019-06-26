@@ -566,7 +566,7 @@ class BertExtractor(DirectSentenceExtractor):
     __batch_size = 8
     __layers = '-1,-2,-3,-4'
     __max_seq_length = 128
-    __bert_path = '/Users/mit-gablab/work/sw/Bert/bert_uncased_L-12_H-768_A-12/'
+    __bert_path = '/Users/mit-gablab/work/pliers_python_workspace_orig/pliers_forked_2/datasets/bert/bert_uncased_L-12_H-768_A-12/'
     __bert_config_file = 'bert_config.json'
     __vocab_file = 'vocab.txt'
     __do_lower_case = True
@@ -581,7 +581,7 @@ class BertExtractor(DirectSentenceExtractor):
 
         self.__bert_config = bert_modeling.BertConfig.from_json_file(self.__bert_path+self.__bert_config_file)
 
-        self.__tokenizer = bert_tokenization.FullTokenizer(
+        self.__bert_tokenizer = bert_tokenization.FullTokenizer(
         vocab_file=self.__bert_path+self.__vocab_file, do_lower_case=self.__do_lower_case)
 
         super(BertExtractor, self).__init__()
@@ -592,7 +592,17 @@ class BertExtractor(DirectSentenceExtractor):
         if not isinstance(stim,list):
             stim = [stim]
         
-        embeddings = bert_extract_features.pliers_embedding(self.__layer_indexes,
+        embeddings = bert_extract_features.pliers_embedding(self.__layer_indexes,\
+                                                            self.__bert_config,\
+                                                            self.__bert_tokenizer,\
+                                                            stim,\
+                                                            self.__batch_size,\
+                                                            self.__num_tpu_cores,\
+                                                            self.__master,\
+                                                            self.__use_tpu,\
+                                                            os.path.join(self.__bert_path,self.__init_checkpoint),\
+                                                            self.__use_one_hot_embeddings)
+                                                                                                             
         
         num_dims = embeddings[0].shape[0]
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
