@@ -78,15 +78,6 @@ def parseArguments(args):
     
 def main(args):
     
-    reps = ['averagewordembedding','doc2vec','infersent','skipthought',\
-               'elmo','dan','sif'] 
-    
-    '''note, skipthought/infersent is not made for > 1 sentence 
-    so we can take average
-    '''
-  #  OutputPath = args[0]
-  #  inputFile = args[1]
-    
     arguments = parseArguments(args)
     
     method = arguments.method_name
