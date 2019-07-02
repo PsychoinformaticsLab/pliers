@@ -1,11 +1,8 @@
 import warnings
-import gensim
-import sklearn.metrics.pairwise
+import sys
+import argparse
 import numpy as np 
-from nltk import __maintainer__
-from tensorflow.contrib.rnn.python.ops.core_rnn_cell import OutputProjectionWrapper
 
-warnings.filterwarnings("ignore", message="numpy.dtype size changed")
 
 from pliers.stimuli import TextStim, ComplexTextStim
 from pliers.extractors import WordEmbeddingExtractor
@@ -14,13 +11,6 @@ embedding_methods,DirectTextExtractorInterface
 from pliers import config
 config.set_option('cache_transformers', False)
 
-import sys
-import argparse
-
-
-
-import tensorflow as tf
-import tensorflow_hub as hub
 
 def textExtractor(ext,method,inputFile,num=None,fileType=None,embedding_type=None):
     
@@ -42,7 +32,7 @@ def textExtractor(ext,method,inputFile,num=None,fileType=None,embedding_type=Non
             
     return allResults
 
-def parseArguments(args):
+def parseArguments():
     
     parser = argparse.ArgumentParser(description='Text encoding via Pliers')
     parser.add_argument('--method_name', type=str, default='averageWordEmbedding',
@@ -76,9 +66,9 @@ def parseArguments(args):
     return args
     
     
-def main(args):
+def main():
     
-    arguments = parseArguments(args)
+    arguments = parseArguments()
     
     method = arguments.method_name
     embedding = arguments.embedding
@@ -101,15 +91,13 @@ def main(args):
                                              stopWords=stopWords,\
                                              unk_vector=unk_vector)
     vectors = textExtractor(extractor,method,inputFile)
+    np.savetxt(outputFile, vectors)
     
-    #embeddingFile = 'embedding_' + method + '.npy'
-    np.save(outputFile, vectors)
-    '''sanity checking for data length'''
-    textRepresentations = np.load(outputFile)
-    print("Loaded encodings of size %s.", textRepresentations.shape)
+    print('output encodings of size %s.' % len(vectors))
     
 if __name__ == '__main__':
     
-    main(sys.argv[1:])
+    main()
+    
     
 

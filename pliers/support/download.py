@@ -125,15 +125,22 @@ def _download_pretrained_embedding_model(embedding_model_full_path,\
         
 def main(args):
     
-    embedding = args[1]
+    pretrained = args[1]
     '''downloading particular embedding file from 
         AWS'''
-    _embedding_model_path = download_data(embedding)
+    '''We support three embeddings (e.g., glove,
+        fasttext, word2vec) and several other
+        pretrained models and LMs (e.g., skipthought, BERT, 
+        ELMO).'''
+    
+    _pretrained_model_path = download_data(pretrained)
+    _pretrained_lms = ['skipthought', 'bert','elmo',
+                       'sif','doc2vec']
     '''currently the vectors and vocabulary are in
         different files and we need to combine them.
         This would be replaced in the next release'''
-    if embedding != 'skipthought':
-        prepare_keyvector(embedding,_embedding_model_path)
+    if pretrained not in _pretrained_lms:
+        prepare_keyvector(pretrained,_pretrained_model_path)
 
 if __name__ == '__main__':
    main(sys.argv)
