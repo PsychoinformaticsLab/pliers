@@ -16,10 +16,9 @@ def textExtractor(ext,method,inputFile,num=None,fileType=None,embedding_type=Non
     
     f = open(inputFile)
     '''id - text (tab separated)'''
-    allInputs = [line.strip().split('\t')[1] for line in f]
+    allInputs = [line.strip() for line in f]
     
     print('length of input: ' + str(len(allInputs)))
-    print (allInputs[0:5])
     
     allResults = []
     
