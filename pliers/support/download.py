@@ -16,10 +16,11 @@ CORPORA = [
 ]
 
 _available_word_embeddings = ['glove','fasttext','word2vec']
-_embedding_model_path = './datasets/embeddings/'
 _aws_bucket_path = 'https://s3.amazonaws.com/mlt-word-embeddings/'
 _tar_gz_extn = '.tar.gz'
 
+_current_path = os.path.abspath(os.path.dirname(__file__))
+_embedding_model_path = os.path.join(_current_path,'../../datasets/embeddings/')
 
 
 def download_nltk_data():
@@ -132,6 +133,8 @@ def main(args):
         fasttext, word2vec) and several other
         pretrained models and LMs (e.g., skipthought, BERT, 
         ELMO).'''
+    
+
     
     _pretrained_model_path = download_data(pretrained)
     _pretrained_lms = ['skipthought', 'bert','elmo',

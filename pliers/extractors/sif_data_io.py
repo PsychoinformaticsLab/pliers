@@ -18,33 +18,57 @@ class tree(object):
 
     def unpopulate_embeddings(self):
         self.embeddings = []
-    
 
-def getWordmap(textfile):
+
+def getWordmap2(textfile):
+    
     words={}
+    We = []
+    n = 0
+    with open(textfile,'r',encoding='latin_1') as f:
+        header = f.readline()
+        for line in f:
+            values=line.split()
+            word = values[0]
+            word = word.encode('latin_1')
+            words[word]=n
+            embedding = values[1:]
+            We.append(embedding)
+            n+=1
+    
+    We = np.array(We)
+    return (words, We) 
+
+def getWordmap(textfile,vector_length):
+    wordmap={}
     We = []
 
     n = 0
     with open(textfile,'r',encoding='latin1') as f:
         header = f.readline()
-        for i in f:
-            i=i.split()
+        for line in f:
+            words=line.split()
+            '''check the embedding length'''
+            if len(words) != vector_length+1:
+                continue
+            
             j = 1
             v = []
-            while j < len(i):
+            while j < len(words):
                 try:
-                    v.append(float(i[j]))
+                    v.append(float(words[j]))
                 except ValueError:
-                    '''error in handing non-english'''
+                    '''error may occur in handing non-english'''
                     v.append(float(0))
-                    
-                    
                 j += 1
-            words[i[0]]=n
+            wordmap[words[0]]=n
             We.append(v)
             n+=1
+    
+    
     We = np.array(We)
-    return (words, We)
+    return (wordmap, We)
+
 
 def getWordWeight(weightfile, a=1e-3):
     if a <=0: # when the parameter makes no sense, use unweighted

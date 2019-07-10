@@ -2,7 +2,7 @@
 New Extractors that operate exclusively on Text stimuli and
 returns embedding via different SOTA models,
 such as: word2vec, glove, fasttext (average embedding)
-       : skipthought, doc2vec, ELMO, etc.
+       : skipthought, doc2vec, ELMO, BERT, Deep Average n/w.
        
 Debanjan Ghosh
 Francisco Pereira
@@ -18,7 +18,6 @@ from pliers.utils import attempt_to_import, verify_dependencies
 from pliers.extractors.text import TextExtractor
 
 import gensim
-from fastText import load_model
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.corpus import stopwords
@@ -31,13 +30,11 @@ from six import string_types
 import gzip
 from enum import Enum   
 
-import tensorflow as tf
-import tensorflow_hub as hub 
+'''uncomment the following two imports (tf and hub)
+   to run DAN'''
+#import tensorflow as tf
+#import tensorflow_hub as hub 
 
-import bert
-#from bert import run_classifier
-#from bert import optimization
-#from bert import tokenization
 
 '''bert related helper code'''
 from pliers.extractors import bert_modeling
@@ -50,6 +47,8 @@ from pliers.extractors import skipthoughts
 '''SIF related helper code'''
 from pliers.extractors import sif_data_io,sif_params,SIF_embedding
 
+''' import elmo related code from AllenAI'''
+from allennlp.commands.elmo import ElmoEmbedder
 
 
 embedding_methods = Enum('embedding_methods', 'average_embedding word2vec glove')
@@ -181,7 +180,6 @@ class DirectTextExtractorInterface():
                                   "dan",\
                                   "elmo",\
                                   "bert" ] :
-        #    stim = [stim]
         
             return self.semvector_object._embed(stim)
 
@@ -199,8 +197,7 @@ class DirectSentenceExtractor(TextExtractor):
     _available_word_embeddings = ['glove', 'word2vec','context2vec', 'fasttext']
     _version = '0.1'
     prefix = 'embedding_dim'
-    _aws_bucket_path = 'https://s3.amazonaws.com/mlt-word-embeddings/'
-    _embedding_model_path = '/Users/mit-gablab/work/pliers_python_workspace_orig/pliers_forked_2/datasets/embeddings/'
+    
     _vectors = 'vectors'
     _text = '.txt'
     
@@ -215,6 +212,10 @@ class DirectSentenceExtractor(TextExtractor):
         verify_dependencies(['keyedvectors']) 
         verify_dependencies(['doc2vecVectors']) 
         self._unk_vector = unk_vector
+        
+        self._current_path = os.path.abspath(os.path.dirname(__file__))
+        self._embedding_model_path = os.path.join(self._current_path,'../../datasets/embeddings/')
+
 
         super(DirectSentenceExtractor, self).__init__()
        
@@ -246,26 +247,29 @@ class SmoothInverseFrequencyExtractor(DirectSentenceExtractor):
         Embeddings by Arora et al. ICLR 2017.
         The code is adapted from https://github.com/PrincetonML/SIF'''
 
-    _weightFile = '/Users/mit-gablab/work/pliers_python_workspace_orig/pliers_forked_2/datasets/embeddings/sif/enwiki_vocab_min200.txt'
-    _method = 'sif'
-    
     def __init__(self,embedding='glove',dimensionality=300,\
                content_only=True,stopWords=None,corpus='840B',unk_vector=None):        
 
         print('inside smooth inverse frequency extractor')
-         
+        super(SmoothInverseFrequencyExtractor, self).__init__()
+
+        
+        self._method = 'sif'
+        self._weightFile = 'enwiki_vocab_min200.txt'
+        self._weightFile = os.path.join(self._embedding_model_path,self._method,self._weightFile)
+        
         '''We use the default embedding (glove) as 
            used in the original work. So other parameterds
            do not have any effect'''
-        embedding = 'glove'
-        dimensionality = 300
-        corpus = '6B'
+        self.embedding = 'glove'
+        self.dimensionality = 50
+        self.corpus = '6B'
         
         ''' Check whether the embedding file exist '''
         
-        embedding_input =  embedding + corpus  + str(dimensionality) 
-        self._embedding_model_path = os.path.join(self._embedding_model_path,embedding)
-        self.embedding_file = self._embedding_model_path + '/' + embedding_input + self._text
+        embedding_input =  self.embedding + self.corpus  + str(self.dimensionality)  + self._text
+        self._sif_model_path = os.path.join(self._embedding_model_path,self.embedding)
+        self.embedding_file = os.path.join(self._sif_model_path, embedding_input)
 
         if not os.path.exists(self.embedding_file):
             raise ValueError('Embedding model file ' + \
@@ -274,16 +278,21 @@ class SmoothInverseFrequencyExtractor(DirectSentenceExtractor):
                                 'python download.py \'[embedding_name]\', where [embedding_name] ' +\
                                 'is from [glove,word2vec,fasttext,dep2vec]')
 
-        super(SmoothInverseFrequencyExtractor, self).__init__()
+        if not os.path.exists(self._weightFile):
+            raise ValueError('sif model file ' + self._weightFile + 
+                                 ' '\
+                                ' is missing. Please download ' + \
+                                ' the model files via the following command: ' +\
+                                ' python download.py (\'sif\')' )
+
         
     def _loadModel(self):
         
         self.weightpara = 1e-3 # the parameter in the SIF weighting scheme, usually in the range [3e-5, 3e-3]
         self.rmpc = 1 # number of principal components to remove in SIF weighting scheme
         # load word vectors
-        (self.word_vecs, self.We) = sif_data_io.getWordmap(self.embedding_file)
+        (self.word_vecs, self.We) = sif_data_io.getWordmap(self.embedding_file,self.dimensionality)
             # load word weights
-       # weightfile = self._embedding_model_path + self._method + '/' + self._weightFile
         word2weight = sif_data_io.getWordWeight(self._weightFile, self.weightpara) # word2weight['str'] is the weight for the word 'str'
         self.weight4ind = sif_data_io.getWeight(self.word_vecs, word2weight) # weight4ind[i] is the weight for the i-th word
 
@@ -313,11 +322,9 @@ class SmoothInverseFrequencyExtractor(DirectSentenceExtractor):
                                features=features)
         
 
-        
 class AverageEmbeddingExtractor(DirectSentenceExtractor):
     
-    _available_word_embeddings = ['glove','fasttext','dep2vec','word2vec']
-    _aws_bucket_path = 'https://s3.amazonaws.com/mlt-word-embeddings/'
+    _available_word_embeddings = ['glove','fasttext','word2vec']
     _fasttext  = 'fasttext'
     _fasttext_corpus = 'C'
     _word2vec = 'word2vec'
@@ -328,6 +335,9 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
                content_only=True,stopWords=None,corpus='840B',unk_vector=None,binary=False):
      
         print ('inside average embedding class')
+        
+        super(AverageEmbeddingExtractor, self).__init__()
+
         
         if not isinstance(embedding,str):
             raise ValueError('Type of embedding should be none or selected' + \
@@ -379,7 +389,7 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
                settings. Thus any other selection (i.e., 
                dimensionality < 300 or > 300) will be 
                superseded '''
-            corpus = self._fasttext_corpus
+            self.corpus = self._fasttext_corpus
             dimensionality = 300 
         
         if embedding == self._word2vec:
@@ -387,27 +397,26 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
                settings. Thus any other selection (i.e., 
                dimensionality < 300 or > 300) will be 
                superseded '''
-            corpus = self._word2vec_corpus
+            self.corpus = self._word2vec_corpus
             self.binary = True
             self._text = '.bin'
             dimensionality = 300 
         
-        embedding_input =  self.embedding + corpus  + str(dimensionality) 
-        self._embedding_model_path = os.path.join(self._embedding_model_path,embedding)
-        self.embedding_file = self._embedding_model_path + '/'+embedding_input + self._text
+        self.embedding_input =  self.embedding + self.corpus  + str(dimensionality) 
+        self.embedding_path = os.path.join(self._embedding_model_path,self.embedding)
+        self.embedding_file  = self.embedding_input + self._text
+        self.embedding_file  = os.path.join(self.embedding_path,self.embedding_file)
 
         if not os.path.exists(self.embedding_file):
             raise ValueError('Embedding model file ' + self.embedding_file +  
                                 ' is missing. Please download ' + \
                                 'the model file(s) via running the following command: ' +\
-                                'python download.py (\'[embedding_name]\'), where [embedding_name] ' +\
+                                'python download.py [embedding_name], where [embedding_name] ' +\
                                 'is from [glove,word2vec,fasttext]. Also see README for ' + \
                                 'the available models.')
 
-        super(AverageEmbeddingExtractor, self).__init__()
 
     def _loadModel(self):
-     #   self.embedding_file = '/Users/mit-gablab/work/pliers_python_workspace_orig/pliers_forked_2/datasets/embeddings/glove/glove6B50.txt'
         self.wvModel = keyedvectors.KeyedVectors.load_word2vec_format(self.embedding_file,binary=self.binary,encoding='latin1')
         print(self.embedding + ': ' + 'model loaded')
 
@@ -420,7 +429,7 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
             stim = [stim]
         
         ''' 
-            We only implementing average word embedding'
+            We only implement average word embedding'
         '''
         '''we already have the embeddings loaded '''
         num_dims = self.wvModel.vector_size
@@ -450,14 +459,10 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
                 embedding_average_vector[index] /=  numWords
 
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
-        
-        #return embedding_average_vector
-        
         return ExtractorResult(embedding_average_vector,
                                stim,
                                self,
                                features=features)
-        
         
 
 class Doc2vecExtractor(DirectSentenceExtractor):
@@ -466,25 +471,27 @@ class Doc2vecExtractor(DirectSentenceExtractor):
     Distributed Representations of Sentences and Documents 
     by Le and Mikolov'''
     
-    _doc2vecEmbedding = 'doc2vec.bin'
-    _method = 'doc2vec'
-    
     
     def __init__(self):
         print ('inside Doc2vecExtractor class')
-        if not os.path.exists(self._embedding_model_path+self._method+'/'+self._doc2vecEmbedding):
-            raise ValueError('Doc2vec model file ' + self._doc2vecEmbedding + 
-                                 ' '\
-                                ' is missing. Please download ' + \
-                                ' the model files via the following command: ' +\
-                                ' python download.py(\'doc2vec\')' )
-                    
         
         super(Doc2vecExtractor, self).__init__()
+        
+        self._doc2vecEmbedding = 'doc2vec.bin'
+        self._method = 'doc2vec'
 
+        self._doc2vecEmbeddingFile = os.path.join(self._embedding_model_path,self._method,self._doc2vecEmbedding)
+
+        if not os.path.exists(self._doc2vecEmbeddingFile):
+            raise ValueError('Doc2vec model file ' + self._doc2vecEmbedding + \
+                                ' is missing. Please download ' + \
+                                ' the model files via the following command: ' +\
+                                ' python download.py doc2vec' )
+                    
+        
     def _loadModel(self):
-        _doc2vecEmbeddingFile = self._embedding_model_path+self._method+'/'+self._doc2vecEmbedding
-        self.doc2vecModel = doc2vecVectors.Doc2Vec.load(_doc2vecEmbeddingFile)
+        
+        self.doc2vecModel = doc2vecVectors.Doc2Vec.load(self._doc2vecEmbeddingFile)
 
     def _embed(self,stim):
 
@@ -511,20 +518,20 @@ class DANExtractor(DirectSentenceExtractor):
     '''Currently we have DAN (Deep Averaging Networks)
         encoding as a service running on Tensorflow Hub.
     '''
-    os.environ["TFHUB_CACHE_DIR"] = '/Users/mit-gablab/work/data_workspace/tfhub/'
     _hub_path = "https://tfhub.dev/google/universal-sentence-encoder/2"
     _method = 'dan'
 
     
     def __init__(self):
-        self.dan_encoder = hub.Module(self._hub_path)
+        
         super(DANExtractor, self).__init__()
+        self._hub_path = os.path.join(self._embedding_model_path, 'tfhub')
+        os.environ["TFHUB_CACHE_DIR"] = self._hub_path
+        self.dan_encoder = hub.Module(self._hub_path)
     
     def setOSEnv(self,path):
         '''to use TF hub we need to se the cache'''
         os.environ["TFHUB_CACHE_DIR"] = path
-        #os.environ["TFHUB_CACHE_DIR"] = '/Users/mit-gablab/work/data_workspace/tfhub/'
-
     
     def _embed(self,stim):
         
@@ -563,28 +570,40 @@ class BertExtractor(DirectSentenceExtractor):
     '''
     ''' we are using mostly the default parameters for BERT 
     '''
-    __batch_size = 8
-    __layers = '-1,-2,-3,-4'
-    __max_seq_length = 128
-    __bert_path = '/Users/mit-gablab/work/pliers_python_workspace_orig/pliers_forked_2/datasets/bert/bert_uncased_L-12_H-768_A-12/'
-    __bert_config_file = 'bert_config.json'
-    __vocab_file = 'vocab.txt'
-    __do_lower_case = True
-    __num_tpu_cores = 8
-    __master = None
-    __use_tpu = False
-    __init_checkpoint = 'bert_model.ckpt'
-    __use_one_hot_embeddings = False
-        
+    _batch_size = 8
+    _layers = '-1,-2,-3,-4'
+    _max_seq_length = 128
+    _bert_config_file = 'bert_config.json'
+    _do_lower_case = True
+    _num_tpu_cores = 8
+    _master = None
+    _use_tpu = False
+    _init_checkpoint = 'bert_model.ckpt'
+    _use_one_hot_embeddings = False
+    _method = 'bert'
+    _model = 'bert_uncased_L-12_H-768_A-12'
     def __init__(self):
-        self.__layer_indexes = [int(x) for x in self.__layers.split(",")]
-
-        self.__bert_config = bert_modeling.BertConfig.from_json_file(self.__bert_path+self.__bert_config_file)
-
-        self.__bert_tokenizer = bert_tokenization.FullTokenizer(
-        vocab_file=self.__bert_path+self.__vocab_file, do_lower_case=self.__do_lower_case)
-
+        
         super(BertExtractor, self).__init__()
+
+        self._vocab_file = 'vocab.txt'
+        
+        self._bert_path = os.path.join(self._embedding_model_path,self._method,self._method,self._model)  
+        
+        if not os.path.exists(os.path.join(self._bert_path,self._vocab_file)):
+            raise ValueError('BERT model file(s) '  + 
+                                 ' '\
+                                ' are missing. Please download ' + \
+                                ' the model files via the following command: ' +\
+                                ' python download.py bert ')
+
+        
+        self._layer_indexes = [int(x) for x in self._layers.split(",")]
+
+        self._bert_config = bert_modeling.BertConfig.from_json_file(os.path.join(self._bert_path,self._bert_config_file))
+
+        self._bert_tokenizer = bert_tokenization.FullTokenizer(
+        vocab_file=os.path.join(self._bert_path,self._vocab_file), do_lower_case=self._do_lower_case)
 
 
     def _embed(self,stim):
@@ -592,16 +611,17 @@ class BertExtractor(DirectSentenceExtractor):
         if not isinstance(stim,list):
             stim = [stim]
         
-        embeddings = bert_extract_features.pliers_embedding(self.__layer_indexes,\
-                                                            self.__bert_config,\
-                                                            self.__bert_tokenizer,\
+        embeddings = bert_extract_features.pliers_embedding(self._layer_indexes,\
+                                                            self._bert_config,\
+                                                            self._bert_tokenizer,\
                                                             stim,\
-                                                            self.__batch_size,\
-                                                            self.__num_tpu_cores,\
-                                                            self.__master,\
-                                                            self.__use_tpu,\
-                                                            os.path.join(self.__bert_path,self.__init_checkpoint),\
-                                                            self.__use_one_hot_embeddings)
+                                                            self._batch_size,\
+                                                            self._num_tpu_cores,\
+                                                            self._master,\
+                                                            self._use_tpu,\
+                                                            os.path.join(self._bert_path,self._init_checkpoint),\
+                                                            self._use_one_hot_embeddings,\
+                                                            self._max_seq_length)
                                                                                                              
         
         num_dims = embeddings[0].shape[0]
@@ -611,8 +631,76 @@ class BertExtractor(DirectSentenceExtractor):
                                stim,
                                self,
                                features=features)
- 
+
 class ElmoExtractor(DirectSentenceExtractor):
+    
+    _options_file = 'elmo_2x2048_256_2048cnn_1xhighway_options.json'
+    _weight_file = 'elmo_2x2048_256_2048cnn_1xhighway_weights.hdf5'
+    _method = 'elmo'
+    
+    def __init__(self,layer=None):
+        
+        super(ElmoExtractor, self).__init__()
+
+        
+        self._options_file = os.path.join(self._embedding_model_path,self._method,self._method,self._options_file)
+        self._weight_file = os.path.join(self._embedding_model_path,self._method,self._method,self._weight_file)
+        
+        '''first check whether weight/option exist'''
+        
+        if not os.path.exists(self._options_file):
+            raise ValueError('Elmo model file(s) '  + 
+                                 ' '\
+                                ' are missing. Please download ' + \
+                                ' the model files via the following command: ' +\
+                                ' python download.py(\'elmo\')' )
+
+        
+        
+        self._elmoObj = ElmoEmbedder(options_file=self._options_file, \
+                                 weight_file=self._weight_file)
+        
+        if layer == None:
+            self._layer = 'default'
+        else:
+            self._layer = layer
+        
+
+        
+    def _embed(self,stim):
+        
+        if not isinstance(stim,list):
+            stim = [stim]
+            
+            
+        embeddings = []
+        for s in stim:
+            tokens = s.split()
+            embedding_layers = self._elmoObj.embed_sentence(tokens)
+            if self._layer == 'default':
+                '''we take the average from
+                the three layers of Elmo'''
+                embedding_avg = np.average(embedding_layers, axis=0)
+                sentence_op = np.average(embedding_avg, axis=0)
+            elif self._layer == 'top':
+                embedding_top = embedding_layers[-1]
+                sentence_op = np.average(embedding_top, axis=0)
+            elif self._layer == 'bottom':
+                embedding_bottom = embedding_layers[1]
+                sentence_op = np.average(embedding_bottom, axis=0)
+            
+            embeddings.append(sentence_op)
+        
+        num_dims = embeddings[0].shape[0]
+        features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
+
+        return ExtractorResult(embeddings[0],
+                               stim,
+                               self,
+                               features=features)
+
+ 
+class ElmoTFHubExtractor(DirectSentenceExtractor):
     
     '''Currently we have Elmo encoding as a service
         running on Tensorflow Hub. '''
@@ -641,8 +729,7 @@ class ElmoExtractor(DirectSentenceExtractor):
         else:
             self._layer = layer
 
-        self._layer = self._lstm1
-        super(ElmoExtractor, self).__init__()
+        super(ElmoTFHubExtractor, self).__init__()
         
         
     def _embed(self,stim):
@@ -719,6 +806,9 @@ class SkipThoughtExtractor(DirectSentenceExtractor):
     
     def __init__(self):
         print ('inside skipthought class')
+        super(SkipThoughtExtractor, self).__init__()
+
+        
         for _skipthought_file in self._skipthought_files:
             if not os.path.exists(self._embedding_model_path+self._method+'/'+_skipthought_file):
                 raise ValueError('Skipthought model file ' + _skipthought_file + 
@@ -728,7 +818,6 @@ class SkipThoughtExtractor(DirectSentenceExtractor):
                                 ' python download.py skipthought' )
                     
         
-        super(SkipThoughtExtractor, self).__init__()
         
     def _loadModel(self):
 

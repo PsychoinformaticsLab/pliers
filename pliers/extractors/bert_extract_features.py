@@ -442,12 +442,12 @@ def main(_):
 def pliers_embedding(layer_indexes,bert_config,\
                      tokenizer,stim,\
                      batch_size,num_tpu_cores,master,\
-                     use_tpu,init_checkpoint,use_one_hot_embeddings):
-
+                     use_tpu,init_checkpoint,use_one_hot_embeddings,\
+                     max_seq_length):
 
   examples = pliers_examples(stim)
   features = convert_examples_to_features(
-      examples=examples, seq_length=FLAGS.max_seq_length, tokenizer=tokenizer)
+      examples=examples, seq_length=max_seq_length, tokenizer=tokenizer)
 
 
   is_per_host = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
@@ -472,13 +472,13 @@ def pliers_embedding(layer_indexes,bert_config,\
   # If TPU is not available, this will fall back to normal Estimator on CPU
   # or GPU.
   estimator = tf.contrib.tpu.TPUEstimator(
-      use_tpu=FLAGS.use_tpu,
+      use_tpu=use_tpu,
       model_fn=model_fn,
       config=run_config,
       predict_batch_size=batch_size)
 
   input_fn = input_fn_builder(
-      features=features, seq_length=FLAGS.max_seq_length)
+      features=features, seq_length=max_seq_length)
 
   final_layers=[]
   sentence_avgs = []
