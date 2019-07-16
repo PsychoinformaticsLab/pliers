@@ -392,7 +392,7 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
             self.corpus = self._fasttext_corpus
             dimensionality = 300 
         
-        if embedding == self._word2vec:
+        elif embedding == self._word2vec:
             '''for word2vec we only support the following 
                settings. Thus any other selection (i.e., 
                dimensionality < 300 or > 300) will be 
@@ -401,6 +401,8 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
             self.binary = True
             self._text = '.bin'
             dimensionality = 300 
+        else:
+            self.corpus = corpus
         
         self.embedding_input =  self.embedding + self.corpus  + str(dimensionality) 
         self.embedding_path = os.path.join(self._embedding_model_path,self.embedding)
