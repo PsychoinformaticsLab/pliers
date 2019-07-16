@@ -39,6 +39,7 @@ from .audio import (LibrosaFeatureExtractor,
                     SpectralContrastExtractor,
                     SpectralRolloffExtractor,
                     PolyFeaturesExtractor,
+                    RMSEExtractor,
                     ZeroCrossingRateExtractor,
                     ChromaSTFTExtractor,
                     ChromaCQTExtractor,
@@ -46,15 +47,7 @@ from .audio import (LibrosaFeatureExtractor,
                     MelspectrogramExtractor,
                     MFCCExtractor,
                     TonnetzExtractor,
-                    TempogramExtractor,
-                    RMSExtractor,
-                    SpectralFlatnessExtractor,
-                    OnsetDetectExtractor,
-                    OnsetStrengthMultiExtractor,
-                    TempoExtractor,
-                    BeatTrackExtractor,
-                    HarmonicExtractor,
-                    PercussiveExtractor)
+                    TempogramExtractor)
 from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
                     VibranceExtractor, FaceRecognitionFaceEncodingsExtractor,
                     FaceRecognitionFaceLandmarksExtractor,
@@ -64,7 +57,11 @@ from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
                    NumUniqueWordsExtractor, PartOfSpeechExtractor,
                    WordEmbeddingExtractor, TextVectorizerExtractor,
-                   VADERSentimentExtractor, SpaCyExtractor)
+                   VADERSentimentExtractor)
+from .text_encoding import (DirectTextExtractorInterface,
+                            DirectSentenceExtractor)
+
+
 from .video import (FarnebackOpticalFlowExtractor)
 
 __all__ = [
@@ -82,6 +79,7 @@ __all__ = [
     'SpectralContrastExtractor',
     'SpectralRolloffExtractor',
     'PolyFeaturesExtractor',
+    'RMSEExtractor',
     'ZeroCrossingRateExtractor',
     'ChromaSTFTExtractor',
     'ChromaCQTExtractor',
@@ -131,14 +129,8 @@ __all__ = [
     'WordEmbeddingExtractor',
     'TextVectorizerExtractor',
     'VADERSentimentExtractor',
-    'merge_results', 
-    'SpaCyExtractor',
-    'RMSExtractor',
-    'SpectralFlatnessExtractor'
-    'OnsetDetectExtractor',
-    'OnsetStrengthMultiExtractor',
-    'TempoExtractor',
-    'BeatTrackExtractor',
-    'HarmonicExtractor',
-    'PercussiveExtractor'
+    'merge_results',
+    'DirectSentenceExtractor',
+    'DirectTextExtractorInterface'
+    
 ]
