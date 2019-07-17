@@ -4,8 +4,8 @@ import requests
 import sys
 import tarfile
 
+import gensim
 from gensim.scripts.glove2word2vec import glove2word2vec,get_glove_info
-from gensim.utils import smart_open
 
 
 CORPORA = [
@@ -67,7 +67,7 @@ def combine(combineFile,vocabFile,vectorFile):
             for line in fin:
                 vocabs.append(line.strip())
                 
-    with smart_open(combineFile+'.txt', 'w',encoding='latin1') as fout:
+    with gensim.utils.smart_open(combineFile+'.txt', 'w',encoding='latin1') as fout:
         fout.write("{0} {1}\n".format(numLines, numDims+1))
         for index,vector in enumerate(vectors):
             vocab = vocabs[index]
@@ -127,7 +127,7 @@ def _download_pretrained_embedding_model(embedding_model_full_path,\
             
     try:
         size = os.stat(embedding_local_file).st_size
-        print('\tSuccesfully downloaded', embedding_model_file, size, 'bytes.')
+        print('\tSuccessfully downloaded', embedding_model_file, size, 'bytes.')
         tarfile.open(embedding_local_file, 'r:gz').extractall(embedding_model_full_path)
         
     except IOError as e:
