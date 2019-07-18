@@ -4,12 +4,9 @@ import argparse
 import numpy as np 
 
 
-from pliers.stimuli import TextStim, ComplexTextStim
-from pliers.extractors import WordEmbeddingExtractor
 from pliers.extractors.text_encoding import DirectSentenceExtractor,\
 embedding_methods,DirectTextExtractorInterface
-from pliers import config
-config.set_option('cache_transformers', False)
+
 
 
 def textExtractor(ext,method,inputFile,num=None,fileType=None,embedding_type=None):
@@ -18,11 +15,12 @@ def textExtractor(ext,method,inputFile,num=None,fileType=None,embedding_type=Non
     '''id - text (tab separated)'''
     allInputs = [line.strip() for line in f]
     
+    allInputs = allInputs[0:5]
     print('length of input: ' + str(len(allInputs)))
     
     allResults = []
     
-    if method == 'dan' or method == 'elmo':
+    if method == 'dan' :
         allResults.extend(ext._embed(allInputs)._data)
     else:
         for input in allInputs:
