@@ -8,12 +8,15 @@ import gensim
 from gensim.scripts.glove2word2vec import glove2word2vec,get_glove_info
 
 
+
 CORPORA = [
     'punkt',
     'maxent_treebank_pos_tagger',
     'averaged_perceptron_tagger',
     'vader_lexicon'
 ]
+
+
 
 _available_word_embeddings = ['glove','fasttext','word2vec']
 _aws_bucket_path = 'https://s3.amazonaws.com/mlt-word-embeddings/'
@@ -43,11 +46,12 @@ def prepare_keyvector(embedding,_embedding_model_path):
         vocabFile = embed_type + '_vocabulary.txt'
         if embed_type.startswith('GV'):
             embed_type = embed_type.replace('GV','glove')
-        if embed_type.startswith('W2V'):
+        elif embed_type.startswith('W2V'):
             embed_type = embed_type.replace('W2V','word2vec')
-        if embed_type.startswith('FT'):
+        elif embed_type.startswith('FT'):
             embed_type = embed_type.replace('FT','fasttext')
-            
+        else:
+            print('embedding type is not supported, check.')
 
         combine(os.path.join(_embedding_model_path,embed_type),os.path.join(_embedding_model_path,vocabFile),
                 os.path.join(_embedding_model_path,vectorFile))
@@ -136,6 +140,7 @@ def _download_pretrained_embedding_model(embedding_model_full_path,\
 def main(args):
     
     pretrained = args[1]
+
     '''downloading particular embedding file from 
         AWS'''
     '''We support three embeddings (e.g., glove,
