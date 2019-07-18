@@ -328,7 +328,7 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
     _fasttext  = 'fasttext'
     _fasttext_corpus = 'C'
     _word2vec = 'word2vec'
-    _word2vec_corpus = 'google-news'
+    _word2vec_corpus = 'NS'
 
 
     def __init__(self,embedding='glove',dimensionality=300,\
@@ -398,8 +398,6 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
                dimensionality < 300 or > 300) will be 
                superseded '''
             self.corpus = self._word2vec_corpus
-            self.binary = True
-            self._text = '.bin'
             dimensionality = 300 
         else:
             self.corpus = corpus
