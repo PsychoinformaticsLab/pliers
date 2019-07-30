@@ -29,6 +29,7 @@ import sys
 from six import string_types
 import gzip
 from enum import Enum   
+from gensim.scripts.word2vec2tensor import word2vec2tensor
 
 '''uncomment the following two imports (tf and hub)
    to run DAN'''
@@ -98,7 +99,7 @@ class DirectTextExtractorInterface():
     def __init__(self,method="averageWordEmbedding",\
                              embedding="glove",\
                              dimensionality=300 ,\
-                             corpus="840B",\
+                             corpus="6B",\
                              content_only=True,\
                              binary=False,\
                              stopWords=None,\
@@ -166,7 +167,7 @@ class DirectTextExtractorInterface():
             
         super(DirectTextExtractorInterface, self).__init__()
         
-    def _embed(self,stim):
+    def embed(self,stim,cbow=False):
         
         ''' 
             we need to know specific method and
@@ -181,7 +182,7 @@ class DirectTextExtractorInterface():
                                   "elmo",\
                                   "bert" ] :
         
-            return self.semvector_object._embed(stim)
+            return self.semvector_object.getVector(stim,cbow)
 
 class DirectSentenceExtractor(TextExtractor):
 
@@ -218,7 +219,28 @@ class DirectSentenceExtractor(TextExtractor):
 
 
         super(DirectSentenceExtractor, self).__init__()
-       
+    
+    def getVector(self,stim):
+    
+        print('hello?')
+    
+    def generateCbows(self,stim):
+        
+        if not isinstance(stim,str):
+            raise ValueError('Stimuli is expected to be of type string')
+
+        stim_words = stim.split()
+        stim_words_return = []
+        word1 = stim_words[0]
+        stim_words_return.append(stim_words[0])
+        for index2 in range(1,len(stim_words)):
+            word2 = stim_words[index2]
+            word1 = word1 + ' ' + word2
+            stim_words_return.append(word1)
+                
+        
+        return stim_words_return
+    
     def _extract(self, stim):
         num_dims = self.wvModel.vector_size
         if stim.text in self.wvModel:
@@ -248,7 +270,7 @@ class SmoothInverseFrequencyExtractor(DirectSentenceExtractor):
         The code is adapted from https://github.com/PrincetonML/SIF'''
 
     def __init__(self,embedding='glove',dimensionality=300,\
-               content_only=True,stopWords=None,corpus='840B',unk_vector=None):        
+               content_only=True,stopWords=None,corpus='6B',unk_vector=None):        
 
         print('inside smooth inverse frequency extractor')
         super(SmoothInverseFrequencyExtractor, self).__init__()
@@ -300,7 +322,11 @@ class SmoothInverseFrequencyExtractor(DirectSentenceExtractor):
         
         self.embedding_file = embedding_file
         
-    def _embed(self,stim):
+    def getVector(self,stim,cbow=False):
+        
+        if cbow == True:
+            stim_cbows = self.generateCbows(stim)
+            stim = stim_cbows
         
         if not isinstance(stim,list):
             stim = [stim]
@@ -312,11 +338,11 @@ class SmoothInverseFrequencyExtractor(DirectSentenceExtractor):
         params = sif_params.sif_params()
         params.rmpc = self.rmpc
             # get SIF embedding
-        embedding_vector = SIF_embedding.SIF_embedding(self.We, x, w, params) # embedding[i,:] is the embedding for sentence i
+        embedding_vectors = SIF_embedding.SIF_embedding(self.We, x, w, params) # embedding[i,:] is the embedding for sentence i
         
-        num_dims = embedding_vector.shape[1]
+        num_dims = embedding_vectors.shape[1]
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
-        return ExtractorResult(embedding_vector[0],
+        return ExtractorResult(embedding_vectors,
                                stim,
                                self,
                                features=features)
@@ -332,7 +358,7 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
 
 
     def __init__(self,embedding='glove',dimensionality=300,\
-               content_only=True,stopWords=None,corpus='840B',unk_vector=None,binary=False):
+               content_only=True,stopWords=None,corpus='6B',unk_vector=None,binary=False):
      
         print ('inside average embedding class')
         
@@ -423,7 +449,11 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
     def _getModel(self):
         return self.wvModel 
 
-    def _embed(self,stim):
+    def getVector(self,stim,cbow=False):
+        
+        if cbow == True:
+            stim_cbows = self.generateCbows(stim)
+            stim = stim_cbows
         
         if not isinstance(stim,list):
             stim = [stim]
@@ -438,6 +468,7 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
             Need to decide whether move the functionality
             to an util class later 
         '''
+        embedding_average_vectors = []
         for s in stim:
             complex_s = ComplexTextStim(text=s.lower())
             embeddings = self.transform(complex_s)
@@ -455,11 +486,14 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
             
                 numWords+=1
         
-            for index in range(num_dims):
-                embedding_average_vector[index] /=  numWords
-
+            if numWords > 0:
+                for index in range(num_dims):
+                    embedding_average_vector[index] /=  numWords
+            
+            embedding_average_vectors.append(embedding_average_vector)
+            
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
-        return ExtractorResult(embedding_average_vector,
+        return ExtractorResult(embedding_average_vectors,
                                stim,
                                self,
                                features=features)
@@ -493,18 +527,27 @@ class Doc2vecExtractor(DirectSentenceExtractor):
         
         self.doc2vecModel = doc2vecVectors.Doc2Vec.load(self._doc2vecEmbeddingFile)
 
-    def _embed(self,stim):
+    def getVector(self,stim,cbow=False):
 
         start_alpha=0.01
         infer_epoch=1000 
         
+        if cbow == True:
+            stim_cbows = self.generateCbows(stim)
+            stim = stim_cbows
+        
+        
         if not isinstance(stim,list):
             stim = [stim]
         
-        embedding_vectors = self.doc2vecModel.infer_vector(stim, alpha=start_alpha,
+        embedding_vectors = []
+        for s in stim:
+            embedding_vector = self.doc2vecModel.infer_vector(s, alpha=start_alpha,
                                             steps=infer_epoch)
             
-        num_dims = embedding_vectors.shape[0]
+            embedding_vectors.append(embedding_vector)
+            
+        num_dims = embedding_vectors[0].shape[0]
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
         
         return ExtractorResult(embedding_vectors,
@@ -533,9 +576,13 @@ class DANExtractor(DirectSentenceExtractor):
         '''to use TF hub we need to se the cache'''
         os.environ["TFHUB_CACHE_DIR"] = path
     
-    def _embed(self,stim):
+    def getVector(self,stim,cbow=False):
         
-       # stim = [stim]
+        if cbow == True:
+            stim_cbows = self.generateCbows(stim)
+            stim = stim_cbows
+
+        
         if not isinstance(stim,list):
             stim = [stim]
        
@@ -606,11 +653,20 @@ class BertExtractor(DirectSentenceExtractor):
         vocab_file=os.path.join(self._bert_path,self._vocab_file), do_lower_case=self._do_lower_case)
 
 
-    def _embed(self,stim):
+    def getVector(self,stim,cbow=False):
+        
+        if cbow == True:
+            stim_cbows = self.generateCbows(stim)
+            stim = stim_cbows
+
         
         if not isinstance(stim,list):
             stim = [stim]
         
+     #   embeddings = []
+        
+      #  for s in stim:
+       #     print(s)
         embeddings = bert_extract_features.pliers_embedding(self._layer_indexes,\
                                                             self._bert_config,\
                                                             self._bert_tokenizer,\
@@ -622,12 +678,12 @@ class BertExtractor(DirectSentenceExtractor):
                                                             os.path.join(self._bert_path,self._init_checkpoint),\
                                                             self._use_one_hot_embeddings,\
                                                             self._max_seq_length)
-                                                                                                             
+        #embeddings.append(embedding[0])                                                                                              
         
         num_dims = embeddings[0].shape[0]
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
 
-        return ExtractorResult(embeddings[0],
+        return ExtractorResult(embeddings,
                                stim,
                                self,
                                features=features)
@@ -667,7 +723,12 @@ class ElmoExtractor(DirectSentenceExtractor):
         
 
         
-    def _embed(self,stim):
+    def getVector(self,stim,cbow=False):
+        
+        if cbow == True:
+            stim_cbows = self.generateCbows(stim)
+            stim = stim_cbows
+
         
         if not isinstance(stim,list):
             stim = [stim]
@@ -694,102 +755,12 @@ class ElmoExtractor(DirectSentenceExtractor):
         num_dims = embeddings[0].shape[0]
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
 
-        return ExtractorResult(embeddings[0],
+        return ExtractorResult(embeddings,
                                stim,
                                self,
                                features=features)
 
  
-class ElmoTFHubExtractor(DirectSentenceExtractor):
-    
-    '''Currently we have Elmo encoding as a service
-        running on Tensorflow Hub. '''
-    
-    '''For more information please refer to the original 
-        paper - Deep contextualized word representations 
-        (Peters et al.). Using TF hub it is feasible
-        to extract the default as well as output from each
-        of Elmos's LSTM networks. We also provide a 
-        mean-pool output from the LSTM networks'''
-    
-    os.environ["TFHUB_CACHE_DIR"] = '/Users/mit-gablab/work/data_workspace/tfhub/'
-    _hub_path = "https://tfhub.dev/google/elmo/2"
-    _method = 'elmo'
-    _lstm1 = 'lstm1'
-    _lstm2 = 'lstm2'
-    _both = 'both'
-    _default = 'default'
-    
-    
-    def __init__(self,layer=None):
-
-        self.elmo_encoder = hub.Module(self._hub_path,trainable=True)
-        if layer == None:
-            self._layer = 'default'
-        else:
-            self._layer = layer
-
-        super(ElmoTFHubExtractor, self).__init__()
-        
-        
-    def _embed(self,stim):
-        
-        if not isinstance(stim,list):
-            stim = [stim]
-        
-        embeddings = self.elmo_encoder(stim,as_dict=True,signature="default")
-        
-        default_elmo = embeddings["default"]
-        lstm_outputs1 = embeddings["lstm_outputs1"]
-        lstm_outputs2 = embeddings["lstm_outputs2"]
-        
-        with tf.Session() as sess:
-            sess.run(tf.global_variables_initializer())
-            sess.run(tf.tables_initializer())
-            
-            if self._layer == self._default:
-                embedding_vectors_1 = sess.run(default_elmo)
-
-            elif self._layer == self._lstm1:
-                embedding_vectors_1 = sess.run(lstm_outputs1)
-                
-            elif self._layer == self._lstm2:
-                embedding_vectors_1 = sess.run(lstm_outputs2)
-                
-            elif self._layer == self._both:
-                embedding_vectors_1 = sess.run(lstm_outputs1)
-                embedding_vectors_2 = sess.run(lstm_outputs2)
-
-
-        num_dims = embedding_vectors_1.shape[0]
-        features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
-
-        if self._layer == self._default: 
-            return ExtractorResult(embedding_vectors_1,
-                               stim,
-                               self,
-                               features=features)
-              
-
-        embedding_elmo_vectors = []
-        for index in range(0,len(stim)):
-            embedding_elmo_vector = embedding_vectors_1[index]
-            if self._layer == self._lstm1 or self._layer == self._lstm2: 
-                embedding_elmo_vector = np.mean(embedding_elmo_vector,axis=0)
-            if self._layer == self._both : 
-                embedding_elmo_vector_2 = embedding_vectors_2[index]
-
-                embedding_elmo_vector = np.concatenate(np.mean(embedding_elmo_vector,axis=0),\
-                                        np.mean(embedding_elmo_vector_2,axis=0))
-
-            embedding_elmo_vectors.append(embedding_elmo_vector)
-            
-        return ExtractorResult(embedding_elmo_vectors,
-                               stim,
-                               self,
-                               features=features)
-        
-
 class SkipThoughtExtractor(DirectSentenceExtractor):
     
     '''To learn about skipthought extractor please
@@ -808,9 +779,10 @@ class SkipThoughtExtractor(DirectSentenceExtractor):
         print ('inside skipthought class')
         super(SkipThoughtExtractor, self).__init__()
 
+        self.skipthought_model_path = os.path.join(self._embedding_model_path,self._method)
         
         for _skipthought_file in self._skipthought_files:
-            if not os.path.exists(self._embedding_model_path+self._method+'/'+_skipthought_file):
+            if not os.path.exists(self.skipthought_model_path+'/'+_skipthought_file):
                 raise ValueError('Skipthought model file ' + _skipthought_file + 
                                  ' '\
                                 ' is missing. Please download ' + \
@@ -821,10 +793,14 @@ class SkipThoughtExtractor(DirectSentenceExtractor):
         
     def _loadModel(self):
 
-        self.skipthought_model = skipthoughts.load_model()
+        self.skipthought_model = skipthoughts.load_model(self.skipthought_model_path)
         self.skipthought_encoder = skipthoughts.Encoder(self.skipthought_model)
 
-    def _embed(self,stim):
+    def getVector(self,stim,cbow=False):
+        
+        if cbow == True:
+            stim_cbows = self.generateCbows(stim)
+            stim = stim_cbows
         
         if not isinstance(stim,list):
             stim = [stim]
@@ -833,7 +809,7 @@ class SkipThoughtExtractor(DirectSentenceExtractor):
         
         num_dims = embedding_vectors.shape[1]
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
-        return ExtractorResult(embedding_vectors[0],
+        return ExtractorResult(embedding_vectors,
                                stim,
                                self,
                                features=features)
