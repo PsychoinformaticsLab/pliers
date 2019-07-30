@@ -9,24 +9,31 @@ embedding_methods,DirectTextExtractorInterface
 
 
 
-def textExtractor(ext,method,inputFile,num=None,fileType=None,embedding_type=None):
+def textExtractor(ext,method,inputFile,num=None,fileType=None,embedding_type=None,cbow=False):
     
     f = open(inputFile)
     '''id - text (tab separated)'''
     allInputs = [line.strip() for line in f]
     
-    allInputs = allInputs[0:5]
+    #allInputs = allInputs[0:5]
     print('length of input: ' + str(len(allInputs)))
     
     allResults = []
+    allStimulis = []
     
-    if method == 'dan' :
-        allResults.extend(ext._embed(allInputs)._data)
-    else:
-        for input in allInputs:
-            results = ext._embed(input.lower())
-            allResults.append(results._data)
-            
+    for input in allInputs:
+        results = ext.embed(input.lower(),cbow=cbow)
+        allResults.extend(results._data)
+        allStimulis.extend(results.stim)
+        
+    print('length results ' + str(len(allResults)))
+    print('length stimuli ' + str(len(allStimulis)))
+    
+    
+ #   for index,s in enumerate(allStimulis):
+ #       print(s + '\t' + str(allResults[index]))
+    
+    
     return allResults
 
 def parseArguments():
@@ -57,6 +64,12 @@ def parseArguments():
     parser.add_argument('--output',type=str,required=True,
                         help = 'output file (by default the ' + 
                         'output is numpy output') 
+    
+    parser.add_argument('--cbow',type=bool,default=False,
+                        help = 'whether the user expects embeddings for each ' +
+                         'cbow (default is false ') 
+    
+    
     args = parser.parse_args()
     print(args)
     
@@ -77,6 +90,7 @@ def main():
     binary = arguments.binary
     inputFile = arguments.input
     outputFile = arguments.output
+    cbow = arguments.cbow
     
     
     extractor = DirectTextExtractorInterface(method=method,\
@@ -87,7 +101,7 @@ def main():
                                              binary = binary,\
                                              stopWords=stopWords,\
                                              unk_vector=unk_vector)
-    vectors = textExtractor(extractor,method,inputFile)
+    vectors = textExtractor(extractor,method,inputFile,cbow)
     np.savetxt(outputFile, vectors)
     
     print('output encodings of size %s.' % len(vectors))
