@@ -98,7 +98,7 @@ class ClarifaiAPIExtractor(APITransformer):
     def _parse_annotations(self, annotation):
         data_dict = {}
         # check whether the model is the face detection model
-        if self.model_name == 'a403429f2ddf4b49b307e318f00e528b':
+        if self.model_name == 'face':
             # if a face was detected, get at least the boundaries
             if annotation['data']:
                 for k, v in annotation['data']['regions'][0]['region_info']['bounding_box'].items():
