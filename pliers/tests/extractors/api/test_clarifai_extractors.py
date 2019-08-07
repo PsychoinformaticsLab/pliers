@@ -100,8 +100,9 @@ def test_clarifai_api_video_extractor():
     # This should actually be 6, in principle, because the clip is < 6 seconds,
     # but the Clarifai API is doing weird things. See comment in
     # ClarifaiAPIVideoExtractor._to_df() for further explanation.
-    assert result.shape[1] == 29
     assert result.shape[0] in (6, 7)
+    # Changes sometimes, so use a range
+    assert result.shape[1] > 25 and result.shape[1] < 30
     assert result['toy'][0] > 0.5
     assert result['onset'][1] == 1.0
     assert result['duration'][0] == 1.0
