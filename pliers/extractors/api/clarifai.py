@@ -97,8 +97,16 @@ class ClarifaiAPIExtractor(APITransformer):
 
     def _parse_annotations(self, annotation):
         data_dict = {}
-        for tag in annotation['data']['concepts']:
-            data_dict[tag['name']] = tag['value']
+        # check whether the model is the face detection model
+        if self.model_name == 'face':
+            # if a face was detected, get at least the boundaries
+            if annotation['data']:
+                for k, v in annotation['data']['regions'][0]['region_info']['bounding_box'].items():
+                    data_dict[k] = v
+            # return an empty dict if there was no face
+        else:
+            for tag in annotation['data']['concepts']:
+                data_dict[tag['name']] = tag['value']
         return data_dict
 
 
