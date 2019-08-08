@@ -184,6 +184,9 @@ class ClarifaiAPIImageExtractor(ClarifaiAPIExtractor, BatchTransformerMixin,
         return extractions
 
     def _to_df(self, result):
+        if self.model_name == 'face':
+            # is a list already, no need to wrap it in one
+            return pd.DataFrame(self._parse_annotations(result._data))
         return pd.DataFrame([self._parse_annotations(result._data)])
 
 
