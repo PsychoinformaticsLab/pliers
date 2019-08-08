@@ -54,6 +54,10 @@ def test_clarifai_api_extractor():
     result = ClarifaiAPIImageExtractor(model='face').transform(stim).to_df()
     assert [k in result.keys() for k in keys_to_check]
 
+    # check whether a multi-face image has the appropriate amount of rows
+    stim = ImageStim(join(IMAGE_DIR, 'thai_people.jpg'))
+    result = ClarifaiAPIImageExtractor(model='face').transform(stim).to_df()
+    assert len(result) == 4
 
 @pytest.mark.requires_payment
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
@@ -119,3 +123,5 @@ def test_clarifai_api_video_extractor():
     result = ext.transform(stim).to_df()
     keys_to_check = ['top_row', 'left_col', 'bottom_row', 'right_col']
     assert [k in result.keys() for k in keys_to_check]
+    # check if we return more than 1 row per second of face bounding boxes
+    assert len(result) > 6
