@@ -21,7 +21,15 @@ Dependencies
 By default, installing pliers with pip will only install third-party libraries that are essential for pliers to function properly. These libraries are listed in requirements.txt. However, because pliers provides interfaces to a large number of feature extraction tools, there are literally dozens of other optional dependencies that may be required depending on 
 what kinds of features you plan to extract (see optional-dependencies.txt). To be on the safe side, you can install all of the optional dependencies with pip:
 
-pip install -r optional-dependencies.txt
+::
+
+    pip install pliers[all]
+
+Or, if you installed via GitHub clone:
+
+::
+
+    pip install -r optional-dependencies.txt
 
 Note, however, that some of these Python dependencies have their own (possibly platform-dependent) requirements. Most notably, python-magic requires libmagic (see `here <https://github.com/ahupp/python-magic#dependencies>`_ for installation instructions), and without this, you'll be relegated to loading all your stims explicitly rather than passing in filenames (i.e., :py:`stim = VideoStim('my_video.mp4'`) will work fine, but passing 'my_video.mp4' directly to an |Extractor| will not). Additionally, the Python OpenCV bindings require `OpenCV3 <http://opencv.org/>`_ (which can be a bit more challenging to install)--but relatively few of the feature extractors in pliers currently depend on OpenCV, so you may not need to bother with this. Similarly, the |TesseractConverter| requires the tesseract OCR library, but no other |Transformer| does, so unless you're planning to capture text from images, you're probably safe.
 

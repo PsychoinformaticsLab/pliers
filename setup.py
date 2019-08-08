@@ -29,5 +29,13 @@ setup(
     zip_safe=False,
     download_url='https://github.com/tyarkoni/pliers/archive/%s.tar.gz' %
     __version__,
-    **extra_setuptools_args
+    **extra_setuptools_args,
+    extras_require={
+        'all': ['google-api-python-client', 'google-compute-engine',
+                'tensorflow', 'clarifai', 'opencv-python', 'face_recognition',
+                'gensim', 'IndicoIo', 'pytesseract', 'librosa>=0.6.3',
+                'rev_ai', 'spacy', 'SpeechRecognition>=3.6.0', 'pysrt',
+                'python-twitter', 'pathos', 'scikit-learn', 'matplotlib',
+                'seaborn', 'pygraphviz', 'xlrd', 'duecredit']
+    },
 )
