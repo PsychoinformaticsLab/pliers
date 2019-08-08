@@ -205,13 +205,33 @@ class ClarifaiAPIVideoExtractor(ClarifaiAPIExtractor, VideoExtractor):
         data = []
         frames = result._data[0]['data']['frames']
         for i, frame_res in enumerate(frames):
-            data.append(self._parse_annotations(frame_res))
-            onset = frame_res['frame_info']['time'] / 1000.0
-            if (i + 1) == len(frames):
-                end = result.stim.duration
+            tmp_res = self._parse_annotations(frame_res)
+            # if we detect multiple faces, the parsed annotation can be multi-line
+            if type(tmp_res) == list:
+                for d in tmp_res:
+                    data.append(d)
+                    onset = frame_res['frame_info']['time'] / 1000.0
+
+                    if (i + 1) == len(frames):
+                        end = result.stim.duration
+                    else:
+                        end = frames[i + 1]['frame_info']['time'] / 1000.0
+                    onsets.append(onset)
+                    durations.append(max([end - onset, 0]))
+
+                    result._onsets = onsets
+                    result._durations = durations
+                    df = pd.DataFrame(data)
+                    result.features = list(df.columns)
             else:
-                end = frames[i+1]['frame_info']['time'] / 1000.0
-            onsets.append(onset)
+                data.append(tmp_res)
+                onset = frame_res['frame_info']['time'] / 1000.0
+
+                if (i + 1) == len(frames):
+                    end = result.stim.duration
+                else:
+                    end = frames[i+1]['frame_info']['time'] / 1000.0
+                onsets.append(onset)
             # NOTE: As of Clarifai API v2 and client library 2.6.1, the API
             # returns more frames than it should—at least for some videos.
             # E.g., given a 5.5 second clip, it may return 7 frames, with the
@@ -220,10 +240,11 @@ class ClarifaiAPIVideoExtractor(ClarifaiAPIExtractor, VideoExtractor):
             # this imaginary frame (I'm guessing it's the very last frame?),
             # we're not going to do anything about it here, except to make sure
             # that durations aren't negative.
-            durations.append(max([end - onset, 0]))
+                durations.append(max([end - onset, 0]))
 
-        result._onsets = onsets
-        result._durations = durations
-        df = pd.DataFrame(data)
-        result.features = list(df.columns)
+            result._onsets = onsets
+            result._durations = durations
+            df = pd.DataFrame(data)
+            result.features = list(df.columns)
+
         return df
