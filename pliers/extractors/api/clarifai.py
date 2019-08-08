@@ -95,19 +95,38 @@ class ClarifaiAPIExtractor(APITransformer):
         tags = self.model.predict(objects, model_output_info=model_output_info)
         return tags['outputs']
 
-    def _parse_annotations(self, annotation):
-        data_dict = {}
+    def _parse_annotations(self, annotation, handle_annotations=None):
+        """
+        Parse outputs from a clarifai face extraction.
+
+        Args:
+            handle_annotations (str): How returned face annotations should be
+                handled in cases where there are multiple faces.
+                'first' indicates to only use the first face JSON object, all
+                other values will default to including every face.
+        """
         # check whether the model is the face detection model
         if self.model_name == 'face':
+
             # if a face was detected, get at least the boundaries
             if annotation['data']:
-                for k, v in annotation['data']['regions'][0]['region_info']['bounding_box'].items():
-                    data_dict[k] = v
+                # if specified, only return first face
+                if handle_annotations == 'first':
+                    annotation = [annotation['data']['region'][0]]
+                # else collate all faces into a multi-row dataframe
+                face_results = []
+                for i, d in enumerate(annotation['data']['regions']):
+                    data_dict = {}
+                    for k, v in d['region_info']['bounding_box'].items():
+                        data_dict[k] = v
+                    face_results.append(data_dict)
+                return face_results
             # return an empty dict if there was no face
         else:
+            data_dict = {}
             for tag in annotation['data']['concepts']:
                 data_dict[tag['name']] = tag['value']
-        return data_dict
+            return data_dict
 
 
 class ClarifaiAPIImageExtractor(ClarifaiAPIExtractor, BatchTransformerMixin,
