@@ -95,19 +95,38 @@ class ClarifaiAPIExtractor(APITransformer):
         tags = self.model.predict(objects, model_output_info=model_output_info)
         return tags['outputs']
 
-    def _parse_annotations(self, annotation):
-        data_dict = {}
+    def _parse_annotations(self, annotation, handle_annotations=None):
+        """
+        Parse outputs from a clarifai face extraction.
+
+        Args:
+            handle_annotations (str): How returned face annotations should be
+                handled in cases where there are multiple faces.
+                'first' indicates to only use the first face JSON object, all
+                other values will default to including every face.
+        """
         # check whether the model is the face detection model
         if self.model_name == 'face':
+
             # if a face was detected, get at least the boundaries
             if annotation['data']:
-                for k, v in annotation['data']['regions'][0]['region_info']['bounding_box'].items():
-                    data_dict[k] = v
+                # if specified, only return first face
+                if handle_annotations == 'first':
+                    annotation = [annotation['data']['region'][0]]
+                # else collate all faces into a multi-row dataframe
+                face_results = []
+                for i, d in enumerate(annotation['data']['regions']):
+                    data_dict = {}
+                    for k, v in d['region_info']['bounding_box'].items():
+                        data_dict[k] = v
+                    face_results.append(data_dict)
+                return face_results
             # return an empty dict if there was no face
         else:
+            data_dict = {}
             for tag in annotation['data']['concepts']:
                 data_dict[tag['name']] = tag['value']
-        return data_dict
+            return data_dict
 
 
 class ClarifaiAPIImageExtractor(ClarifaiAPIExtractor, BatchTransformerMixin,
@@ -165,6 +184,9 @@ class ClarifaiAPIImageExtractor(ClarifaiAPIExtractor, BatchTransformerMixin,
         return extractions
 
     def _to_df(self, result):
+        if self.model_name == 'face':
+            # is a list already, no need to wrap it in one
+            return pd.DataFrame(self._parse_annotations(result._data))
         return pd.DataFrame([self._parse_annotations(result._data)])
 
 
@@ -183,13 +205,33 @@ class ClarifaiAPIVideoExtractor(ClarifaiAPIExtractor, VideoExtractor):
         data = []
         frames = result._data[0]['data']['frames']
         for i, frame_res in enumerate(frames):
-            data.append(self._parse_annotations(frame_res))
-            onset = frame_res['frame_info']['time'] / 1000.0
-            if (i + 1) == len(frames):
-                end = result.stim.duration
+            tmp_res = self._parse_annotations(frame_res)
+            # if we detect multiple faces, the parsed annotation can be multi-line
+            if type(tmp_res) == list:
+                for d in tmp_res:
+                    data.append(d)
+                    onset = frame_res['frame_info']['time'] / 1000.0
+
+                    if (i + 1) == len(frames):
+                        end = result.stim.duration
+                    else:
+                        end = frames[i + 1]['frame_info']['time'] / 1000.0
+                    onsets.append(onset)
+                    durations.append(max([end - onset, 0]))
+
+                    result._onsets = onsets
+                    result._durations = durations
+                    df = pd.DataFrame(data)
+                    result.features = list(df.columns)
             else:
-                end = frames[i+1]['frame_info']['time'] / 1000.0
-            onsets.append(onset)
+                data.append(tmp_res)
+                onset = frame_res['frame_info']['time'] / 1000.0
+
+                if (i + 1) == len(frames):
+                    end = result.stim.duration
+                else:
+                    end = frames[i+1]['frame_info']['time'] / 1000.0
+                onsets.append(onset)
             # NOTE: As of Clarifai API v2 and client library 2.6.1, the API
             # returns more frames than it should—at least for some videos.
             # E.g., given a 5.5 second clip, it may return 7 frames, with the
@@ -198,10 +240,11 @@ class ClarifaiAPIVideoExtractor(ClarifaiAPIExtractor, VideoExtractor):
             # this imaginary frame (I'm guessing it's the very last frame?),
             # we're not going to do anything about it here, except to make sure
             # that durations aren't negative.
-            durations.append(max([end - onset, 0]))
+                durations.append(max([end - onset, 0]))
 
-        result._onsets = onsets
-        result._durations = durations
-        df = pd.DataFrame(data)
-        result.features = list(df.columns)
+            result._onsets = onsets
+            result._durations = durations
+            df = pd.DataFrame(data)
+            result.features = list(df.columns)
+
         return df
