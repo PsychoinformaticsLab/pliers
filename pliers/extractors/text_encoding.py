@@ -222,22 +222,25 @@ class DirectSentenceExtractor(TextExtractor):
     
     def getVector(self,stim):
     
-        print('hello?')
+        pass
     
     def generateCbows(self,stim):
         
-        if not isinstance(stim,str):
-            raise ValueError('Stimuli is expected to be of type string')
-
-        stim_words = stim.split()
         stim_words_return = []
-        word1 = stim_words[0]
-        stim_words_return.append(stim_words[0])
-        for index2 in range(1,len(stim_words)):
-            word2 = stim_words[index2]
-            word1 = word1 + ' ' + word2
-            stim_words_return.append(word1)
-                
+        
+        for s in stim:
+    
+            if not isinstance(s,str):
+                raise ValueError('Stimuli is expected to be of type string')
+    
+            stim_words = s.split()
+            word1 = stim_words[0]
+            stim_words_return.append(stim_words[0])
+            for index2 in range(1,len(stim_words)):
+                word2 = stim_words[index2]
+                word1 = word1 + ' ' + word2
+                stim_words_return.append(word1)
+                    
         
         return stim_words_return
     
@@ -324,12 +327,12 @@ class SmoothInverseFrequencyExtractor(DirectSentenceExtractor):
         
     def getVector(self,stim,cbow=False):
         
+        if not isinstance(stim,list):
+            stim = [stim]
+            
         if cbow == True:
             stim_cbows = self.generateCbows(stim)
             stim = stim_cbows
-        
-        if not isinstance(stim,list):
-            stim = [stim]
         
         x, m = sif_data_io.sentences2idx(stim, self.word_vecs) # x is the array of word indices, m is the binary mask indicating whether there is a word in that location
         w = sif_data_io.seq2weight(x, m, self.weight4ind) # get word weights
@@ -451,12 +454,12 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
 
     def getVector(self,stim,cbow=False):
         
+        if not isinstance(stim,list):
+            stim = [stim]
+        
         if cbow == True:
             stim_cbows = self.generateCbows(stim)
             stim = stim_cbows
-        
-        if not isinstance(stim,list):
-            stim = [stim]
         
         ''' 
             We only implement average word embedding'
@@ -532,13 +535,13 @@ class Doc2vecExtractor(DirectSentenceExtractor):
         start_alpha=0.01
         infer_epoch=1000 
         
+        if not isinstance(stim,list):
+            stim = [stim]
+        
         if cbow == True:
             stim_cbows = self.generateCbows(stim)
             stim = stim_cbows
         
-        
-        if not isinstance(stim,list):
-            stim = [stim]
         
         embedding_vectors = []
         for s in stim:
@@ -578,14 +581,12 @@ class DANExtractor(DirectSentenceExtractor):
     
     def getVector(self,stim,cbow=False):
         
+        if not isinstance(stim,list):
+            stim = [stim]
+        
         if cbow == True:
             stim_cbows = self.generateCbows(stim)
             stim = stim_cbows
-
-        
-        if not isinstance(stim,list):
-            stim = [stim]
-       
        
         embeddings = self.dan_encoder(stim,as_dict=True)
         with tf.Session() as sess:
@@ -655,18 +656,13 @@ class BertExtractor(DirectSentenceExtractor):
 
     def getVector(self,stim,cbow=False):
         
+        if not isinstance(stim,list):
+            stim = [stim]
+        
         if cbow == True:
             stim_cbows = self.generateCbows(stim)
             stim = stim_cbows
 
-        
-        if not isinstance(stim,list):
-            stim = [stim]
-        
-     #   embeddings = []
-        
-      #  for s in stim:
-       #     print(s)
         embeddings = bert_extract_features.pliers_embedding(self._layer_indexes,\
                                                             self._bert_config,\
                                                             self._bert_tokenizer,\
@@ -678,7 +674,6 @@ class BertExtractor(DirectSentenceExtractor):
                                                             os.path.join(self._bert_path,self._init_checkpoint),\
                                                             self._use_one_hot_embeddings,\
                                                             self._max_seq_length)
-        #embeddings.append(embedding[0])                                                                                              
         
         num_dims = embeddings[0].shape[0]
         features = ['%s%d' % (self.prefix, i) for i in range(num_dims)]
@@ -725,14 +720,12 @@ class ElmoExtractor(DirectSentenceExtractor):
         
     def getVector(self,stim,cbow=False):
         
+        if not isinstance(stim,list):
+            stim = [stim]
+        
         if cbow == True:
             stim_cbows = self.generateCbows(stim)
             stim = stim_cbows
-
-        
-        if not isinstance(stim,list):
-            stim = [stim]
-            
             
         embeddings = []
         for s in stim:
@@ -797,14 +790,14 @@ class SkipThoughtExtractor(DirectSentenceExtractor):
         self.skipthought_encoder = skipthoughts.Encoder(self.skipthought_model)
 
     def getVector(self,stim,cbow=False):
-        
+
+        if not isinstance(stim,list):
+            stim = [stim]
+
         if cbow == True:
             stim_cbows = self.generateCbows(stim)
             stim = stim_cbows
         
-        if not isinstance(stim,list):
-            stim = [stim]
-
         embedding_vectors = self.skipthought_encoder.encode(stim,verbose=False)
         
         num_dims = embedding_vectors.shape[1]

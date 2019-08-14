@@ -9,7 +9,8 @@ embedding_methods,DirectTextExtractorInterface
 
 
 
-def textExtractor(ext,method,inputFile,num=None,fileType=None,embedding_type=None,cbow=False):
+def textExtractor(ext,method,inputFile,num=None,fileType=None,\
+                  embedding_type=None,cbow=False):
     
     f = open(inputFile)
     '''id - text (tab separated)'''
@@ -101,7 +102,8 @@ def main():
                                              binary = binary,\
                                              stopWords=stopWords,\
                                              unk_vector=unk_vector)
-    vectors = textExtractor(extractor,method,inputFile,cbow)
+    vectors = textExtractor(extractor,method=method,\
+                            inputFile=inputFile,cbow=cbow)
     np.savetxt(outputFile, vectors)
     
     print('output encodings of size %s.' % len(vectors))
