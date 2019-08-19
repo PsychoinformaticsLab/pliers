@@ -205,7 +205,11 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
         return request_obj.execute(num_retries=self.num_retries)
 
     def _query_operations(self, name):
-        request_obj = self.service.operations().get(name=name)
+        if hasattr(self.service.operations(), 'get'):
+            request_obj = self.service.operations().get(name=name)
+        else:
+            request_obj = self.service.projects().locations().\
+                operations().get(name=name)
         return request_obj.execute(num_retries=self.num_retries)
 
     def _build_request(self, stim):
