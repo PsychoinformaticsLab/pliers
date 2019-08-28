@@ -3,9 +3,11 @@ import os
 import requests
 import sys
 import tarfile
+import logging
 
 import gensim
 from gensim.scripts.glove2word2vec import glove2word2vec,get_glove_info
+import argparse
 
 
 
@@ -80,7 +82,7 @@ def combine(combineFile,vocabFile,vectorFile):
 
     
             
-def download_embedding_data(embedding):
+def download_embedding_data(embedding,keep_download):
     
     embedding_aws_file = os.path.join(_aws_bucket_path,embedding)
     embedding_aws_file = embedding_aws_file + _tar_gz_extn
@@ -96,7 +98,8 @@ def download_embedding_data(embedding):
     
         
     else:
-        print('Embedding file already exist, please check')
+        print('Embedding zip file already exist, please check whether it has been unzipped correctly.')
+        logging.info('Embedding tar file already exist, please check whether it has been unzipped correctly.')
     
     _pretrained_lms = ['skipthought', 'bert','elmo',
                        'sif','doc2vec']
@@ -105,6 +108,11 @@ def download_embedding_data(embedding):
         This would be replaced in the next release'''
     if embedding not in _pretrained_lms:
         prepare_keyvector(embedding,embedding_model_full_path)
+        
+    '''Remove the zip file since it might take up space'''
+    if keep_download == False:
+        if os.path.exists(embedding_local_file):
+            os.remove(embedding_local_file)
 
 #    return embedding_model_full_path
 
@@ -132,14 +140,34 @@ def _download_pretrained_embedding_model(embedding_model_full_path,\
     try:
         size = os.stat(embedding_local_file).st_size
         print('\tSuccessfully downloaded', embedding_model_file, size, 'bytes.')
+        logging.info('\tSuccessfully downloaded', embedding_model_file, size, 'bytes.')
         tarfile.open(embedding_local_file, 'r:gz').extractall(embedding_model_full_path)
         
     except IOError as e:
         print(e)
-        
-def main(args):
+
+
+def parseArguments():
     
-    pretrained = args[1]
+    parser = argparse.ArgumentParser(description='Download required model/embedding files for Text encoding via Pliers')
+    parser.add_argument('--pretrained', type=str, default='glove',
+                         help = 'select from glove, word2vec, fasttext, bert etc. (check the documentation ' + 
+                         'for the various options. ')
+    parser.add_argument('--keep_download', type=bool, default=False, required=False, 
+                        help = 'whether storing the zip/tar file or removing after the successfull download action; ' +
+                            ' default is removing the zip file.' )
+
+    args = parser.parse_args()
+    print(args)
+    
+    return args
+
+def main():
+    
+    arguments = parseArguments()
+    pretrained = arguments.pretrained
+    keep_download = arguments.keep_download
+
 
     '''downloading particular embedding file from 
         AWS'''
@@ -148,8 +176,8 @@ def main(args):
         pretrained models and LMs (e.g., skipthought, BERT, 
         ELMO).'''
     
-    download_embedding_data(pretrained)
+    download_embedding_data(pretrained,keep_download)
 
 if __name__ == '__main__':
-   main(sys.argv)
+   main()
    
