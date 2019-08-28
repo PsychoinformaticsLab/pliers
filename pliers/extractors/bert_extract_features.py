@@ -320,6 +320,10 @@ def _truncate_seq_pair(tokens_a, tokens_b, max_length):
 
 def pliers_examples(stim):
 
+    '''splitting text to words'''
+    if not isinstance(stim,list):
+        stim = stim.split()
+        
     examples = []
     unique_id = 0
     for s in stim:
@@ -480,7 +484,6 @@ def pliers_embedding(layer_indexes,bert_config,\
   input_fn = input_fn_builder(
       features=features, seq_length=max_seq_length)
 
-  final_layers=[]
   sentence_avgs = []
   for result in estimator.predict(input_fn, yield_single_examples=True):
     unique_id = int(result["unique_id"])
@@ -488,8 +491,10 @@ def pliers_embedding(layer_indexes,bert_config,\
     output_json = collections.OrderedDict()
     output_json["linex_index"] = unique_id
     sentence_embeddings = []
+    
     for (i, token) in enumerate(feature.tokens):
         all_layers = []
+        
         for (j, layer_index) in enumerate(layer_indexes):
             layer_output = result["layer_output_%d" % j]
             layers = collections.OrderedDict()
@@ -497,24 +502,32 @@ def pliers_embedding(layer_indexes,bert_config,\
             layers["values"] = [
               round(float(x), 6) for x in layer_output[i:(i + 1)].flat
             ]
-            sentence_embeddings.append(layers["values"])
+            
             all_layers.append(layers)
-        features = collections.OrderedDict()
-        features["token"] = token
-        features["layers"] = all_layers
+        
+        token_features = collections.OrderedDict()
+        token_features["token"] = token
+        token_features["layers"] = all_layers
+        sentence_embeddings.append(token_features)
+    
     sentence_avg = getAvg(sentence_embeddings)
     sentence_avgs.append(sentence_avg)
 
-    return sentence_avgs
+  return sentence_avgs
 
 def  getAvg(sentence_embeddings):
     
-    dims = len(sentence_embeddings[0])
+    dims = len(sentence_embeddings[0]["layers"][0]["values"])
     numWords = len(sentence_embeddings)
     avg_embedding = np.zeros(dims)
-    for embedding in sentence_embeddings:
-        for index,value in enumerate(embedding):
-            avg_embedding[index]+=value
+    for token_features in sentence_embeddings:
+        all_layers = token_features["layers"]
+        for _,layer in enumerate(all_layers):
+            for index2,value in enumerate(layer["values"]):
+                avg_embedding[index2]+=value
+                
+        for index,value in enumerate(avg_embedding):
+            avg_embedding[index] /= len(all_layers)
 
     for index,value in enumerate(avg_embedding):
         avg_embedding[index] /= numWords
