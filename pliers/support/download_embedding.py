@@ -176,7 +176,7 @@ def main():
         pretrained models and LMs (e.g., skipthought, BERT, 
         ELMO).'''
     
-    download_embedding_data(pretrained,keep_download)
+    download_embedding_data(pretrained=pretrained,keep_download=keep_download)
 
 if __name__ == '__main__':
    main()
