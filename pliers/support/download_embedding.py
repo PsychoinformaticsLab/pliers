@@ -82,14 +82,14 @@ def combine(combineFile,vocabFile,vectorFile):
 
     
             
-def download_embedding_data(embedding,keep_download):
+def download_embedding_data(embedding='glove',keep_download=False):
     
     embedding_aws_file = os.path.join(_aws_bucket_path,embedding)
     embedding_aws_file = embedding_aws_file + _tar_gz_extn
     embedding_model_file= embedding_aws_file.split('/')[-1]
     embedding_model_folder = embedding_model_file.split('.')[0]
     embedding_model_full_path = os.path.join(_embedding_model_path,embedding_model_folder)
-    embedding_local_file = os.path.join(embedding_model_full_path, embedding_model_file)
+    embedding_local_file = os.path.join(_embedding_model_path, embedding_model_file)
     if not os.path.exists(embedding_local_file):
         _download_pretrained_embedding_model(embedding_model_full_path,\
                                             embedding_model_file,\
@@ -107,7 +107,7 @@ def download_embedding_data(embedding,keep_download):
         different files and we need to combine them.
         This would be replaced in the next release'''
     if embedding not in _pretrained_lms:
-        prepare_keyvector(embedding,embedding_model_full_path)
+        prepare_keyvector(embedding,_embedding_model_path)
         
     '''Remove the zip file since it might take up space'''
     if keep_download == False:
@@ -176,7 +176,7 @@ def main():
         pretrained models and LMs (e.g., skipthought, BERT, 
         ELMO).'''
     
-    download_embedding_data(pretrained=pretrained,keep_download=keep_download)
+    download_embedding_data(embedding=pretrained,keep_download=keep_download)
 
 if __name__ == '__main__':
    main()
