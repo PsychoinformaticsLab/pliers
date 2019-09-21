@@ -9,29 +9,14 @@ import gensim
 from gensim.scripts.glove2word2vec import glove2word2vec,get_glove_info
 import argparse
 
-
-
-CORPORA = [
-    'punkt',
-    'maxent_treebank_pos_tagger',
-    'averaged_perceptron_tagger',
-    'vader_lexicon'
-]
-
-
-
-_available_word_embeddings = ['glove','fasttext','word2vec']
 _aws_bucket_path = 'https://s3.amazonaws.com/mlt-word-embeddings/'
 _tar_gz_extn = '.tar.gz'
 
 _current_path = os.path.abspath(os.path.dirname(__file__))
 _embedding_model_path = os.path.join(_current_path,'../../datasets/embeddings/')
 
-
-def download_nltk_data():
-    ''' Download nltk corpora required for one or more feature extractors. '''
-    for c in CORPORA:
-        nltk.download(c)
+logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',level=logging.INFO)
+logger = logging.getLogger(name='download_embedding_logger')
 
 def prepare_keyvector(embedding,_embedding_model_path):
     
@@ -53,11 +38,11 @@ def prepare_keyvector(embedding,_embedding_model_path):
         elif embed_type.startswith('FT'):
             embed_type = embed_type.replace('FT','fasttext')
         else:
-            print('embedding type is not supported, check.')
+            logger.error('embedding type is not supported, check.')
 
         combine(os.path.join(_embedding_model_path,embed_type),os.path.join(_embedding_model_path,vocabFile),
                 os.path.join(_embedding_model_path,vectorFile))
-        print('done: ' + vectorFile)
+        logging.info(vectorFile + ' is ready')
 
 def combine(combineFile,vocabFile,vectorFile):
     
@@ -77,7 +62,6 @@ def combine(combineFile,vocabFile,vectorFile):
         fout.write("{0} {1}\n".format(numLines, numDims+1))
         for index,vector in enumerate(vectors):
             vocab = vocabs[index]
-        #    fout.write(vocab + ' '+vector)
             fout.write("{0} {1}\n".format(vocab, vector))
 
     
@@ -98,8 +82,7 @@ def download_embedding_data(embedding='glove',keep_download=False):
     
         
     else:
-        print('Embedding zip file already exist, please check whether it has been unzipped correctly.')
-        logging.info('Embedding tar file already exist, please check whether it has been unzipped correctly.')
+        logger.info('Embedding tar file already exist, please check whether it has been unzipped correctly.')
     
     _pretrained_lms = ['skipthought', 'bert','elmo',
                        'sif','doc2vec']
@@ -107,21 +90,20 @@ def download_embedding_data(embedding='glove',keep_download=False):
         different files and we need to combine them.
         This would be replaced in the next release'''
     if embedding not in _pretrained_lms:
-        prepare_keyvector(embedding,_embedding_model_path)
+        prepare_keyvector(embedding,embedding_model_full_path)
         
     '''Remove the zip file since it might take up space'''
     if keep_download == False:
         if os.path.exists(embedding_local_file):
             os.remove(embedding_local_file)
 
-#    return embedding_model_full_path
 
 def _download_pretrained_embedding_model(embedding_model_full_path,\
                                          embedding_model_file,\
                                              embedding_local_file,\
                                              embedding_aws_file):
         
-    print('Downloading Embedding model: ' +embedding_model_file)
+    logger.info('Downloading Embedding model: ' +embedding_model_file)
     if not os.path.exists(embedding_model_full_path):
         os.makedirs(embedding_model_full_path)
         
@@ -135,16 +117,15 @@ def _download_pretrained_embedding_model(embedding_model_full_path,\
                         f.write(chunk)
     except IOError as e:
             #catch exception
-        print(e)
+        logger.info(e)
             
     try:
         size = os.stat(embedding_local_file).st_size
-        print('\tSuccessfully downloaded', embedding_model_file, size, 'bytes.')
-        logging.info('\tSuccessfully downloaded', embedding_model_file, size, 'bytes.')
+        logger.info('\tSuccessfully downloaded:' + '\t' + embedding_model_file)
         tarfile.open(embedding_local_file, 'r:gz').extractall(embedding_model_full_path)
         
     except IOError as e:
-        print(e)
+        logger.info(e)
 
 
 def parseArguments():
@@ -158,7 +139,7 @@ def parseArguments():
                             ' default is removing the zip file.' )
 
     args = parser.parse_args()
-    print(args)
+    logger.info(args)
     
     return args
 
@@ -175,7 +156,7 @@ def main():
         fasttext, word2vec) and several other
         pretrained models and LMs (e.g., skipthought, BERT, 
         ELMO).'''
-    
+    pretrained = 'fasttext'
     download_embedding_data(embedding=pretrained,keep_download=keep_download)
 
 if __name__ == '__main__':

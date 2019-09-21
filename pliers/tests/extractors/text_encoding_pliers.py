@@ -2,11 +2,15 @@ import warnings
 import sys
 import argparse
 import numpy as np 
+import logging
 
 
 from pliers.extractors.text_encoding import DirectSentenceExtractor,\
 embedding_methods,DirectTextExtractorInterface
 
+
+logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',level=logging.INFO)
+logger = logging.getLogger(name='text_encoding_logger')
 
 
 def textExtractor(ext,method,inputFile,num=None,fileType=None,\
@@ -17,7 +21,7 @@ def textExtractor(ext,method,inputFile,num=None,fileType=None,\
     allInputs = [line.strip() for line in f]
     
     #allInputs = allInputs[0:5]
-    print('length of input: ' + str(len(allInputs)))
+    logger.info('length of input: ' + str(len(allInputs)))
     
     allResults = []
     allStimulis = []
@@ -27,12 +31,8 @@ def textExtractor(ext,method,inputFile,num=None,fileType=None,\
         allResults.extend(results._data)
         allStimulis.extend(results.stim)
         
-    print('length results ' + str(len(allResults)))
-    print('length stimuli ' + str(len(allStimulis)))
-    
-    
- #   for index,s in enumerate(allStimulis):
- #       print(s + '\t' + str(allResults[index]))
+    logger.info('length results ' + str(len(allResults)))
+    logger.info('length stimuli ' + str(len(allStimulis)))
     
     
     return allResults
@@ -72,7 +72,7 @@ def parseArguments():
     
     
     args = parser.parse_args()
-    print(args)
+    logger.info(args)
     
     return args
     
@@ -106,7 +106,7 @@ def main():
                             inputFile=inputFile,cbow=cbow)
     np.savetxt(outputFile, vectors)
     
-    print('output encodings of size %s.' % len(vectors))
+    logger.info('output encodings of size %s.' % len(vectors))
     
 if __name__ == '__main__':
     

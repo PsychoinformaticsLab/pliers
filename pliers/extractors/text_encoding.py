@@ -59,6 +59,8 @@ keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
 doc2vecVectors = attempt_to_import('gensim.models.doc2vec','doc2vecVectors',
                                    ['Doc2Vec.load'])
 
+logger = logging.getLogger("text_encoding_logger") 
+
 class DirectTextExtractorInterface():
     
     '''
@@ -275,7 +277,7 @@ class SmoothInverseFrequencyExtractor(DirectSentenceExtractor):
     def __init__(self,embedding='glove',dimensionality=300,\
                content_only=True,stopWords=None,corpus='6B',unk_vector=None):        
 
-        print('inside smooth inverse frequency extractor')
+        logger.info('inside smooth inverse frequency extractor')
         super(SmoothInverseFrequencyExtractor, self).__init__()
 
         
@@ -363,7 +365,7 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
     def __init__(self,embedding='glove',dimensionality=300,\
                content_only=True,stopWords=None,corpus='6B',unk_vector=None,binary=False):
      
-        print ('inside average embedding class')
+        logger.info ('inside average embedding class')
         
         super(AverageEmbeddingExtractor, self).__init__()
 
@@ -447,7 +449,7 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
 
     def _loadModel(self):
         self.wvModel = keyedvectors.KeyedVectors.load_word2vec_format(self.embedding_file,binary=self.binary,encoding='latin1')
-        print(self.embedding + ': ' + 'model loaded')
+        logger.info(self.embedding + ': ' + 'model loaded')
 
     def _getModel(self):
         return self.wvModel 
@@ -510,7 +512,7 @@ class Doc2vecExtractor(DirectSentenceExtractor):
     
     
     def __init__(self):
-        print ('inside Doc2vecExtractor class')
+        logger.info ('inside Doc2vecExtractor class')
         
         super(Doc2vecExtractor, self).__init__()
         
@@ -769,7 +771,7 @@ class SkipThoughtExtractor(DirectSentenceExtractor):
     _method = 'skipthought'
     
     def __init__(self):
-        print ('inside skipthought class')
+        logger.info ('inside skipthought class')
         super(SkipThoughtExtractor, self).__init__()
 
         self.skipthought_model_path = os.path.join(self._embedding_model_path,self._method)
