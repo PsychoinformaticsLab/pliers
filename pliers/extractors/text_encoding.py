@@ -22,6 +22,7 @@ import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.corpus import stopwords
 
+import logging
 import os
 import numpy as np
 import pandas as pd
