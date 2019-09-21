@@ -60,6 +60,7 @@ keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
 doc2vecVectors = attempt_to_import('gensim.models.doc2vec','doc2vecVectors',
                                    ['Doc2Vec.load'])
 
+logging.getLogger('smart_open').setLevel(logging.ERROR)
 logger = logging.getLogger("text_encoding_logger") 
 
 class DirectTextExtractorInterface():
@@ -410,7 +411,7 @@ class AverageEmbeddingExtractor(DirectSentenceExtractor):
         
         if embedding.lower() not in self._available_word_embeddings:
             raise ValueError('selected embedding type is not ' + \
-                             ' compatible with the embedding method, please check the available.' +\
+                             ' compatible with the embedding method, please check the available' +\
                              ' embeddings')
         else:
             self.embedding = embedding
@@ -639,7 +640,7 @@ class BertExtractor(DirectSentenceExtractor):
 
         self._vocab_file = 'vocab.txt'
         
-        self._bert_path = os.path.join(self._embedding_model_path,self._method,self._method,self._model)  
+        self._bert_path = os.path.join(self._embedding_model_path,self._method,self._model)  
         
         if not os.path.exists(os.path.join(self._bert_path,self._vocab_file)):
             raise ValueError('BERT model file(s) '  + 
@@ -697,8 +698,8 @@ class ElmoExtractor(DirectSentenceExtractor):
         super(ElmoExtractor, self).__init__()
 
         
-        self._options_file = os.path.join(self._embedding_model_path,self._method,self._method,self._options_file)
-        self._weight_file = os.path.join(self._embedding_model_path,self._method,self._method,self._weight_file)
+        self._options_file = os.path.join(self._embedding_model_path,self._method,self._options_file)
+        self._weight_file = os.path.join(self._embedding_model_path,self._method,self._weight_file)
         
         '''first check whether weight/option exist'''
         

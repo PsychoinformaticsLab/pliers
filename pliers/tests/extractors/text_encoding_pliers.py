@@ -8,7 +8,7 @@ import logging
 from pliers.extractors.text_encoding import DirectSentenceExtractor,\
 embedding_methods,DirectTextExtractorInterface
 
-
+logging.getLogger('smart_open').setLevel(logging.ERROR)
 logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 logger = logging.getLogger(name='text_encoding_logger')
 

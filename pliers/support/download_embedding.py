@@ -15,6 +15,7 @@ _tar_gz_extn = '.tar.gz'
 _current_path = os.path.abspath(os.path.dirname(__file__))
 _embedding_model_path = os.path.join(_current_path,'../../datasets/embeddings/')
 
+logging.getLogger('smart_open').setLevel(logging.ERROR)
 logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',level=logging.INFO)
 logger = logging.getLogger(name='download_embedding_logger')
 
