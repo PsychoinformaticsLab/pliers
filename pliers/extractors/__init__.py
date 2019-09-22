@@ -39,7 +39,6 @@ from .audio import (LibrosaFeatureExtractor,
                     SpectralContrastExtractor,
                     SpectralRolloffExtractor,
                     PolyFeaturesExtractor,
-                    RMSExtractor,
                     ZeroCrossingRateExtractor,
                     ChromaSTFTExtractor,
                     ChromaCQTExtractor,
@@ -47,21 +46,27 @@ from .audio import (LibrosaFeatureExtractor,
                     MelspectrogramExtractor,
                     MFCCExtractor,
                     TonnetzExtractor,
-                    TempogramExtractor)
+                    TempogramExtractor,
+                    RMSExtractor,
+                    SpectralFlatnessExtractor,
+                    OnsetDetectExtractor,
+                    OnsetStrengthMultiExtractor,
+                    TempoExtractor,
+                    BeatTrackExtractor,
+                    HarmonicExtractor,
+                    PercussiveExtractor)
 from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
                     VibranceExtractor, FaceRecognitionFaceEncodingsExtractor,
                     FaceRecognitionFaceLandmarksExtractor,
                     FaceRecognitionFaceLocationsExtractor)
-from .models import TensorFlowInceptionV3Extractor
+from .models import TensorFlowKerasApplicationExtractor
 from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
                    NumUniqueWordsExtractor, PartOfSpeechExtractor,
                    WordEmbeddingExtractor, TextVectorizerExtractor,
-                   VADERSentimentExtractor)
+                   VADERSentimentExtractor, SpaCyExtractor)
 from .text_encoding import (DirectTextExtractorInterface,
                             DirectSentenceExtractor)
-
-
 from .video import (FarnebackOpticalFlowExtractor)
 
 __all__ = [
@@ -79,7 +84,6 @@ __all__ = [
     'SpectralContrastExtractor',
     'SpectralRolloffExtractor',
     'PolyFeaturesExtractor',
-    'RMSExtractor',
     'ZeroCrossingRateExtractor',
     'ChromaSTFTExtractor',
     'ChromaCQTExtractor',
@@ -118,7 +122,7 @@ __all__ = [
     'MicrosoftVisionAPIImageTypeExtractor',
     'MicrosoftVisionAPIColorExtractor',
     'MicrosoftVisionAPIAdultExtractor',
-    'TensorFlowInceptionV3Extractor',
+    'TensorFlowKerasApplicationExtractor',
     'ComplexTextExtractor',
     'DictionaryExtractor',
     'PredefinedDictionaryExtractor',
@@ -130,7 +134,15 @@ __all__ = [
     'TextVectorizerExtractor',
     'VADERSentimentExtractor',
     'merge_results',
+    'SpaCyExtractor',
+    'RMSExtractor',
+    'SpectralFlatnessExtractor'
+    'OnsetDetectExtractor',
+    'OnsetStrengthMultiExtractor',
+    'TempoExtractor',
+    'BeatTrackExtractor',
+    'HarmonicExtractor',
+    'PercussiveExtractor',
     'DirectSentenceExtractor',
     'DirectTextExtractorInterface'
-    
 ]

@@ -1,3 +1,5 @@
+docker/Dockerfile
+
 *.pyc
 *.DS_Store
 *~

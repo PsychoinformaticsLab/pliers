@@ -34,7 +34,7 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
         rate_limit (int): The minimum number of seconds required between
             transform calls on this Transformer.
         model (str): The model to use for speech recognition (e.g., 'en-US',
-            'zh-CN', etc.). Don't include the "_BroadbandModel" suffix. 
+            'zh-CN', etc.). Don't include the "_BroadbandModel" suffix.
     '''
 
     _env_keys = ('IBM_USERNAME', 'IBM_PASSWORD')
@@ -69,15 +69,11 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
             self._send_request(request)
             return True
         except Exception as e:
-            if 'Not Authorized' in str(e):
-                logging.warn(str(e))
-                return False
-            else:
-                raise e
+            logging.warn(str(e))
+            return False
 
     def _convert(self, audio):
         verify_dependencies(['sr'])
-        offset = 0.0 if audio.onset is None else audio.onset
 
         with audio.get_filename() as filename:
             with sr.AudioFile(filename) as source:
@@ -100,7 +96,7 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
                         start = entry[1]
                         end = entry[2]
                         elements.append(TextStim(text=text,
-                                                 onset=offset+start,
+                                                 onset=start,
                                                  duration=end-start,
                                                  order=order))
                         order += 1
@@ -109,7 +105,7 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
                     start = timestamps[0][1]
                     end = timestamps[-1][2]
                     elements.append(TextStim(text=text,
-                                             onset=offset+start,
+                                             onset=start,
                                              duration=end-start,
                                              order=order))
                     order += 1

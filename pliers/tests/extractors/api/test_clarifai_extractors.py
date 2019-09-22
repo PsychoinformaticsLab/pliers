@@ -44,6 +44,20 @@ def test_clarifai_api_extractor():
     ext = ClarifaiAPIImageExtractor(api_key='nogood')
     assert not ext.validate_keys()
 
+    stim = ImageStim(join(IMAGE_DIR, 'obama.jpg'))
+    result = ClarifaiAPIImageExtractor(model='face').transform(stim).to_df()
+    keys_to_check = ['top_row', 'left_col', 'bottom_row', 'right_col']
+    assert [k not in result.keys() for k in keys_to_check]
+    assert all([result[k][0] != np.nan for k in result if k in keys_to_check])
+
+    stim = ImageStim(join(IMAGE_DIR, 'aspect_ratio_fail.jpg'))
+    result = ClarifaiAPIImageExtractor(model='face').transform(stim).to_df()
+    assert [k in result.keys() for k in keys_to_check]
+
+    # check whether a multi-face image has the appropriate amount of rows
+    stim = ImageStim(join(IMAGE_DIR, 'thai_people.jpg'))
+    result = ClarifaiAPIImageExtractor(model='face').transform(stim).to_df()
+    assert len(result) == 4
 
 @pytest.mark.requires_payment
 @pytest.mark.skipif("'CLARIFAI_API_KEY' not in os.environ")
@@ -90,10 +104,24 @@ def test_clarifai_api_video_extractor():
     # This should actually be 6, in principle, because the clip is < 6 seconds,
     # but the Clarifai API is doing weird things. See comment in
     # ClarifaiAPIVideoExtractor._to_df() for further explanation.
-    assert result.shape[1] == 29
     assert result.shape[0] in (6, 7)
+    # Changes sometimes, so use a range
+    assert result.shape[1] > 25 and result.shape[1] < 30
     assert result['toy'][0] > 0.5
     assert result['onset'][1] == 1.0
     assert result['duration'][0] == 1.0
     # because of the behavior described above—handle both cases
     assert np.isclose(result['duration'][5], 0.57) or result['duration'][6] == 0
+
+    ext = ClarifaiAPIVideoExtractor(model='face')
+    result = ext.transform(stim).to_df()
+    keys_to_check = ['top_row', 'left_col', 'bottom_row', 'right_col']
+    assert [k not in result.keys() for k in keys_to_check]
+    assert all([result[k][0] == np.nan for k in result if k in keys_to_check])
+
+    stim = VideoStim(join(VIDEO_DIR, 'obama_speech.mp4'))
+    result = ext.transform(stim).to_df()
+    keys_to_check = ['top_row', 'left_col', 'bottom_row', 'right_col']
+    assert [k in result.keys() for k in keys_to_check]
+    # check if we return more than 1 row per second of face bounding boxes
+    assert len(result) > 6

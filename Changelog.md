@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.3.0 (June 8, 2019)
+This is a major release that adds support for several new feature extraction services/models, as well as a large number of minor bugfixes and improvements.
+
+New features and major improvements/bugfixes:
+* Basic support for Google Natural Language API (#306)
+* Basic support for Google Video Intelligence API (#288)
+* Support for Rev.ai speech-to-text converter (#334)
+* Added several librosa features (#320)
+* Support for pre-trained Keras-based image classifiers (#341, #344)
+* Added .srt output functionality to `ComplexTextStim` (#301)
+* Added a `get_bytestring()` method to `ImageStim` and `VideoStim` classes (#324)
+* Expanded/improved `PredefinedDictionaryExtractor` list (#339, #351)
+* Adds `ImageResizeFilter` (#342)
+* Improved/fixed Dockerfile (#343)
+
+Minor improvements and bug fixes:
+* Fixed bug in `GoogleSpeechAPIConverter` that overwrote all but last speech block (#316)
+* Improved sampling accuracy in FrameSamplingFilter (#301)
+* Fixed bug in RGB information returned by GoogleVisionAPI (#296)
+* Fixed caching of transformations on file paths (#286)
+* Adds support for a few config options in Google Video Intelligence extractors (#337)
+* Various other minor improvements and fixes (#301, #308, #312, #324, #332)
+
 ## 0.2.3 (April 7, 2018)
 This is a minor release that adds several new features and bug fixes:
 * A number improvements to API transformers (custom marker for unit tests; key validation; large job limits; etc.; see #270)

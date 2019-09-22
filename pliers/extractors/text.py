@@ -2,7 +2,7 @@
 Extractors that operate primarily or exclusively on Text stimuli.
 '''
 import sys
-#sys.path.insert(0,'C:\\Users\\jayee\\Documents\\Tal-Pliers\\pliers' )
+
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.exceptions import PliersError
@@ -20,13 +20,12 @@ import logging
 from six import string_types
 
 
-
-
 keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
                                  ['KeyedVectors'])
 sklearn_text = attempt_to_import('sklearn.feature_extraction.text', 'sklearn_text',
                                  ['VectorizerMixin', 'CountVectorizer'])
 spacy = attempt_to_import('spacy')
+
 
 class TextExtractor(Extractor):
 
@@ -116,12 +115,16 @@ class PredefinedDictionaryExtractor(DictionaryExtractor):
             a dictionary (defaults to numpy's NaN).
         case_sensitive (bool): If True, entries in the dictionary are treated
             as case-sensitive (e.g., 'John' and 'john' are different words).
+        force_retrieve (bool): If True, the source dictionary will always be
+            retrieved/download, even if it exists locally. If False, a cached
+            local version will be used if it exists.
     '''
 
     _log_attributes = ('variables', 'missing', 'case_sensitive')
     VERSION = '1.0'
 
-    def __init__(self, variables, missing=np.nan, case_sensitive=True):
+    def __init__(self, variables, missing=np.nan, case_sensitive=True,
+                 force_retrieve=False):
 
         self.case_sensitive = case_sensitive
 
@@ -137,7 +140,7 @@ class PredefinedDictionaryExtractor(DictionaryExtractor):
 
         dicts = []
         for k, v in variables.items():
-            d = fetch_dictionary(k)
+            d = fetch_dictionary(k, force_retrieve=force_retrieve)
             if not case_sensitive:
                 d.index = d.index.str.lower()
             if v:
@@ -145,7 +148,12 @@ class PredefinedDictionaryExtractor(DictionaryExtractor):
             d.columns = ['%s_%s' % (k, c) for c in d.columns]
             dicts.append(d)
 
-        dictionary = pd.concat(dicts, axis=1, join='outer')
+        # Make sure none of the dictionaries have duplicate indices
+        drop_dups = lambda d: d[~d.index.duplicated(keep='first')]
+        dicts = [d if d.index.is_unique else drop_dups(d) for d in dicts]
+
+        dictionary = pd.concat(dicts, axis=1, join='outer', sort=False)
+
         super(PredefinedDictionaryExtractor, self).__init__(
             dictionary, missing=missing)
 

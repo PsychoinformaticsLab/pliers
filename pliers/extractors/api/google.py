@@ -205,7 +205,11 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
         return request_obj.execute(num_retries=self.num_retries)
 
     def _query_operations(self, name):
-        request_obj = self.service.operations().get(name=name)
+        if hasattr(self.service.operations(), 'get'):
+            request_obj = self.service.operations().get(name=name)
+        else:
+            request_obj = self.service.projects().locations().\
+                operations().get(name=name)
         return request_obj.execute(num_retries=self.num_retries)
 
     def _build_request(self, stim):
@@ -317,16 +321,37 @@ class GoogleVideoAPILabelDetectionExtractor(GoogleVideoIntelligenceAPIExtractor)
 
     ''' Extracts image labels using the Google Video Intelligence API '''
 
-    def __init__(self, mode='SHOT_MODE', stationary_camera=False, segments=None,
-                 timeout=90, request_rate=5, discovery_file=None,
-                 api_version='v1', max_results=100, num_retries=3,
-                 rate_limit=None):
+    def __init__(self, mode='SHOT_MODE', stationary_camera=False,
+                 segments=None, timeout=90, request_rate=5, num_retries=3,
+                 discovery_file=None, api_version='v1', max_results=100,
+                 rate_limit=None, frame_confidence_threshold=None,
+                 video_confidence_threshold=None):
+
         config = {
             'labelDetectionConfig': {
                 'labelDetectionMode': mode,
                 'stationaryCamera': stationary_camera
             }
         }
+
+        if frame_confidence_threshold is not None:
+            if mode not in ['FRAME_MODE', 'SHOT_AND_FRAME_MODE']:
+                raise ValueError(
+                    "frame_confidence_threshold can only be specified in"
+                    "FRAME or SHOT_AND_FRAME modes.")
+            else:
+                config['labelDetectionConfig']['frameConfidenceThreshold'] = \
+                    frame_confidence_threshold
+
+        if video_confidence_threshold is not None:
+            if mode not in ['SHOT_MODE', 'SHOT_AND_FRAME_MODE']:
+                raise ValueError(
+                    "video_confidence_threshold can only be specified in"
+                    "SHOT or SHOT_AND_FRAME modes.")
+            else:
+                config['labelDetectionConfig']['videoConfidenceThreshold'] = \
+                    video_confidence_threshold
+
         super(GoogleVideoAPILabelDetectionExtractor,
               self).__init__(features=['LABEL_DETECTION'],
                              segments=segments,
