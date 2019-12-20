@@ -412,7 +412,7 @@ class WordCounterExtractor(TextExtractor):
         '''
 
     def __init__(self, lemmatize=None):
-        super(WordCounter, self).__init__()
+        super(WordCounterExtractor, self).__init__()
         self.lemmatize = lemmatize
 
     def _extract(self, stim):
