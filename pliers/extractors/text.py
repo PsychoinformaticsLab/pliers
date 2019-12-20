@@ -402,3 +402,33 @@ class SpaCyExtractor(TextExtractor):
 
         return ExtractorResult(features_list, stim, self,
                                features=self.features, orders=order_list)
+
+class WordCounterExtractor(TextExtractor):
+
+    ''' Extracts number of times word has occurred within text
+    
+    Args:
+        lemmatize(bool): specifies if words are to be lemmatized before being counted. 
+        '''
+
+    def __init__(self, lemmatize=None):
+        super(WordCounter, self).__init__()
+        self.lemmatize = lemmatize
+
+    def _extract(self, stim):
+        
+        
+        tokens = nltk.word_tokenize(stim.text)
+        
+        if self.lemmatize:
+            lemmatizer=nltk.WordNetLemmatizer()
+            pos_map = dict(zip(['ADJ', 'ADJ_SAT', 'ADV', 'NOUN', 'VERB'], ['a', 's', 'r', 'n', 'v'])) # map tags to wordnet tagset
+            tokens = dict(nltk.pos_tag(tokens, tagset='universal'))
+            tokens = {k: pos_map[v] if v in pos_map else 'n' for k, v in tokens.items()}
+            tokens = [lemmatizer.lemmatize(k, pos=v) for k, v in tokens.items()]
+            
+        word_counter = pd.Series(tokens).groupby(tokens).cumcount()
+        
+        
+        return ExtractorResult(list(word_counter), stim,
+                               self, features=['word_counter'])
