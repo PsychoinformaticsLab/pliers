@@ -24,7 +24,6 @@ keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
 sklearn_text = attempt_to_import('sklearn.feature_extraction.text', 'sklearn_text',
                                  ['VectorizerMixin', 'CountVectorizer'])
 spacy = attempt_to_import('spacy')
-transformers = attempt_to_import('transformers')
 
 class TextExtractor(Extractor):
 
