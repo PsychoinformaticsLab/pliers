@@ -19,13 +19,12 @@ import re
 import logging
 from six import string_types
 
-
 keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
                                  ['KeyedVectors'])
 sklearn_text = attempt_to_import('sklearn.feature_extraction.text', 'sklearn_text',
                                  ['VectorizerMixin', 'CountVectorizer'])
 spacy = attempt_to_import('spacy')
-
+transformers = attempt_to_import('transformers')
 
 class TextExtractor(Extractor):
 
@@ -403,20 +402,22 @@ class SpaCyExtractor(TextExtractor):
         return ExtractorResult(features_list, stim, self,
                                features=self.features, orders=order_list)
 
+
 class WordCounterExtractor(TextExtractor):
 
-    ''' Extracts number of times word has occurred within text
+    ''' Extracts number of times each unique word has occurred within text
     
     Args:
         lemmatize(bool): specifies if words are to be lemmatized before being counted. 
         '''
 
+    _log_attributes = ('lemmatize',)
+    
     def __init__(self, lemmatize=None):
         super(WordCounterExtractor, self).__init__()
         self.lemmatize = lemmatize
 
     def _extract(self, stim):
-        
         
         tokens = nltk.word_tokenize(stim.text)
         
@@ -427,8 +428,7 @@ class WordCounterExtractor(TextExtractor):
             tokens = {k: pos_map[v] if v in pos_map else 'n' for k, v in tokens.items()}
             tokens = [lemmatizer.lemmatize(k, pos=v) for k, v in tokens.items()]
             
-        word_counter = pd.Series(tokens).groupby(tokens).cumcount()
-        
+        word_counter = pd.Series(tokens).value_counts()
         
         return ExtractorResult(list(word_counter), stim,
-                               self, features=['word_counter'])
+                               self, features=list(word_counter.index)) #still in progress
