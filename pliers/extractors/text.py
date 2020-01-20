@@ -428,9 +428,9 @@ class WordCounterExtractor(BatchTransformerMixin, TextExtractor):
             lemmatizer=nltk.WordNetLemmatizer()
             pos_map = dict(zip(['ADJ', 'ADJ_SAT', 'ADV', 'NOUN', 'VERB'], 
                                ['a', 's', 'r', 'n', 'v'])) # map tags to wordnet tagset
-            tokens = dict(nltk.pos_tag(tokens, tagset='universal'))
-            tokens = {k: pos_map[v] if v in pos_map else 'n' for k, v in tokens.items()}
-            tokens = [lemmatizer.lemmatize(k, pos=v) for k, v in tokens.items()]
+            pos_tagged = dict(nltk.pos_tag(tokens, tagset='universal'))
+            pos_tagged = {t: pos_map[tag] if tag in pos_map else 'n' for t,tag in pos_tagged.items()}
+            tokens = [lemmatizer.lemmatize(t, pos=pos_tagged[t]) for t in tokens]
         
         word_counter = pd.Series(tokens).groupby(tokens).cumcount() + 1
         
