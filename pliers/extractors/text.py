@@ -417,7 +417,7 @@ class PretrainedBertEncodingExtractor(TextExtractor):
         embedding_level(str): A string specifying whether embeddings at word, sentence or sequence level
             are to be returned. Must be one of 'word', 'sentence', 'sequence'.
         pooling_method(str): Optional argument, relevant for sentence- or sequence-level embeddings.
-            If None, [CLS] or [SEP] tokens are taken as sequence or sentence-level embeddings. If set to 'average',
+            If None, [CLS] or [SEP] tokens are used as sequence or sentence-level embeddings. If set to 'average',
             sequence/sentence embeddings are calculated by averaging over word-level embeddings. Defaults to None.
     '''    
     
@@ -425,75 +425,72 @@ class PretrainedBertEncodingExtractor(TextExtractor):
     
     def __init__(self, 
                  pretrained_model_or_path='bert-base-uncased',
-                 framework='torch',
+                 tokenizer='bert-base-uncased',
+                 framework='pt',
                  embedding_level='word', 
                  pooling_method=None,
-                **model_kwargs): #any reason to include *model_args? # add option to run on GPU?
+                **model_kwargs): # to do: split into distinct kwargs dictionaries
         
-        supported_frameworks = ['torch', 'tensorflow'] 
-        if framework not in supported_frameworks: # Q: More compact?
-            raise(ValueError("Invalid framework; must be one of 'torch' or 'tensorflow'"))
-        attempt_to_import(framework)
-        verify_dependencies(['transformers', framework])
+        if framework not in ['pt', 'tf']: 
+            raise(ValueError("Invalid framework; must be one of 'pt' (pytorch) or 'tf' (tensorflow)"))
         
         self.pretrained_model = pretrained_model_or_path
         self.framework = framework
         self.embedding_level = embedding_level # To dos: implement sentence level embeddings?
-        self.pooling_method = pooling_method # Q: can we pass args to transform call?
+        self.pooling_method = pooling_method
         self.model_kwargs = model_kwargs # Q 
         
-        f_dict = dict(zip(supported_frameworks, ['BertModel', 'TFBertModel']))
+        f_dict = {'pt':'BertModel', 'tf': 'TFBertModel'}
         self.tokenizer = transformers.BertTokenizer.from_pretrained(pretrained_model_or_path, **model_kwargs) # Q: set up here or in extract?
         self.model = getattr(transformers, f_dict[self.framework]).from_pretrained(pretrained_model_or_path, **model_kwargs)
         
         super(PretrainedBertEncodingExtractor, self).__init__()
         
-    def _extract(self, stim):
+    def _extract(self, stim): # 
         
         tok_str = self.tokenizer.tokenize(stim.text)
-        tok_id = self.tokenizer.encode(tok_str)
-        spec_id = [getattr(self.tokenizer, t) for t in ['pad_token_id', 'sep_token_id', 'cls_token_id']] # Others?
-        non_spec_idx = [idx for idx in range(len(tok_id)) if tok_id[idx] not in spec_id]
+        tok_id = self.tokenizer.encode(tok_str, return_tensors=self.framework)
         
-        if self.framework == 'torch':
-            torch = __import__('torch')
-            tensor_input = torch.tensor([tok_id])
-        else:
-            tf = __import__('tensorflow')
-            print('TBD') # To dos: tensorflow conversion 
+        spec_id = [getattr(self.tokenizer, t) for t in ['pad_token_id', 'sep_token_id', 'cls_token_id']] # get special dictionary ids
+        non_spec_idx = [idx for idx in range(tok_id.shape[1]) if tok_id[:,idx] not in spec_id] # indices of non-special tokens within input seq
        
-        output = self.model(tensor_input)#, self.model_kwargs, look up "no_grads" 
+        output = self.model(tok_id)
         
         if self.embedding_level == 'word':
             out_tokens = tok_str
-            output=output[0][:,non_spec_idx,:].squeeze().detach().numpy()
+            output = output[0][:,non_spec_idx,:]
+            if self.framework == 'pt':
+                output = output.detach()
+            output = output.numpy().squeeze()
             
         elif self.embedding_level == 'sequence':
             out_tokens = [stim.text]
-            if self.pooling_method == 'average':
-                output=torch.mean(output[0][:,non_spec_idx,:], dim=1, keepdims=True)
-            else:
-                output=output[1].detach().numpy()
             
-        #IN PROGRESS
-        #elif self.embedding_level == 'sentence': # To dos: figure out sentence indices
-        #    if self.pooling_method == 'average':
-        #        print('TBD') # do stuff
-        #    else:
-        #        print('TBD') # only subset '[SEP]' tokens 
+            if self.pooling_method == 'average':
+                output = output[0][:,non_spec_idx,:]
+                if self.framework == 'pt':
+                    output =  output.detach()
+                output = np.mean(output.numpy(), axis=1, keepdims=True)
+            else:
+                output = output[1]
+                if self.framework == 'pt':
+                    output = output.detach()
+            
+        # To do: add sentence-level encoding
         
         elif self.embedding_level == 'all':
             out_tokens = self.tokenizer.convert_ids_to_tokens(tok_id)
-            output = output[0].squeeze().detach().numpy()
+            output = output[0]
+            
+            if self.framework == 'pt':
+                output = output.detach()
+            output = output.numpy().squeeze()
         
         assert output.shape[0] == len(out_tokens)
-        features = ['%s%d_' % (self.pretrained_model, i) for i in range(output.shape[1])]
-        results = []
         
-        for t in range(len(out_tokens)):
-            results.append(ExtractorResult([output[t]], stim, self, features=features))
-             
-        return results
+        return ExtractorResult([output, out_tokens], 
+                               stim, self, features=['encoding', 'token'])
+
                    
 # Missing:
 # Keep word info
