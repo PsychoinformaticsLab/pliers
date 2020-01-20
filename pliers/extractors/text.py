@@ -416,7 +416,8 @@ class WordCounterExtractor(BatchTransformerMixin, TextExtractor):
     def __init__(self, lemmatize=None):
         super(WordCounterExtractor, self).__init__()
         self.lemmatize = lemmatize
-
+    
+    @requires_nltk_corpus
     def _extract(self, stims):
         
         tokens = [s.text for s in stims]
