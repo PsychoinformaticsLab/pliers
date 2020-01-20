@@ -408,15 +408,17 @@ class WordCounterExtractor(BatchTransformerMixin, TextExtractor):
     
     Args:
         lemmatize(bool): specifies if words are to be lemmatized before being counted. 
+        log_scale(bool): specifies if count values are to be returned in log scale (defaults to False)
         '''
 
-    _log_attributes = ('lemmatize',)
+    _log_attributes = ('lemmatize','log_scale',)
     _batch_size = sys.maxsize
     
-    def __init__(self, lemmatize=None):
+    def __init__(self, lemmatize=None, log_scale=False):
         super(WordCounterExtractor, self).__init__()
         self.lemmatize = lemmatize
-    
+        self.log_scale = log_scale
+        
     @requires_nltk_corpus
     def _extract(self, stims):
         
@@ -430,7 +432,10 @@ class WordCounterExtractor(BatchTransformerMixin, TextExtractor):
             tokens = {k: pos_map[v] if v in pos_map else 'n' for k, v in tokens.items()}
             tokens = [lemmatizer.lemmatize(k, pos=v) for k, v in tokens.items()]
         
-        word_counter = pd.Series(tokens).groupby(tokens).cumcount()
+        word_counter = pd.Series(tokens).groupby(tokens).cumcount() + 1
+        
+        if self.log_scale:
+            word_counter = np.log(word_counter)
         
         results = []
         for i, count in enumerate(word_counter):
