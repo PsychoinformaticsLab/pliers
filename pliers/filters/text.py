@@ -48,7 +48,7 @@ class WordStemmingFilter(TextFilter):
         'wordnet': 'WordNetLemmatizer'
     }
 
-    _log_attributes = ('stemmer', 'tokenize')
+    _log_attributes = ('stemmer', 'tokenize', 'case_insensitive')
 
     def __init__(self, stemmer='porter', tokenize=True, case_insensitive=True, *args, **kwargs):
 
