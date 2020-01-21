@@ -22,7 +22,7 @@ class TextFilter(Filter):
 
 class WordStemmingFilter(TextFilter):
 
-    ''' Nltk-based word stemming Filter.
+    ''' Nltk-based word stemming and lemmatization Filter.
 
     Args:
         stemmer (str, Stemmer): If a string, must be the name of one of the
