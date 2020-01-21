@@ -400,46 +400,5 @@ class SpaCyExtractor(TextExtractor):
 
         return ExtractorResult(features_list, stim, self,
                                features=self.features, orders=order_list)
-
-
-class WordCounterExtractor(BatchTransformerMixin, TextExtractor):
-
-    ''' Extracts number of times each unique word has occurred within text
     
-    Args:
-        lemmatize(bool): specifies if words are to be lemmatized before being counted. 
-        log_scale(bool): specifies if count values are to be returned in log scale (defaults to False)
-        '''
-
-    _log_attributes = ('lemmatize','log_scale',)
-    _batch_size = sys.maxsize
     
-    def __init__(self, lemmatize=None, log_scale=False):
-        super(WordCounterExtractor, self).__init__()
-        self.lemmatize = lemmatize
-        self.log_scale = log_scale
-        self.features = ['log_word_count'] if self.log_scale else ['word_count']
-        
-    @requires_nltk_corpus
-    def _extract(self, stims):
-        
-        tokens = [s.text.lower() for s in stims]
-        
-        if self.lemmatize:
-            lemmatizer=nltk.WordNetLemmatizer()
-            pos_map = dict(zip(['ADJ', 'ADJ_SAT', 'ADV', 'NOUN', 'VERB'], 
-                               ['a', 's', 'r', 'n', 'v'])) # map tags to wordnet tagset
-            pos_tagged = dict(nltk.pos_tag(tokens, tagset='universal'))
-            pos_tagged = {t: pos_map[tag] if tag in pos_map else 'n' for t,tag in pos_tagged.items()}
-            tokens = [lemmatizer.lemmatize(t, pos=pos_tagged[t]) for t in tokens]
-        
-        word_counter = pd.Series(tokens).groupby(tokens).cumcount() + 1
-        
-        if self.log_scale:
-            word_counter = np.log(word_counter)
-        
-        results = []
-        for i, count in enumerate(word_counter):
-            results.append(ExtractorResult([count], stims[i], self, features=self.features))
-            
-        return results
