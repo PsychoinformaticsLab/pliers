@@ -26,14 +26,16 @@ class WordStemmingFilter(TextFilter):
 
     Args:
         stemmer (str, Stemmer): If a string, must be the name of one of the
-            stemming modules available in nltk.stem. Valid values are
-            'porter', 'snowball', 'isri', 'lancaster', 'regexp', 'wordet',
-            or 'rslp'. Alternatively, an initialized nltk StemmerI instance
+            stemming and lemmatization modules available in nltk.stem. 
+            Valid values are 'porter', 'snowball', 'isri', 'lancaster', 'regexp', 
+            'wordnet', or 'rslp'. Alternatively, an initialized nltk StemmerI instance
             can be passed.
-        tokenize (bool): if True, apply the stemmer to each token in the
-            TextStim, otherwise treat the whole TextStim as one token to stem.
+        tokenize (bool): if True, apply the stemmer/lemmatizer to each token in the
+            TextStim, otherwise treat the whole TextStim as one token to stem/lemmatize.
+        case_insensitive(bool): if True, input is lower-cased before stemming
+            or lemmatizing.
         args, kwargs: Optional positional and keyword args passed onto the
-            nltk stemmer.
+            nltk stemmer/lemmatizer.
     '''
 
     stemmers = {
@@ -42,12 +44,13 @@ class WordStemmingFilter(TextFilter):
         'lancaster': 'LancasterStemmer',
         'isri': 'ISRIStemmer',
         'regexp': 'RegexpStemmer',
-        'rslp': 'RSLPStemmer'
+        'rslp': 'RSLPStemmer',
+        'wordnet': 'WordNetLemmatizer'
     }
 
     _log_attributes = ('stemmer', 'tokenize')
 
-    def __init__(self, stemmer='porter', tokenize=True, *args, **kwargs):
+    def __init__(self, stemmer='porter', tokenize=True, case_insensitive=True, *args, **kwargs):
 
         if isinstance(stemmer, string_types):
             if stemmer not in self.stemmers:
@@ -60,14 +63,40 @@ class WordStemmingFilter(TextFilter):
                              "instance of class StemmerI.")
         self.stemmer = stemmer
         self.tokenize = tokenize
+        self.case_insensitive = case_insensitive
         super(WordStemmingFilter, self).__init__()
 
     def _filter(self, stim):
+    
+        pos_map = {
+            'ADJ':'a',
+            'ADJ_SAT': 's',
+            'ADV': 'r',
+            'NOUN': 'n',
+            'VERB': 'v'
+        }
+    
+        def pos_wordnet(txt):
+            pos_tagged = dict(nltk.pos_tag(txt, tagset='universal'))
+            pos_tagged = {tok: pos_map[tag] if tag in pos_map else 'n' for tok,tag in pos_tagged.items()}
+            return pos_tagged
+        
         if self.tokenize:
-            tokens = stim.text.split()
-            stemmed = ' '.join([self.stemmer.stem(tok) for tok in tokens])
+            tokens = [s.lower() for s in stim.text.split()] if self.case_insensitive else stim.text.split()
+            if not isinstance(self.stemmer, stem.WordNetLemmatizer):
+                stemmed = ' '.join([self.stemmer.stem(tok) for tok in tokens])
+            else:
+                pos_tagged = pos_wordnet(tokens)
+                stemmed = ' '.join([self.stemmer.lemmatize(tok, pos=pos_tagged[tok]) for tok in tokens])
+                
         else:
-            stemmed = self.stemmer.stem(stim.text)
+            text = stim.text.lower() if self.case_insensitive else stim.text
+            if not isinstance(self.stemmer, stem.WordNetLemmatizer):
+                stemmed = self.stemmer.stem(text)
+            else:
+                pos_tagged = pos_wordnet([text])
+                stemmed = self.stemmer.lemmatize(text, pos_tagged[text])
+                
         return TextStim(stim.filename, stemmed)
 
 
