@@ -418,11 +418,12 @@ class WordCounterExtractor(BatchTransformerMixin, TextExtractor):
         super(WordCounterExtractor, self).__init__()
         self.lemmatize = lemmatize
         self.log_scale = log_scale
+        self.features = ['log_word_count'] if self.log_scale else ['word_count']
         
     @requires_nltk_corpus
     def _extract(self, stims):
         
-        tokens = [s.text for s in stims]
+        tokens = [s.text.lower() for s in stims]
         
         if self.lemmatize:
             lemmatizer=nltk.WordNetLemmatizer()
@@ -439,6 +440,6 @@ class WordCounterExtractor(BatchTransformerMixin, TextExtractor):
         
         results = []
         for i, count in enumerate(word_counter):
-            results.append(ExtractorResult([count], stims[i], self,
-                                features=['word_counter']))
+            results.append(ExtractorResult([count], stims[i], self, features=self.features))
+            
         return results
