@@ -435,13 +435,14 @@ class PretrainedBertEncodingExtractor(TextExtractor):
             raise(ValueError("Invalid framework; must be one of 'pt' (pytorch) or 'tf' (tensorflow)"))
         
         self.pretrained_model = pretrained_model_or_path
+        self.tokenizer_type = tokenizer # implement
         self.framework = framework
         self.embedding_level = embedding_level # To dos: implement sentence level embeddings?
         self.pooling_method = pooling_method
         self.model_kwargs = model_kwargs # Q 
         
         f_dict = {'pt':'BertModel', 'tf': 'TFBertModel'}
-        self.tokenizer = transformers.BertTokenizer.from_pretrained(pretrained_model_or_path, **model_kwargs) # Q: set up here or in extract?
+        self.tokenizer = transformers.BertTokenizer.from_pretrained(pretrained_model_or_path, **model_kwargs)
         self.model = getattr(transformers, f_dict[self.framework]).from_pretrained(pretrained_model_or_path, **model_kwargs)
         
         super(PretrainedBertEncodingExtractor, self).__init__()
@@ -451,8 +452,9 @@ class PretrainedBertEncodingExtractor(TextExtractor):
         tok_str = self.tokenizer.tokenize(stim.text)
         tok_id = self.tokenizer.encode(tok_str, return_tensors=self.framework)
         
-        spec_id = [getattr(self.tokenizer, t) for t in ['pad_token_id', 'sep_token_id', 'cls_token_id']] # get special dictionary ids
-        non_spec_idx = [idx for idx in range(tok_id.shape[1]) if tok_id[:,idx] not in spec_id] # indices of non-special tokens within input seq
+        spec_id = [getattr(self.tokenizer, t) 
+                   for t in ['pad_token_id', 'sep_token_id', 'cls_token_id']] 
+        non_spec_idx = [idx for idx in range(tok_id.shape[1]) if tok_id[:,idx] not in spec_id]
        
         output = self.model(tok_id)
         
@@ -486,19 +488,22 @@ class PretrainedBertEncodingExtractor(TextExtractor):
                 output = output.detach()
             output = output.numpy().squeeze()
         
-        assert output.shape[0] == len(out_tokens)
+        assert output.shape[0] == len(out_tokens) # move to test
         
-        return ExtractorResult([output, out_tokens], 
-                               stim, self, features=['encoding', 'token'])
+        return ExtractorResult([output.tolist(), 
+                                out_tokens, stim.text, 
+                                self.pretrained_model, self.tokenizer_type], 
+                               stim, self, features=['encoding', 'token', 'sequence', 'model', 'tokenizer'])
 
+    
+    def _to_df(self, result):
+        return pd.DataFrame(dict(zip(result.features, result._data)))
                    
 # Missing:
-# Keep word info
-# Keep position in sequence index
-# Keep sequence index
-# Tensorflow
-# Handle onset & duration info
+# Add position in sequence to result df
+# Add sentence index to result df (see Bert paper)
+# Add is_special_token to result df
+# Make sure we handle onset & duration info
 # Paste and parse if input is a list of words
-# no conflict?
 # take string as input?
 # tokenizers as filters?
