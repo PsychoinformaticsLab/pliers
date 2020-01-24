@@ -259,3 +259,68 @@ def test_spacy_doc_extractor():
     assert result['is_parsed'][3]
     assert result['is_tagged'][3]
     assert result['is_sentenced'][3]
+    
+def test_word_counter_extractor():
+    
+    stim_txt = ComplexTextStim(text = 'This is my first test. The extractor counts how many '
+                               'times this or that word occurs. '
+                               'Counting words is so exciting, and tests!, they are great.')
+    
+    stim_from_file = ComplexTextStim(filename = join(TEXT_DIR, 'simple_text_with_repetitions.txt'))
+    stim_with_onsets = ComplexTextStim(filename = join(TEXT_DIR, 'complex_stim_with_repetitions.txt'))
+    
+    ext = WordCounterExtractor()
+    result_stim_txt = merge_results(ext.transform(stim_simple))    
+    result_stim_from_file = merge_results(ext.transform(stim_from_file))
+    result_stim_with_onsets = merge_results(ext.transform(stim_with_onsets))
+    
+    assert result_stim_txt.shape[0] == 25 # exp nr rows
+    assert all(result_stim_txt['word_count'] >= 1) #test values
+    assert result_stim_txt['word_count'][11] == 2 #upper case 
+    assert result_stim_txt['word_count'][22] == 1 #test non-lemmatized
+      
+    assert result_stim_from_file.shape[0] == 45
+    assert all(result_stim_from_file['word_count'] >= 1)
+    assert result_stim_from_file['word_count'][15] == 2
+    assert result_stim_from_file['word_count'][44] == 3
+    
+    assert result_stim_with_onsets.shape[0] == 8
+    assert result_stim_with_onsets['onset'][2] == 0.8
+    assert result_stim_with_onsets['duration'][2] == 0.1
+    assert result_stim_with_onsets['word_count'][2] == 2
+    assert result_stim_with_onsets['word_count'][5] == 2
+    assert result_stim_with_onsets['word_count'][7] == 1
+    
+    ext2 = WordCounterExtractor(lemmatize=True)
+    result_stim_txt = merge_results(ext2.transform(stim_simple))
+    result_stim_from_file = merge_results(ext2.transform(stim_from_file))
+    result_stim_with_onsets = merge_results(ext2.transform(stim_with_onsets))
+    
+    assert result_stim_txt_df.shape[0] == 25
+    assert all(result_stim_txt_df['word_count'] >= 1)
+    assert result_stim_txt_df['word_count'][11] == 2
+    assert result_stim_txt_df['word_count'][22] == 2
+
+    assert result_stim_from_file.shape[0] == 45
+    assert all(result_stim_from_file['word_count'] >= 1)
+    assert result_stim_from_file['word_count'][15] == 2
+    assert result_stim_from_file['word_count'][44] == 4
+    assert result_stim_from_file['word_count'][13] == 2 # test lemmatized verb
+    
+    assert result_stim_with_onsets['word_count'][5] == 3
+    assert result_stim_with_onsets['word_count'][7] == 2
+    
+    ext3 = WordCounterExtractor(log_scale=True)
+    result_stim_txt = merge_results(ext3.transform(stim_simple))
+    result_stim_from_file = merge_results(ext3.transform(stim_from_file))    
+    result_stim_with_onsets = merge_results(ext3.transform(stim_with_onsets))  
+    
+    assert result_stim_txt_df.shape[0] == 25
+    assert all(result_stim_txt_df['log_word_count'] >= 0)
+    assert result_stim_txt_df['log_word_count'][11] == np.log(2)
+    assert result_stim_txt_df['log_word_count'][22] = np.log(1)
+
+    assert result_stim_from_file.shape[0] == 45
+    assert all(result_stim_from_file['log_word_count'] >= 0)
+    assert result_stim_from_file['log_word_count'][15] == np.log(2)
+    assert result_stim_from_file['log_word_count'][44] == np.log(3)
