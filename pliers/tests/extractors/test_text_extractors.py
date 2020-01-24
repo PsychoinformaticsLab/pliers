@@ -296,31 +296,18 @@ def test_word_counter_extractor():
     result_stim_from_file = merge_results(ext2.transform(stim_from_file))
     result_stim_with_onsets = merge_results(ext2.transform(stim_with_onsets))
     
-    assert result_stim_txt_df.shape[0] == 25
-    assert all(result_stim_txt_df['word_count'] >= 1)
-    assert result_stim_txt_df['word_count'][11] == 2
-    assert result_stim_txt_df['word_count'][22] == 2
-
-    assert result_stim_from_file.shape[0] == 45
-    assert all(result_stim_from_file['word_count'] >= 1)
+    assert result_stim_txt.shape[0] == 25
+    assert result_stim_txt['word_count'][11] == 2
+    assert result_stim_txt['word_count'][22] == 2
     assert result_stim_from_file['word_count'][15] == 2
     assert result_stim_from_file['word_count'][44] == 4
-    assert result_stim_from_file['word_count'][13] == 2 # test lemmatized verb
-    
+    assert result_stim_from_file['word_count'][13] == 2   
     assert result_stim_with_onsets['word_count'][5] == 3
     assert result_stim_with_onsets['word_count'][7] == 2
     
     ext3 = WordCounterExtractor(log_scale=True)
     result_stim_txt = merge_results(ext3.transform(stim_simple))
-    result_stim_from_file = merge_results(ext3.transform(stim_from_file))    
-    result_stim_with_onsets = merge_results(ext3.transform(stim_with_onsets))  
     
-    assert result_stim_txt_df.shape[0] == 25
-    assert all(result_stim_txt_df['log_word_count'] >= 0)
-    assert result_stim_txt_df['log_word_count'][11] == np.log(2)
-    assert result_stim_txt_df['log_word_count'][22] = np.log(1)
-
-    assert result_stim_from_file.shape[0] == 45
-    assert all(result_stim_from_file['log_word_count'] >= 0)
-    assert result_stim_from_file['log_word_count'][15] == np.log(2)
-    assert result_stim_from_file['log_word_count'][44] == np.log(3)
+    assert all(result_stim_txt['log_word_count'] >= 0)
+    assert result_stim_txt['log_word_count'][11] == np.log(2)
+    assert result_stim_txt['log_word_count'][22] = np.log(1)
