@@ -1,2 +1,2 @@
-This is a text where certain words occur again and again. Sometimes they are lowercase, sometimes they are uppercase. There are also words that may look different, but they come from the same lemma. Take a word like "text", and its plural "texts".
+This is a text where certain words occur again and again. Sometimes they are lowercase, sometimes they are uppercase. There are also words that may look different, but they come from the same lemma. Take a word like text, and its plural texts.
 Oh, words!

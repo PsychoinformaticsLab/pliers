@@ -415,10 +415,11 @@ class WordCounterExtractor(BatchTransformerMixin, TextExtractor):
     _batch_size = sys.maxsize
     
     def __init__(self, lemmatize=None, log_scale=False):
-        super(WordCounterExtractor, self).__init__()
+        
         self.lemmatize = lemmatize
         self.log_scale = log_scale
         self.features = ['log_word_count'] if self.log_scale else ['word_count']
+        super(WordCounterExtractor, self).__init__()
         
     @requires_nltk_corpus
     def _extract(self, stims):
