@@ -13,6 +13,7 @@ from pliers.utils import attempt_to_import, verify_dependencies
 import numpy as np
 import pandas as pd
 import nltk
+import itertools
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import os
 import re
@@ -381,9 +382,9 @@ class SpaCyExtractor(TextExtractor):
                                  'sentiment', 'is_ascii', 'is_digit']
 
         elif self.extractor_type == 'doc':
-             elements = [elem.as_doc() for elem in list(elements.sents)]
-             if self.features is None:
-                 self.features = ['text', 'is_tagged', 'is_parsed',
+            elements = [elem.as_doc() for elem in list(elements.sents)]
+            if self.features is None:
+                self.features = ['text', 'is_tagged', 'is_parsed',
                                   'is_sentenced', 'sentiment']
 
         else:
@@ -402,21 +403,22 @@ class SpaCyExtractor(TextExtractor):
         return ExtractorResult(features_list, stim, self,
                                features=self.features, orders=order_list)
 
-
-class PretrainedBertEncodingExtractor(TextExtractor):
     
-    ''' Uses transformers library to encode inputs in hidden states using pre-trained BERT models.
-    Returns embeddings for each token in the sequence, or 
-    Can optionally be set to returning sequence representation.
+    
+class PretrainedBertEncodingExtractor(ComplexTextExtractor):
+    
+    ''' Uses transformers library to extract contextualize encodings for words or text sequences using pre-trained BERT models.
     
     Args:
-        bert_model(str): A string providing information on which BERT model to use. Can be one of ** ADD INFO **,
+        pretrained_model_or_path(str): A string providing information on which BERT model to use. Can be one of ** ADD INFO **,
             or path to custom model. Check ** ADD INFO ** for documentation and details.
+        tokenizer(str): Type of tokenization used in the tokenization step. 
+            Can be None, in which case words not explictly encoded in the vocabulary are treated as unknowns.
         framework (str): The name of the deep learning framework to use. Must be one of 
-            'torch' or 'tensorflow'. Defaults to 'torch'.
+            'pt' (PyTorch) or 'tensorflow'. Defaults to 'pt'.
         embedding_level(str): A string specifying whether embeddings at word, sentence or sequence level
-            are to be returned. Must be one of 'word', 'sentence', 'sequence'.
-        pooling_method(str): Optional argument, relevant for sentence- or sequence-level embeddings.
+            are to be returned. Must be one of 'token', 'sequence'.
+        pooling(str): Optional argument, relevant for sentence- or sequence-level embeddings.
             If None, [CLS] or [SEP] tokens are used as sequence or sentence-level embeddings. If set to 'average',
             sequence/sentence embeddings are calculated by averaging over word-level embeddings. Defaults to None.
     '''    
@@ -427,83 +429,73 @@ class PretrainedBertEncodingExtractor(TextExtractor):
                  pretrained_model_or_path='bert-base-uncased',
                  tokenizer='bert-base-uncased',
                  framework='pt',
-                 embedding_level='word', 
-                 pooling_method=None,
+                 embedding_level='token', 
+                 pooling=None,
                 **model_kwargs): # to do: split into distinct kwargs dictionaries
         
         if framework not in ['pt', 'tf']: 
             raise(ValueError("Invalid framework; must be one of 'pt' (pytorch) or 'tf' (tensorflow)"))
         
+        # Arguments to pass
+        f_dict = {'pt':'BertModel', 'tf': 'TFBertModel'}
         self.pretrained_model = pretrained_model_or_path
-        self.tokenizer_type = tokenizer # implement
+        self.tokenizer_type = tokenizer
         self.framework = framework
         self.embedding_level = embedding_level # To dos: implement sentence level embeddings?
-        self.pooling_method = pooling_method
-        self.model_kwargs = model_kwargs # Q 
+        self.pooling = pooling
+        self.model_kwargs = model_kwargs
         
-        f_dict = {'pt':'BertModel', 'tf': 'TFBertModel'}
-        self.tokenizer = transformers.BertTokenizer.from_pretrained(pretrained_model_or_path, **model_kwargs)
+        self.tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, **model_kwargs)
         self.model = getattr(transformers, f_dict[self.framework]).from_pretrained(pretrained_model_or_path, **model_kwargs)
         
         super(PretrainedBertEncodingExtractor, self).__init__()
         
-    def _extract(self, stim): # 
+    def _extract(self, stims): 
         
-        tok_str = self.tokenizer.tokenize(stim.text)
-        tok_id = self.tokenizer.encode(tok_str, return_tensors=self.framework)
-        
-        spec_id = [getattr(self.tokenizer, t) 
-                   for t in ['pad_token_id', 'sep_token_id', 'cls_token_id']] 
-        non_spec_idx = [idx for idx in range(tok_id.shape[1]) if tok_id[:,idx] not in spec_id]
-       
-        output = self.model(tok_id)
-        
-        if self.embedding_level == 'word':
-            out_tokens = tok_str
-            output = output[0][:,non_spec_idx,:]
-            if self.framework == 'pt':
-                output = output.detach()
-            output = output.numpy().squeeze()
+        tokens = [s.text for s in stims]
+        string_tokens = [self.tokenizer.tokenize(t) for t in tokens]
+        tensor_tokens = self.tokenizer.encode(list(itertools.chain(*string_tokens)), 
+                                              return_tensors = 'pt')
+        word_tokens = list(itertools.chain.from_iterable(itertools.repeat(i, len(string_tokens[i])) 
+                                                         for i in range(len(tokens))))
+   
+        output = self.model(tensor_tokens)
+    
+        token_encodings = output[0]
+        sequence_encoding = output[1]
+    
+        if self.embedding_level == 'token':
+            output_tokens = string_tokens
+            encodings = token_encodings[:,1:-1,:].detach().numpy().squeeze() if self.framework == 'pt' else token_encodings[:,1:-1,:].numpy().squeeze()
             
         elif self.embedding_level == 'sequence':
-            out_tokens = [stim.text]
-            
-            if self.pooling_method == 'average':
-                output = output[0][:,non_spec_idx,:]
-                if self.framework == 'pt':
-                    output =  output.detach()
-                output = np.mean(output.numpy(), axis=1, keepdims=True)
+            output_tokens = [' '.join(tokens)]
+            word_tokens = output_tokens
+            if self.pooling == 'average':
+                encodings = token_encodings[:,1:-1,:].detach().numpy() if self.framework == 'pt' else token_encodings[:,1:-1,:].numpy()
+                encodings = np.mean(encodings, axis=1, keepdims=True)
             else:
-                output = output[1]
-                if self.framework == 'pt':
-                    output = output.detach()
-            
-        # To do: add sentence-level encoding
+                encodings = sequence_encodings.detach() if self.framework == 'pt' else sequence_encodings
         
-        elif self.embedding_level == 'all':
-            out_tokens = self.tokenizer.convert_ids_to_tokens(tok_id)
-            output = output[0]
-            
-            if self.framework == 'pt':
-                output = output.detach()
-            output = output.numpy().squeeze()
-        
-        assert output.shape[0] == len(out_tokens) # move to test
-        
-        return ExtractorResult([output.tolist(), 
-                                out_tokens, stim.text, 
-                                self.pretrained_model, self.tokenizer_type], 
-                               stim, self, features=['encoding', 'token', 'sequence', 'model', 'tokenizer'])
+        return ExtractorResult([encodings.tolist(), 
+                                output_tokens, 
+                                word_tokens, 
+                                [' '.join(tokens)] * encodings.shape[0], 
+                                [self.pretrained_model] * encodings.shape[0], 
+                                [self.tokenizer_type] * encodings.shape[0]], 
+                                stims, self, features=['encoding', 'token', 'word_level_token', 
+                                                       'sequence', 'model', 'tokenizer'])
 
     
     def _to_df(self, result):
         return pd.DataFrame(dict(zip(result.features, result._data)))
                    
 # Missing:
+# Try with file
+# Avoid explicit length adaptation
 # Add position in sequence to result df
+# batch layer
 # Add sentence index to result df (see Bert paper)
-# Add is_special_token to result df
-# Make sure we handle onset & duration info
-# Paste and parse if input is a list of words
-# take string as input?
+# Add option to preserve special tokens
+# Check support for both TextStim and ComplexTextStim
 # tokenizers as filters?
