@@ -441,7 +441,7 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         self.pretrained_model = pretrained_model_or_path
         self.tokenizer_type = tokenizer
         self.framework = framework
-        self.embedding_level = embedding_level # To dos: implement sentence level embeddings?
+        self.embedding_level = embedding_level
         self.pooling = pooling
         self.model_kwargs = model_kwargs
         
@@ -452,50 +452,63 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         
     def _extract(self, stims): 
         
-        tokens = [s.text for s in stims]
-        string_tokens = [self.tokenizer.tokenize(t) for t in tokens]
-        tensor_tokens = self.tokenizer.encode(list(itertools.chain(*string_tokens)), 
-                                              return_tensors = 'pt')
-        word_tokens = list(itertools.chain.from_iterable(itertools.repeat(i, len(string_tokens[i])) 
-                                                         for i in range(len(tokens))))
-   
+        text, durations, onsets = map(list, zip(*((s.text, s.duration, s.onset) for s in stims)))
+        string_tokens = [self.tokenizer.tokenize(t) for t in text]
+        string_tokens_flat = list(itertools.chain(*string_tokens)) 
+        
+        def broadcast_vals(wvlist):
+            wvlist = list(itertools.chain.from_iterable([itertools.repeat(wvlist[i],len(string_tokens[i])) 
+                                                         for i in range(len(wvlist))]))
+            return wvlist
+        
+        w_txt, w_ons, w_dur = map(broadcast_vals, [text, onsets, durations])
+
+        tensor_tokens = self.tokenizer.encode(string_tokens_flat, return_tensors = self.framework)
         output = self.model(tensor_tokens)
     
-        token_encodings = output[0]
-        sequence_encoding = output[1]
-    
         if self.embedding_level == 'token':
-            output_tokens = string_tokens
-            encodings = token_encodings[:,1:-1,:].detach().numpy().squeeze() if self.framework == 'pt' else token_encodings[:,1:-1,:].numpy().squeeze()
+            encoded_tokens = string_tokens_flat
+            encodings = output[0][:,1:-1,:].detach().numpy().squeeze() if self.framework == 'pt' else output[0][:,1:-1,:].numpy().squeeze()
             
         elif self.embedding_level == 'sequence':
-            output_tokens = [' '.join(tokens)]
-            word_tokens = output_tokens
+            encoded_tokens = [' '.join(tokens)]
+            w_txt = np.nan()
             if self.pooling == 'average':
-                encodings = token_encodings[:,1:-1,:].detach().numpy() if self.framework == 'pt' else token_encodings[:,1:-1,:].numpy()
-                encodings = np.mean(encodings, axis=1, keepdims=True)
+                encodings = output[0][:,1:-1,:].detach() if self.framework == 'pt' else output[0][:,1:-1,:]
+                encodings = np.mean(encodings.numpy(), axis=1, keepdims=True)
             else:
-                encodings = sequence_encodings.detach() if self.framework == 'pt' else sequence_encodings
+                encodings = output[1].detach() if self.framework == 'pt' else output[1]
         
         return ExtractorResult([encodings.tolist(), 
-                                output_tokens, 
-                                word_tokens, 
-                                [' '.join(tokens)] * encodings.shape[0], 
-                                [self.pretrained_model] * encodings.shape[0], 
-                                [self.tokenizer_type] * encodings.shape[0]], 
-                                stims, self, features=['encoding', 'token', 'word_level_token', 
-                                                       'sequence', 'model', 'tokenizer'])
+                                encoded_tokens, 
+                                w_txt, 
+                                [' '.join(text)] * len(encoded_tokens), 
+                                [self.pretrained_model]  * len(encoded_tokens), 
+                                [self.tokenizer_type] * len(encoded_tokens)], 
+                                stims, self, 
+                                features=['encoding', 'encoded_token', 'word_level_token', 
+                                                       'sequence', 'model', 'tokenizer'],
+                                onsets=w_ons, durations=w_dur, orders=range(len(encoded_tokens)))
 
+    
+    # compute loss? 
     
     def _to_df(self, result):
         return pd.DataFrame(dict(zip(result.features, result._data)))
-                   
+
+
+  
 # Missing:
-# Try with file
-# Avoid explicit length adaptation
-# Add position in sequence to result df
-# batch layer
+# object ID
+# batching
 # Add sentence index to result df (see Bert paper)
 # Add option to preserve special tokens
 # Check support for both TextStim and ComplexTextStim
 # tokenizers as filters?
+# get non-contextualized representations?
+# get loss
+# stride parameter?
+# set seed?
+# access hidden states / attention
+# no gradient
+# masked_lm_labels and lm_labels for LM extractor - is the loss for all words? or for masked tokens only?
