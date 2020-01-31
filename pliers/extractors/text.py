@@ -9,7 +9,7 @@ from pliers.support.exceptions import PliersError
 from pliers.support.decorators import requires_nltk_corpus
 from pliers.datasets.text import fetch_dictionary
 from pliers.transformers import BatchTransformerMixin
-from pliers.utils import attempt_to_import, verify_dependencies
+from pliers.utils import attempt_to_import, verify_dependencies, flatten
 import numpy as np
 import pandas as pd
 import nltk
@@ -436,70 +436,55 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         if framework not in ['pt', 'tf']: 
             raise(ValueError("Invalid framework; must be one of 'pt' (pytorch) or 'tf' (tensorflow)"))
         
-        # Arguments to pass
         f_dict = {'pt':'BertModel', 'tf': 'TFBertModel'}
-        self.pretrained_model = pretrained_model_or_path
-        self.tokenizer_type = tokenizer
-        self.framework = framework
-        self.embedding_level = embedding_level
-        self.pooling = pooling
-        self.model_kwargs = model_kwargs
+        self.pretrained_model = pretrained_model_or_path # generic
+        self.tokenizer_type = tokenizer # generic
+        self.framework = framework # generic
+        self.embedding_level = embedding_level # BertSpecific
+        self.pooling = pooling #BertSpecific
+        self.model_kwargs = model_kwargs # generic
         
-        self.tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, **model_kwargs)
-        self.model = getattr(transformers, f_dict[self.framework]).from_pretrained(pretrained_model_or_path, **model_kwargs)
+        self.tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, **model_kwargs) # generic
+        self.model = getattr(transformers, f_dict[self.framework]).from_pretrained(pretrained_model_or_path, **model_kwargs) #BertSpecific
         
         super(PretrainedBertEncodingExtractor, self).__init__()
         
     def _extract(self, stims): 
         
-        text, durations, onsets = map(list, zip(*((s.text, s.duration, s.onset) for s in stims)))
-        string_tokens = [self.tokenizer.tokenize(t) for t in text]
-        string_tokens_flat = list(itertools.chain(*string_tokens)) 
-        
-        def broadcast_vals(wvlist):
-            wvlist = list(itertools.chain.from_iterable([itertools.repeat(wvlist[i],len(string_tokens[i])) 
-                                                         for i in range(len(wvlist))]))
-            return wvlist
-        
-        w_txt, w_ons, w_dur = map(broadcast_vals, [text, onsets, durations])
+        text, durations, onsets = zip(*((s.text, s.duration, s.onset) for s in stims))
+        string_tokens = [(t, self.tokenizer.tokenize(t)) for t in text]
+        string_tokens_flat = list(flatten(string_tokens))       
+        t_text, t_ons, t_dur = map(lambda ls: [ls[t] * len(string_tokens[t]) for t in range(len(string_tokens))], [text, onsets, durations])
 
-        tensor_tokens = self.tokenizer.encode(string_tokens_flat, return_tensors = self.framework)
+        tensor_tokens = self.tokenizer.encode(string_tokens_flat, return_tensors=self.framework)
         output = self.model(tensor_tokens)
     
         if self.embedding_level == 'token':
             encoded_tokens = string_tokens_flat
-            encodings = output[0][:,1:-1,:].detach().numpy().squeeze() if self.framework == 'pt' else output[0][:,1:-1,:].numpy().squeeze()
+            encodings = output[0][:,1:-1,:].numpy().squeeze()
             
         elif self.embedding_level == 'sequence':
             encoded_tokens = [' '.join(tokens)]
-            w_txt = np.nan()
+            t_txt = np.nan()
             if self.pooling == 'average':
-                encodings = output[0][:,1:-1,:].detach() if self.framework == 'pt' else output[0][:,1:-1,:]
-                encodings = np.mean(encodings.numpy(), axis=1, keepdims=True)
+                encodings = np.mean(output[0][:,1:-1,:].numpy(), axis=1, keepdims=True)
             else:
-                encodings = output[1].detach() if self.framework == 'pt' else output[1]
+                encodings = output[1]
+                
+        sequence, model, tokenizer = map(lambda x: listify(x) * len(encoded_tokens), [' '.join(text), self.pretrained_model, self.tokenizer_type]) 
         
-        return ExtractorResult([encodings.tolist(), 
-                                encoded_tokens, 
-                                w_txt, 
-                                [' '.join(text)] * len(encoded_tokens), 
-                                [self.pretrained_model]  * len(encoded_tokens), 
-                                [self.tokenizer_type] * len(encoded_tokens)], 
-                                stims, self, 
-                                features=['encoding', 'encoded_token', 'word_level_token', 
+        return ExtractorResult([encodings.tolist(), encoded_tokens, t_txt, sequence, model, tokenizer], 
+                                stims, self, features=['encoding', 'encoded_token', 'word_level_token', 
                                                        'sequence', 'model', 'tokenizer'],
-                                onsets=w_ons, durations=w_dur, orders=range(len(encoded_tokens)))
-
-    
-    # compute loss? 
+                                onsets=t_ons, durations=t_dur, orders=range(len(encoded_tokens)))
     
     def _to_df(self, result):
         return pd.DataFrame(dict(zip(result.features, result._data)))
 
 
   
-# Missing:
-# object ID
+# Missing
+# Leave flexibility for tokenizer?
 # batching
 # Add sentence index to result df (see Bert paper)
 # Add option to preserve special tokens
