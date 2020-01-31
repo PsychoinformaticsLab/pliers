@@ -9,7 +9,7 @@ from pliers.support.exceptions import PliersError
 from pliers.support.decorators import requires_nltk_corpus
 from pliers.datasets.text import fetch_dictionary
 from pliers.transformers import BatchTransformerMixin
-from pliers.utils import attempt_to_import, verify_dependencies, flatten
+from pliers.utils import attempt_to_import, verify_dependencies, flatten, listify
 import numpy as np
 import pandas as pd
 import nltk
@@ -430,7 +430,7 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
                  tokenizer='bert-base-uncased',
                  framework='pt',
                  embedding_level='token', 
-                 pooling=None,
+                 pooling='no_pooling',
                 **model_kwargs): # to do: split into distinct kwargs dictionaries
         
         if framework not in ['pt', 'tf']: 
@@ -451,10 +451,12 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         
     def _extract(self, stims): 
         
-        text, durations, onsets = zip(*((s.text, s.duration, s.onset) for s in stims))
-        string_tokens = [(t, self.tokenizer.tokenize(t)) for t in text]
+        text, onsets, durations = zip(*((s.text, s.onset, s.duration) for s in stims))
+        string_tokens = [self.tokenizer.tokenize(t) for t in text]
         string_tokens_flat = list(flatten(string_tokens))       
-        t_text, t_ons, t_dur = map(lambda ls: [ls[t] * len(string_tokens[t]) for t in range(len(string_tokens))], [text, onsets, durations])
+        t_text, t_ons, t_dur = map(lambda ls: [ [ls[t]] * len(string_tokens[t]) for t in range(len(string_tokens)) ], 
+                                   [text, onsets, durations])
+        t_text, t_ons, t_dur = map(lambda ls: list(flatten(ls)), [t_text, t_ons, t_dur])
 
         tensor_tokens = self.tokenizer.encode(string_tokens_flat, return_tensors=self.framework)
         output = self.model(tensor_tokens)
@@ -465,24 +467,27 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
             
         elif self.embedding_level == 'sequence':
             encoded_tokens = [' '.join(tokens)]
-            t_txt = np.nan()
+            t_text = np.nan()
             if self.pooling == 'average':
                 encodings = np.mean(output[0][:,1:-1,:].numpy(), axis=1, keepdims=True)
             else:
                 encodings = output[1]
                 
-        sequence, model, tokenizer = map(lambda x: listify(x) * len(encoded_tokens), [' '.join(text), self.pretrained_model, self.tokenizer_type]) 
+        sequence, model, tokenizer, pooling = map(lambda x: listify(x) * len(encoded_tokens), 
+                                         [' '.join(text), self.pretrained_model, self.tokenizer_type, self.pooling]) 
         
-        return ExtractorResult([encodings.tolist(), encoded_tokens, t_txt, sequence, model, tokenizer], 
+        return ExtractorResult([encodings.tolist(), encoded_tokens, t_text, sequence, model, tokenizer, pooling], 
                                 stims, self, features=['encoding', 'encoded_token', 'word_level_token', 
-                                                       'sequence', 'model', 'tokenizer'],
+                                                       'sequence', 'model', 'tokenizer', 'pooling'],
                                 onsets=t_ons, durations=t_dur, orders=range(len(encoded_tokens)))
     
     def _to_df(self, result):
         return pd.DataFrame(dict(zip(result.features, result._data)))
 
 
-  
+#class PretrainedBertMaskedLMExtractor():
+
+    
 # Missing
 # Leave flexibility for tokenizer?
 # batching
