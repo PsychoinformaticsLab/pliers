@@ -406,7 +406,7 @@ class SpaCyExtractor(TextExtractor):
                                features=self.features, orders=order_list)
 
 
-class PretrainedBertEncodingExtractor(BatchTransformerMixin, ComplexTextExtractor):
+class PretrainedBertEncodingExtractor(ComplexTextExtractor):
 
     ''' Uses transformers library to extract contextualize encodings for words 
     or text sequences using pre-trained BERT models.
@@ -425,11 +425,12 @@ class PretrainedBertEncodingExtractor(BatchTransformerMixin, ComplexTextExtracto
             sequence encodings are to be returned. Must be one of 'token', 'sequence'.
         pooling(str): Optional argument, relevant for sequence-level embeddings 
             only. If None and encoding_level='sequence', encodings for [CLS] tokens
-            are returned. Alternatively, token-level embeddings are pooled according
-            to specified numpy pooling function (e.g. 'mean', 'max', 'min').
+            are returned. If encoding_level='sequence' and numpy function is 
+            specified, token-level embeddings are pooled according to specified 
+            method (e.g. 'mean', 'max', 'min').
     '''
 
-    _log_attributes = ('pretrained_model', 'embedding_level')
+    _log_attributes = ('pretrained_model', 'encoding_level')
 
     def __init__(self,
                  pretrained_model_or_path='bert-base-uncased',
@@ -444,17 +445,17 @@ class PretrainedBertEncodingExtractor(BatchTransformerMixin, ComplexTextExtracto
                 "Invalid framework; must be one of 'pt' (pytorch) or 'tf' (tensorflow)"))
 
         f_dict = {'pt': 'BertModel', 'tf': 'TFBertModel'}
-        self.pretrained_model = pretrained_model_or_path  # generic
-        self.tokenizer_type = tokenizer  # generic
-        self.framework = framework  # generic
-        self.embedding_level = embedding_level  # BertSpecific
-        self.pooling = pooling  # BertSpecific
-        self.model_kwargs = model_kwargs  # generic
+        self.pretrained_model = pretrained_model_or_path
+        self.tokenizer_type = tokenizer
+        self.framework = framework
+        self.encoding_level = encoding_level
+        self.pooling = pooling
+        self.model_kwargs = model_kwargs
 
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(
-            tokenizer, **model_kwargs)  # generic
+            tokenizer, **model_kwargs)
         self.model = getattr(transformers, f_dict[self.framework]).from_pretrained(
-            pretrained_model_or_path, **model_kwargs)  # BertSpecific
+            pretrained_model_or_path, **model_kwargs)
 
         super(PretrainedBertEncodingExtractor, self).__init__()
 
@@ -463,26 +464,26 @@ class PretrainedBertEncodingExtractor(BatchTransformerMixin, ComplexTextExtracto
         text, onsets, durations = zip(
             *((s.text, s.onset, s.duration) for s in stims))
         tokens = [self.tokenizer.tokenize(t) for t in text]
-        tokens_flat = list(flatten(string_tokens))
+        tokens_flat = list(flatten(tokens))
 
         def cast_to_token_level(word_level_list):
             token_level_list = [listify(word_level_list[i]) * len(tok) 
                                 for i,tok in enumerate(tokens)]
-            token_level_list = flatten(token_level_list)
-        return token_level_list
+            token_level_list = list(flatten(token_level_list))
+            return token_level_list
             
         t_text, t_ons, t_dur = map(cast_to_token_level, [text, onsets, durations])
 
         tensor_tokens = self.tokenizer.encode(tokens_flat, return_tensors=self.framework)
         output = self.model(tensor_tokens)
-        output = [out.detach().numpy() for out in output if self.framework == 'pt'
-                  else out.numpy()]
+        output = [out.detach().numpy() if self.framework == 'pt' else out.numpy() 
+                  for out in output]
 
-        if self.embedding_level == 'token':
+        if self.encoding_level == 'token':
             encoded_tokens = tokens_flat
             encodings = output[0][:, 1:-1, :].squeeze()
 
-        elif self.embedding_level == 'sequence':
+        elif self.encoding_level == 'sequence':
             encoded_tokens = [' '.join(tokens)]
             t_text = np.nan()
             if self.pooling:
@@ -494,7 +495,7 @@ class PretrainedBertEncodingExtractor(BatchTransformerMixin, ComplexTextExtracto
 
         sequence, model, tokenizer, pooling = map(lambda x: listify(x) * len(encoded_tokens), 
                                                   [' '.join(text), self.pretrained_model, 
-                                                   self.tokenizer_type, self.pooling])
+                                                   self.tokenizer_type, str(self.pooling)])
 
         return ExtractorResult([encodings.tolist(), encoded_tokens, t_text, sequence, 
                                 model, tokenizer, pooling],
@@ -502,8 +503,8 @@ class PretrainedBertEncodingExtractor(BatchTransformerMixin, ComplexTextExtracto
                                 features= ['encoding', 'encoded_token', 'word', 'sequence',
                                            'model', 'tokenizer', 'pooling'],
                                 onsets=t_ons, durations=t_dur, 
-                                orders=range(len(encoded_tokens)))
-
+                                orders=np.arange(0, len(encoded_tokens)))
+    
     def _to_df(self, result):
         return pd.DataFrame(dict(zip(result.features, result._data)))
 
