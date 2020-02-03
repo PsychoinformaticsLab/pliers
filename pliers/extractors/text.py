@@ -463,6 +463,8 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
 
         text, onsets, durations = zip(
             *((s.text, s.onset, s.duration) for s in stims.elements))
+        durations = [0.0 if d is None else d for d in durations]
+             
         tokens = [self.tokenizer.tokenize(t) for t in text]
         tokens_flat = list(flatten(tokens))
         token_positions = np.arange(0, len(tokens_flat))
@@ -485,9 +487,9 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
             encodings = output[0][:, 1:-1, :].squeeze()
 
         elif self.encoding_level == 'sequence':
-            encoded_tokens = [' '.join(tokens)]
+            encoded_tokens = [' '.join(text)]
             token_positions = 'None'
-            t_text = np.nan()
+            t_text = 'None'
             if self.pooling:
                 pooling_function = getattr(np, self.pooling)
                 encodings = pooling_function(output[0][:, 1:-1, :], 
