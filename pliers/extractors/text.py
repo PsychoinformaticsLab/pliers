@@ -462,9 +462,10 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
     def _extract(self, stims):
 
         text, onsets, durations = zip(
-            *((s.text, s.onset, s.duration) for s in stims))
+            *((s.text, s.onset, s.duration) for s in stims.elements))
         tokens = [self.tokenizer.tokenize(t) for t in text]
         tokens_flat = list(flatten(tokens))
+        token_positions = np.arange(0, len(tokens_flat))
 
         def cast_to_token_level(word_level_list):
             token_level_list = [listify(word_level_list[i]) * len(tok) 
@@ -485,6 +486,7 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
 
         elif self.encoding_level == 'sequence':
             encoded_tokens = [' '.join(tokens)]
+            token_positions = 'None'
             t_text = np.nan()
             if self.pooling:
                 pooling_function = getattr(np, self.pooling)
@@ -497,13 +499,12 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
                                                   [' '.join(text), self.pretrained_model, 
                                                    self.tokenizer_type, str(self.pooling)])
 
-        return ExtractorResult([encodings.tolist(), encoded_tokens, t_text, sequence, 
-                                model, tokenizer, pooling],
+        return ExtractorResult([encodings.tolist(), encoded_tokens, t_text, 
+                                token_positions,sequence, model, tokenizer, pooling],
                                 stims, self, 
-                                features= ['encoding', 'encoded_token', 'word', 'sequence',
-                                           'model', 'tokenizer', 'pooling'],
-                                onsets=t_ons, durations=t_dur, 
-                                orders=np.arange(0, len(encoded_tokens)))
+                                features=['encoding', 'token', 'word', 'token_position',
+                                           'sequence', 'model', 'tokenizer', 'pooling'],
+                                onsets=t_ons, durations=t_dur)
     
     def _to_df(self, result):
         return pd.DataFrame(dict(zip(result.features, result._data)))
