@@ -430,7 +430,7 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
             method (e.g. 'mean', 'max', 'min').
     '''
 
-    _log_attributes = ('pretrained_model', 'encoding_level')
+    _log_attributes = ('pretrained_model', 'encoding_level', 'pooling', 'framework', 'tokenizer_type')
 
     def __init__(self,
                  pretrained_model_or_path='bert-base-uncased',
@@ -488,8 +488,11 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
 
         elif self.encoding_level == 'sequence':
             encoded_tokens = [' '.join(text)]
-            token_positions = 'None'
-            t_text = 'None'
+            token_positions = ['None']
+            t_text = ['None']
+            t_dur = t_ons[-1] + t_dur[-1] - t_ons[0]
+            t_ons = t_ons[0]
+            
             if self.pooling:
                 pooling_function = getattr(np, self.pooling)
                 encodings = pooling_function(output[0][:, 1:-1, :], 
