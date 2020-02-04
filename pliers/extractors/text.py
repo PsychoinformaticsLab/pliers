@@ -427,7 +427,15 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
             only. If None and encoding_level='sequence', encodings for [CLS] tokens
             are returned. If encoding_level='sequence' and numpy function is 
             specified, token-level embeddings are pooled according to specified 
-            method (e.g. 'mean', 'max', 'min').
+            method (e.g. 'mean', 'max', 'min').¨
+        model_kwargs(dict): Dictionary of additional named arguments for pretrained 
+            model initialization. 
+            See: https://huggingface.co/transformers/main_classes/model.html and 
+            https://huggingface.co/transformers/model_doc/bert.html for further info.
+        tokenizer_kwargs(dict): Dictionary of additional named arguments for
+            tokenizer initialization. 
+            See https://huggingface.co/transformers/main_classes/tokenizer.html for 
+            further info.
     '''
 
     _log_attributes = ('pretrained_model', 'encoding_level', 'pooling', 'framework', 'tokenizer_type')
@@ -438,7 +446,8 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
                  framework='pt',
                  encoding_level='token',
                  pooling=None,
-                 **model_kwargs):  # to do: split into distinct kwargs dictionaries
+                 model_kwargs=None,
+                 tokenizer_kwargs=None):  # to do: split into distinct kwargs dictionaries
 
         if framework not in ['pt', 'tf']:
             raise(ValueError(
@@ -450,12 +459,11 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         self.framework = framework
         self.encoding_level = encoding_level
         self.pooling = pooling
-        self.model_kwargs = model_kwargs
-
+        
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(
             tokenizer, **model_kwargs)
         self.model = getattr(transformers, f_dict[self.framework]).from_pretrained(
-            pretrained_model_or_path, **model_kwargs)
+            pretrained_model_or_path, **tokenizer_kwargs)
 
         super(PretrainedBertEncodingExtractor, self).__init__()
 
