@@ -1,11 +1,11 @@
 python-magic
-numpy~=1.8
-nltk~=3.0
-moviepy>=0.2.3.5
-pandas~=0.20.0
+numpy>=1.13
+nltk>=3.0
+moviepy>=0.2
+pandas~=0.25
 pillow
 requests
-scipy~=0.13
-imageio~=2.3
+scipy>=0.13
+imageio>=2.3
 six
 tqdm
