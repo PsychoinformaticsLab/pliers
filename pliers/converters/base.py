@@ -6,7 +6,7 @@ from six import with_metaclass
 from pliers.utils import listify, EnvironmentKeyMixin
 from pliers import config
 import pliers
-
+import inspect
 
 class Converter(with_metaclass(ABCMeta, Transformer)):
 
@@ -48,7 +48,7 @@ def get_converter(in_type, out_type, *args, **kwargs):
 
     for name in convs:
         cls = getattr(pliers.converters, name)
-        if not issubclass(cls, Converter):
+        if not inspect.isclass(cls) or not issubclass(cls, Converter):
             continue
 
         available = cls.available if issubclass(
