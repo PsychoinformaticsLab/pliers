@@ -483,12 +483,14 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
             token_level_list = list(flatten(token_level_list))
             return token_level_list
             
-        t_text, t_ons, t_dur = map(cast_to_token_level, [text, onsets, durations])
+        t_text, t_ons, t_dur = map(cast_to_token_level, 
+                                   [text, onsets, durations])
 
-        tensor_tokens = self.tokenizer.encode(tokens_flat, return_tensors=self.framework)
+        tensor_tokens = self.tokenizer.encode(tokens_flat, 
+                                              return_tensors=self.framework)
         output = self.model(tensor_tokens)
-        output = [out.detach().numpy() if self.framework == 'pt' else out.numpy() 
-                  for out in output]
+        output = [out.detach().numpy() if self.framework == 'pt' else 
+                  out.numpy() for out in output]
 
         if self.encoding_level == 'token':
             encoded_tokens = tokens_flat
@@ -507,16 +509,21 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
                                              axis=1, keepdims=True)
             else:
                 encodings = output[1]
-
-        sequence, model, tokenizer, pooling = map(lambda x: listify(x) * len(encoded_tokens), 
-                                                  [' '.join(text), self.pretrained_model, 
-                                                   self.tokenizer_type, str(self.pooling)])
-
-        return ExtractorResult([encodings.tolist(), encoded_tokens, t_text, 
-                                token_positions,sequence, model, tokenizer, pooling],
-                                stims, self, 
-                                features=['encoding', 'token', 'word', 'token_position',
-                                           'sequence', 'model', 'tokenizer', 'pooling'],
+    
+        def expand_metadata(metadata):
+            return listify(metadata) * len(encoded_tokens)
+        
+        seq, model, tokenizer, pooling = map(expand_metadata, 
+                [' '.join(text), self.pretrained_model, self.tokenizer_type,
+                 str(self.pooling)])
+            
+        data = [encodings.tolist(), encoded_tokens, t_text, token_positions, 
+                seq, model, tokenizer, pooling]
+        features = ['encoding', 'token', 'word', 'token_position','sequence',
+                    'model', 'tokenizer', 'pooling']
+            
+        return ExtractorResult(data, stims, self, 
+                                features=features,
                                 onsets=t_ons, durations=t_dur)
     
     def _to_df(self, result):
