@@ -446,8 +446,8 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
                  framework='pt',
                  encoding_level='token',
                  pooling=None,
-                 model_kwargs=None,
-                 tokenizer_kwargs=None):  # to do: split into distinct kwargs dictionaries
+                 model_kwargs={},
+                 tokenizer_kwargs={}):  # to do: split into distinct kwargs dictionaries
 
         if framework not in ['pt', 'tf']:
             raise(ValueError(
@@ -460,7 +460,7 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         self.encoding_level = encoding_level
         self.pooling = pooling
         
-        self.tokenizer = transformers.AutoTokenizer.from_pretrained(
+        self.tokenizer = transformers.BertTokenizer.from_pretrained(
             tokenizer, **model_kwargs)
         self.model = getattr(transformers, f_dict[self.framework]).from_pretrained(
             pretrained_model_or_path, **tokenizer_kwargs)
