@@ -413,8 +413,8 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
     or text sequences using pre-trained BERT models.
 
     Args:
-        pretrained_model_or_path(str): A string providing information on
-            which BERT model to use. Can be one of pretrained BERT models in
+        pretrained_model_or_path(str): A string specifying which BERT
+            model to use. Can be one of pretrained BERT models listed at
             https://huggingface.co/transformers/pretrained_models.html
             or path to custom model.
         tokenizer(str): Type of tokenization used in the tokenization step.
