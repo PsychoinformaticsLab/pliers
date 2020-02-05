@@ -23,7 +23,7 @@ from six import string_types
 keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
                                  ['KeyedVectors'])
 sklearn_text = attempt_to_import('sklearn.feature_extraction.text', 'sklearn_text',
-                                 ['_VectorizerMixin', 'CountVectorizer'])
+                                 ['CountVectorizer'])
 spacy = attempt_to_import('spacy')
 
 
