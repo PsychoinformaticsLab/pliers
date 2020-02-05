@@ -32,7 +32,7 @@ class WordStemmingFilter(TextFilter):
             can be passed.
         tokenize (bool): if True, apply the stemmer/lemmatizer to each token in the
             TextStim, otherwise treat the whole TextStim as one token to stem/lemmatize.
-        case_insensitive(bool): if True, input is lower-cased before stemming
+        case_insensitive (bool): if True, input is lower-cased before stemming
             or lemmatizing.
         args, kwargs: Optional positional and keyword args passed onto the
             nltk stemmer/lemmatizer.
@@ -48,9 +48,9 @@ class WordStemmingFilter(TextFilter):
         'wordnet': 'WordNetLemmatizer'
     }
 
-    _log_attributes = ('stemmer', 'tokenize', 'case_insensitive')
+    _log_attributes = ('stemmer', 'tokenize', 'case_sensitive')
 
-    def __init__(self, stemmer='porter', tokenize=True, case_insensitive=True, *args, **kwargs):
+    def __init__(self, stemmer='porter', tokenize=True, case_sensitive=False, *args, **kwargs):
 
         if isinstance(stemmer, string_types):
             if stemmer not in self.stemmers:
@@ -63,7 +63,7 @@ class WordStemmingFilter(TextFilter):
                              "instance of class StemmerI.")
         self.stemmer = stemmer
         self.tokenize = tokenize
-        self.case_insensitive = case_insensitive
+        self.case_sensitive = case_sensitive
         super(WordStemmingFilter, self).__init__()
 
     def _filter(self, stim):
@@ -82,7 +82,7 @@ class WordStemmingFilter(TextFilter):
             return pos_tagged
         
         if self.tokenize:
-            tokens = [s.lower() for s in stim.text.split()] if self.case_insensitive else stim.text.split()
+            tokens = [s.lower() for s in stim.text.split()] if not self.case_sensitive else stim.text.split()
             if not isinstance(self.stemmer, stem.WordNetLemmatizer):
                 stemmed = ' '.join([self.stemmer.stem(tok) for tok in tokens])
             else:
@@ -90,7 +90,7 @@ class WordStemmingFilter(TextFilter):
                 stemmed = ' '.join([self.stemmer.lemmatize(tok, pos=pos_tagged[tok]) for tok in tokens])
                 
         else:
-            text = stim.text.lower() if self.case_insensitive else stim.text
+            text = stim.text.lower() if not self.case_sensitive else stim.text
             if not isinstance(self.stemmer, stem.WordNetLemmatizer):
                 stemmed = self.stemmer.stem(text)
             else:

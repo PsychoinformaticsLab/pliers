@@ -42,7 +42,22 @@ def test_word_stemming_filter():
     stemmed = filt.transform(stim)
     stems = [s.text for s in stemmed]
     assert stems == target
-
+    
+    # Try lemmatization filter
+    stim = ComplexTextStim(text='These are tests for Stemming filters')
+    filt = WordStemmingFilter(stemmer='wordnet')
+    lemmatized = filt.transform(stim)
+    lemmas = [l.text for l in lemmatized]
+    target = ['these', 'be', 'test', 'for', 'stem', 'filter']
+    assert lemmas == target
+    
+    # Try case sensitive
+    filt = WordStemmingFilter(stemmer = 'wordnet', case_sensitive=True)
+    lemmatized = filt.transform(stim)
+    lemmas = [l.text for l in lemmatized]
+    target = ['These', 'be', 'test', 'for', 'Stemming', 'filter']
+    assert lemmas == target
+    
     # Fails on invalid values
     with pytest.raises(ValueError):
         filt = WordStemmingFilter(stemmer='nonexistent_stemmer')
