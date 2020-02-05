@@ -1,8 +1,10 @@
 ''' Filters that operate on TextStim inputs. '''
 
 from pliers.stimuli import AudioStim
+from pliers.utils import attempt_to_import
 from .base import Filter, TemporalTrimmingFilter
 
+librosa = attempt_to_import('librosa')
 
 class AudioFilter(Filter):
 
@@ -13,3 +15,26 @@ class AudioFilter(Filter):
 
 class AudioTrimmingFilter(TemporalTrimmingFilter, AudioFilter):
     pass
+
+
+class AudioResamplingFilter(Filter):
+    
+    _log_attributes = ('target_sr', 'resample_type')
+    _input_type = AudioStim
+    
+    def __init__(self, target_sr=16000, resample_type='kaiser_best',
+                 **librosa_kwargs):
+        verify_dependencies(['librosa'])
+        self.target_sr = target_sr
+        self.resample_type = resample_type
+        self.librosa_kwargs = librosa_kwargs
+        super(AudioResamplingFilter, self).__init__()
+
+    def _filter(self, stim):
+        stim.data, stim.sr = librosa.core.resample(y=stim.data,
+                                          orig_sr=stim.sampling_rate,
+                                          target_sr=self.target_sr,
+                                          resample_type=self.resample_type,
+                                          **self.librosa_kwargs)
+        
+        return stim
