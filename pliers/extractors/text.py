@@ -408,37 +408,38 @@ class SpaCyExtractor(TextExtractor):
 
 class PretrainedBertEncodingExtractor(ComplexTextExtractor):
 
-    ''' Uses transformers library to extract contextualize encodings for words 
+    ''' Uses transformers library to extract contextualize encodings for words
     or text sequences using pre-trained BERT models.
 
     Args:
-        pretrained_model_or_path(str): A string providing information on 
+        pretrained_model_or_path(str): A string providing information on
             which BERT model to use. Can be one of the pretrained BERT models
-            listed in https://huggingface.co/transformers/pretrained_models.html 
+            listed in https://huggingface.co/transformers/pretrained_models.html
             or path to custom model.
         tokenizer(str): Type of tokenization used in the tokenization step.
-            If different from model, out-of-vocabulary tokens may be treated as 
+            If different from model, out-of-vocabulary tokens may be treated as
             unknown tokens.
-        framework (str): name deep learning framework to use. Must be one of 'pt' 
+        framework (str): name deep learning framework to use. Must be one of 'pt'
             (PyTorch) or 'tensorflow'. Defaults to 'pt'.
         encoding_level(str): A string specifying whether encodings for each token or
             sequence encodings are to be returned. Must be one of 'token', 'sequence'.
-        pooling(str): Optional argument, relevant for sequence-level embeddings 
+        pooling(str): Optional argument, relevant for sequence-level embeddings
             only. If None and encoding_level='sequence', encodings for [CLS] tokens
-            are returned. If encoding_level='sequence' and numpy function is 
-            specified, token-level embeddings are pooled according to specified 
+            are returned. If encoding_level='sequence' and numpy function is
+            specified, token-level embeddings are pooled according to specified
             method (e.g. 'mean', 'max', 'min').¨
-        model_kwargs(dict): Dictionary of additional named arguments for pretrained 
-            model initialization. 
-            See: https://huggingface.co/transformers/main_classes/model.html and 
+        model_kwargs(dict): Dictionary of additional named arguments for pretrained
+            model initialization.
+            See: https://huggingface.co/transformers/main_classes/model.html and
             https://huggingface.co/transformers/model_doc/bert.html for further info.
         tokenizer_kwargs(dict): Dictionary of additional named arguments for
-            tokenizer initialization. 
-            See https://huggingface.co/transformers/main_classes/tokenizer.html for 
+            tokenizer initialization.
+            See https://huggingface.co/transformers/main_classes/tokenizer.html for
             further info.
     '''
 
-    _log_attributes = ('pretrained_model', 'encoding_level', 'pooling', 'framework', 'tokenizer_type')
+    _log_attributes = ('pretrained_model', 'encoding_level',
+                       'pooling', 'framework', 'tokenizer_type')
 
     def __init__(self,
                  pretrained_model_or_path='bert-base-uncased',
@@ -459,7 +460,7 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         self.framework = framework
         self.encoding_level = encoding_level
         self.pooling = pooling
-        
+
         self.tokenizer = transformers.BertTokenizer.from_pretrained(
             tokenizer, **model_kwargs)
         self.model = getattr(transformers, f_dict[self.framework]).from_pretrained(
@@ -472,24 +473,24 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         text, onsets, durations = zip(
             *((s.text, s.onset, s.duration) for s in stims.elements))
         durations = [0.0 if d is None else d for d in durations]
-             
+
         tokens = [self.tokenizer.tokenize(t) for t in text]
         tokens_flat = list(flatten(tokens))
         token_positions = np.arange(0, len(tokens_flat))
 
         def cast_to_token_level(word_level_list):
-            token_level_list = [listify(word_level_list[i]) * len(tok) 
-                                for i,tok in enumerate(tokens)]
+            token_level_list = [listify(word_level_list[i]) * len(tok)
+                                for i, tok in enumerate(tokens)]
             token_level_list = list(flatten(token_level_list))
             return token_level_list
-            
-        t_text, t_ons, t_dur = map(cast_to_token_level, 
+
+        t_text, t_ons, t_dur = map(cast_to_token_level,
                                    [text, onsets, durations])
 
-        tensor_tokens = self.tokenizer.encode(tokens_flat, 
+        tensor_tokens = self.tokenizer.encode(tokens_flat,
                                               return_tensors=self.framework)
         output = self.model(tensor_tokens)
-        output = [out.detach().numpy() if self.framework == 'pt' else 
+        output = [out.detach().numpy() if self.framework == 'pt' else
                   out.numpy() for out in output]
 
         if self.encoding_level == 'token':
@@ -502,30 +503,29 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
             t_text = ['None']
             t_dur = t_ons[-1] + t_dur[-1] - t_ons[0]
             t_ons = t_ons[0]
-            
+
             if self.pooling:
                 pooling_function = getattr(np, self.pooling)
-                encodings = pooling_function(output[0][:, 1:-1, :], 
+                encodings = pooling_function(output[0][:, 1:-1, :],
                                              axis=1, keepdims=True)
             else:
                 encodings = output[1]
-    
+
         def expand_metadata(metadata):
             return listify(metadata) * len(encoded_tokens)
-        
-        seq, model, tokenizer, pooling = map(expand_metadata, 
-                [' '.join(text), self.pretrained_model, self.tokenizer_type,
-                 str(self.pooling)])
-            
-        data = [encodings.tolist(), encoded_tokens, t_text, token_positions, 
+
+        seq, model, tokenizer, pooling = map(expand_metadata,
+                                             [' '.join(text), self.pretrained_model, self.tokenizer_type,
+                                              str(self.pooling)])
+
+        data = [encodings.tolist(), encoded_tokens, t_text, token_positions,
                 seq, model, tokenizer, pooling]
-        features = ['encoding', 'token', 'word', 'token_position','sequence',
+        features = ['encoding', 'token', 'word', 'token_position', 'sequence',
                     'model', 'tokenizer', 'pooling']
-            
-        return ExtractorResult(data, stims, self, 
-                                features=features,
-                                onsets=t_ons, durations=t_dur)
-    
+
+        return ExtractorResult(data, stims, self,
+                               features=features,
+                               onsets=t_ons, durations=t_dur)
+
     def _to_df(self, result):
         return pd.DataFrame(dict(zip(result.features, result._data)))
-
