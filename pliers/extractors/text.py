@@ -288,7 +288,7 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
 
     def __init__(self, vectorizer=None, *vectorizer_args, **vectorizer_kwargs):
         verify_dependencies(['sklearn_text'])
-        if isinstance(vectorizer, sklearn_text._VectorizerMixin):
+        if isinstance(vectorizer, sklearn_text.CountVectorizer):
             self.vectorizer = vectorizer
         elif isinstance(vectorizer, str):
             vec = getattr(sklearn_text, vectorizer)
