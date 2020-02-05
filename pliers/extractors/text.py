@@ -9,7 +9,8 @@ from pliers.support.exceptions import PliersError
 from pliers.support.decorators import requires_nltk_corpus
 from pliers.datasets.text import fetch_dictionary
 from pliers.transformers import BatchTransformerMixin
-from pliers.utils import attempt_to_import, verify_dependencies, flatten, listify
+from pliers.utils import attempt_to_import, verify_dependencies, flatten, \
+    listify
 import numpy as np
 import pandas as pd
 import nltk
@@ -413,29 +414,30 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
 
     Args:
         pretrained_model_or_path(str): A string providing information on
-            which BERT model to use. Can be one of the pretrained BERT models
-            listed in https://huggingface.co/transformers/pretrained_models.html
+            which BERT model to use. Can be one of pretrained BERT models in
+            https://huggingface.co/transformers/pretrained_models.html
             or path to custom model.
         tokenizer(str): Type of tokenization used in the tokenization step.
             If different from model, out-of-vocabulary tokens may be treated as
             unknown tokens.
-        framework (str): name deep learning framework to use. Must be one of 'pt'
+        framework (str): name deep learning framework to use. Must be 'pt'
             (PyTorch) or 'tensorflow'. Defaults to 'pt'.
-        encoding_level(str): A string specifying whether encodings for each token or
-            sequence encodings are to be returned. Must be one of 'token', 'sequence'.
+        encoding_level(str): A string specifying whether encodings for each
+            token or sequence encodings are to be returned. Must be one of
+            'token', 'sequence'.
         pooling(str): Optional argument, relevant for sequence-level embeddings
-            only. If None and encoding_level='sequence', encodings for [CLS] tokens
-            are returned. If encoding_level='sequence' and numpy function is
-            specified, token-level embeddings are pooled according to specified
-            method (e.g. 'mean', 'max', 'min').¨
-        model_kwargs(dict): Dictionary of additional named arguments for pretrained
-            model initialization.
-            See: https://huggingface.co/transformers/main_classes/model.html and
-            https://huggingface.co/transformers/model_doc/bert.html for further info.
-        tokenizer_kwargs(dict): Dictionary of additional named arguments for
-            tokenizer initialization.
-            See https://huggingface.co/transformers/main_classes/tokenizer.html for
+            only. If None and encoding_level='sequence', encodings for [CLS]
+            tokens are returned. If encoding_level='sequence' and numpy
+            function is specified, token-level embeddings are pooled according
+            to specified method (e.g. 'mean', 'max', 'min').
+        model_kwargs(dict): Dictionary of named arguments for pretrained model.
+            See: https://huggingface.co/transformers/main_classes/model.html
+            and https://huggingface.co/transformers/model_doc/bert.html for
             further info.
+        tokenizer_kwargs(dict): Dictionary of named arguments for
+            tokenizer.
+            See https://huggingface.co/transformers/main_classes/tokenizer.html
+            for further info.
     '''
 
     _log_attributes = ('pretrained_model', 'encoding_level',
@@ -451,19 +453,19 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
                  tokenizer_kwargs={}):
 
         if framework not in ['pt', 'tf']:
-            raise(ValueError(
-                "Invalid framework; must be one of 'pt' (pytorch) or 'tf' (tensorflow)"))
+            raise(ValueError('''Invalid framework;
+                must be one of 'pt' (pytorch) or 'tf' (tensorflow)'''))
 
-        f_dict = {'pt': 'BertModel', 'tf': 'TFBertModel'}
         self.pretrained_model = pretrained_model_or_path
         self.tokenizer_type = tokenizer
         self.framework = framework
         self.encoding_level = encoding_level
         self.pooling = pooling
+        model_name = 'BertModel' if self.framework == 'pt' else 'TFBertModel'
 
         self.tokenizer = transformers.BertTokenizer.from_pretrained(
             tokenizer, **model_kwargs)
-        self.model = getattr(transformers, f_dict[self.framework]).from_pretrained(
+        self.model = getattr(transformers, model_name).from_pretrained(
             pretrained_model_or_path, **tokenizer_kwargs)
 
         super(PretrainedBertEncodingExtractor, self).__init__()
@@ -515,7 +517,9 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
             return listify(metadata) * len(encoded_tokens)
 
         seq, model, tokenizer, pooling = map(expand_metadata,
-                                             [' '.join(text), self.pretrained_model, self.tokenizer_type,
+                                             [' '.join(text),
+                                              self.pretrained_model,
+                                              self.tokenizer_type,
                                               str(self.pooling)])
 
         data = [encodings.tolist(), encoded_tokens, t_text, token_positions,
