@@ -1,7 +1,7 @@
 ''' Filters that operate on TextStim inputs. '''
 
 from pliers.stimuli import AudioStim
-from pliers.utils import attempt_to_import
+from pliers.utils import attempt_to_import, verify_dependencies
 from .base import Filter, TemporalTrimmingFilter
 
 librosa = attempt_to_import('librosa')
@@ -18,6 +18,19 @@ class AudioTrimmingFilter(TemporalTrimmingFilter, AudioFilter):
 
 
 class AudioResamplingFilter(Filter):
+    
+    ''' Librosa-based audio resampling Filter.
+        Uses librosa.core.resample function.
+
+    Args:
+        target_sr (float): Target sampling rate (in Hz).
+        resample_type (str): Type of resampling. Must be one of 
+            'kaiser_best', 'kaiser_fast', 'scipy', 'fft' or 
+            'polyphase'. See librosa.core.resample documentation for 
+            more details.
+        librosa_kwargs: Optional keyword args passed onto the
+            librosa resampling function.
+    '''
     
     _log_attributes = ('target_sr', 'resample_type')
     _input_type = AudioStim
