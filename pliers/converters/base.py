@@ -8,6 +8,7 @@ from pliers import config
 import pliers
 import inspect
 
+
 class Converter(with_metaclass(ABCMeta, Transformer)):
 
     ''' Base class for Converters.'''
