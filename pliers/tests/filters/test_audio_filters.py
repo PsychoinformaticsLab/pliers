@@ -5,6 +5,7 @@ from pliers.filters import (AudioTrimmingFilter,
                             AudioResamplingFilter)
 from pliers.stimuli import AudioStim
 import pytest
+import numpy as np
 
 AUDIO_DIR = join(get_test_data_path(), 'audio')
 
@@ -40,4 +41,4 @@ def test_audio_resampling_filter(target_sr, resample_type):
     resampled = filt.transform(stim)
     
     assert resampled.sampling_rate == target_sr
-    assert np.abs(target_sr * stim.duration - resampled.shape[0]) <= 1
+    assert np.abs(target_sr * stim.duration - resampled.data.shape[0]) <= 1
