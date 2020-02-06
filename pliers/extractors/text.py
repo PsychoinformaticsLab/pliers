@@ -405,7 +405,7 @@ class SpaCyExtractor(TextExtractor):
 
 class PretrainedBertEncodingExtractor(ComplexTextExtractor):
 
-    ''' Uses transformers library to extract contextualize encodings for words
+    ''' Uses transformers library to extract contextualized encodings for words
     or text sequences using pre-trained BERT models.
 
     Args:
