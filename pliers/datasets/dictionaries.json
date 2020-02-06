@@ -207,7 +207,7 @@
         "columns":["Auditory.mean","Gustatory.mean","Haptic.mean","Interoceptive.mean","Olfactory.mean","Visual.mean","Foot_leg.mean","Hand_arm.mean","Head.mean","Mouth.mean","Torso.mean","Auditory.SD","Gustatory.SD","Haptic.SD","Interoceptive.SD","Olfactory.SD","Visual.SD","Foot_leg.SD","Hand_arm.SD","Head.SD","Mouth.SD","Torso.SD","Max_strength.perceptual","Minkowski3.perceptual","Exclusivity.perceptual","Dominant.perceptual","Max_strength.action","Minkowski3.action","Exclusivity.action","Dominant.action","Max_strength.sensorimotor","Minkowski3.sensorimotor","Exclusivity.sensorimotor","Dominant.sensorimotor","N_known.perceptual","List_N.perceptual","Percent_known.perceptual","N_known.action","List_N.action","Percent_known.action","Mean_age.perceptual","Mean_age.action","List#.perceptual","List#.action"],
         "column_descriptions": [
             "mean rating (0–5) of how strongly the concept is experienced by hearing",
-             "mean rating (0–5) of how strongly the concept is experienced by tasting",
+            "mean rating (0–5) of how strongly the concept is experienced by tasting",
              "mean rating (0–5) of how strongly the concept is experienced by feeling through touch",
              "mean rating (0–5) of how strongly the concept is experienced by sensations inside the body",
              "mean rating (0–5) of how strongly the concept is experienced by smelling",
