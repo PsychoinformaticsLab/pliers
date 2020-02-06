@@ -48,6 +48,6 @@ class AudioResamplingFilter(AudioFilter):
                                           target_sr=self.target_sr,
                                           resample_type=self.resample_type,
                                           **self.librosa_kwargs)
-        stim.sr = self.target_sr
+        stim.sampling_rate = self.target_sr
         
         return stim
