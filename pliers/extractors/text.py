@@ -413,7 +413,7 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
             model to use. Can be one of pretrained BERT models listed at
             https://huggingface.co/transformers/pretrained_models.html
             or path to custom model.
-        tokenizer(str): Type of tokenization used in the tokenization step.
+        tokenizer (str): Type of tokenization used in the tokenization step.
             If different from model, out-of-vocabulary tokens may be treated as
             unknown tokens.
         framework (str): name deep learning framework to use. Must be 'pt'
