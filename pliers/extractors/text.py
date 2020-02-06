@@ -149,7 +149,7 @@ class PredefinedDictionaryExtractor(DictionaryExtractor):
             dicts.append(d)
 
         # Make sure none of the dictionaries have duplicate indices
-        def drop_dups(d): return d[~d.index.duplicated(keep='first')]
+        drop_dups = lambda d: d[~d.index.duplicated(keep='first')]
         dicts = [d if d.index.is_unique else drop_dups(d) for d in dicts]
 
         dictionary = pd.concat(dicts, axis=1, join='outer', sort=False)
