@@ -430,7 +430,7 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
             See: https://huggingface.co/transformers/main_classes/model.html
             and https://huggingface.co/transformers/model_doc/bert.html for
             further info.
-        tokenizer_kwargs(dict): Dictionary of named arguments for
+        tokenizer_kwargs (dict): Dictionary of named arguments for
             tokenizer.
             See https://huggingface.co/transformers/main_classes/tokenizer.html
             for further info.
