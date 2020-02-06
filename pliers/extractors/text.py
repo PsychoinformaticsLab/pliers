@@ -463,7 +463,7 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         self.tokenizer = transformers.BertTokenizer.from_pretrained(
             tokenizer, **tokenizer_kwargs)
         self.model = getattr(transformers, model_name).from_pretrained(
-            pretrained_model_or_path, **tokenizer_kwargs)
+            pretrained_model_or_path, **model_kwargs)
 
         super(PretrainedBertEncodingExtractor, self).__init__()
 
