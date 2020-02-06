@@ -9,15 +9,12 @@ from pliers.support.exceptions import PliersError
 from pliers.support.decorators import requires_nltk_corpus
 from pliers.datasets.text import fetch_dictionary
 from pliers.transformers import BatchTransformerMixin
-from pliers.utils import attempt_to_import, verify_dependencies, flatten, \
-    listify
+from pliers.utils import (attempt_to_import, verify_dependencies, flatten,
+    listify)
 import numpy as np
 import pandas as pd
 import nltk
-import itertools
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-import os
-import re
 import logging
 from six import string_types
 
@@ -337,7 +334,6 @@ class SpaCyExtractor(TextExtractor):
 
     ''' A generic class for Spacy Text extractors
 
-
     Uses SpaCy to extract features from text. Extracts features for every word
     (token) in a sentence.
 
@@ -409,32 +405,32 @@ class SpaCyExtractor(TextExtractor):
 
 class PretrainedBertEncodingExtractor(ComplexTextExtractor):
 
-    ''' Uses transformers library to extract contextualize encodings for words
+    ''' Uses transformers library to extract contextualized encodings for words
     or text sequences using pre-trained BERT models.
 
     Args:
-        pretrained_model_or_path(str): A string specifying which BERT
+        pretrained_model_or_path (str): A string specifying which BERT
             model to use. Can be one of pretrained BERT models listed at
             https://huggingface.co/transformers/pretrained_models.html
             or path to custom model.
-        tokenizer(str): Type of tokenization used in the tokenization step.
+        tokenizer (str): Type of tokenization used in the tokenization step.
             If different from model, out-of-vocabulary tokens may be treated as
             unknown tokens.
         framework (str): name deep learning framework to use. Must be 'pt'
             (PyTorch) or 'tensorflow'. Defaults to 'pt'.
-        encoding_level(str): A string specifying whether encodings for each
+        encoding_level (str): A string specifying whether encodings for each
             token or sequence encodings are to be returned. Must be one of
             'token', 'sequence'.
-        pooling(str): Optional argument, relevant for sequence-level embeddings
+        pooling (str): Optional argument, relevant for sequence-level embeddings
             only. If None and encoding_level='sequence', encodings for [CLS]
             tokens are returned. If encoding_level='sequence' and numpy
             function is specified, token-level embeddings are pooled according
             to specified method (e.g. 'mean', 'max', 'min').
-        model_kwargs(dict): Dictionary of named arguments for pretrained model.
+        model_kwargs (dict): Dictionary of named arguments for pretrained model.
             See: https://huggingface.co/transformers/main_classes/model.html
             and https://huggingface.co/transformers/model_doc/bert.html for
             further info.
-        tokenizer_kwargs(dict): Dictionary of named arguments for
+        tokenizer_kwargs (dict): Dictionary of named arguments for
             tokenizer.
             See https://huggingface.co/transformers/main_classes/tokenizer.html
             for further info.
@@ -464,9 +460,9 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         model_name = 'BertModel' if self.framework == 'pt' else 'TFBertModel'
 
         self.tokenizer = transformers.BertTokenizer.from_pretrained(
-            tokenizer, **model_kwargs)
+            tokenizer, **tokenizer_kwargs)
         self.model = getattr(transformers, model_name).from_pretrained(
-            pretrained_model_or_path, **tokenizer_kwargs)
+            pretrained_model_or_path, **model_kwargs)
 
         super(PretrainedBertEncodingExtractor, self).__init__()
 

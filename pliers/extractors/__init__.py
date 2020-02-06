@@ -64,7 +64,8 @@ from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
                    NumUniqueWordsExtractor, PartOfSpeechExtractor,
                    WordEmbeddingExtractor, TextVectorizerExtractor,
-                   VADERSentimentExtractor, SpaCyExtractor, PretrainedBertEncodingExtractor)
+                   VADERSentimentExtractor, SpaCyExtractor,
+                   PretrainedBertEncodingExtractor)
 from .video import (FarnebackOpticalFlowExtractor)
 
 __all__ = [
