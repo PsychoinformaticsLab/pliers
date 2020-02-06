@@ -10,7 +10,7 @@ from pliers.support.decorators import requires_nltk_corpus
 from pliers.datasets.text import fetch_dictionary
 from pliers.transformers import BatchTransformerMixin
 from pliers.utils import (attempt_to_import, verify_dependencies, flatten,
-    listify
+    listify)
 import numpy as np
 import pandas as pd
 import nltk
