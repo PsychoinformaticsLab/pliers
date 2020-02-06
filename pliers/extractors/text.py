@@ -421,7 +421,7 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         encoding_level (str): A string specifying whether encodings for each
             token or sequence encodings are to be returned. Must be one of
             'token', 'sequence'.
-        pooling(str): Optional argument, relevant for sequence-level embeddings
+        pooling (str): Optional argument, relevant for sequence-level embeddings
             only. If None and encoding_level='sequence', encodings for [CLS]
             tokens are returned. If encoding_level='sequence' and numpy
             function is specified, token-level embeddings are pooled according
