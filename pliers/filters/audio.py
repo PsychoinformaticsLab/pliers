@@ -34,7 +34,7 @@ class AudioResamplingFilter(AudioFilter):
     
     _log_attributes = ('target_sr', 'resample_type')
     
-    def __init__(self, target_sr=22050, resample_type='kaiser_best',
+    def __init__(self, target_sr=44100, resample_type='kaiser_best',
                  **librosa_kwargs):
         verify_dependencies(['librosa'])
         self.target_sr = target_sr
