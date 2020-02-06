@@ -5,7 +5,6 @@ python-twitter
 gensim
 google-api-python-client
 google-compute-engine
-IndicoIo
 librosa>=0.6.3
 matplotlib
 opencv-python
