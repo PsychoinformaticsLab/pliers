@@ -44,10 +44,11 @@ class AudioResamplingFilter(Filter):
         super(AudioResamplingFilter, self).__init__()
 
     def _filter(self, stim):
-        stim.data, stim.sr = librosa.core.resample(y=stim.data,
+        stim.data = librosa.core.resample(y=stim.data,
                                           orig_sr=stim.sampling_rate,
                                           target_sr=self.target_sr,
                                           resample_type=self.resample_type,
                                           **self.librosa_kwargs)
+        stim.sr = self.target_sr
         
         return stim
