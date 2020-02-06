@@ -17,7 +17,7 @@ class AudioTrimmingFilter(TemporalTrimmingFilter, AudioFilter):
     pass
 
 
-class AudioResamplingFilter(Filter):
+class AudioResamplingFilter(AudioFilter):
     
     ''' Librosa-based audio resampling Filter.
         Uses librosa.core.resample function.
@@ -33,9 +33,8 @@ class AudioResamplingFilter(Filter):
     '''
     
     _log_attributes = ('target_sr', 'resample_type')
-    _input_type = AudioStim
     
-    def __init__(self, target_sr=16000, resample_type='kaiser_best',
+    def __init__(self, target_sr=22050, resample_type='kaiser_best',
                  **librosa_kwargs):
         verify_dependencies(['librosa'])
         self.target_sr = target_sr
