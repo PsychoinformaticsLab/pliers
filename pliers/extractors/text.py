@@ -437,7 +437,8 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
     '''
 
     _log_attributes = ('pretrained_model', 'encoding_level',
-                       'pooling', 'framework', 'tokenizer_type')
+                       'pooling', 'framework', 'tokenizer_type',
+                       'model_kwargs', 'tokenizer_kwargs')
 
     def __init__(self,
                  pretrained_model_or_path='bert-base-uncased',
