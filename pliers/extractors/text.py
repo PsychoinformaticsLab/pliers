@@ -20,9 +20,8 @@ from six import string_types
 
 keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
                                  ['KeyedVectors'])
-sklearn_text = attempt_to_import(
-    'sklearn.feature_extraction.text', 'sklearn_text', [
-        'VectorizerMixin', 'CountVectorizer'])
+sklearn_text = attempt_to_import('sklearn.feature_extraction.text', 'sklearn_text',
+                                 ['CountVectorizer'])
 spacy = attempt_to_import('spacy')
 transformers = attempt_to_import('transformers')
 
@@ -289,7 +288,7 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
 
     def __init__(self, vectorizer=None, *vectorizer_args, **vectorizer_kwargs):
         verify_dependencies(['sklearn_text'])
-        if isinstance(vectorizer, sklearn_text.VectorizerMixin):
+        if isinstance(vectorizer, sklearn_text.CountVectorizer):
             self.vectorizer = vectorizer
         elif isinstance(vectorizer, str):
             vec = getattr(sklearn_text, vectorizer)
