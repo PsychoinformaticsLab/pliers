@@ -445,13 +445,19 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
                  framework='pt',
                  encoding_level='token',
                  pooling=None,
-                 model_kwargs={},
-                 tokenizer_kwargs={}):
+                 model_kwargs=None,
+                 tokenizer_kwargs=None):
 
         if framework not in ['pt', 'tf']:
             raise(ValueError('''Invalid framework;
                 must be one of 'pt' (pytorch) or 'tf' (tensorflow)'''))
-
+        
+        if model_kwargs is None:
+            model_kwargs = {}
+            
+        if tokenizer_kwargs is None:
+            tokenizer_kwargs = {}
+        
         self.pretrained_model = pretrained_model_or_path
         self.tokenizer_type = tokenizer
         self.framework = framework
