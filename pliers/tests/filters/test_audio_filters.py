@@ -39,5 +39,5 @@ def test_audio_resampling_filter(target_sr, resample_type):
     filt = AudioResamplingFilter(target_sr, resample_type)
     resampled = filt.transform(stim)
     
-    assert resampled.sampling_rate == target_rs
+    assert resampled.sampling_rate == target_sr
     assert np.abs(target_sr * stim.duration - resampled.shape[0]) <= 1
