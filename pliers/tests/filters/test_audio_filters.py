@@ -27,3 +27,15 @@ def test_audio_trimming_filter():
     error_filt = AudioTrimmingFilter(start=1.0, end=5.0, validation='strict')
     with pytest.raises(ValueError):
         short_audio = error_filt.transform(audio)
+    
+
+@pytest.mark.parametrize('target_sr', [8000, 22050])
+@pytest.mark.parametrize('resample_type', ['kaiser_best', 'kaiser_fast', 'scipy', 'fft', 'polyphase'])
+def test_audio_resampling_filter(target_sr, resample_type):
+
+    stim = AudioStim(join(AUDIO_DIR, 'homer.wav'))
+    filt = AudioResamplingFilter(target_sr, resample_type)
+    resampled = filt.transform(stim)
+    
+    assert resampled.sampling_rate == target_rs
+    assert np.abs(target_sr * stim.duration - resampled.shape[0]) <= 1
