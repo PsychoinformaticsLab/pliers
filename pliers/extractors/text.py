@@ -426,7 +426,7 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
             tokens are returned. If encoding_level='sequence' and numpy
             function is specified, token-level embeddings are pooled according
             to specified method (e.g. 'mean', 'max', 'min').
-        model_kwargs(dict): Dictionary of named arguments for pretrained model.
+        model_kwargs (dict): Dictionary of named arguments for pretrained model.
             See: https://huggingface.co/transformers/main_classes/model.html
             and https://huggingface.co/transformers/model_doc/bert.html for
             further info.
