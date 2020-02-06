@@ -463,6 +463,8 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         self.framework = framework
         self.encoding_level = encoding_level
         self.pooling = pooling
+        self.model_kwargs = model_kwargs
+        self.tokenizer_kwargs = tokenizer_kwargs
         model_name = 'BertModel' if self.framework == 'pt' else 'TFBertModel'
 
         self.tokenizer = transformers.BertTokenizer.from_pretrained(
@@ -473,7 +475,8 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         super(PretrainedBertEncodingExtractor, self).__init__()
 
     def _extract(self, stims):
-
+        
+        stims.name = ' '.join([s.text for s in stims.elements])
         text, onsets, durations = zip(
             *((s.text, s.onset, s.duration) for s in stims.elements))
         durations = [0.0 if d is None else d for d in durations]
@@ -514,24 +517,25 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
                                              axis=1, keepdims=True)
             else:
                 encodings = output[1]
-
-        def expand_metadata(metadata):
-            return listify(metadata) * len(encoded_tokens)
-
-        seq, model, tokenizer, pooling = map(expand_metadata,
-                                             [' '.join(text),
-                                              self.pretrained_model,
-                                              self.tokenizer_type,
-                                              str(self.pooling)])
-
-        data = [encodings.tolist(), encoded_tokens, t_text, token_positions,
-                seq, model, tokenizer, pooling]
-        features = ['encoding', 'token', 'word', 'token_position', 'sequence',
-                    'model', 'tokenizer', 'pooling']
+        
+        data = [encodings.tolist(), encoded_tokens, t_text]
+        features = ['encoding', 'token', 'word']
 
         return ExtractorResult(data, stims, self,
                                features=features,
                                onsets=t_ons, durations=t_dur)
 
-    def _to_df(self, result):
-        return pd.DataFrame(dict(zip(result.features, result._data)))
+    def _to_df(self, result, model_attributes=True):
+        
+        df_dict = dict(zip(result.features, result._data))
+        
+        if model_attributes:
+            log_dict = {attr: getattr(result.extractor, attr) for  
+                        attr in ['pretrained_model', 'encoding_level',
+                       'pooling', 'framework', 'tokenizer_type']}
+            df_dict.update(log_dict)
+        
+        result_df = pd.DataFrame(df_dict)    
+        result_df['object_id'] = range(result_df.shape[0])
+        
+        return result_df
