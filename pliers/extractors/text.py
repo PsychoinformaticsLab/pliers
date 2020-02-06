@@ -16,7 +16,6 @@ import pandas as pd
 import nltk
 import itertools
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-import os
 import re
 import logging
 from six import string_types
