@@ -461,7 +461,7 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         model_name = 'BertModel' if self.framework == 'pt' else 'TFBertModel'
 
         self.tokenizer = transformers.BertTokenizer.from_pretrained(
-            tokenizer, **model_kwargs)
+            tokenizer, **tokenizer_kwargs)
         self.model = getattr(transformers, model_name).from_pretrained(
             pretrained_model_or_path, **tokenizer_kwargs)
 
