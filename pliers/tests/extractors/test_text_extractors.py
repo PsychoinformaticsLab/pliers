@@ -204,7 +204,7 @@ def test_spacy_token_extractor():
 
     assert result['text'][1] == 'is'
     assert result['lemma_'][1].lower() == 'be'
-    assert result['pos_'][1] == 'VERB'
+    assert result['pos_'][1] == 'AUX'
     assert result['tag_'][1] == 'VBZ'
     assert result['dep_'][1] == 'ROOT'
     assert result['shape_'][1] == 'xx'

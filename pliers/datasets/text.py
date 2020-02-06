@@ -36,7 +36,7 @@ def _download_dictionary(url, format, rename):
     with open(_file, 'wb') as f:
         f.write(r.content)
 
-    if zipfile.is_zipfile(_file):
+    if format != 'xlsx' and zipfile.is_zipfile(_file):
         with zipfile.ZipFile(_file) as zf:
             source = zf.namelist()[0]
             zf.extract(source, tmpdir)
