@@ -1,6 +1,8 @@
 from os.path import join
 from ..utils import get_test_data_path
-from pliers.filters import AudioTrimmingFilter, TemporalTrimmingFilter
+from pliers.filters import (AudioTrimmingFilter, 
+                            TemporalTrimmingFilter,
+                            AudioResamplingFilter)
 from pliers.stimuli import AudioStim
 import pytest
 
