@@ -334,7 +334,6 @@ class SpaCyExtractor(TextExtractor):
 
     ''' A generic class for Spacy Text extractors
 
-
     Uses SpaCy to extract features from text. Extracts features for every word
     (token) in a sentence.
 
