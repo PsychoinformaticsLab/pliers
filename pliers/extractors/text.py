@@ -418,7 +418,7 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
             unknown tokens.
         framework (str): name deep learning framework to use. Must be 'pt'
             (PyTorch) or 'tensorflow'. Defaults to 'pt'.
-        encoding_level(str): A string specifying whether encodings for each
+        encoding_level (str): A string specifying whether encodings for each
             token or sequence encodings are to be returned. Must be one of
             'token', 'sequence'.
         pooling(str): Optional argument, relevant for sequence-level embeddings
