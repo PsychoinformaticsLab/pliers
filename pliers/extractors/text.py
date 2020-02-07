@@ -411,18 +411,20 @@ class WordCounterExtractor(BatchTransformerMixin, TextExtractor):
                          scale (defaults to False)
         '''
 
-    _log_attributes = ('log_scale',)
+    _log_attributes = ('case_sensitive', 'log_scale')
     _batch_size = sys.maxsize
 
-    def __init__(self, log_scale=False):
+    def __init__(self, case_sensitive=False, log_scale=False):
 
         self.log_scale = log_scale
+        self.case_sensitive = case_sensitive
         self.features = ['log_word_count'] if self.log_scale else ['word_count']
         super(WordCounterExtractor, self).__init__()
 
     def _extract(self, stims):
 
-        tokens = [s.text.lower() for s in stims]
+        tokens = [s.text for s in stims]
+        tokens = [t if self.case_sensitive else t.lower() for t in tokens]
         word_counter = pd.Series(tokens).groupby(tokens).cumcount() + 1
         if self.log_scale:
             word_counter = np.log(word_counter)
