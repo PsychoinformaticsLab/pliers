@@ -272,7 +272,6 @@ def test_word_counter_extractor():
                                     'plural texts Oh words')
     stim_with_onsets = ComplexTextStim(filename=join(TEXT_DIR,
                                        'complex_stim_with_repetitions.txt'))
-
     ext = WordCounterExtractor()
     result_stim_txt = merge_results(ext.transform(stim_txt),
                                     extractor_names=False)
