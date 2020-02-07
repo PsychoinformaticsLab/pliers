@@ -4,9 +4,7 @@ another `Stim` instance).
 '''
 
 from .base import Extractor, ExtractorResult, merge_results
-from .api import (IndicoAPITextExtractor,
-                  IndicoAPIImageExtractor,
-                  ClarifaiAPIImageExtractor,
+from .api import (ClarifaiAPIImageExtractor,
                   ClarifaiAPIVideoExtractor,
                   GoogleVisionAPIFaceExtractor,
                   GoogleVisionAPILabelExtractor,
@@ -71,8 +69,6 @@ from .video import (FarnebackOpticalFlowExtractor)
 __all__ = [
     'Extractor',
     'ExtractorResult',
-    'IndicoAPITextExtractor',
-    'IndicoAPIImageExtractor',
     'ClarifaiAPIImageExtractor',
     'ClarifaiAPIVideoExtractor',
     'STFTAudioExtractor',

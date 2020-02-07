@@ -122,7 +122,7 @@ class PredefinedDictionaryExtractor(DictionaryExtractor):
     _log_attributes = ('variables', 'missing', 'case_sensitive')
     VERSION = '1.0'
 
-    def __init__(self, variables, missing=np.nan, case_sensitive=True,
+    def __init__(self, variables, missing=np.nan, case_sensitive=False,
                  force_retrieve=False):
 
         self.case_sensitive = case_sensitive
