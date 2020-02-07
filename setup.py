@@ -33,7 +33,7 @@ setup(
     extras_require={
         'all': ['google-api-python-client', 'google-compute-engine',
                 'tensorflow', 'clarifai', 'opencv-python', 'face_recognition',
-                'gensim', 'IndicoIo', 'pytesseract', 'librosa>=0.6.3',
+                'gensim', 'pytesseract', 'librosa>=0.6.3',
                 'rev_ai', 'spacy', 'SpeechRecognition>=3.6.0', 'pysrt',
                 'python-twitter', 'pathos', 'scikit-learn', 'matplotlib',
                 'seaborn', 'pygraphviz', 'xlrd', 'duecredit']

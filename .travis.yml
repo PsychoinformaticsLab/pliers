@@ -1,28 +1,33 @@
 sudo: required
-dist: trusty
+dist: xenial
 language: python
 matrix:
   include:
   - os: linux
     env:
-    - PYTHON_VERSION=3.5
-    - MINICONDA_URL="https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh"
-    python: 3.5
-  - os: linux
-    env:
     - PYTHON_VERSION=3.6
     - MINICONDA_URL="https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh"
     python: 3.6
+  - os: linux
+    env:
+    - PYTHON_VERSION=3.7
+    - MINICONDA_URL="https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+    python: 3.7
 before_install:
 - openssl aes-256-cbc -K $encrypted_a0a62c26415d_key -iv $encrypted_a0a62c26415d_iv
   -in pliers/tests/credentials/google.json.enc -out pliers/tests/credentials/google.json -d || true
-- sudo add-apt-repository ppa:mc3man/trusty-media -y
-- sudo apt-get -qq update
-- sudo apt-get install libmp3lame-dev ffmpeg tesseract-ocr graphviz cmake
+- sudo apt-get install libavformat-dev libavfilter-dev libavdevice-dev ffmpeg libmp3lame-dev tesseract-ocr graphviz cmake
 - export MINICONDA=$HOME/miniconda
 - export PATH="$MINICONDA/bin:$PATH"
-- wget $MINICONDA_URL -O miniconda.sh;
-- bash miniconda.sh -b -f -p $MINICONDA;
+- if test -e $MINICONDA/bin ; then
+    echo "miniconda already installed.";
+  else
+      echo "Installing miniconda.";
+      rm -rf $HOME/miniconda;
+      if [[ -d $HOME/miniconda.sh ]]; then rm -rf $HOME/miniconda.sh; fi;
+      wget $MINICONDA_URL -O miniconda.sh;
+      bash miniconda.sh -b -f -p $MINICONDA;
+  fi
 - hash -r
 - conda info -a
 - conda config --set always_yes yes --set changeps1 no
@@ -35,7 +40,7 @@ install:
 - sudo apt-get install libboost-python-dev
 - pip install --upgrade --ignore-installed setuptools
 - pip install -r requirements.txt --upgrade
-- pip install -r optional-dependencies.txt --upgrade 
+- pip install -r optional-dependencies.txt --upgrade
 - pip install --upgrade coveralls pytest-cov
 
 before_script:

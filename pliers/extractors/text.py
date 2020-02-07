@@ -22,7 +22,7 @@ from six import string_types
 keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
                                  ['KeyedVectors'])
 sklearn_text = attempt_to_import('sklearn.feature_extraction.text', 'sklearn_text',
-                                 ['VectorizerMixin', 'CountVectorizer'])
+                                 ['CountVectorizer'])
 spacy = attempt_to_import('spacy')
 
 class TextExtractor(Extractor):
@@ -121,7 +121,7 @@ class PredefinedDictionaryExtractor(DictionaryExtractor):
     _log_attributes = ('variables', 'missing', 'case_sensitive')
     VERSION = '1.0'
 
-    def __init__(self, variables, missing=np.nan, case_sensitive=True,
+    def __init__(self, variables, missing=np.nan, case_sensitive=False,
                  force_retrieve=False):
 
         self.case_sensitive = case_sensitive
@@ -286,7 +286,7 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
 
     def __init__(self, vectorizer=None, *vectorizer_args, **vectorizer_kwargs):
         verify_dependencies(['sklearn_text'])
-        if isinstance(vectorizer, sklearn_text.VectorizerMixin):
+        if isinstance(vectorizer, sklearn_text.CountVectorizer):
             self.vectorizer = vectorizer
         elif isinstance(vectorizer, str):
             vec = getattr(sklearn_text, vectorizer)
