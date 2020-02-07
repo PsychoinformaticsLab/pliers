@@ -420,17 +420,16 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         encoding_level (str): A string specifying whether encodings for each
             token or sequence encodings are to be returned. Must be one of
             'token', 'sequence'.
-        pooling (str): Optional argument, relevant for sequence-level embeddings
-            only. If None and encoding_level='sequence', encodings for [CLS]
-            tokens are returned. If encoding_level='sequence' and numpy
-            function is specified, token-level embeddings are pooled according
-            to specified method (e.g. 'mean', 'max', 'min').
-        model_kwargs (dict): Dictionary of named arguments for pretrained model.
+        pooling (str): Optional argument, relevant for sequence-level
+            embeddings only. If None and encoding_level='sequence', encodings
+            for [CLS] tokens are returned. If encoding_level='sequence' and
+            numpy function is specified, token-level embeddings are pooled
+            according to specified method (e.g. 'mean', 'max', 'min').
+        model_kwargs (dict): Named arguments for pretrained model.
             See: https://huggingface.co/transformers/main_classes/model.html
             and https://huggingface.co/transformers/model_doc/bert.html for
             further info.
-        tokenizer_kwargs (dict): Dictionary of named arguments for
-            tokenizer.
+        tokenizer_kwargs (dict): Named arguments for tokenizer.
             See https://huggingface.co/transformers/main_classes/tokenizer.html
             for further info.
     '''
@@ -451,13 +450,13 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         if framework not in ['pt', 'tf']:
             raise(ValueError('''Invalid framework;
                 must be one of 'pt' (pytorch) or 'tf' (tensorflow)'''))
-        
+
         if model_kwargs is None:
             model_kwargs = {}
-            
+
         if tokenizer_kwargs is None:
             tokenizer_kwargs = {}
-        
+
         self.pretrained_model = pretrained_model_or_path
         self.tokenizer_type = tokenizer
         self.framework = framework
@@ -475,7 +474,7 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         super(PretrainedBertEncodingExtractor, self).__init__()
 
     def _extract(self, stims):
-        
+
         stims.name = ' '.join([s.text for s in stims.elements])
         text, onsets, durations = zip(
             *((s.text, s.onset, s.duration) for s in stims.elements))
@@ -483,7 +482,6 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
 
         tokens = [self.tokenizer.tokenize(t) for t in text]
         tokens_flat = list(flatten(tokens))
-        token_positions = np.arange(0, len(tokens_flat))
 
         def cast_to_token_level(word_level_list):
             token_level_list = [listify(word_level_list[i]) * len(tok)
@@ -506,7 +504,6 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
 
         elif self.encoding_level == 'sequence':
             encoded_tokens = [' '.join(text)]
-            token_positions = ['None']
             t_text = ['None']
             t_dur = t_ons[-1] + t_dur[-1] - t_ons[0]
             t_ons = t_ons[0]
@@ -517,7 +514,7 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
                                              axis=1, keepdims=True)
             else:
                 encodings = output[1]
-        
+
         data = [encodings.tolist(), encoded_tokens, t_text]
         features = ['encoding', 'token', 'word']
 
@@ -526,16 +523,15 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
                                onsets=t_ons, durations=t_dur)
 
     def _to_df(self, result, model_attributes=True):
-        
         df_dict = dict(zip(result.features, result._data))
-        
+
         if model_attributes:
-            log_dict = {attr: getattr(result.extractor, attr) for  
+            log_dict = {attr: getattr(result.extractor, attr) for
                         attr in ['pretrained_model', 'encoding_level',
-                       'pooling', 'framework', 'tokenizer_type']}
+                        'pooling', 'framework', 'tokenizer_type']}
             df_dict.update(log_dict)
-        
-        result_df = pd.DataFrame(df_dict)    
+
+        result_df = pd.DataFrame(df_dict)
         result_df['object_id'] = range(result_df.shape[0])
-        
+
         return result_df
