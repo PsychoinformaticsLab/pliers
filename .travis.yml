@@ -19,8 +19,15 @@ before_install:
 - sudo apt-get install libavformat-dev libavfilter-dev libavdevice-dev ffmpeg libmp3lame-dev tesseract-ocr graphviz cmake
 - export MINICONDA=$HOME/miniconda
 - export PATH="$MINICONDA/bin:$PATH"
-- wget $MINICONDA_URL -O miniconda.sh;
-- bash miniconda.sh -b -f -p $MINICONDA;
+- if test -e $MINICONDA/bin ; then
+    echo "miniconda already installed.";
+  else
+      echo "Installing miniconda.";
+      rm -rf $HOME/miniconda;
+      if [[ -d $HOME/miniconda.sh ]]; then rm -rf $HOME/miniconda.sh; fi;
+      wget $MINICONDA_URL -O miniconda.sh;
+      bash miniconda.sh -b -f -p $MINICONDA;
+  fi
 - hash -r
 - conda info -a
 - conda config --set always_yes yes --set changeps1 no

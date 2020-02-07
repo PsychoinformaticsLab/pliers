@@ -1,7 +1,5 @@
 from .clarifai import (ClarifaiAPIImageExtractor,
                        ClarifaiAPIVideoExtractor)
-from .indico import (IndicoAPITextExtractor,
-                     IndicoAPIImageExtractor)
 from .google import (GoogleVisionAPIFaceExtractor,
                      GoogleVisionAPILabelExtractor,
                      GoogleVisionAPIPropertyExtractor,
@@ -29,8 +27,6 @@ from .microsoft import (MicrosoftAPIFaceExtractor,
 __all__ = [
     'ClarifaiAPIImageExtractor',
     'ClarifaiAPIVideoExtractor',
-    'IndicoAPITextExtractor',
-    'IndicoAPIImageExtractor',
     'GoogleVisionAPIFaceExtractor',
     'GoogleVisionAPILabelExtractor',
     'GoogleVisionAPIPropertyExtractor',
