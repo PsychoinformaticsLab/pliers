@@ -82,7 +82,7 @@ class WordStemmingFilter(TextFilter):
             return pos_tagged
         
         if self.tokenize:
-            tokens = [s.lower() for s in stim.text.split()] if not self.case_sensitive else stim.text.split()
+            tokens = nltk.word_tokenize(stim.text)
             if not isinstance(self.stemmer, stem.WordNetLemmatizer):
                 stemmed = ' '.join([self.stemmer.stem(tok) for tok in tokens])
             else:
