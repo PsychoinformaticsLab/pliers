@@ -143,14 +143,17 @@ class ExtractorResult(object):
         # take our best guess. The logic is that we increment the object
         # counter for any row in the DF that cannot be uniquely distinguished
         # from other rows by onset and duration.
-        if object_id and 'object_id' not in df.columns:
-            index = pd.Series(onsets).astype(str) + '_' + \
-                pd.Series(durations).astype(str)
-            if object_id is True or (object_id == 'auto' and
-                                     len(set(index)) < len(df)):
-                ids = np.arange(len(df)) if len(index) == 1 \
-                    else df.groupby(index).cumcount()
-                df.insert(0, 'object_id', ids)
+        if object_id:
+            if 'object_id' not in df.columns:
+                index = pd.Series(onsets).astype(str) + '_' + \
+                    pd.Series(durations).astype(str)
+                if object_id is True or (object_id == 'auto' and
+                                         len(set(index)) < len(df)):
+                    ids = np.arange(len(df)) if len(index) == 1 \
+                        else df.groupby(index).cumcount()
+                    df.insert(0, 'object_id', ids)
+                    index_cols = ['object_id']
+            else:
                 index_cols = ['object_id']
 
         if timing is True or (timing == 'auto' and
