@@ -21,6 +21,11 @@ def test_word_stemming_filter():
     stim = ComplexTextStim(join(TEXT_DIR, 'sample_text.txt'),
                            columns='to', default_duration=1)
 
+    try:
+        nltk.find('taggers/universal_tagset')
+    except LookupError:
+        nltk.download('universal_tagset')
+
     # With all defaults (porter stemmer)
     filt = WordStemmingFilter()
     assert isinstance(filt.stemmer, nls.PorterStemmer)
