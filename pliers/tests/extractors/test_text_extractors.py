@@ -263,7 +263,6 @@ def test_spacy_doc_extractor():
 
 
 def test_word_counter_extractor():
-
     stim_txt = ComplexTextStim(text='This is a text where certain words occur'
                                     ' again and again Sometimes they are '
                                     'lowercase sometimes they are uppercase '
