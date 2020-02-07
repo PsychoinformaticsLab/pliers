@@ -7,6 +7,7 @@ from pliers.filters import (WordStemmingFilter,
                             PunctuationRemovalFilter)
 from pliers.graph import Graph
 from pliers.stimuli import ComplexTextStim, TextStim
+from pliers.support.decorators import requires_nltk_corpus
 from nltk import stem as nls
 from nltk.tokenize import PunktSentenceTokenizer
 import nltk
@@ -48,6 +49,10 @@ def test_word_stemming_filter():
         nltk.find('taggers/universal_tagset')
     except LookupError:
         nltk.download('universal_tagset')
+    try:
+        ntlk.find('corpora/wordnet')
+    except LookupError:
+        nltk.download('wordnet')
     stim = ComplexTextStim(text='These are tests for Stemming filters')
     filt = WordStemmingFilter(stemmer='wordnet')
     lemmatized = filt.transform(stim)

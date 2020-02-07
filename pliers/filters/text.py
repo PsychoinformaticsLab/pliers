@@ -51,13 +51,9 @@ class WordStemmingFilter(TextFilter):
 
     _log_attributes = ('stemmer', 'tokenize', 'case_sensitive')
 
+    @requires_nltk_corpus
     def __init__(self, stemmer='porter', tokenize=True, case_sensitive=False,
                  *args, **kwargs):
-        if stemmer == 'wordnet' or isinstance(stemmer, stem.WordNetLemmatizer):
-            try:
-                nltk.find('corpora/wordnet')
-            except LookupError:
-                ntlk.download('wordnet')
         if isinstance(stemmer, string_types):
             if stemmer not in self._stemmers:
                 valid = list(self._stemmers.keys())
@@ -72,6 +68,7 @@ class WordStemmingFilter(TextFilter):
         self.case_sensitive = case_sensitive
         super(WordStemmingFilter, self).__init__()
 
+    @requires_nltk_corpus
     def _filter(self, stim):
         pos_map = {
             'ADJ': 'a',
