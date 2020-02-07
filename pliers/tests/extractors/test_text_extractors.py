@@ -260,46 +260,39 @@ def test_spacy_doc_extractor():
     assert result['is_parsed'][3]
     assert result['is_tagged'][3]
     assert result['is_sentenced'][3]
-    
+
+
 def test_word_counter_extractor():
-    
-    stim_txt = ComplexTextStim(text = 'This is a text where certain words occur again and again '
-                               'Sometimes they are lowercase sometimes they are uppercase '
-                               'There are also words that may look different but they come from the same lemma '
-                               'Take a word like text and its plural texts ' 
-                               'Oh words ')
-    stim_with_onsets = ComplexTextStim(filename = join(TEXT_DIR, 'complex_stim_with_repetitions.txt'))
-    
+
+    stim_txt = ComplexTextStim(text='This is a text where certain words occur'
+                                    ' again and again Sometimes they are '
+                                    'lowercase sometimes they are uppercase '
+                                    'There are also words that may look '
+                                    'different but they come from the same '
+                                    'lemma Take a word like text and its '
+                                    'plural texts Oh words')
+    stim_with_onsets = ComplexTextStim(filename=join(TEXT_DIR,
+                                       'complex_stim_with_repetitions.txt'))
+
     ext = WordCounterExtractor()
-    result_stim_txt = merge_results(ext.transform(stim_txt), extractor_names=False)    
-    result_stim_with_onsets = merge_results(ext.transform(stim_with_onsets), extractor_names=False)
-      
+    result_stim_txt = merge_results(ext.transform(stim_txt),
+                                    extractor_names=False)
+    result_stim_with_onsets = merge_results(ext.transform(stim_with_onsets),
+                                            extractor_names=False)
     assert result_stim_txt.shape[0] == 45
     assert all(result_stim_txt['word_count'] >= 1)
     assert result_stim_txt['word_count'][15] == 2
     assert result_stim_txt['word_count'][44] == 3
-    
     assert result_stim_with_onsets.shape[0] == 8
     assert result_stim_with_onsets['onset'][2] == 0.8
     assert result_stim_with_onsets['duration'][2] == 0.1
     assert result_stim_with_onsets['word_count'][2] == 2
     assert result_stim_with_onsets['word_count'][5] == 2
     assert result_stim_with_onsets['word_count'][7] == 1
-    
-    ext2 = WordCounterExtractor(lemmatize=True)
-    result_stim_txt = merge_results(ext2.transform(stim_txt), extractor_names=False)
-    result_stim_with_onsets = merge_results(ext2.transform(stim_with_onsets), extractor_names=False)
-    
-    assert result_stim_txt['word_count'][15] == 2
-    assert result_stim_txt['word_count'][44] == 4
-    assert result_stim_txt['word_count'][13] == 2   
-    
-    assert result_stim_with_onsets['word_count'][5] == 3
-    assert result_stim_with_onsets['word_count'][7] == 2
-    
-    ext3 = WordCounterExtractor(log_scale=True)
-    result_stim_txt = merge_results(ext3.transform(stim_txt), extractor_names=False)
-    
+
+    ext2 = WordCounterExtractor(log_scale=True)
+    result_stim_txt = merge_results(ext2.transform(stim_txt),
+                                    extractor_names=False)
     assert all(result_stim_txt['log_word_count'] >= 0)
     assert result_stim_txt['log_word_count'][15] == np.log(2)
     assert result_stim_txt['log_word_count'][44] == np.log(3)
