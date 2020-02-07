@@ -81,17 +81,15 @@ class WordStemmingFilter(TextFilter):
             pos_tagged = {tok: pos_map[tag] if tag in pos_map else 'n' for tok,tag in pos_tagged.items()}
             return pos_tagged
         
-        tokens = stim.text
+        tokens = [stim.text]
         if self.tokenize:
             tokens = nltk.word_tokenize(tokens[0])
-            tokens = [t.lower() if not self.case_sensitive else t for t in tokens ]
-
+            tokens = [tok.lower() if not self.case_sensitive else tok for tok in tokens]
         if not isinstance(self.stemmer, stem.WordNetLemmatizer):
             stemmed = ' '.join([self.stemmer.stem(tok) for tok in tokens])
         else:
             pos_tagged = pos_wordnet(tokens)
             stemmed = ' '.join([self.stemmer.lemmatize(tok, pos=pos_tagged[tok]) for tok in tokens])
-                
         return TextStim(stim.filename, stemmed)
 
 
