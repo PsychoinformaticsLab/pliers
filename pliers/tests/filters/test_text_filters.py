@@ -49,7 +49,7 @@ def test_word_stemming_filter():
     except LookupError:
         nltk.download('universal_tagset')
     try:
-        ntlk.find('corpora/wordnet')
+        nltk.find('corpora/wordnet')
     except LookupError:
         nltk.download('wordnet')
     stim = ComplexTextStim(text='These are tests for Stemming filters')
