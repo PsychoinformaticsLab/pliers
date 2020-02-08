@@ -7,7 +7,6 @@ from pliers.filters import (WordStemmingFilter,
                             PunctuationRemovalFilter)
 from pliers.graph import Graph
 from pliers.stimuli import ComplexTextStim, TextStim
-from pliers.support.decorators import requires_nltk_corpus
 from nltk import stem as nls
 from nltk.tokenize import PunktSentenceTokenizer
 import nltk

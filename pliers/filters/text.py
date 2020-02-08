@@ -10,6 +10,7 @@ from nltk.tokenize import word_tokenize
 from nltk.tokenize import * # noqa
 from nltk.tokenize.api import TokenizerI
 from pliers.stimuli.text import TextStim
+from pliers.support.decorators import requires_nltk_corpus
 from .base import Filter
 
 
