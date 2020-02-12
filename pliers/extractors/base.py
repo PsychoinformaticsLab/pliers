@@ -166,6 +166,9 @@ class ExtractorResult(object):
             index_cols.extend(['onset', 'order', 'duration'])
 
         if format == 'long':
+            for col in self._log_attributes:
+                if col in df.columns:
+                    index_cols.append(col)
             df = df.melt(index_cols, var_name='feature')
             df = df.dropna(subset=['value'])
 
