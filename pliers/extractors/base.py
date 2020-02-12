@@ -131,7 +131,7 @@ class ExtractorResult(object):
         orders = np.nan if orders is None else orders
 
         # If any features clash with protected keys, append underscore
-        protected = ['onset', 'order', 'duration', 'extractor', 'stim_name', \
+        protected = ['onset', 'order', 'duration', 'extractor', 'stim_name',
                      'class', 'filename', 'history', 'source_file']
         df = df.rename(columns={k: k + '_' for k in protected})
 
