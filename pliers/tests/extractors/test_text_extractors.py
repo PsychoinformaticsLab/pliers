@@ -315,7 +315,8 @@ def test_pretrained_bert_large_extractor():
     assert len(res['encoding'][0]) == 1024
     
     # clear to prevent memory issues
-    dir_path = '~/.cache/torch/transformers/'
+    home = os.path.expanduser("~")
+    dir_path = home + '/.cache/torch/transformers'
     file_list = os.listdir(dir_path)
     for fn in file_list:
         os.remove(dir_path + '/' + fn)
