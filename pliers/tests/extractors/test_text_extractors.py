@@ -16,7 +16,7 @@ import numpy as np
 from os.path import join
 import pytest
 import spacy
-import os
+from os import environ
 
 TEXT_DIR = join(get_test_data_path(), 'text')
 
