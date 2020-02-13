@@ -110,8 +110,13 @@ class ExtractorResult(object):
         # Ideally, Extractors should implement their own _to_df() class method
         # that produces a DataFrame in standardized format. Failing that, we
         # assume self._data is already array-like and can be wrapped in a DF.
+        index_cols = []
+
         if hasattr(self.extractor, '_to_df'):
             df = self.extractor._to_df(self, **to_df_kwargs)
+            for col in self.extractor._log_attributes:
+                if col in df.columns:
+                    index_cols.append(col)
         else:
             features = self.features
             data = np.array(self._data)
@@ -134,8 +139,6 @@ class ExtractorResult(object):
         protected = ['onset', 'order', 'duration', 'extractor', 'stim_name',
                      'class', 'filename', 'history', 'source_file']
         df = df.rename(columns={k: k + '_' for k in protected})
-
-        index_cols = []
 
         # Generally we leave it to Extractors to properly track the number of
         # objects returned in the result DF, using the 'object_id' column.
@@ -166,9 +169,6 @@ class ExtractorResult(object):
             index_cols.extend(['onset', 'order', 'duration'])
 
         if format == 'long':
-            for col in self._log_attributes:
-                if col in df.columns:
-                    index_cols.append(col)
             df = df.melt(index_cols, var_name='feature')
             df = df.dropna(subset=['value'])
 
