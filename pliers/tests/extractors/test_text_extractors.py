@@ -303,6 +303,8 @@ def test_pretrained_bert_encoding_extractor():
     assert res_sequence['token'][0] == 'This is not a tokenized sentence .'
     assert res_sequence['word'][0] == 'None'
 
+    del ext_base, ext_base_tf, ext_sequence, ext_sequence_pooling
+    del res, res_file, res_base_tf, res_sequence, res_sequence_pooling
 
 def test_pretrained_bert_large_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
@@ -310,3 +312,5 @@ def test_pretrained_bert_large_extractor():
                                                tokenizer='bert-large-uncased')
     res = ext.transform(stim).to_df()
     assert len(res['encoding'][0]) == 1024
+    
+    del ext, res
