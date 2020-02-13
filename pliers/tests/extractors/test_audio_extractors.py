@@ -119,7 +119,7 @@ def test_polyfeatures_extractor():
     assert np.isclose(df['coefficient_3'][2], 12.32108)
 
 
-@pytest.mark.skipif(environ.get('TRAVIS', False))
+@pytest.mark.skipif(environ.get('TRAVIS', False) == 'true')
 def test_zcr_extractor():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'),
                       onset=2.0)
