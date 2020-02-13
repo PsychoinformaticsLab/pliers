@@ -262,6 +262,7 @@ def test_spacy_doc_extractor():
     assert result['is_tagged'][3]
     assert result['is_sentenced'][3]
 
+
 def test_pretrained_bert_encoding_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
@@ -307,16 +308,11 @@ def test_pretrained_bert_encoding_extractor():
     del ext_base, ext_base_tf, ext_sequence, ext_sequence_pooling
     del res, res_file, res_base_tf, res_sequence, res_sequence_pooling
 
+
+@pytest.mark.skipif(environ.get('TRAVIS', False) == 'true')
 def test_pretrained_bert_large_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     ext = PretrainedBertEncodingExtractor(pretrained_model_or_path='bert-large-uncased',
                                                tokenizer='bert-large-uncased')
     res = ext.transform(stim).to_df()
     assert len(res['encoding'][0]) == 1024
-    
-    # clear to prevent memory issues
-    home = os.path.expanduser("~")
-    dir_path = home + '/.cache/torch/transformers'
-    file_list = os.listdir(dir_path)
-    for fn in file_list:
-        os.remove(dir_path + '/' + fn)
