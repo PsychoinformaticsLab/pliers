@@ -16,6 +16,7 @@ import numpy as np
 from os.path import join
 import pytest
 import spacy
+import os
 
 TEXT_DIR = join(get_test_data_path(), 'text')
 
@@ -313,4 +314,8 @@ def test_pretrained_bert_large_extractor():
     res = ext.transform(stim).to_df()
     assert len(res['encoding'][0]) == 1024
     
-    del ext, res
+    # clear to prevent memory issues
+    dir_path = '~/.cache/torch/transformers/'
+    file_list = os.listdir(dir_path)
+    for fn in file_list:
+        os.remove(dir_path + '/' + fn)
