@@ -13,7 +13,6 @@ from ..utils import get_test_data_path
 
 import numpy as np
 from os.path import join
-from os import environ
 import pytest
 import spacy
 
@@ -96,7 +95,6 @@ def test_predefined_dictionary_retrieval():
                       6.65101626)
 
 
-@pytest.mark.skipif(environ.get('TRAVIS', False))
 def test_part_of_speech_extractor():
     import nltk
     nltk.download('tagsets')

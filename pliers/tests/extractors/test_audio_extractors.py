@@ -27,6 +27,8 @@ from pliers.extractors import (LibrosaFeatureExtractor,
 from pliers.stimuli import (ComplexTextStim, AudioStim,
                             TranscribedAudioCompoundStim)
 import numpy as np
+import pytest
+from os import environ
 
 AUDIO_DIR = join(get_test_data_path(), 'audio')
 
@@ -117,6 +119,7 @@ def test_polyfeatures_extractor():
     assert np.isclose(df['coefficient_3'][2], 12.32108)
 
 
+@pytest.mark.skipif(environ.get('TRAVIS', False))
 def test_zcr_extractor():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'),
                       onset=2.0)
