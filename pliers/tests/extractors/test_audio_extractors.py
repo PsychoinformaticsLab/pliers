@@ -138,8 +138,9 @@ def test_zcr_extractor():
     assert np.isclose(df['zero_crossing_rate'][0], 0.140625)
 
 
-@pytest.mark.skipif(environ.get('TRAVIS', False) == 'true',
-                    reason='test times out on travis')
+@pytest.mark.skipif(
+    'TRAVIS' in environ & environ.get('PYTHON_VERSION', None) == 3.6,
+    reason='test times out on travis')
 def test_chroma_extractors():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
     ext = ChromaSTFTExtractor()
@@ -322,8 +323,9 @@ def test_beat_track_extractor():
     assert np.isclose(df['beat_track'][101], 1195)
 
 
-@pytest.mark.skipif(environ.get('TRAVIS', False) == 'true',
-                    reason='test times out on travis')
+@pytest.mark.skipif(
+    'TRAVIS' in environ & environ.get('PYTHON_VERSION', None) == 3.6,
+    reason='test times out on travis')
 def test_harmonic_extractor():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
     ext = HarmonicExtractor()
@@ -342,8 +344,9 @@ def test_harmonic_extractor():
     assert np.isclose(df['harmonic'][29], -0.004497, rtol=1e-4)
 
 
-@pytest.mark.skipif(environ.get('TRAVIS', False) == 'true',
-                    reason='test times out on travis')
+@pytest.mark.skipif(
+    'TRAVIS' in environ & environ.get('PYTHON_VERSION', None) == 3.6,
+    reason='test times out on travis')
 def test_percussion_extractor():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
     ext = PercussiveExtractor()
