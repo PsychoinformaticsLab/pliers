@@ -95,7 +95,8 @@ class WordStemmingFilter(TextFilter):
             pos_tagged = pos_wordnet(tokens)
             stemmed = ' '.join([self.stemmer.lemmatize(t, pos=pos_tagged[t])
                                 for t in tokens])
-        return TextStim(stim.filename, stemmed)
+        return TextStim(stim.filename, stemmed, stim.onset, stim.duration,
+                        stim.order, stim.url)
 
 
 class TokenizingFilter(TextFilter):
