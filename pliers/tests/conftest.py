@@ -28,7 +28,8 @@ def pytest_runtest_teardown(item):
     consumed_ram_log.append(log_entry)
     gc.collect()
 
-LEAK_LIMIT = 10 * 1024 * 1024
+
+LEAK_LIMIT = 5 * 1024 * 1024
 
 
 def pytest_terminal_summary(terminalreporter):
