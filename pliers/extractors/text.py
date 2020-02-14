@@ -402,7 +402,7 @@ class SpaCyExtractor(TextExtractor):
                                features=self.features, orders=order_list)
 
 
-class WordCounterExtractor(BatchTransformerMixin, TextExtractor):
+class WordCounterExtractor(ComplexTextExtractor):
 
     ''' Extracts number of times each unique word has occurred within text
 
@@ -412,7 +412,6 @@ class WordCounterExtractor(BatchTransformerMixin, TextExtractor):
         '''
 
     _log_attributes = ('case_sensitive', 'log_scale')
-    _batch_size = sys.maxsize
 
     def __init__(self, case_sensitive=False, log_scale=False):
 
@@ -433,3 +432,4 @@ class WordCounterExtractor(BatchTransformerMixin, TextExtractor):
             results.append(ExtractorResult([count], stims[i],
                            self, features=self.features))
         return results
+        
