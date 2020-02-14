@@ -9,3 +9,4 @@ scipy>=0.13
 imageio>=2.3
 six
 tqdm
+psutil
