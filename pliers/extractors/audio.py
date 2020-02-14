@@ -489,3 +489,23 @@ class PercussiveExtractor(LibrosaFeatureExtractor):
     https://librosa.github.io/librosa/effect.html.'''
 
     _feature = 'percussive'
+
+
+class AudiosetLabelExtractor(AudioExtractor):
+
+    ''' Extract probability of audio event classes based on AudioSet-YouTube 
+    corpus using a YAMN architecture. 
+
+    Code available at:
+    https://github.com/tensorflow/models/tree/master/research/audioset/yamnet 
+    
+    '''
+    _log_attributes = ()
+
+    def __init__(self):
+        super(AudiosetLabelExtractor, self).__init__()
+
+    def _extract(self, stim):
+        return stim
+
+# Add pointer to installation instructions
