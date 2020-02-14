@@ -5,9 +5,11 @@ from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.utils import attempt_to_import, verify_dependencies, listify
 import numpy as np
 from scipy import fft
+import soundfile as sf
 from abc import ABCMeta
 
 librosa = attempt_to_import('librosa')
+yamnet = attempt_to_import('yamnet')
 
 
 class AudioExtractor(Extractor):
@@ -503,9 +505,11 @@ class AudiosetLabelExtractor(AudioExtractor):
     _log_attributes = ()
 
     def __init__(self):
+        verify_dependencies(['yamnet'])
         super(AudiosetLabelExtractor, self).__init__()
 
     def _extract(self, stim):
         return stim
 
 # Add pointer to installation instructions
+# Find out how to install package from directory
