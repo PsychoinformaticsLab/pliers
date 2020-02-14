@@ -110,13 +110,9 @@ class ExtractorResult(object):
         # Ideally, Extractors should implement their own _to_df() class method
         # that produces a DataFrame in standardized format. Failing that, we
         # assume self._data is already array-like and can be wrapped in a DF.
-        index_cols = []
 
         if hasattr(self.extractor, '_to_df'):
             df = self.extractor._to_df(self, **to_df_kwargs)
-            for col in self.extractor._log_attributes:
-                if col in df.columns:
-                    index_cols.append(col)
         else:
             features = self.features
             data = np.array(self._data)
@@ -124,6 +120,8 @@ class ExtractorResult(object):
                 features = ['feature_%d' % (i + 1)
                             for i in range(data.shape[1])]
             df = pd.DataFrame(data, columns=features)
+
+        index_cols = list(set(df.columns) - set(self.features))
 
         if hasattr(self, '_onsets'):
             onsets = np.array(self._onsets)
@@ -155,9 +153,6 @@ class ExtractorResult(object):
                     ids = np.arange(len(df)) if len(index) == 1 \
                         else df.groupby(index).cumcount()
                     df.insert(0, 'object_id', ids)
-                    index_cols = ['object_id']
-            else:
-                index_cols = ['object_id']
 
         if timing is True or (timing == 'auto' and
                               (np.isfinite(durations).any() or
