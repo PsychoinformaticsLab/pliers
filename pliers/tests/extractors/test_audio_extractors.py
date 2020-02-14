@@ -27,8 +27,6 @@ from pliers.extractors import (LibrosaFeatureExtractor,
 from pliers.stimuli import (ComplexTextStim, AudioStim,
                             TranscribedAudioCompoundStim)
 import numpy as np
-import pytest
-from os import environ
 
 AUDIO_DIR = join(get_test_data_path(), 'audio')
 

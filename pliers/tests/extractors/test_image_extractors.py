@@ -12,7 +12,6 @@ from pliers.stimuli import ImageStim
 from pliers.extractors.base import merge_results
 import numpy as np
 import pytest
-from os import environ
 
 IMAGE_DIR = join(get_test_data_path(), 'image')
 
