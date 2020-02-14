@@ -2,6 +2,7 @@ import os
 from psutil import Process
 from collections import namedtuple
 from itertools import groupby
+import gc
 
 _proc = Process(os.getpid())
 
@@ -25,7 +26,7 @@ def pytest_runtest_setup(item):
 def pytest_runtest_teardown(item):
     log_entry = ConsumedRamLogEntry(item.nodeid, END, get_consumed_ram())
     consumed_ram_log.append(log_entry)
-
+    gc.collect()
 
 LEAK_LIMIT = 10 * 1024 * 1024
 
