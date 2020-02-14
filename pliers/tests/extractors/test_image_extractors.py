@@ -56,7 +56,7 @@ def test_saliency_extractor():
 
 
 @pytest.mark.skipif(
-    'TRAVIS' in environ & environ.get('PYTHON_VERSION', None) == 3.6,
+    ('TRAVIS' in environ) & (environ.get('PYTHON_VERSION', None) == '3.6'),
     reason='test times out on travis')
 def test_tensorflow_keras_application_extractor():
     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'obama.jpg']]

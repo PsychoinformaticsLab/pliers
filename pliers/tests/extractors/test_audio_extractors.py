@@ -139,7 +139,7 @@ def test_zcr_extractor():
 
 
 @pytest.mark.skipif(
-    'TRAVIS' in environ & environ.get('PYTHON_VERSION', None) == 3.6,
+    ('TRAVIS' in environ) & (environ.get('PYTHON_VERSION', None) == '3.6'),
     reason='test times out on travis')
 def test_chroma_extractors():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
@@ -324,7 +324,7 @@ def test_beat_track_extractor():
 
 
 @pytest.mark.skipif(
-    'TRAVIS' in environ & environ.get('PYTHON_VERSION', None) == 3.6,
+    ('TRAVIS' in environ) & (environ.get('PYTHON_VERSION', None) == '3.6'),
     reason='test times out on travis')
 def test_harmonic_extractor():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
@@ -345,7 +345,7 @@ def test_harmonic_extractor():
 
 
 @pytest.mark.skipif(
-    'TRAVIS' in environ & environ.get('PYTHON_VERSION', None) == 3.6,
+    ('TRAVIS' in environ) & (environ.get('PYTHON_VERSION', None) == '3.6'),
     reason='test times out on travis')
 def test_percussion_extractor():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
