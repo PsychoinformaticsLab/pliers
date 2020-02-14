@@ -309,7 +309,8 @@ def test_pretrained_bert_encoding_extractor():
     del res, res_file, res_base_tf, res_sequence, res_sequence_pooling
 
 
-@pytest.mark.skipif(environ.get('TRAVIS', False) == 'true')
+@pytest.mark.skipif(environ.get('TRAVIS', False) == 'true',
+                                reason='model too large')
 def test_pretrained_bert_large_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     ext = PretrainedBertEncodingExtractor(pretrained_model_or_path='bert-large-uncased',

@@ -260,9 +260,9 @@ def test_transcribed_audio_stim():
 
 
 def test_remote_stims():
-    url = 'http://www.obamadownloads.com/videos/iran-deal-speech.mp4'
+    video_url = 'https://archive.org/download/DisneyCastletest/Disney_Castle_512kb.mp4'
     video = VideoStim(url=url)
-    assert video.fps == 12
+    assert video.fps == 30.0
 
     url = 'http://www.bobainsworth.com/wav/simpsons/themodyn.wav'
     audio = AudioStim(url=url)
