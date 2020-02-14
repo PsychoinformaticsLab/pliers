@@ -322,6 +322,8 @@ def test_beat_track_extractor():
     assert np.isclose(df['beat_track'][101], 1195)
 
 
+@pytest.mark.skipif(environ.get('TRAVIS', False) == 'true',
+                    reason='test times out on travis')
 def test_harmonic_extractor():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
     ext = HarmonicExtractor()
