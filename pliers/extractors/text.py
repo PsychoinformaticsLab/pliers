@@ -446,6 +446,8 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
                  pooling=None,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
+                 
+        verify_dependencies(['transformers'])
 
         if framework not in ['pt', 'tf']:
             raise(ValueError('''Invalid framework;
