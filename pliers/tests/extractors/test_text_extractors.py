@@ -283,7 +283,6 @@ def test_pretrained_bert_encoding_extractor():
     assert res['token'][5] == '##ized'
     assert res['word'][5] == 'tokenized'
     assert res['object_id'][5] == 5
-    assert res['stim_name'][5] == 'This is not a tokenized sentence .'
        
     assert len(res_base_tf['encoding'][0]) == 768
     assert all(np.round(res_base_tf['encoding'][0],3) == np.round(res['encoding'][0],3))
@@ -295,7 +294,6 @@ def test_pretrained_bert_encoding_extractor():
     assert res_file['token'][5] == 'transform'
     assert res_file['word'][5] == 'transformer'
     assert res_file['object_id'][5] == 5
-    assert res_file['stim_name'][5] == 'bert is the most impressive transformer ever'
     
     assert res_sequence.shape[0] == 1
     assert len(res_sequence['encoding'][0]) == 768
