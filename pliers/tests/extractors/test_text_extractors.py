@@ -13,7 +13,6 @@ from ..utils import get_test_data_path
 
 import numpy as np
 from os.path import join
-from os import environ
 import pytest
 import spacy
 
@@ -68,9 +67,6 @@ def test_dictionary_extractor():
     assert np.isnan(result['frequency'][0])
 
 
-@pytest.mark.skipif(
-    ('TRAVIS' in environ) & (environ.get('PYTHON_VERSION', None) == '3.6'),
-    reason='test times out on travis')
 def test_predefined_dictionary_extractor():
     stim = TextStim(text='enormous')
     td = PredefinedDictionaryExtractor(['aoa/Freq_pm'])

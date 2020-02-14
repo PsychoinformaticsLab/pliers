@@ -55,9 +55,6 @@ def test_saliency_extractor():
     assert np.isclose(sf, 0.27461971, 1e-5)
 
 
-@pytest.mark.skipif(
-    ('TRAVIS' in environ) & (environ.get('PYTHON_VERSION', None) == '3.6'),
-    reason='test times out on travis')
 def test_tensorflow_keras_application_extractor():
     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'obama.jpg']]
     imgs = [ImageStim(im, onset=4.2, duration=1) for im in imgs]
