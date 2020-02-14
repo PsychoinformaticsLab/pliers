@@ -512,7 +512,10 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         elif self.encoding_level == 'sequence':
             encoded_tokens = [' '.join(text)]
             t_text = ['None']
-            t_dur = t_ons[-1] + t_dur[-1] - t_ons[0]
+            if not any(val is None for val in [t_ons[-1],t_dur[-1],t_ons[0]]):
+                t_dur = t_ons[-1] + t_dur[-1] - t_ons[0]
+            else:
+                t_dur = None
             t_ons = t_ons[0]
 
             if self.pooling:
