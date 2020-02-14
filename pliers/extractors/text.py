@@ -11,6 +11,7 @@ from pliers.datasets.text import fetch_dictionary
 from pliers.transformers import BatchTransformerMixin
 from pliers.utils import (attempt_to_import, verify_dependencies, flatten,
     listify)
+import itertools
 import numpy as np
 import pandas as pd
 import nltk
@@ -411,15 +412,16 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         pretrained_model_or_path (str): A string specifying which BERT
             model to use. Can be one of pretrained BERT models listed at
             https://huggingface.co/transformers/pretrained_models.html
+            (valid values include all the models with 'bert' prefix) 
             or path to custom model.
         tokenizer (str): Type of tokenization used in the tokenization step.
             If different from model, out-of-vocabulary tokens may be treated as
             unknown tokens.
         framework (str): name deep learning framework to use. Must be 'pt'
-            (PyTorch) or 'tensorflow'. Defaults to 'pt'.
-        encoding_level (str): A string specifying whether encodings for each
-            token or sequence encodings are to be returned. Must be one of
-            'token', 'sequence'.
+            (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
+        encoding_level (str): A string specifying whether one encoding per token
+            ('token') or a single encoding for the input sequence ('sequence')
+            are to be returned.
         pooling (str): Optional argument, relevant for sequence-level
             embeddings only. If None and encoding_level='sequence', encodings
             for [CLS] tokens are returned. If encoding_level='sequence' and
@@ -453,6 +455,10 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
             raise(ValueError('''Invalid framework;
                 must be one of 'pt' (pytorch) or 'tf' (tensorflow)'''))
 
+        if encoding_level not in ['token', 'sequence']:
+            raise(ValueError('''Invalid encoding_level;
+                must be one of 'token' or 'sequence'.'''))
+
         if model_kwargs is None:
             model_kwargs = {}
 
@@ -477,23 +483,22 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
 
     def _extract(self, stims):
 
-        stims.name = ' '.join([s.text for s in stims.elements])
+        if stims.name == '':
+            stims.name = ' '.join([s.text for s in stims.elements])
+
         text, onsets, durations = zip(
             *((s.text, s.onset, s.duration) for s in stims.elements))
-        durations = [0.0 if d is None else d for d in durations]
-
         tokens = [self.tokenizer.tokenize(t) for t in text]
         tokens_flat = list(flatten(tokens))
 
         def cast_to_token_level(word_level_list):
-            token_level_list = [listify(word_level_list[i]) * len(tok)
+            token_level_list = [itertools.repeat(word_level_list[i], len(tok))
                                 for i, tok in enumerate(tokens)]
             token_level_list = list(flatten(token_level_list))
             return token_level_list
 
         t_text, t_ons, t_dur = map(cast_to_token_level,
                                    [text, onsets, durations])
-
         tensor_tokens = self.tokenizer.encode(tokens_flat,
                                               return_tensors=self.framework)
         output = self.model(tensor_tokens)
