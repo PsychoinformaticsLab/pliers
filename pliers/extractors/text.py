@@ -430,7 +430,7 @@ class WordCounterExtractor(ComplexTextExtractor):
         if self.log_scale:
             word_counter = np.log(word_counter)
 
-        return ExtractorResult([word_counter], stims, self,
+        return ExtractorResult(word_counter, stims, self,
                                features=self.features,
                                onsets=onsets, durations=durations)
 
