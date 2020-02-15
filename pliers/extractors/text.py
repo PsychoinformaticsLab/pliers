@@ -429,7 +429,7 @@ class WordCounterExtractor(ComplexTextExtractor):
             word_counter = np.log(word_counter)
         results = []
         for i, count in enumerate(word_counter):
-            results.append(ExtractorResult([count], stims[i],
+            results.append(ExtractorResult([count], list(stims)[i],
                            self, features=self.features))
         return results
         
