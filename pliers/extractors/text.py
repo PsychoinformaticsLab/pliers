@@ -421,15 +421,17 @@ class WordCounterExtractor(ComplexTextExtractor):
         super(WordCounterExtractor, self).__init__()
 
     def _extract(self, stims):
-
+        
+        onsets = [s.onset for s in stims]
+        durations = [s.duration for s in stims]
         tokens = [s.text for s in stims]
         tokens = [t if self.case_sensitive else t.lower() for t in tokens]
         word_counter = pd.Series(tokens).groupby(tokens).cumcount() + 1
         if self.log_scale:
             word_counter = np.log(word_counter)
-        results = []
-        for i, count in enumerate(word_counter):
-            results.append(ExtractorResult([count], list(stims)[i],
-                           self, features=self.features))
-        return results
+
+        return ExtractorResult([word_counter], stims, self,
+                               features=self.features,
+                               onsets=onsets, durations=durations)
+
         

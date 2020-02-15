@@ -273,10 +273,8 @@ def test_word_counter_extractor():
     stim_with_onsets = ComplexTextStim(filename=join(TEXT_DIR,
                                        'complex_stim_with_repetitions.txt'))
     ext = WordCounterExtractor()
-    result_stim_txt = merge_results(ext.transform(stim_txt),
-                                    extractor_names=False)
-    result_stim_with_onsets = merge_results(ext.transform(stim_with_onsets),
-                                            extractor_names=False)
+    result_stim_txt = txt.transform(stim_txt).to_df()
+    result_stim_with_onsets = ext.transform(stim_with_onsets).to_df()
     assert result_stim_txt.shape[0] == 45
     assert all(result_stim_txt['word_count'] >= 1)
     assert result_stim_txt['word_count'][15] == 2
@@ -289,8 +287,7 @@ def test_word_counter_extractor():
     assert result_stim_with_onsets['word_count'][7] == 1
 
     ext2 = WordCounterExtractor(log_scale=True)
-    result_stim_txt = merge_results(ext2.transform(stim_txt),
-                                    extractor_names=False)
+    result_stim_txt = ext2.transform(stim_txt).to_df()
     assert all(result_stim_txt['log_word_count'] >= 0)
     assert result_stim_txt['log_word_count'][15] == np.log(2)
     assert result_stim_txt['log_word_count'][44] == np.log(3)
