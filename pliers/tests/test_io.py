@@ -44,4 +44,3 @@ def test_loader_nonexistent():
 
     with pytest.raises(IOError):
         stims = load_stims(audio_file, fail_silently=True)
-

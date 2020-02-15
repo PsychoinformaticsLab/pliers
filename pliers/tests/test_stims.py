@@ -260,6 +260,7 @@ def test_transcribed_audio_stim():
 
 
 def test_remote_stims():
+
     video_url = 'https://archive.org/download/DisneyCastletest/Disney_Castle_512kb.mp4'
     video = VideoStim(url=video_url)
     assert video.fps == 30.0
