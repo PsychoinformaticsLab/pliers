@@ -534,7 +534,7 @@ class AudiosetLabelExtractor(AudioExtractor):
             raise ValueError('''Stimulus sampling rate does not match
                 model sampling rate. Resample your stimulus using
                 AudioResamplingFilter or reinitialize this extractor
-                with correct sample_rate value'''.
+                with correct sample_rate value''')
 
         data = stim.data
         with self.tf_graph.as_default():
