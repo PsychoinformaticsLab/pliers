@@ -10,6 +10,7 @@ from abc import ABCMeta
 
 librosa = attempt_to_import('librosa')
 yamnet = attempt_to_import('yamnet')
+tf = attempt_to_import('tensorflow')
 
 
 class AudioExtractor(Extractor):
@@ -496,20 +497,55 @@ class PercussiveExtractor(LibrosaFeatureExtractor):
 class AudiosetLabelExtractor(AudioExtractor):
 
     ''' Extract probability of audio event classes based on AudioSet-YouTube 
-    corpus using a YAMN architecture. 
-
+    corpus using a YAMNET architecture. 
     Code available at:
     https://github.com/tensorflow/models/tree/master/research/audioset/yamnet 
-    
-    '''
-    _log_attributes = ()
 
-    def __init__(self):
+    Args:
+    hop_size (float): size of the window (in seconds) on which label extraction 
+                      is performed.
+    '''
+    _log_attributes = ('params', 'yamnet_kwargs')
+
+    def __init__(self, hop_size=0.1, sample_rate=16000, **yamnet_kwargs):
         verify_dependencies(['yamnet'])
+        verify_dependencies(['tensorflow'])
+
+        self.params = yamnet.params
+        self.params.PATCH_HOP_SECONDS = hop_size
+        self.params.SAMPLE_RATE = sample_rate
+        self.tf_graph = tf.Graph()
+
+        for p in self.params.__dict__:
+            if p in yamnet_kwargs.keys():
+                setattr(self.params, p, yamnet_kwargs[p])
+        
+        with self.tf_graph.as_default():
+            self.model = yamnet.yamnet_frames_model(self.params)
+            self.model.load_weights('yamnet.h5')
+
         super(AudiosetLabelExtractor, self).__init__()
 
     def _extract(self, stim):
-        return stim
+        
+        try:
+            assert stim.sampling_rate != self.params.SAMPLE_RATE
+        except:
+            raise ValueError('''Stimulus sampling rate does not match
+                model sampling rate. Resample your stimulus using
+                AudioResamplingFilter or reinitialize this extractor
+                with correct sample_rate value'''.
 
-# Add pointer to installation instructions
-# Find out how to install package from directory
+        data = stim.data
+        with self.tf_graph.as_default():
+            predictions = model.predict(np.reshape(data, [1,-1]), steps=1)
+
+        return predictions
+
+# Add pointer to installation instructions (install models, run test install - link, add to pythonpath)
+# Sample rate options
+    # Import sampling rate from stimulus
+    # Detect mismatch between stimulus sampling rate and model sampling rate
+    # Import sampling rate from stimulus but specify that it's better to have a different one
+# Labels or probabilities?
+# Import tensorflow
