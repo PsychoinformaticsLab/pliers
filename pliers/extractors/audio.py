@@ -7,6 +7,7 @@ import numpy as np
 from scipy import fft
 import soundfile as sf
 from abc import ABCMeta
+from os import path
 
 librosa = attempt_to_import('librosa')
 yamnet = attempt_to_import('yamnet')
@@ -504,32 +505,47 @@ class AudiosetLabelExtractor(AudioExtractor):
     Args:
     hop_size (float): size of the window (in seconds) on which label extraction 
                       is performed.
+    sample_rate (int): sampling rate parameter for the yamnet model. Must match
+                        stimulus sampling rate. Note that yamnet was trained
+                        with 16000Hz files. Resampling audio stimuli to this 
+                        rate prior to using this extractor might yield better
+                        performance.
+    top_n (int or False): defines how many of the highest label probabilities 
+                          are returned.
+    spectrogram (bool): if True, plots mel-spectrogram of the audio stimulus.
     '''
-    _log_attributes = ('params', 'yamnet_kwargs')
+    _log_attributes = ()
 
-    def __init__(self, hop_size=0.1, sample_rate=16000, **yamnet_kwargs):
+    def __init__(self, hop_size=0.1, sample_rate=16000, top_n=False, 
+                 spectrogram=False, **yamnet_kwargs):
         verify_dependencies(['yamnet'])
         verify_dependencies(['tensorflow'])
 
         self.params = yamnet.params
         self.params.PATCH_HOP_SECONDS = hop_size
         self.params.SAMPLE_RATE = sample_rate
+        self.spectrogram = spectrogram
+        self.top_n = top_n
         self.tf_graph = tf.Graph()
 
-        for p in self.params.__dict__:
-            if p in yamnet_kwargs.keys():
-                setattr(self.params, p, yamnet_kwargs[p])
-        
+        if yamnet_kwargs:
+            for p in self.params.__dict__:
+                if p in yamnet_kwargs.keys():
+                    setattr(self.params, p, yamnet_kwargs[p])
+
+        MODULE_PATH = path.dirname(yamnet.__file__)
+        WEIGHTS_PATH = path.join(MODULE_PATH, 'yamnet.h5')
+        LABELS_PATH = path.join(MODULE_PATH, 'yamnet_class_map.csv')
+
         with self.tf_graph.as_default():
             self.model = yamnet.yamnet_frames_model(self.params)
-            self.model.load_weights('yamnet.h5')
-
+            self.model.load_weights(WEIGHTS_PATH)
+        self.labels = self.model.class_names(LABELS_PATH)
         super(AudiosetLabelExtractor, self).__init__()
 
     def _extract(self, stim):
-        
         try:
-            assert stim.sampling_rate != self.params.SAMPLE_RATE
+            assert stim.sampling_rate == self.params.SAMPLE_RATE
         except:
             raise ValueError('''Stimulus sampling rate does not match
                 model sampling rate. Resample your stimulus using
@@ -538,14 +554,32 @@ class AudiosetLabelExtractor(AudioExtractor):
 
         data = stim.data
         with self.tf_graph.as_default():
-            predictions = model.predict(np.reshape(data, [1,-1]), steps=1)
+            preds, spectrogram = self.model.predict(np.reshape(data, [1,-1]), 
+                                                    steps=1)
+        
+        if self.spectrogram:
+            import matplotlib.pyplot as plt
+            plt.imshow(spectrogram.T, aspect='auto', interpolation='nearest', 
+                       origin='bottom', cmap='RdYlBu_r')
+            plt.xlabel('Time')
+            plt.ylabel('Frequency')
+            plt.colorbar()
+            plt.show()
+        
+        if self.top_n:
+            top_pred = np.mean(preds,axis=0).argsort(axis=1)
+            idx = np.where(top_pred > np.max(top_pred) - self.top_n)
+            preds = preds[idx]
+            labels = self.labels[idx]
+        else:
+            labels=self.labels
 
-        return predictions
+        return ExtractorResult(data=preds, stim=stim, extractor=self, 
+                               features=labels)
 
 # Add pointer to installation instructions (install models, run test install - link, add to pythonpath)
 # Sample rate options
     # Import sampling rate from stimulus
     # Detect mismatch between stimulus sampling rate and model sampling rate
     # Import sampling rate from stimulus but specify that it's better to have a different one
-# Labels or probabilities?
-# Import tensorflow
+# migrate to models?
