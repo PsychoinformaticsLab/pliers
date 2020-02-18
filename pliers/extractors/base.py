@@ -113,6 +113,7 @@ class ExtractorResult(object):
 
         if hasattr(self.extractor, '_to_df'):
             df = self.extractor._to_df(self, **to_df_kwargs)
+            features = self.features
         else:
             features = self.features
             data = np.array(self._data)
@@ -121,7 +122,10 @@ class ExtractorResult(object):
                             for i in range(data.shape[1])]
             df = pd.DataFrame(data, columns=features)
 
-        index_cols = list(set(df.columns) - set(self.features))
+        if features is not None:
+            index_cols = list(set(df.columns) - set(features))
+        else:
+            index_cols = list(set(df.columns))
 
         if hasattr(self, '_onsets'):
             onsets = np.array(self._onsets)
