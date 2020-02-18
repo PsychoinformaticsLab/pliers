@@ -5,6 +5,7 @@ from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.utils import attempt_to_import, verify_dependencies, listify
 import numpy as np
 from scipy import fft
+import pandas as pd
 import soundfile as sf
 from abc import ABCMeta
 from os import path
@@ -507,9 +508,7 @@ class AudiosetLabelExtractor(AudioExtractor):
                       is performed.
     sample_rate (int): sampling rate parameter for the yamnet model. Must match
                         stimulus sampling rate. Note that yamnet was trained
-                        with 16000Hz files. Resampling audio stimuli to this 
-                        rate prior to using this extractor might yield better
-                        performance.
+                        on waveforms resampled at 16000Hz.
     top_n (int or False): defines how many of the highest label probabilities 
                           are returned.
     spectrogram (bool): if True, plots mel-spectrogram of the audio stimulus.
@@ -528,19 +527,18 @@ class AudiosetLabelExtractor(AudioExtractor):
         self.top_n = top_n
         self.tf_graph = tf.Graph()
 
-        if yamnet_kwargs:
-            for p in self.params.__dict__:
-                if p in yamnet_kwargs.keys():
-                    setattr(self.params, p, yamnet_kwargs[p])
-
         MODULE_PATH = path.dirname(yamnet.__file__)
         WEIGHTS_PATH = path.join(MODULE_PATH, 'yamnet.h5')
         LABELS_PATH = path.join(MODULE_PATH, 'yamnet_class_map.csv')
 
+        if yamnet_kwargs:
+            for p in self.params.__dict__:
+                if p in yamnet_kwargs.keys():
+                    setattr(self.params, p, yamnet_kwargs[p])
         with self.tf_graph.as_default():
             self.model = yamnet.yamnet_frames_model(self.params)
             self.model.load_weights(WEIGHTS_PATH)
-        self.labels = self.model.class_names(LABELS_PATH)
+        self.labels = pd.read_csv(LABELS_PATH)['display_name'].tolist()
         super(AudiosetLabelExtractor, self).__init__()
 
     def _extract(self, stim):
@@ -567,19 +565,24 @@ class AudiosetLabelExtractor(AudioExtractor):
             plt.show()
         
         if self.top_n:
-            top_pred = np.mean(preds,axis=0).argsort(axis=1)
-            idx = np.where(top_pred > np.max(top_pred) - self.top_n)
-            preds = preds[idx]
-            labels = self.labels[idx]
-        else:
-            labels=self.labels
+            top_pred = np.mean(preds,axis=0).argsort()
+            idx = np.where(top_pred > np.max(top_pred) - self.top_n)[0]
+            preds = preds[:,idx]
+            self.labels = [self.labels[i] for i in idx]
 
-        return ExtractorResult(data=preds, stim=stim, extractor=self, 
-                               features=labels)
+        #durations = [self.params.PATCH_HOP_SECONDS] * preds.shape[0]
+        #onsets = np.arange(start=0, stop=stim.duration, step=durations[0])
+
+        return ExtractorResult(preds, stim, self, features=self.labels)
+                               #onsets=onsets.tolist(), durations=durations)
+        
+
 
 # Add pointer to installation instructions (install models, run test install - link, add to pythonpath)
 # Sample rate options
     # Import sampling rate from stimulus
     # Detect mismatch between stimulus sampling rate and model sampling rate
     # Import sampling rate from stimulus but specify that it's better to have a different one
-# migrate to models?
+# Migrate to models
+# Ontology levels
+# Top_n in init?
