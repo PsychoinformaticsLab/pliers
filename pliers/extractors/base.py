@@ -150,6 +150,7 @@ class ExtractorResult(object):
         # from other rows by onset and duration.
         if object_id:
             if 'object_id' not in df.columns:
+                index_cols.append('object_id')
                 index = pd.Series(onsets).astype(str) + '_' + \
                     pd.Series(durations).astype(str)
                 if object_id is True or (object_id == 'auto' and
