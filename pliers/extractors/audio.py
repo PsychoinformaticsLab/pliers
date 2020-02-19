@@ -507,8 +507,8 @@ class AudiosetLabelExtractor(AudioExtractor):
     Args:
     hop_size (float): size of the window (in seconds) on which label extraction
         is performed.
-    top_n (int): if defined, specifies how many of the highest label 
-        probabilities are returned.
+    top_n (int): specifies how many of the highest label probabilities are 
+        returned. If not defined, returns probabilities for all labels.
     spectrogram (bool): if True, plots mel-spectrogram of the audio stimulus.
     yamnet_kwargs (optional): Optional named arguments that modify input 
         parameters for the model (see params.py file in yamnet repository)
