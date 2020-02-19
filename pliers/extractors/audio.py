@@ -9,6 +9,7 @@ import pandas as pd
 import soundfile as sf
 from abc import ABCMeta
 from os import path
+import warnings
 
 librosa = attempt_to_import('librosa')
 yamnet = attempt_to_import('yamnet')
@@ -493,64 +494,62 @@ class PercussiveExtractor(LibrosaFeatureExtractor):
     For details on argument specification visit:
     https://librosa.github.io/librosa/effect.html.'''
 
+
     _feature = 'percussive'
 
 
 class AudiosetLabelExtractor(AudioExtractor):
 
     ''' Extract probability of audio event classes based on AudioSet-YouTube 
-    corpus using a YAMNET architecture. 
-    Code available at:
+    corpus using a YAMNet architecture. Code available at:
     https://github.com/tensorflow/models/tree/master/research/audioset/yamnet 
 
     Args:
-    hop_size (float): size of the window (in seconds) on which label extraction 
-                      is performed.
-    sample_rate (int): sampling rate parameter for the yamnet model. Must match
-                        stimulus sampling rate. Note that yamnet was trained
-                        on waveforms resampled at 16000Hz.
-    top_n (int or False): defines how many of the highest label probabilities 
-                          are returned.
+    hop_size (float): size of the window (in seconds) on which label extraction
+        is performed.
+    top_n (int): if defined, specifies how many of the highest label 
+        probabilities are returned.
     spectrogram (bool): if True, plots mel-spectrogram of the audio stimulus.
+    yamnet_kwargs (optional): Optional named arguments that modify input 
+        parameters for the model (see params.py file in yamnet repository)
     '''
-    _log_attributes = ()
 
-    def __init__(self, hop_size=0.1, sample_rate=16000, top_n=False, 
+    _log_attributes = ('params', 'top_n')
+
+    def __init__(self, hop_size=0.1, top_n=None, 
                  spectrogram=False, **yamnet_kwargs):
         verify_dependencies(['yamnet'])
         verify_dependencies(['tensorflow'])
-
-        self.params = yamnet.params
-        self.params.PATCH_HOP_SECONDS = hop_size
-        self.params.SAMPLE_RATE = sample_rate
-        self.spectrogram = spectrogram
-        self.top_n = top_n
-        self.tf_graph = tf.Graph()
 
         MODULE_PATH = path.dirname(yamnet.__file__)
         WEIGHTS_PATH = path.join(MODULE_PATH, 'yamnet.h5')
         LABELS_PATH = path.join(MODULE_PATH, 'yamnet_class_map.csv')
 
+        self.spectrogram = spectrogram
+        self.params = yamnet.params
+        self.params.PATCH_HOP_SECONDS = hop_size
+
         if yamnet_kwargs:
-            for p in self.params.__dict__:
-                if p in yamnet_kwargs.keys():
-                    setattr(self.params, p, yamnet_kwargs[p])
+            for par in self.params.__dict__:
+                if yamnet_kwargs[par]:
+                    setattr(self.params, par, yamnet_kwargs[par])
+
+        self.tf_graph = tf.Graph()
         with self.tf_graph.as_default():
             self.model = yamnet.yamnet_frames_model(self.params)
             self.model.load_weights(WEIGHTS_PATH)
+
         self.labels = pd.read_csv(LABELS_PATH)['display_name'].tolist()
+        self.params = {par: val for par,val in self.params.__dict__.items()
+                       if par.isupper()}
+        self.top_n = top_n if top_n else len(self.labels)
         super(AudiosetLabelExtractor, self).__init__()
 
     def _extract(self, stim):
-        try:
-            assert stim.sampling_rate == self.params.SAMPLE_RATE
-        except:
-            raise ValueError('''Stimulus sampling rate does not match
-                model sampling rate. Resample your stimulus using
-                AudioResamplingFilter or reinitialize this extractor
-                with correct sample_rate value''')
-
+        
         data = stim.data
+        self.params['SAMPLE_RATE'] = stim.sampling_rate
+        
         with self.tf_graph.as_default():
             preds, spectrogram = self.model.predict(np.reshape(data, [1,-1]), 
                                                     steps=1)
@@ -558,31 +557,25 @@ class AudiosetLabelExtractor(AudioExtractor):
         if self.spectrogram:
             import matplotlib.pyplot as plt
             plt.imshow(spectrogram.T, aspect='auto', interpolation='nearest', 
-                       origin='bottom', cmap='RdYlBu_r')
+                       origin='lower', cmap='RdYlBu_r')
             plt.xlabel('Time')
             plt.ylabel('Frequency')
             plt.colorbar()
             plt.show()
         
-        if self.top_n:
-            top_pred = np.mean(preds,axis=0).argsort()
-            idx = np.where(top_pred > np.max(top_pred) - self.top_n)[0]
-            preds = preds[:,idx]
-            self.labels = [self.labels[i] for i in idx]
+        idx = np.mean(preds,axis=0).argsort()
+        preds = np.flip(preds[:,idx],axis=0)[:,:self.top_n]
+        self.labels = [self.labels[i] for i in idx][::-1][:self.top_n]
 
-        #durations = [self.params.PATCH_HOP_SECONDS] * preds.shape[0]
-        #onsets = np.arange(start=0, stop=stim.duration, step=durations[0])
+        durations = self.params['PATCH_HOP_SECONDS']
+        onsets = np.arange(start=0, stop=stim.duration, step=durations)
+        onsets = onsets[onsets + self.params['PATCH_WINDOW_SECONDS'] < stim.duration]
 
-        return ExtractorResult(preds, stim, self, features=self.labels)
-                               #onsets=onsets.tolist(), durations=durations)
-        
-
+        return ExtractorResult(preds, stim, self, features=self.labels,
+                               onsets=onsets, durations=durations,
+                               orders=list(range(len(onsets))))
 
 # Add pointer to installation instructions (install models, run test install - link, add to pythonpath)
-# Sample rate options
-    # Import sampling rate from stimulus
-    # Detect mismatch between stimulus sampling rate and model sampling rate
-    # Import sampling rate from stimulus but specify that it's better to have a different one
-# Migrate to models
-# Ontology levels
-# Top_n in init?
+# Add length warning
+# Migrate to models?
+# Plot predictions?
