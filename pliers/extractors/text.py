@@ -482,7 +482,6 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         super(PretrainedBertEncodingExtractor, self).__init__()
 
     def _extract(self, stims):
-
         if stims.name == '':
             stims.name = ' '.join([s.text for s in stims.elements])
 
