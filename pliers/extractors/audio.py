@@ -546,7 +546,6 @@ class AudiosetLabelExtractor(AudioExtractor):
         super(AudiosetLabelExtractor, self).__init__()
 
     def _extract(self, stim):
-        
         data = stim.data
         self.params['SAMPLE_RATE'] = stim.sampling_rate
         
