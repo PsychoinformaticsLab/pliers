@@ -421,7 +421,6 @@ class WordCounterExtractor(ComplexTextExtractor):
         super(WordCounterExtractor, self).__init__()
 
     def _extract(self, stims):
-        
         onsets = [s.onset for s in stims]
         durations = [s.duration for s in stims]
         tokens = [s.text for s in stims]
