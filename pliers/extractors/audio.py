@@ -509,7 +509,6 @@ class AudiosetLabelExtractor(AudioExtractor):
         is performed.
     top_n (int): specifies how many of the highest label probabilities are 
         returned. If not defined, returns probabilities for all labels.
-    spectrogram (bool): if True, plots mel-spectrogram of the audio stimulus.
     yamnet_kwargs (optional): Optional named arguments that modify input 
         parameters for the model (see params.py file in yamnet repository)
     '''
@@ -525,7 +524,6 @@ class AudiosetLabelExtractor(AudioExtractor):
         WEIGHTS_PATH = path.join(MODULE_PATH, 'yamnet.h5')
         LABELS_PATH = path.join(MODULE_PATH, 'yamnet_class_map.csv')
 
-        self.spectrogram = spectrogram
         self.params = yamnet.params
         self.params.PATCH_HOP_SECONDS = hop_size
 
@@ -553,15 +551,7 @@ class AudiosetLabelExtractor(AudioExtractor):
         with self.tf_graph.as_default():
             preds, spectrogram = self.model.predict(np.reshape(data, [1,-1]), 
                                                     steps=1)
-        
-        if self.spectrogram:
-            import matplotlib.pyplot as plt
-            plt.imshow(spectrogram.T, aspect='auto', interpolation='nearest', 
-                       origin='lower', cmap='RdYlBu_r')
-            plt.xlabel('Time')
-            plt.ylabel('Frequency')
-            plt.colorbar()
-            plt.show()
+        self.spectrogram = spectrogram
         
         idx = np.mean(preds,axis=0).argsort()
         preds = np.flip(preds[:,idx],axis=0)[:,:self.top_n]
