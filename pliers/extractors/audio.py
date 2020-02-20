@@ -509,14 +509,17 @@ class AudiosetLabelExtractor(AudioExtractor):
         is performed.
     top_n (int): specifies how many of the highest label probabilities are 
         returned. If not defined, returns probabilities for all labels.
+    label_subset (list): specifies subset of labels for which probabilities 
+        are to be returned. A comprehensive list of labels is available in the
+        audioset/yamnet repository (yamnet_class_map.csv).
     yamnet_kwargs (optional): Optional named arguments that modify input 
         parameters for the model (see params.py file in yamnet repository)
     '''
 
     _log_attributes = ('hop_size', 'top_n', 'yamnet_kwargs')
 
-    def __init__(self, hop_size=0.1, top_n=None, 
-                 spectrogram=False, **yamnet_kwargs):
+    def __init__(self, hop_size=0.1, top_n=None, label_subset=None,
+                 **yamnet_kwargs):
         verify_dependencies(['yamnet'])
         verify_dependencies(['tensorflow'])
 
@@ -533,12 +536,14 @@ class AudiosetLabelExtractor(AudioExtractor):
                 setattr(self.params, par, v)
         self.weights_path = WEIGHTS_PATH
         self.labels = pd.read_csv(LABELS_PATH)['display_name'].tolist()
+        self.label_subset = label_subset
         self.top_n = top_n if top_n else len(self.labels)
         super(AudiosetLabelExtractor, self).__init__()
 
     def _extract(self, stim):
         data = stim.data
         params = self.params
+        labels = self.labels
         params.SAMPLE_RATE = stim.sampling_rate
         
         tf_graph = tf.Graph()
@@ -549,9 +554,15 @@ class AudiosetLabelExtractor(AudioExtractor):
                                                   steps=1)
         self.spectrogram = spectrogram
         
+        if self.label_subset:
+            label_subset_idx =  [idx for idx, val in enumerate(labels) 
+                                 if val in self.label_subset]
+            labels = [labels[idx] for idx in label_subset_idx]
+            preds = preds[:label_subset_idx]
+
         idx = np.mean(preds,axis=0).argsort()
         preds = np.fliplr(preds[:,idx])[:,:self.top_n]
-        labels = [self.labels[i] for i in idx][::-1][:self.top_n]
+        labels = [labels[i] for i in idx][::-1][:self.top_n]
 
         durations = params.PATCH_HOP_SECONDS
         onsets = np.arange(start=0, stop=stim.duration, step=durations)
