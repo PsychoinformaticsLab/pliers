@@ -47,9 +47,9 @@ before_script:
 - python -m pliers.support.download
 - python -m spacy download en_core_web_sm
 script:
-- py.test pliers/tests/test_* --cov=pliers --cov-report= -m "not requires_payment"
-- py.test pliers/tests/extractors --cov=pliers --cov-report= -m "not requires_payment" --cov-append
-- py.test pliers/tests/converters pliers/tests/filters --cov=pliers--cov-report=  -m "not requires_payment" --cov-append
+- py.test pliers/tests/test_* --cov=pliers --cov-report= -m "not requires_payment" -W ignore::UserWarning
+- py.test pliers/tests/extractors --cov=pliers --cov-report= -m "not requires_payment" --cov-append -W ignore::UserWarning
+- py.test pliers/tests/converters pliers/tests/filters --cov=pliers --cov-report= -m "not requires_payment" --cov-append -W ignore::UserWarning
 after_success:
 - coveralls
 before_cache:
