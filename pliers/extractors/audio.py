@@ -528,9 +528,9 @@ class AudiosetLabelExtractor(AudioExtractor):
         LABELS_PATH = path.join(MODULE_PATH, 'yamnet_class_map.csv')
 
         self.hop_size = hop_size
+        self.yamnet_kwargs = yamnet_kwargs
         self.params = yamnet.params
         self.params.PATCH_HOP_SECONDS = hop_size
-        self.yamnet_kwargs = yamnet_kwargs
         for par, v in self.yamnet_kwargs.items():
             if par in self.params.__dict__:
                 setattr(self.params, par, v)
@@ -541,16 +541,36 @@ class AudiosetLabelExtractor(AudioExtractor):
         super(AudiosetLabelExtractor, self).__init__()
 
     def _extract(self, stim):
-        data = stim.data
         params = self.params
         labels = self.labels
         params.SAMPLE_RATE = stim.sampling_rate
-        
+
+        try:
+            assert params.SAMPLE_RATE >= 2 * params.MEL_MAX_HZ
+            if params.SAMPLE_RATE != 1600:
+                warnings.warn('''The sampling rate of the stimulus is {}
+                Hz, while YAMNet was trained on audio sampled at 16000Hz. 
+                This should not affect the results, but you can resample the 
+                input file (e.g. using AudioResamplingFilter) for full 
+                conformity to training defaults.'''.format(params.SAMPLE_RATE))
+            if params.MEL_MIN_HZ != 125 or params.MEL_MAX_HZ != 7500:
+                warnings.warn('''Custom values for MEL_MIN_HZ and MEL_MAX_HZ 
+                were passed. Note that changing these defaults might affect 
+                model performance.''')
+        except:
+            raise ValueError('''The sampling rate of your stimulus ({}Hz)
+                must be at least twice the value of MEL_MAX_HZ ({}Hz). You can 
+                upsample your audio at a suitable sampling rate or pass a 
+                lower value of MEL_MAX_HZ when initializing this extractor. 
+                Note that YAMNet was trained with MEL_MAX_HZ = 7500Hz.
+                Changing this default value might result in less accurate 
+                predictions.'''.format(params.SAMPLE_RATE, params.MEL_MAX_HZ))
+
         tf_graph = tf.Graph()
         with tf_graph.as_default():
             model = yamnet.yamnet_frames_model(params)
             model.load_weights(self.weights_path)
-            preds, spectrogram = model.predict(np.reshape(data, [1,-1]), 
+            preds, spectrogram = model.predict(np.reshape(stim.data, [1,-1]), 
                                                   steps=1)
         self.spectrogram = spectrogram
         
