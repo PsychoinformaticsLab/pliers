@@ -527,39 +527,36 @@ class AudiosetLabelExtractor(AudioExtractor):
         self.params = yamnet.params
         self.params.PATCH_HOP_SECONDS = hop_size
         self.yamnet_kwargs = yamnet_kwargs
+        print(yamnet_kwargs)
         for par, v in self.yamnet_kwargs.items():
             if par in self.params.__dict__:
                 setattr(self.params, par, v)
-
-        self.tf_graph = tf.Graph()
-        with self.tf_graph.as_default():
-            self.model = yamnet.yamnet_frames_model(self.params)
-            self.model.load_weights(WEIGHTS_PATH)
-
+        self.weights_path = WEIGHTS_PATH
         self.labels = pd.read_csv(LABELS_PATH)['display_name'].tolist()
-        self.params = {par: val for par,val in self.params.__dict__.items()
-                       if par.isupper()}
         self.top_n = top_n if top_n else len(self.labels)
         super(AudiosetLabelExtractor, self).__init__()
 
     def _extract(self, stim):
         data = stim.data
-        self.params['SAMPLE_RATE'] = stim.sampling_rate
+        params = self.params
+        params.SAMPLE_RATE = stim.sampling_rate
         
-        with self.tf_graph.as_default():
-            preds, spectrogram = self.model.predict(np.reshape(data, [1,-1]), 
-                                                    steps=1)
+        with tf.Graph().as_default():
+            model = yamnet.yamnet_frames_model(params)
+            model.load_weights(self.weights_path)
+            preds, spectrogram = model.predict(np.reshape(data, [1,-1]), 
+                                                  steps=1)
         self.spectrogram = spectrogram
         
         idx = np.mean(preds,axis=0).argsort()
         preds = np.flip(preds[:,idx],axis=0)[:,:self.top_n]
-        self.labels = [self.labels[i] for i in idx][::-1][:self.top_n]
+        labels = [self.labels[i] for i in idx][::-1][:self.top_n]
 
-        durations = self.params['PATCH_HOP_SECONDS']
+        durations = params.PATCH_HOP_SECONDS
         onsets = np.arange(start=0, stop=stim.duration, step=durations)
-        onsets = onsets[onsets + self.params['PATCH_WINDOW_SECONDS'] < stim.duration]
+        onsets = onsets[onsets + params.PATCH_WINDOW_SECONDS < stim.duration]
 
-        return ExtractorResult(preds, stim, self, features=self.labels,
+        return ExtractorResult(preds, stim, self, features=labels,
                                onsets=onsets, durations=durations,
                                orders=list(range(len(onsets))))
 
@@ -567,3 +564,5 @@ class AudiosetLabelExtractor(AudioExtractor):
 # Add length warning
 # Migrate to models?
 # Plot predictions?
+# Log sampling rate and kwargs
+# issue with reinitializing after call
