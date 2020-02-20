@@ -526,10 +526,10 @@ class AudiosetLabelExtractor(AudioExtractor):
 
         self.params = yamnet.params
         self.params.PATCH_HOP_SECONDS = hop_size
-        if yamnet_kwargs:
-            for par in self.params.__dict__:
-                if yamnet_kwargs[par]:
-                    setattr(self.params, par, yamnet_kwargs[par])
+        self.yamnet_kwargs = yamnet_kwargs
+        for par, v in self.yamnet_kwargs.items():
+            if par in self.params.__dict__:
+                setattr(self.params, par, v)
 
         self.tf_graph = tf.Graph()
         with self.tf_graph.as_default():
@@ -540,7 +540,6 @@ class AudiosetLabelExtractor(AudioExtractor):
         self.params = {par: val for par,val in self.params.__dict__.items()
                        if par.isupper()}
         self.top_n = top_n if top_n else len(self.labels)
-        self.yamnet_kwargs = {} if not yamnet_kwargs else yamnet_kwargs
         super(AudiosetLabelExtractor, self).__init__()
 
     def _extract(self, stim):
