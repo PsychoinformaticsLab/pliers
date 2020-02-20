@@ -513,7 +513,7 @@ class AudiosetLabelExtractor(AudioExtractor):
         parameters for the model (see params.py file in yamnet repository)
     '''
 
-    _log_attributes = ('params', 'top_n')
+    _log_attributes = ('yamnet_kwargs')
 
     def __init__(self, hop_size=0.1, top_n=None, 
                  spectrogram=False, **yamnet_kwargs):
@@ -526,7 +526,6 @@ class AudiosetLabelExtractor(AudioExtractor):
 
         self.params = yamnet.params
         self.params.PATCH_HOP_SECONDS = hop_size
-
         if yamnet_kwargs:
             for par in self.params.__dict__:
                 if yamnet_kwargs[par]:
@@ -541,6 +540,7 @@ class AudiosetLabelExtractor(AudioExtractor):
         self.params = {par: val for par,val in self.params.__dict__.items()
                        if par.isupper()}
         self.top_n = top_n if top_n else len(self.labels)
+        self.yamnet_kwargs = {} if not yamnet_kwargs else yamnet_kwargs
         super(AudiosetLabelExtractor, self).__init__()
 
     def _extract(self, stim):
