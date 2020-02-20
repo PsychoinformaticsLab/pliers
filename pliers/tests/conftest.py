@@ -29,7 +29,7 @@ def pytest_runtest_teardown(item):
     gc.collect()
 
 
-LEAK_LIMIT = 5 * 1024 * 1024
+LEAK_LIMIT = 15 * 1024 * 1024
 
 
 def pytest_terminal_summary(terminalreporter):
