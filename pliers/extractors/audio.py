@@ -513,7 +513,7 @@ class AudiosetLabelExtractor(AudioExtractor):
         parameters for the model (see params.py file in yamnet repository)
     '''
 
-    _log_attributes = ('yamnet_kwargs')
+    _log_attributes = ()
 
     def __init__(self, hop_size=0.1, top_n=None, 
                  spectrogram=False, **yamnet_kwargs):
@@ -541,16 +541,19 @@ class AudiosetLabelExtractor(AudioExtractor):
         params = self.params
         params.SAMPLE_RATE = stim.sampling_rate
         
-        with tf.Graph().as_default():
+        tf_graph = tf.Graph()
+        with tf_graph.as_default():
             model = yamnet.yamnet_frames_model(params)
             model.load_weights(self.weights_path)
             preds, spectrogram = model.predict(np.reshape(data, [1,-1]), 
                                                   steps=1)
         self.spectrogram = spectrogram
         
+        ########## CHECK HERE ########## 
         idx = np.mean(preds,axis=0).argsort()
         preds = np.flip(preds[:,idx],axis=0)[:,:self.top_n]
         labels = [self.labels[i] for i in idx][::-1][:self.top_n]
+        ################################
 
         durations = params.PATCH_HOP_SECONDS
         onsets = np.arange(start=0, stop=stim.duration, step=durations)
@@ -560,9 +563,8 @@ class AudiosetLabelExtractor(AudioExtractor):
                                onsets=onsets, durations=durations,
                                orders=list(range(len(onsets))))
 
+# Check model values
 # Add pointer to installation instructions (install models, run test install - link, add to pythonpath)
-# Add length warning
-# Migrate to models?
-# Plot predictions?
-# Log sampling rate and kwargs
-# issue with reinitializing after call
+# Add length warning / batching
+# Migrate to models
+# Look into kwargs log
