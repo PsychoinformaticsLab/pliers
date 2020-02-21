@@ -29,7 +29,7 @@ def pytest_runtest_teardown(item):
     gc.collect()
 
 
-LEAK_LIMIT = 5 * 1024 * 1024
+LEAK_LIMIT = 75 * 1024 * 1024
 
 
 def pytest_terminal_summary(terminalreporter):
@@ -40,8 +40,8 @@ def pytest_terminal_summary(terminalreporter):
             leaked = end_entry.consumed_ram - start_entry.consumed_ram
             if leaked > LEAK_LIMIT:
                 terminalreporter.write('LEAKED {}MB in {}\n'.format(
-                    leaked / 1024 / 1024, nodeid))
+                    round(leaked / 1024 / 1024, 2), nodeid))
                 terminalreporter.write('MEMORY ENDED AT: {}MB in {}\n'.format(
-                    end_entry.consumed_ram / 1024 / 1024, nodeid))
+                    round(end_entry.consumed_ram / 1024 / 1024, 2), nodeid))
         except:
             pass
