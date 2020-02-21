@@ -566,12 +566,9 @@ class AudiosetLabelExtractor(AudioExtractor):
                 Changing this default value might result in less accurate 
                 predictions.'''.format(params.SAMPLE_RATE, params.MEL_MAX_HZ))
 
-        tf_graph = tf.Graph()
-        with tf_graph.as_default():
-            model = yamnet.yamnet_frames_model(params)
-            model.load_weights(self.weights_path)
-            preds, spectrogram = model.predict(np.reshape(stim.data, [1,-1]), 
-                                                  steps=1)
+        model = yamnet.yamnet_frames_model(params)
+        model.load_weights(self.weights_path)
+        preds, spectrogram = model.predict_on_batch(np.reshape(stim.data, [1,-1]))
         self.spectrogram = spectrogram
         
         if self.label_subset:
