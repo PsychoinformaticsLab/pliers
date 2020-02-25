@@ -500,33 +500,35 @@ class PercussiveExtractor(LibrosaFeatureExtractor):
 
 class AudiosetLabelExtractor(AudioExtractor):
 
-    ''' Extract probability of audio event classes based on AudioSet-YouTube 
+    ''' Extract probability of 521 audio event classes based on AudioSet
     corpus using a YAMNet architecture. Code available at:
     https://github.com/tensorflow/models/tree/master/research/audioset/yamnet 
 
     Args:
-    hop_size (float): size of the window (in seconds) on which label extraction
-        is performed.
+    hop_size (float): size of the audio segment (in seconds) on which label 
+        extraction is performed.
     top_n (int): specifies how many of the highest label probabilities are 
-        returned. If not defined, returns probabilities for all labels.
+        returned. If not defined, returns probabilities for all 521 labels.
     label_subset (list): specifies subset of labels for which probabilities 
         are to be returned. A comprehensive list of labels is available in the
-        audioset/yamnet repository (yamnet_class_map.csv).
+        audioset/yamnet repository (see yamnet_class_map.csv).
+    weights_path (optional): full path to model weights file. If not provided
+        weights from pretrained YAMNet module are used.
     yamnet_kwargs (optional): Optional named arguments that modify input 
         parameters for the model (see params.py file in yamnet repository)
     '''
 
-    _log_attributes = ('hop_size', 'top_n', 'yamnet_kwargs')
+    _log_attributes = ('hop_size', 'top_n', 'label_subset', 'weights_path',
+                       'yamnet_kwargs')
 
     def __init__(self, hop_size=0.1, top_n=None, label_subset=None,
-                 **yamnet_kwargs):
+                 weights_path=None, **yamnet_kwargs):
         verify_dependencies(['yamnet'])
         verify_dependencies(['tensorflow'])
 
         MODULE_PATH = path.dirname(yamnet.__file__)
-        WEIGHTS_PATH = path.join(MODULE_PATH, 'yamnet.h5')
         LABELS_PATH = path.join(MODULE_PATH, 'yamnet_class_map.csv')
-
+        self.weights_path = weights_path or path.join(MODULE_PATH, 'yamnet.h5')
         self.hop_size = hop_size
         self.yamnet_kwargs = yamnet_kwargs
         self.params = yamnet.params
@@ -534,52 +536,59 @@ class AudiosetLabelExtractor(AudioExtractor):
         for par, v in self.yamnet_kwargs.items():
             if par in self.params.__dict__:
                 setattr(self.params, par, v)
-        self.weights_path = WEIGHTS_PATH
+        self.model = yamnet.yamnet_frames_model(self.params)
+        self.model.load_weights(self.weights_path)
         self.labels = pd.read_csv(LABELS_PATH)['display_name'].tolist()
         self.label_subset = label_subset
-        self.top_n = top_n if top_n else len(self.labels)
+        self.top_n = top_n
+        if self.label_subset:
+            for l in self.label_subset:
+                if l not in self.labels:
+                    warnings.warn('''Label {} does not exist. 
+                    Dropping.'''.format(l))
         super(AudiosetLabelExtractor, self).__init__()
 
     def _extract(self, stim):
         params = self.params
-        labels = self.labels
         params.SAMPLE_RATE = stim.sampling_rate
 
         try:
             assert params.SAMPLE_RATE >= 2 * params.MEL_MAX_HZ
             if params.SAMPLE_RATE != 1600:
                 warnings.warn('''The sampling rate of the stimulus is {}Hz. 
-                YAMNet was trained on audio sampled at 16000Hz. 
-                This should not impact predictions, but you can resample the
-                input using AudioResamplingFilter to ensure conformity to 
-                training parameters.'''.format(params.SAMPLE_RATE))
+                    YAMNet was trained on audio sampled at 16000Hz. 
+                    This should not impact predictions, but you can resample 
+                    the input using AudioResamplingFilter for full conformity 
+                    to training.'''.format(params.SAMPLE_RATE))
             if params.MEL_MIN_HZ != 125 or params.MEL_MAX_HZ != 7500:
                 warnings.warn('''Custom values for MEL_MIN_HZ and MEL_MAX_HZ 
-                were passed. Note that changing these defaults might affect 
-                model performance.''')
+                    were passed. Changing these defaults might affect 
+                    model performance.''')
         except:
             raise ValueError('''The sampling rate of your stimulus ({}Hz)
-                must be at least twice the value of MEL_MAX_HZ ({}Hz). You can 
-                upsample your audio at a suitable sampling rate or pass a 
-                lower value of MEL_MAX_HZ when initializing this extractor. 
-                Note that YAMNet was trained with MEL_MAX_HZ = 7500Hz.
-                Changing this default value might impact
-                predictions.'''.format(params.SAMPLE_RATE, params.MEL_MAX_HZ))
+                    must be at least twice the value of MEL_MAX_HZ ({}Hz). 
+                    Upsample your audio (recommended) or pass a lower value of 
+                    MEL_MAX_HZ when initializing this extractor.'''.format(
+                    params.SAMPLE_RATE, params.MEL_MAX_HZ))
 
-        model = yamnet.yamnet_frames_model(params)
-        model.load_weights(self.weights_path)
-        preds, _ = model.predict_on_batch(np.reshape(stim.data, [1,-1]))
+        labels = self.labels
+        preds, _ = self.model.predict_on_batch(np.reshape(stim.data, [1,-1]))
         preds = preds.numpy()
-        
-        if self.label_subset:
-            label_subset_idx =  [idx for idx, val in enumerate(labels) 
-                                 if val in self.label_subset]
-            labels = [labels[idx] for idx in label_subset_idx]
-            preds = preds[:,label_subset_idx]
 
+        if self.label_subset:
+            label_subset_idx = [np.where(labels == l)[0] 
+                                for l in self.label_subset]
+            preds = preds[:,label_subset_idx]
+            labels = self.label_subset
+
+        nr_lab = self.top_n or len(labels)
+        if nr_lab > len(labels):
+            raise ValueError('''Value of top_n ({}) exceeds number of 
+                labels ({}). Reinstantiate this extractor using suitable 
+                parameters.'''.format(self.top_n, len(labels)))
         idx = np.mean(preds,axis=0).argsort()
-        preds = preds[:,idx][:,-self.top_n:]
-        labels = [labels[i] for i in idx][-self.top_n:]
+        preds = np.fliplr(preds[:,idx][:,-nr_lab:])
+        labels = [labels[i] for i in idx][-nr_lab:][::-1]
 
         durations = params.PATCH_HOP_SECONDS
         onsets = np.arange(start=0, stop=stim.duration, step=durations)
@@ -590,4 +599,3 @@ class AudiosetLabelExtractor(AudioExtractor):
                                orders=list(range(len(onsets))))
 
 # Add pointer to installation instructions (install models, run test install - link, add to pythonpath)
-# Migrate to models
