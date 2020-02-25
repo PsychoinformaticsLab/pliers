@@ -548,11 +548,11 @@ class AudiosetLabelExtractor(AudioExtractor):
         try:
             assert params.SAMPLE_RATE >= 2 * params.MEL_MAX_HZ
             if params.SAMPLE_RATE != 1600:
-                warnings.warn('''The sampling rate of the stimulus is {}
-                Hz, while YAMNet was trained on audio sampled at 16000Hz. 
-                This should not affect the results, but you can resample the 
-                input file (e.g. using AudioResamplingFilter) for full 
-                conformity to training defaults.'''.format(params.SAMPLE_RATE))
+                warnings.warn('''The sampling rate of the stimulus is {}Hz. 
+                YAMNet was trained on audio sampled at 16000Hz. 
+                This should not impact predictions, but you can resample the
+                input using AudioResamplingFilter to ensure conformity to 
+                training parameters.'''.format(params.SAMPLE_RATE))
             if params.MEL_MIN_HZ != 125 or params.MEL_MAX_HZ != 7500:
                 warnings.warn('''Custom values for MEL_MIN_HZ and MEL_MAX_HZ 
                 were passed. Note that changing these defaults might affect 
@@ -563,23 +563,23 @@ class AudiosetLabelExtractor(AudioExtractor):
                 upsample your audio at a suitable sampling rate or pass a 
                 lower value of MEL_MAX_HZ when initializing this extractor. 
                 Note that YAMNet was trained with MEL_MAX_HZ = 7500Hz.
-                Changing this default value might result in less accurate 
+                Changing this default value might impact
                 predictions.'''.format(params.SAMPLE_RATE, params.MEL_MAX_HZ))
 
         model = yamnet.yamnet_frames_model(params)
         model.load_weights(self.weights_path)
-        preds, spectrogram = model.predict_on_batch(np.reshape(stim.data, [1,-1]))
-        self.spectrogram = spectrogram
+        preds, _ = model.predict_on_batch(np.reshape(stim.data, [1,-1]))
+        preds = preds.numpy()
         
         if self.label_subset:
             label_subset_idx =  [idx for idx, val in enumerate(labels) 
                                  if val in self.label_subset]
             labels = [labels[idx] for idx in label_subset_idx]
-            preds = preds[:label_subset_idx]
+            preds = preds[:,label_subset_idx]
 
         idx = np.mean(preds,axis=0).argsort()
-        preds = np.fliplr(preds[:,idx])[:,:self.top_n]
-        labels = [labels[i] for i in idx][::-1][:self.top_n]
+        preds = preds[:,idx][:,-self.top_n:]
+        labels = [labels[i] for i in idx][-self.top_n:]
 
         durations = params.PATCH_HOP_SECONDS
         onsets = np.arange(start=0, stop=stim.duration, step=durations)
@@ -590,5 +590,4 @@ class AudiosetLabelExtractor(AudioExtractor):
                                orders=list(range(len(onsets))))
 
 # Add pointer to installation instructions (install models, run test install - link, add to pythonpath)
-# Add length warning / batching
 # Migrate to models
