@@ -110,8 +110,10 @@ class ExtractorResult(object):
         # Ideally, Extractors should implement their own _to_df() class method
         # that produces a DataFrame in standardized format. Failing that, we
         # assume self._data is already array-like and can be wrapped in a DF.
+
         if hasattr(self.extractor, '_to_df'):
             df = self.extractor._to_df(self, **to_df_kwargs)
+            features = self.features
         else:
             features = self.features
             data = np.array(self._data)
@@ -119,6 +121,11 @@ class ExtractorResult(object):
                 features = ['feature_%d' % (i + 1)
                             for i in range(data.shape[1])]
             df = pd.DataFrame(data, columns=features)
+
+        if features is not None:
+            index_cols = list(set(df.columns) - set(features))
+        else:
+            index_cols = list(set(df.columns))
 
         if hasattr(self, '_onsets'):
             onsets = np.array(self._onsets)
@@ -131,11 +138,9 @@ class ExtractorResult(object):
         orders = np.nan if orders is None else orders
 
         # If any features clash with protected keys, append underscore
-        protected = ['onset', 'order', 'duration', 'extractor', 'stim_name', \
+        protected = ['onset', 'order', 'duration', 'extractor', 'stim_name',
                      'class', 'filename', 'history', 'source_file']
         df = df.rename(columns={k: k + '_' for k in protected})
-
-        index_cols = []
 
         # Generally we leave it to Extractors to properly track the number of
         # objects returned in the result DF, using the 'object_id' column.
@@ -143,15 +148,16 @@ class ExtractorResult(object):
         # take our best guess. The logic is that we increment the object
         # counter for any row in the DF that cannot be uniquely distinguished
         # from other rows by onset and duration.
-        if object_id and 'object_id' not in df.columns:
-            index = pd.Series(onsets).astype(str) + '_' + \
-                pd.Series(durations).astype(str)
-            if object_id is True or (object_id == 'auto' and
-                                     len(set(index)) < len(df)):
-                ids = np.arange(len(df)) if len(index) == 1 \
-                    else df.groupby(index).cumcount()
-                df.insert(0, 'object_id', ids)
-                index_cols = ['object_id']
+        if object_id:
+            if 'object_id' not in df.columns:
+                index_cols.append('object_id')
+                index = pd.Series(onsets).astype(str) + '_' + \
+                    pd.Series(durations).astype(str)
+                if object_id is True or (object_id == 'auto' and
+                                         len(set(index)) < len(df)):
+                    ids = np.arange(len(df)) if len(index) == 1 \
+                        else df.groupby(index).cumcount()
+                    df.insert(0, 'object_id', ids)
 
         if timing is True or (timing == 'auto' and
                               (np.isfinite(durations).any() or
