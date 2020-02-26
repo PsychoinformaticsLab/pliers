@@ -537,8 +537,8 @@ class AudiosetLabelExtractor(AudioExtractor):
         try:
             verify_dependencies(['yamnet'])
         except MissingDependencyError: 
-            raise MissingDependencyError(dependencies='yamnet',
-                                         msg=YAMNET_INSTALL_MESSAGE)
+            raise MissingDependencyError(dependencies=None,
+                                         custom_message=YAMNET_INSTALL_MESSAGE)
         verify_dependencies(['tensorflow'])
 
         MODULE_PATH = path.dirname(yamnet.__file__)
