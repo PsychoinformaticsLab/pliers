@@ -3,6 +3,7 @@ from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.text import ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.utils import attempt_to_import, verify_dependencies, listify
+from pliers.support.exceptions import MissingDependencyError
 import numpy as np
 from scipy import fft
 import pandas as pd
@@ -15,6 +16,16 @@ librosa = attempt_to_import('librosa')
 yamnet = attempt_to_import('yamnet')
 tf = attempt_to_import('tensorflow')
 
+YAMNET_INSTALL_MESSAGE = '''
+yamnet cannot be imported. To download and set up yamnet, open a terminal
+window and do the following
+- cd DOWNLOAD_PATH (path where you want yamnet to be downloaded)
+- git clone --depth 1 -b master https://github.com/tensorflow/models
+- cd models/research/audioset/yamnet
+- curl -O https://storage.googleapis.com/audioset/yamnet.h5
+- python yamnet_test.py
+- export PYTHONPATH=$PYTHONPATH:$PWD
+'''
 
 class AudioExtractor(Extractor):
 
@@ -523,7 +534,11 @@ class AudiosetLabelExtractor(AudioExtractor):
 
     def __init__(self, hop_size=0.1, top_n=None, label_subset=None,
                  weights_path=None, **yamnet_kwargs):
-        verify_dependencies(['yamnet'])
+        try:
+            verify_dependencies(['yamnet'])
+        except MissingDependencyError: 
+            raise MissingDependencyError(dependencies='yamnet',
+                                         msg=YAMNET_INSTALL_MESSAGE)
         verify_dependencies(['tensorflow'])
 
         MODULE_PATH = path.dirname(yamnet.__file__)

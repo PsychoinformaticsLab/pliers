@@ -22,4 +22,3 @@ SpeechRecognition>=3.6.0
 tensorflow>=1.0.0
 xlrd
 rev_ai
-soundfile
