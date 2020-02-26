@@ -44,10 +44,13 @@ install:
 - pip install -r optional-dependencies.txt --upgrade
 - pip install --upgrade coveralls pytest-cov
 - git clone --depth 1 -b master https://github.com/tensorflow/models
+- echo $PWD
 - cd models/research/audioset/yamnet
 - curl -O https://storage.googleapis.com/audioset/yamnet.h5
 - python yamnet_test.py
-- export PYTHONPATH=$PYTHONPATH:$PWD/models/research/audioset/yamnet
+- echo $PYTHONPATH
+- export PYTHONPATH=$PYTHONPATH:$PWD
+- echo $PYTHONPATH
 - cd
 
 before_script:
