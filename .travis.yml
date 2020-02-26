@@ -48,6 +48,7 @@ install:
 - curl -O https://storage.googleapis.com/audioset/yamnet.h5
 - python yamnet_test.py
 - export PYTHONPATH=$PYTHONPATH:$PWD/models/research/audioset/yamnet
+- cd
 
 before_script:
 - python -m pliers.support.download
