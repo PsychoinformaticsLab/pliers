@@ -37,11 +37,17 @@ before_install:
 - conda create -q -n test-env python=$PYTHON_VERSION
 - source activate test-env
 install:
+- python -m pip install --upgrade pip wheel
 - sudo apt-get install libboost-python-dev
 - pip install --upgrade --ignore-installed setuptools
 - pip install -r requirements.txt --upgrade
 - pip install -r optional-dependencies.txt --upgrade
 - pip install --upgrade coveralls pytest-cov
+- git clone --depth 1 -b master https://github.com/tensorflow/models
+- cd models/research/audioset/yamnet
+- curl -O https://storage.googleapis.com/audioset/yamnet.h5
+- python yamnet_test.py
+- export PYTHONPATH=$PYTHONPATH:$PWD/models/research/audioset/yamnet
 
 before_script:
 - python -m pliers.support.download

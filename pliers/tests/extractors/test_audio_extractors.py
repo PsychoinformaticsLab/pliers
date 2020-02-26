@@ -361,7 +361,7 @@ def test_percussion_extractor():
 @pytest.mark.parametrize('hop_size', [0.1, 1])
 @pytest.mark.parametrize('top_n', [5, 10])
 @pytest.mark.parametrize('target_sr', [22000, 14000])
-def test_audioset_extractor(hop_size, top_n, target_sr, caplog):
+def test_audioset_extractor(hop_size, top_n, target_sr):
 
     def compute_expected_length(stim, ext):
         bins = int(stim.duration / ext.hop_size)
@@ -373,7 +373,7 @@ def test_audioset_extractor(hop_size, top_n, target_sr, caplog):
     audio_filter = AudioResamplingFilter(target_sr=target_sr)
     audio_resampled = audio_filter.transform(audio_stim)
 
-    # test with defaults and 44000 stimulus
+    # test with defaults and 44100 stimulus
     ext = AudiosetLabelExtractor(hop_size=hop_size)
     r_orig = ext.transform(audio_stim).to_df()
     assert r_orig.shape[0] == compute_expected_length(audio_stim, ext)
