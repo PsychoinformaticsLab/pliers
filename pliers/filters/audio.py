@@ -3,6 +3,7 @@
 from pliers.stimuli import AudioStim
 from pliers.utils import attempt_to_import, verify_dependencies
 from .base import Filter, TemporalTrimmingFilter
+from copy import deepcopy
 
 librosa = attempt_to_import('librosa')
 
@@ -43,11 +44,11 @@ class AudioResamplingFilter(AudioFilter):
         super(AudioResamplingFilter, self).__init__()
 
     def _filter(self, stim):
-        stim.data = librosa.core.resample(y=stim.data,
+        resampled_stim = deepcopy(stim)
+        resampled_stim.data = librosa.core.resample(y=stim.data,
                                           orig_sr=stim.sampling_rate,
                                           target_sr=self.target_sr,
                                           resample_type=self.resample_type,
                                           **self.librosa_kwargs)
-        stim.sampling_rate = self.target_sr
-        
-        return stim
+        resampled_stim.sampling_rate = self.target_sr
+        return resampled_stim

@@ -1,5 +1,6 @@
 from os.path import join
 from ..utils import get_test_data_path
+from pliers import set_option
 from pliers.extractors import (LibrosaFeatureExtractor,
                                STFTAudioExtractor,
                                MeanAmplitudeExtractor,
@@ -23,10 +24,13 @@ from pliers.extractors import (LibrosaFeatureExtractor,
                                TempoExtractor,
                                BeatTrackExtractor,
                                HarmonicExtractor,
-                               PercussiveExtractor)
+                               PercussiveExtractor,
+                               AudiosetLabelExtractor)
 from pliers.stimuli import (ComplexTextStim, AudioStim,
                             TranscribedAudioCompoundStim)
+from pliers.filters import AudioResamplingFilter
 import numpy as np
+import pytest
 
 AUDIO_DIR = join(get_test_data_path(), 'audio')
 
@@ -352,3 +356,63 @@ def test_percussion_extractor():
     assert np.isclose(df['onset'][29], 1.346757)
     assert np.isclose(df['duration'][29], 0.04644)
     assert np.isclose(df['percussive'][29], 0.004497, rtol=1e-4)
+
+
+@pytest.mark.parametrize('hop_size', [0.1, 1])
+@pytest.mark.parametrize('top_n', [5, 10])
+@pytest.mark.parametrize('target_sr', [22000, 14000])
+def test_audioset_extractor(hop_size, top_n, target_sr, caplog):
+
+    def compute_expected_length(stim, ext):
+        bins = int(stim.duration / ext.hop_size)
+        nr_incomplete = ext.params.PATCH_WINDOW_SECONDS / ext.hop_size - 1
+        exp_length = int(bins - nr_incomplete)
+        return exp_length
+
+    audio_stim = AudioStim(join(AUDIO_DIR, 'crowd.mp3'))
+    audio_filter = AudioResamplingFilter(target_sr=target_sr)
+    audio_resampled = audio_filter.transform(audio_stim)
+
+    # test with defaults and 44000 stimulus
+    ext = AudiosetLabelExtractor(hop_size=hop_size)
+    r_orig = ext.transform(audio_stim).to_df()
+    assert r_orig.shape[0] == compute_expected_length(audio_stim, ext)
+    assert r_orig.shape[1] == 525
+    assert np.argmax(r_orig.to_numpy()[:,4:].mean(axis=0)) == 0
+    assert r_orig['duration'][0] == ext.hop_size
+    assert all([np.isclose(r_orig['onset'][i] - r_orig['onset'][i-1], hop_size)
+                for i in range(1,r_orig.shape[0])])
+
+    # test resampled audio length and errors
+    if target_sr >= 14500:
+        r_resampled = ext.transform(audio_resampled).to_df()
+        assert r_orig.shape[0] == r_resampled.shape[0]
+    else:
+        with pytest.raises(ValueError) as sr_error:
+            ext.transform(audio_resampled)
+        assert all([substr in str(sr_error.value) 
+                    for substr in ['Upsample' , str(target_sr)]])
+
+    # test top_n option
+    ext_top_n = AudiosetLabelExtractor(top_n=top_n)
+    r_top_n = ext_top_n.transform(audio_stim).to_df()
+    assert r_top_n.shape[1] == ext_top_n.top_n + 4
+    assert np.argmax(r_top_n.to_numpy()[:,4:].mean(axis=0)) == 0
+
+    # test label subset
+    labels = ['Speech', 'Silence', 'Harmonic', 'Bark', 'Music', 'Bell', 
+              'Steam', 'Rain']
+    ext_labels_only = AudiosetLabelExtractor(label_subset=labels)
+    r_labels_only = ext_labels_only.transform(audio_stim).to_df()
+    assert r_labels_only.shape[1] == len(labels) + 4
+    
+    # test top_n/labels combination
+    ext_labels_top_n = AudiosetLabelExtractor(top_n=top_n, label_subset=labels)
+    if top_n > len(labels):
+        with pytest.raises(ValueError) as labels_error:
+            ext_labels_top_n.transform(audio_stim)
+        assert all([val in str(labels_error.value) 
+                    for val in [str(top_n), str(len(labels))]])
+    else:
+        r_labels_top_n = ext_labels_top_n.transform(audio_stim).to_df()
+        assert r_labels_top_n.shape[1] == top_n + 4

@@ -9,7 +9,7 @@ import pandas as pd
 import soundfile as sf
 from abc import ABCMeta
 from os import path
-import warnings
+import logging
 
 librosa = attempt_to_import('librosa')
 yamnet = attempt_to_import('yamnet')
@@ -512,7 +512,7 @@ class AudiosetLabelExtractor(AudioExtractor):
     label_subset (list): specifies subset of labels for which probabilities 
         are to be returned. A comprehensive list of labels is available in the
         audioset/yamnet repository (see yamnet_class_map.csv).
-    weights_path (optional): full path to model weights file. If not provided
+    weights_path (optional): full path to model weights file. If not provided,
         weights from pretrained YAMNet module are used.
     yamnet_kwargs (optional): Optional named arguments that modify input 
         parameters for the model (see params.py file in yamnet repository)
@@ -536,56 +536,63 @@ class AudiosetLabelExtractor(AudioExtractor):
         for par, v in self.yamnet_kwargs.items():
             if par in self.params.__dict__:
                 setattr(self.params, par, v)
-        self.model = yamnet.yamnet_frames_model(self.params)
-        self.model.load_weights(self.weights_path)
         self.labels = pd.read_csv(LABELS_PATH)['display_name'].tolist()
         self.label_subset = label_subset
         self.top_n = top_n
         if self.label_subset:
             for l in self.label_subset:
                 if l not in self.labels:
-                    warnings.warn('''Label {} does not exist. 
-                    Dropping.'''.format(l))
+                    logging.warning('''Label {} does not exist. 
+                                     Dropping.'''.format(l))
         super(AudiosetLabelExtractor, self).__init__()
 
     def _extract(self, stim):
         params = self.params
         params.SAMPLE_RATE = stim.sampling_rate
 
-        try:
-            assert params.SAMPLE_RATE >= 2 * params.MEL_MAX_HZ
-            if params.SAMPLE_RATE != 1600:
-                warnings.warn('''The sampling rate of the stimulus is {}Hz. 
-                    YAMNet was trained on audio sampled at 16000Hz. 
-                    This should not impact predictions, but you can resample 
-                    the input using AudioResamplingFilter for full conformity 
-                    to training.'''.format(params.SAMPLE_RATE))
+        if params.SAMPLE_RATE >= 2 * params.MEL_MAX_HZ:
+            if params.SAMPLE_RATE != 16000:
+                logging.warning(
+                    'The sampling rate of the stimulus is '
+                    f'{params.SAMPLE_RATE}Hz. '
+                    'YAMNet was trained on audio sampled at 16000Hz. ' 
+                    'This should not impact predictions, but you can resample ' 
+                    'the input using AudioResamplingFilter for full conformity ' 
+                    'to training.')
             if params.MEL_MIN_HZ != 125 or params.MEL_MAX_HZ != 7500:
-                warnings.warn('''Custom values for MEL_MIN_HZ and MEL_MAX_HZ 
-                    were passed. Changing these defaults might affect 
-                    model performance.''')
-        except:
-            raise ValueError('''The sampling rate of your stimulus ({}Hz)
-                    must be at least twice the value of MEL_MAX_HZ ({}Hz). 
-                    Upsample your audio (recommended) or pass a lower value of 
-                    MEL_MAX_HZ when initializing this extractor.'''.format(
-                    params.SAMPLE_RATE, params.MEL_MAX_HZ))
+                logging.warning(
+                    'Custom values for MEL_MIN_HZ and MEL_MAX_HZ '
+                    'were passed. Changing these defaults might affect ' 
+                    'model performance.')
+        else:
+            raise ValueError(
+                f'The sampling rate of your stimulus ({params.SAMPLE_RATE}Hz)'
+                ' must be at least twice the value of MEL_MAX_HZ '
+                f'({params.MEL_MAX_HZ}Hz). ' 
+                'Upsample your audio stimulus (recommended) or pass a lower '
+                'value of MEL_MAX_HZ when initializing this extractor.')
 
         labels = self.labels
-        preds, _ = self.model.predict_on_batch(np.reshape(stim.data, [1,-1]))
+        model = yamnet.yamnet_frames_model(params)
+        model.load_weights(self.weights_path)
+        preds, _ = model.predict_on_batch(np.reshape(stim.data, [1,-1]))
         preds = preds.numpy()
 
         if self.label_subset:
-            label_subset_idx = [np.where(labels == l)[0] 
-                                for l in self.label_subset]
+            for l in self.label_subset:
+                print(l)
+                print(np.where(labels == l))
+            label_subset_idx = [idx for idx, lab in enumerate(labels) 
+                                    if lab in self.label_subset]
             preds = preds[:,label_subset_idx]
             labels = self.label_subset
 
         nr_lab = self.top_n or len(labels)
         if nr_lab > len(labels):
-            raise ValueError('''Value of top_n ({}) exceeds number of 
-                labels ({}). Reinstantiate this extractor using suitable 
-                parameters.'''.format(self.top_n, len(labels)))
+            raise ValueError(
+                f'Value of top_n ({self.top_n}) exceeds number of '
+                f'labels ({len(labels)}). Reinstantiate this extractor using '
+                'suitable parameters.''')
         idx = np.mean(preds,axis=0).argsort()
         preds = np.fliplr(preds[:,idx][:,-nr_lab:])
         labels = [labels[i] for i in idx][-nr_lab:][::-1]
