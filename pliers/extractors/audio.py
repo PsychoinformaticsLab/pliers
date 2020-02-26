@@ -24,11 +24,13 @@ window and do the following
 - cd models/research/audioset/yamnet
 - curl -O https://storage.googleapis.com/audioset/yamnet.h5
 - python yamnet_test.py
-Then you're a Mac or Linux user, do:
+
+If you're a Mac or Linux user, do:
 - open ~/.bash_profile
 - add "export PYTHONPATH=$PYTHONPATH:DOWNLOAD_PATH/models/research/audioset/yamnet" 
 to the end of the file
 - save and close
+
 If you're a Windows user, do:
 - set PYTHONPATH=%PYTHONPATH%;DOWNLOAD_PATH/models/research/audioset/yamnet
 - To make the change permanent, you have to add this line to your autoexec.bat
