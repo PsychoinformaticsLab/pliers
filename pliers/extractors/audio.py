@@ -16,26 +16,6 @@ librosa = attempt_to_import('librosa')
 yamnet = attempt_to_import('yamnet')
 tf = attempt_to_import('tensorflow')
 
-YAMNET_INSTALL_MESSAGE = '''
-yamnet cannot be imported. To download and set up yamnet, open a terminal
-window and do the following
-- cd DOWNLOAD_PATH (path where you want yamnet to be downloaded)
-- git clone --depth 1 -b master https://github.com/tensorflow/models
-- cd models/research/audioset/yamnet
-- curl -O https://storage.googleapis.com/audioset/yamnet.h5
-- python yamnet_test.py
-
-If you're a Mac or Linux user, do:
-- open ~/.bash_profile
-- add "export PYTHONPATH=$PYTHONPATH:DOWNLOAD_PATH/models/research/audioset/yamnet" 
-to the end of the file
-- save and close
-
-If you're a Windows user, do:
-- set PYTHONPATH=%PYTHONPATH%;DOWNLOAD_PATH/models/research/audioset/yamnet
-- To make the change permanent, you have to add this line to your autoexec.bat
-'''
-
 class AudioExtractor(Extractor):
 
     ''' Base Audio Extractor class; all subclasses can only be applied to
@@ -518,8 +498,29 @@ class PercussiveExtractor(LibrosaFeatureExtractor):
     _feature = 'percussive'
 
 
-class AudiosetLabelExtractor(AudioExtractor):
+YAMNET_INSTALL_MESSAGE = '''
+yamnet cannot be imported. To download and set up yamnet, open a terminal
+window and do the following
+- cd DOWNLOAD_PATH (path where you want yamnet to be downloaded)
+- git clone --depth 1 -b master https://github.com/tensorflow/models
+- cd models/research/audioset/yamnet
+- curl -O https://storage.googleapis.com/audioset/yamnet.h5
+- python yamnet_test.py
 
+If you're a Mac or Linux user:
+- open ~/.bash_profile
+- add "export PYTHONPATH=$PYTHONPATH:DOWNLOAD_PATH/models/research/audioset/yamnet" 
+to the end of the file
+- save and close
+
+If you're a Windows user, do:
+- set PYTHONPATH=%PYTHONPATH%;DOWNLOAD_PATH/models/research/audioset/yamnet
+- To make the change permanent, you have to add this line to your autoexec.bat
+'''
+
+
+class AudiosetLabelExtractor(AudioExtractor):
+    
     ''' Extract probability of 521 audio event classes based on AudioSet
     corpus using a YAMNet architecture. Code available at:
     https://github.com/tensorflow/models/tree/master/research/audioset/yamnet 
