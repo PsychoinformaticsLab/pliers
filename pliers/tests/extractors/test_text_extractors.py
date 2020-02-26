@@ -7,7 +7,9 @@ from pliers.extractors import (DictionaryExtractor,
                                WordEmbeddingExtractor,
                                VADERSentimentExtractor,
                                SpaCyExtractor,
-                               PretrainedBertEncodingExtractor)
+                               PretrainedBertEncodingExtractor,
+                               WordCounterExtractor)
+
 from pliers.extractors.base import merge_results
 from pliers.stimuli import TextStim, ComplexTextStim
 from ..utils import get_test_data_path
@@ -315,3 +317,35 @@ def test_pretrained_bert_large_extractor():
                                                tokenizer='bert-large-uncased')
     res = ext.transform(stim).to_df()
     assert len(res['encoding'][0]) == 1024
+
+
+def test_word_counter_extractor():
+    stim_txt = ComplexTextStim(text='This is a text where certain words occur'
+                                    ' again and again Sometimes they are '
+                                    'lowercase sometimes they are uppercase '
+                                    'There are also words that may look '
+                                    'different but they come from the same '
+                                    'lemma Take a word like text and its '
+                                    'plural texts Oh words')
+    stim_with_onsets = ComplexTextStim(filename=join(TEXT_DIR,
+                                       'complex_stim_with_repetitions.txt'))
+    ext = WordCounterExtractor()
+    result_stim_txt = ext.transform(stim_txt).to_df()
+    result_stim_with_onsets = ext.transform(stim_with_onsets).to_df()
+    assert result_stim_txt.shape[0] == 45
+    assert all(result_stim_txt['word_count'] >= 1)
+    assert result_stim_txt['word_count'][15] == 2
+    assert result_stim_txt['word_count'][44] == 3
+    assert result_stim_with_onsets.shape[0] == 8
+    assert result_stim_with_onsets['onset'][2] == 0.8
+    assert result_stim_with_onsets['duration'][2] == 0.1
+    assert result_stim_with_onsets['word_count'][2] == 2
+    assert result_stim_with_onsets['word_count'][5] == 2
+    assert result_stim_with_onsets['word_count'][7] == 1
+
+    ext2 = WordCounterExtractor(log_scale=True)
+    result_stim_txt = ext2.transform(stim_txt).to_df()
+    assert all(result_stim_txt['log_word_count'] >= 0)
+    assert result_stim_txt['log_word_count'][15] == np.log(2)
+    assert result_stim_txt['log_word_count'][44] == np.log(3)
+

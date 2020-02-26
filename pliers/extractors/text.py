@@ -26,7 +26,6 @@ sklearn_text = attempt_to_import('sklearn.feature_extraction.text', 'sklearn_tex
 spacy = attempt_to_import('spacy')
 transformers = attempt_to_import('transformers')
 
-
 class TextExtractor(Extractor):
 
     ''' Base Text Extractor class; all subclasses can only be applied to text.
@@ -544,3 +543,36 @@ class PretrainedBertEncodingExtractor(ComplexTextExtractor):
         result_df['object_id'] = range(result_df.shape[0])
 
         return result_df
+
+      
+class WordCounterExtractor(ComplexTextExtractor):
+
+    ''' Extracts number of times each unique word has occurred within text
+
+    Args:
+        log_scale(bool): specifies if count values are to be returned in log-
+                         scale (defaults to False)
+        '''
+
+    _log_attributes = ('case_sensitive', 'log_scale')
+
+    def __init__(self, case_sensitive=False, log_scale=False):
+
+        self.log_scale = log_scale
+        self.case_sensitive = case_sensitive
+        self.features = ['log_word_count'] if self.log_scale else ['word_count']
+        super(WordCounterExtractor, self).__init__()
+
+    def _extract(self, stims):
+        onsets = [s.onset for s in stims]
+        durations = [s.duration for s in stims]
+        tokens = [s.text for s in stims]
+        tokens = [t if self.case_sensitive else t.lower() for t in tokens]
+        word_counter = pd.Series(tokens).groupby(tokens).cumcount() + 1
+        if self.log_scale:
+            word_counter = np.log(word_counter)
+
+        return ExtractorResult(word_counter, stims, self,
+                               features=self.features,
+                               onsets=onsets, durations=durations)
+
