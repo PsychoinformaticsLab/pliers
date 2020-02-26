@@ -7,7 +7,9 @@ from pliers.extractors import (DictionaryExtractor,
                                WordEmbeddingExtractor,
                                VADERSentimentExtractor,
                                SpaCyExtractor,
+                               PretrainedBertEncodingExtractor,
                                WordCounterExtractor)
+
 from pliers.extractors.base import merge_results
 from pliers.stimuli import TextStim, ComplexTextStim
 from ..utils import get_test_data_path
@@ -16,6 +18,7 @@ import numpy as np
 from os.path import join
 import pytest
 import spacy
+from os import environ
 
 TEXT_DIR = join(get_test_data_path(), 'text')
 
@@ -262,6 +265,60 @@ def test_spacy_doc_extractor():
     assert result['is_sentenced'][3]
 
 
+def test_pretrained_bert_encoding_extractor():
+    stim = ComplexTextStim(text='This is not a tokenized sentence.')
+    stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
+    
+    ext_base = PretrainedBertEncodingExtractor(pretrained_model_or_path='bert-base-uncased')
+    ext_base_tf = PretrainedBertEncodingExtractor(framework='tf')
+    ext_sequence = PretrainedBertEncodingExtractor(encoding_level='sequence')
+    ext_sequence_pooling = PretrainedBertEncodingExtractor(encoding_level='sequence', pooling='mean')
+    
+    res = ext_base.transform(stim).to_df(metadata=True)
+    res_file = ext_base.transform(stim_file).to_df(metadata=True)
+    res_base_tf = ext_base_tf.transform(stim).to_df(metadata=True)
+    res_sequence = ext_sequence.transform(stim).to_df(metadata=True)
+    res_sequence_pooling = ext_sequence_pooling.transform(stim).to_df(metadata=True)
+    
+    assert len(res['encoding'][0]) == 768
+    assert res.shape[0] == 8
+    assert res['token'][5] == '##ized'
+    assert res['word'][5] == 'tokenized'
+    assert res['object_id'][5] == 5
+       
+    assert len(res_base_tf['encoding'][0]) == 768
+    assert all(np.round(res_base_tf['encoding'][0],3) == np.round(res['encoding'][0],3))
+    
+    assert res_file.shape[0] == 8
+    assert res_file['onset'][3] == 1.3
+    assert res_file['duration'][5] == 0.5
+    assert res_file['duration'][5] == 0.5
+    assert res_file['token'][5] == 'transform'
+    assert res_file['word'][5] == 'transformer'
+    assert res_file['object_id'][5] == 5
+    
+    assert res_sequence.shape[0] == 1
+    assert len(res_sequence['encoding'][0]) == 768
+    assert res_sequence_pooling.shape[0] == 1
+    assert res_sequence_pooling['pooling'][0] == 'mean'
+    assert res_sequence['encoding'][0] != res_sequence_pooling['encoding'][0]
+    assert res_sequence['token'][0] == 'This is not a tokenized sentence .'
+    assert res_sequence['word'][0] == 'None'
+
+    del ext_base, ext_base_tf, ext_sequence, ext_sequence_pooling
+    del res, res_file, res_base_tf, res_sequence, res_sequence_pooling
+
+
+@pytest.mark.skipif(environ.get('TRAVIS', False) == 'true',
+                                reason='model too large')
+def test_pretrained_bert_large_extractor():
+    stim = ComplexTextStim(text='This is not a tokenized sentence.')
+    ext = PretrainedBertEncodingExtractor(pretrained_model_or_path='bert-large-uncased',
+                                               tokenizer='bert-large-uncased')
+    res = ext.transform(stim).to_df()
+    assert len(res['encoding'][0]) == 1024
+
+
 def test_word_counter_extractor():
     stim_txt = ComplexTextStim(text='This is a text where certain words occur'
                                     ' again and again Sometimes they are '
@@ -291,3 +348,4 @@ def test_word_counter_extractor():
     assert all(result_stim_txt['log_word_count'] >= 0)
     assert result_stim_txt['log_word_count'][15] == np.log(2)
     assert result_stim_txt['log_word_count'][44] == np.log(3)
+

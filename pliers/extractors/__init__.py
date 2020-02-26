@@ -62,7 +62,8 @@ from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
                    NumUniqueWordsExtractor, PartOfSpeechExtractor,
                    WordEmbeddingExtractor, TextVectorizerExtractor,
-                   VADERSentimentExtractor, SpaCyExtractor, WordCounterExtractor)
+                   VADERSentimentExtractor, SpaCyExtractor,
+                   WordCounterExtractor, PretrainedBertEncodingExtractor)
 from .video import (FarnebackOpticalFlowExtractor)
 
 __all__ = [
@@ -137,5 +138,6 @@ __all__ = [
     'BeatTrackExtractor',
     'HarmonicExtractor',
     'PercussiveExtractor',
+    'PretrainedBertEncodingExtractor',
     'WordCounterExtractor'
 ]

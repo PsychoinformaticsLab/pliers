@@ -118,7 +118,7 @@ def verify_dependencies(dependencies):
             missing.append(module_names[dep].package)
     if missing:
         raise MissingDependencyError(missing)
-
+        
 
 class EnvironmentKeyMixin(object):
 

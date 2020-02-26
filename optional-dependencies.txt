@@ -18,5 +18,7 @@ seaborn
 spacy
 SpeechRecognition>=3.6.0
 tensorflow>=1.0.0
+torch
+transformers
 xlrd
 rev_ai
