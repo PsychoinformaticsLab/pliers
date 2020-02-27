@@ -561,14 +561,25 @@ class AudiosetLabelExtractor(AudioExtractor):
         for par, v in self.yamnet_kwargs.items():
             if par in self.params.__dict__:
                 setattr(self.params, par, v)
-        self.labels = pd.read_csv(LABELS_PATH)['display_name'].tolist()
-        self.label_subset = label_subset
+        
+        if top_n and label_subset:
+            raise ValueError('Only one of top_n or label_subset can be provided. '
+                             'Reinitialize the extractor setting either top_n or '
+                             'subset_label to None (or leaving it unspecified)')
+                             
         self.top_n = top_n
-        if self.label_subset:
-            for l in self.label_subset:
-                if l not in self.labels:
-                    logging.warning('''Label {} does not exist. 
-                                     Dropping.'''.format(l))
+        all_labels = pd.read_csv(LABELS_PATH)['display_name'].tolist()
+        if label_subset:
+            for l in label_subset:
+                if l not in all_labels:
+                    logging.warning(f'Label {l} does not exist. Dropping.')
+                    label_subset.remove(l)
+            self.labels = label_subset
+            self.label_idx = [idx for idx, lab in enumerate(all_labels) 
+                                    if lab in label_subset]
+        else:
+            self.labels = all_labels
+            self.label_idx = range(len(all_labels))
         super(AudiosetLabelExtractor, self).__init__()
 
     def _extract(self, stim):
@@ -597,27 +608,15 @@ class AudiosetLabelExtractor(AudioExtractor):
                 'Upsample your audio stimulus (recommended) or pass a lower '
                 'value of MEL_MAX_HZ when initializing this extractor.')
 
-        labels = self.labels
         model = yamnet.yamnet_frames_model(params)
         model.load_weights(self.weights_path)
         preds, _ = model.predict_on_batch(np.reshape(stim.data, [1,-1]))
-        preds = preds.numpy()
-
-        if self.label_subset:
-            label_subset_idx = [idx for idx, lab in enumerate(labels) 
-                                    if lab in self.label_subset]
-            preds = preds[:,label_subset_idx]
-            labels = self.label_subset
-
-        nr_lab = self.top_n or len(labels)
-        if nr_lab > len(labels):
-            raise ValueError(
-                f'Value of top_n ({self.top_n}) exceeds number of '
-                f'labels ({len(labels)}). Reinstantiate this extractor using '
-                'suitable parameters.''')
+        preds = preds.numpy()[:,self.label_idx]
+        
+        nr_lab = self.top_n or len(self.labels)
         idx = np.mean(preds,axis=0).argsort()
         preds = np.fliplr(preds[:,idx][:,-nr_lab:])
-        labels = [labels[i] for i in idx][-nr_lab:][::-1]
+        labels = [self.labels[i] for i in idx][-nr_lab:][::-1]
 
         durations = params.PATCH_HOP_SECONDS
         onsets = np.arange(start=0, stop=stim.duration, step=durations)
@@ -626,5 +625,3 @@ class AudiosetLabelExtractor(AudioExtractor):
         return ExtractorResult(preds, stim, self, features=labels,
                                onsets=onsets, durations=durations,
                                orders=list(range(len(onsets))))
-
-# Add pointer to installation instructions (install models, run test install - link, add to pythonpath)
