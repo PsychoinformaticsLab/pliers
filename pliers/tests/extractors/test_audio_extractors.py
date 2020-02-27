@@ -1,6 +1,5 @@
 from os.path import join
 from ..utils import get_test_data_path
-from pliers import set_option
 from pliers.extractors import (LibrosaFeatureExtractor,
                                STFTAudioExtractor,
                                MeanAmplitudeExtractor,
