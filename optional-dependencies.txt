@@ -13,7 +13,6 @@ pygraphviz
 pysrt
 pytesseract
 python-twitter
-resampy
 scikit-learn
 seaborn
 soundfile
