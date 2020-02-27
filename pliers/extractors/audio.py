@@ -529,17 +529,19 @@ class AudiosetLabelExtractor(AudioExtractor):
     hop_size (float): size of the audio segment (in seconds) on which label 
         extraction is performed.
     top_n (int): specifies how many of the highest label probabilities are 
-        returned. If not defined, returns probabilities for all 521 labels.
+        returned. If None, all labels (or all in label_subset) are returned.
+        Top_n and label_subset are mutually exclusive arguments.
     label_subset (list): specifies subset of labels for which probabilities 
-        are to be returned. A comprehensive list of labels is available in the
-        audioset/yamnet repository (see yamnet_class_map.csv).
+        are to be returned. If None, all labels (or top_n) are returned.
+        The full list of labels is available in the audioset/yamnet 
+        repository (see yamnet_class_map.csv).
     weights_path (optional): full path to model weights file. If not provided,
         weights from pretrained YAMNet module are used.
     yamnet_kwargs (optional): Optional named arguments that modify input 
         parameters for the model (see params.py file in yamnet repository)
     '''
 
-    _log_attributes = ('hop_size', 'top_n', 'label_subset', 'weights_path',
+    _log_attributes = ('hop_size', 'top_n', 'labels', 'weights_path',
                        'yamnet_kwargs')
 
     def __init__(self, hop_size=0.1, top_n=None, label_subset=None,
@@ -563,9 +565,10 @@ class AudiosetLabelExtractor(AudioExtractor):
                 setattr(self.params, par, v)
         
         if top_n and label_subset:
-            raise ValueError('Only one of top_n or label_subset can be provided. '
-                             'Reinitialize the extractor setting either top_n or '
-                             'subset_label to None (or leaving it unspecified)')
+            raise ValueError('Top_n and label_subset are mutually exclusive '
+                             'arguments. Reinstantiate the extractor setting '
+                             'top_n or subset_label to None (or leaving it '
+                             'unspecified).')
                              
         self.top_n = top_n
         all_labels = pd.read_csv(LABELS_PATH)['display_name'].tolist()

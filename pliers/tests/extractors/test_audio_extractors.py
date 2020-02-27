@@ -406,13 +406,7 @@ def test_audioset_extractor(hop_size, top_n, target_sr):
     r_labels_only = ext_labels_only.transform(audio_stim).to_df()
     assert r_labels_only.shape[1] == len(labels) + 4
     
-    # test top_n/labels combination
-    ext_labels_top_n = AudiosetLabelExtractor(top_n=top_n, label_subset=labels)
-    if top_n > len(labels):
-        with pytest.raises(ValueError) as labels_error:
-            ext_labels_top_n.transform(audio_stim)
-        assert all([val in str(labels_error.value) 
-                    for val in [str(top_n), str(len(labels))]])
-    else:
-        r_labels_top_n = ext_labels_top_n.transform(audio_stim).to_df()
-        assert r_labels_top_n.shape[1] == top_n + 4
+    # test top_n/labels error
+    with pytest.raises(ValueError) as err:
+        AudiosetLabelExtractor(top_n=10, label_subset=labels)
+    assert 'Top_n and label_subset are mutually exclusive' in str(err.value)
