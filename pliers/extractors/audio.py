@@ -604,9 +604,6 @@ class AudiosetLabelExtractor(AudioExtractor):
         preds = preds.numpy()
 
         if self.label_subset:
-            for l in self.label_subset:
-                print(l)
-                print(np.where(labels == l))
             label_subset_idx = [idx for idx, lab in enumerate(labels) 
                                     if lab in self.label_subset]
             preds = preds[:,label_subset_idx]
