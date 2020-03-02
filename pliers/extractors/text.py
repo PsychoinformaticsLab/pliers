@@ -691,7 +691,7 @@ class BertLMExtractor(BertExtractor):
 # Add option to return encodings to LM? 
 # Softmax-ed or raw scores?
 # Move to models?
-
+# Select subset of metrics
 
 class WordCounterExtractor(ComplexTextExtractor):
 
