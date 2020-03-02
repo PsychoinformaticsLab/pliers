@@ -14,6 +14,7 @@ from pliers.utils import (attempt_to_import, verify_dependencies, flatten,
 import itertools
 import numpy as np
 import pandas as pd
+import scipy
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import logging
@@ -465,6 +466,7 @@ class BertExtractor(ComplexTextExtractor):
 
     def _preprocess(self, stims):
         wds, ons, dur = zip(*[(s.text, s.onset, s.duration) for s in stims.elements])
+        wds, ons, dur = map(list, [wds, ons, dur])
         tok = [self.tokenizer.tokenize(w) for w in self._mask(wds)]
         n_tok = [len(t) for t in tok]
         wds, ons, dur = map(lambda x: np.repeat(x, n_tok), [wds, ons, dur])
@@ -484,7 +486,6 @@ class BertExtractor(ComplexTextExtractor):
         wds, ons, dur, tok, idx = self._preprocess(stims)
         preds = self.model(idx)
         preds = [p.detach() if self.framework == 'pt' else p for p in preds]
-        preds = [p.numpy().squeeze() for p in preds]
         data, ons, dur = self._postprocess(preds, tok, wds, ons, dur)
         features = self._get_feature_names()
         return ExtractorResult(data, stims, self, 
@@ -546,6 +547,10 @@ class BertSequenceEncodingExtractor(BertExtractor):
                  model_kwargs=None,
                  tokenizer_kwargs=None):
 
+        super(BertSequenceEncodingExtractor, self).__init__(pretrained_model,
+            tokenizer, framework, model_kwargs, tokenizer_kwargs, 
+            model_class='BertModel')
+        
         if pooling:
             if return_sep:
                 raise(ValueError('Pooling and return_seq argument are '
@@ -557,12 +562,9 @@ class BertSequenceEncodingExtractor(BertExtractor):
 
         self.return_sep = return_sep
         self.pooling = pooling
-        super(BertExtractor, self).__init__(pretrained_model,
-                                            tokenizer, framework,
-                                            pooling, return_sep, 
-                                            model_class='BertModel')
     
     def _postprocess(preds, tok, wds, ons, dur):
+        preds = [p.numpy().squeeze() for p in preds]
         tok = [' '.join(wds)]
         try: 
             dur = ons[-1] + dur[-1] - ons[0]
@@ -614,7 +616,7 @@ class BertLMExtractor(BertExtractor):
     '''
 
     _log_attributes = ('pretrained_model', 'framework', 'top_n', 'mask', 'target',
-        'tokenizer_type', 'model_class', 'model_kwargs', 'tokenizer_kwargs')
+        'tokenizer_type')
 
     def __init__(self,
                  pretrained_model='bert-base-uncased',
@@ -625,12 +627,16 @@ class BertLMExtractor(BertExtractor):
                  target=None,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
+        
+        super(BertLMExtractor, self).__init__(pretrained_model=pretrained_model, 
+                                              tokenizer=tokenizer, 
+                                              framework=framework,
+                                              model_kwargs=model_kwargs,
+                                              tokenizer_kwargs=tokenizer_kwargs,
+                                              model_class='BertForMaskedLM')
         self.top_n = top_n
         self.mask = listify(mask)
         self.target = listify(target)
-        super(BertExtractor, self).__init__(pretrained_model,
-                                            tokenizer, framework,
-                                            model_class='BertForMaskedLM')
 
     def _mask(self, wds):
         for m in self.mask:
@@ -644,13 +650,14 @@ class BertLMExtractor(BertExtractor):
             raise ValueError('No valid mask tokens.')
         return wds
 
-    def _postprocess(preds, tok, wds, ons, dur):
+    def _postprocess(self, preds, tok, wds, ons, dur):
+        preds = preds[0].numpy()
         preds_softmax = scipy.special.softmax(preds, axis=-1)
 
         m_idx = [idx for idx, tok in enumerate(tok) if tok == '[MASK]']
         m_wds, m_ons, m_dur = ([] for i in range(3))
-        top_wd, top_score, top_softmax = ([] for i in range(3))
-        gold_score, gold_softmax, gold_rank = ([] for i in range(3))
+        top_wd, top_softmax = ([] for i in range(2))
+        gold_softmax, gold_rank = ([] for i in range(2))
 
         top_n = self.top_n or preds.shape[2]
 
@@ -664,35 +671,33 @@ class BertLMExtractor(BertExtractor):
             m_dur.append(dur[i])
 
             top_wd.append(self.tokenizer.convert_ids_to_tokens(top_pred))
-            top_score.append(preds[0,i,top_pred])
             top_softmax.append(preds_softmax[0,i,top_pred])
 
-            gold_score.append(preds[0,i,g_idx])
             gold_softmax.append(preds_softmax[0,i,g_idx])
             gold_rank.append(g_rank)
 
         # add target words routine here
+        # probability
+        # rank
 
-        data = [top_wd, top_score, top_softmax, 
-                gold_score, gold_softmax, gold_rank, m_wds]
+        data = [top_wd,  top_softmax, gold_softmax, gold_rank, m_wds]
         return data, m_ons, m_dur
 
     def _get_feature_names(self):
-        return ['top_wd', 'top_score', 'top_softmax', 
-                'gold_score', 'gold_softmax', 'gold_rank', 'masked_word']
+        return ['top_wd', 'top_softmax', 'gold_softmax', 'gold_rank', 'masked_word']
     
     def _get_model_attributes(self):
         return ['pretrained_model', 'framework', 'top_n', 'mask', 'target',
-                'tokenizer_type', 'model_class']
+                'tokenizer_type']
 
 # TO DOs:
+# fix _to_df
 # Add routine for tracking target words
 # Add option to extract other layers / attention heads from encoding extractor
-# Add option to return encodings to LM? 
-# Softmax-ed or raw scores?
-# Move to models?
-# Select subset of metrics
-# Softmax over whole distribution?
+# Add option to return encodings for LM?
+# Softmax-ed or raw scores (softmax over whole dist?), which metrics?
+# Fix init
+# Move to models
 
 class WordCounterExtractor(ComplexTextExtractor):
 
