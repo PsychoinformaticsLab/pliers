@@ -692,6 +692,7 @@ class BertLMExtractor(BertExtractor):
 # Softmax-ed or raw scores?
 # Move to models?
 # Select subset of metrics
+# Softmax over whole distribution?
 
 class WordCounterExtractor(ComplexTextExtractor):
 
