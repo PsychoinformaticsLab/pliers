@@ -137,5 +137,6 @@ __all__ = [
     'TempoExtractor',
     'BeatTrackExtractor',
     'HarmonicExtractor',
-    'PercussiveExtractor'
+    'PercussiveExtractor',
+    'AudiosetLabelExtractor'
 ]
