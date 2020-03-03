@@ -607,9 +607,11 @@ class BertLMExtractor(BertExtractor):
             (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
         top_n (int): Specifies how many of the highest-probability tokens are
             to be returned.
-        mask (int or str or list): Words to be masked (string) or indices of 
+        mask (int or str): Words to be masked (string) or indices of 
             words in the sequence to be masked (indexing starts at 0). Can 
             be either a single word/index or a list of words/indices.
+            If str is passed and more than one word in the input matches the 
+            string, only the first one is masked.
         target (str or list): Vocabulary token(s) for which probability is to 
             be returned. Tokens defined in the vocabulary change across 
             tokenizers.
@@ -625,15 +627,16 @@ class BertLMExtractor(BertExtractor):
     '''
 
     _log_attributes = ('pretrained_model', 'framework', 'top_n', 'mask', 'target',
-        'tokenizer_type')
+        'tokenizer_type', 'return_softmax')
 
     def __init__(self,
                  pretrained_model='bert-base-uncased',
                  tokenizer='bert-base-uncased',
                  framework='pt',
                  top_n=None,
-                 mask=None,
+                 mask='[MASK]',
                  target=None,
+                 return_softmax=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
         
@@ -644,10 +647,13 @@ class BertLMExtractor(BertExtractor):
                                               tokenizer_kwargs=tokenizer_kwargs,
                                               model_class='BertForMaskedLM')
         if top_n and target:
-            raise ValueError('top_n and target are mutually exclusive arguments')
+            raise ValueError('top_n and target are mutually exclusive')
         self.return_softmax = return_softmax
         self.top_n = top_n
-        self.mask = listify(mask)
+        self.mask = mask
+        if type(self.mask) not in [int, str]:
+            raise ValueError('mask arguments must be an integer or a string'
+                             f' ({type(self.mask)} passed).')
         self.target = listify(target)
         if self.target:
             for t in self.target:
@@ -662,13 +668,13 @@ class BertLMExtractor(BertExtractor):
 
     def _mask(self, wds):
         mwds = wds.copy()
-        for m in self.mask:
-            if type(m) == int:
-                mwds[m] = '[MASK]'
-            elif type(m) == str:
-                mwds = ['[MASK]' if w==m else w for i, w in enumerate(mwds)]
-            else:
-                logging.warning(f'{m} is not a valid mask index or string.') 
+        if type(self.mask) == int:
+            mwds[self.mask] = '[MASK]'
+        elif type(self.mask) == str:
+            w_idx = np.where(np.array(mwds)==self.mask)[0][0]
+            mwds[w_idx] = '[MASK]'
+        else:
+            logging.warning(f'{self.mask} is not a valid mask value')
         if '[MASK]' not in mwds:
             raise ValueError('No valid mask tokens.')
         return mwds
@@ -680,40 +686,26 @@ class BertLMExtractor(BertExtractor):
         if self.target:
             target_ids = self.tokenizer.convert_tokens_to_ids(self.target)
             preds = preds[:,:,target_ids]
-        m_idx = [idx for idx, tok in enumerate(tok) if tok == '[MASK]'] # edit so to inherit index from elsewhere
+        
         m_wds, m_ons, m_dur = ([] for i in range(3))
         top_wd, top_scores = ([] for i in range(2))
-        gold_scores, gold_rank = ([] for i in range(2))
         top_n = self.top_n or preds.shape[2]
-            
-        for i in m_idx:
 
-            sorted_idx = preds[0,i,:].argsort(axis=-1)
-            top_idx = np.flip(sorted_idx[-top_n:])
-
-            m_wds.append(wds[i])
-            m_ons.append(ons[i])
-            m_dur.append(dur[i])
-
-
-            g_idx = self.tokenizer.convert_tokens_to_ids(wds[i])
-            g_rank = len(np.where(preds[0,i,:] >= preds[0,i,g_idx])[0]) + 1
-            top_wd.append(self.tokenizer.convert_ids_to_tokens(top_idx))
-            top_scores.append([preds[0,i,t] for t in top_idx])
-            gold_scores.append(preds[0,i,g_idx])
-            gold_rank.append(g_rank)
-
-        # add target words routine here
-        # probability
-        # rank
+        m_idx = [i for i, t in enumerate(tok) if t=='[MASK]']     
+        sorted_idx = preds[0,m_idx,:].argsort(axis=-1)
+        top_idx = np.flip(sorted_idx[-top_n:])
+        m_wds.append(wds[m_idx])
+        m_ons.append(ons[m_idx])
+        m_dur.append(dur[m_idx])
+        top_wd.append(self.tokenizer.convert_ids_to_tokens(top_idx))
+        top_scores.append([preds[0,m_idx,t] for t in top_idx])
 
         seq = ' '.join(tok)
-        data = [top_wd, top_scores, gold_scores, gold_rank, m_wds, seq]
+        data = [top_wd, top_scores, m_wds, seq]
         return data, m_ons, m_dur
 
     def _get_feature_names(self):
-        return ['top_wd', 'top_scores', 'gold_scores', 'gold_rank', 
-                    'masked_word', 'sequence']
+        return ['top_wd', 'top_scores', 'masked_word', 'sequence']
     
     def _get_model_attributes(self):
         return ['pretrained_model', 'framework', 'top_n', 'mask', 'target',
