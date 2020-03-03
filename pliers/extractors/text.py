@@ -613,6 +613,8 @@ class BertLMExtractor(BertExtractor):
         target (str or list): Vocabulary token(s) for which probability is to 
             be returned. Tokens defined in the vocabulary change across 
             tokenizers.
+        return_softmax (bool): if True, returns probability scores instead of 
+            raw predictions scores for language modeling.
         model_kwargs (dict): Named arguments for pretrained model.
             See: https://huggingface.co/transformers/main_classes/model.html
             and https://huggingface.co/transformers/model_doc/bert.html for
@@ -643,6 +645,7 @@ class BertLMExtractor(BertExtractor):
                                               model_class='BertForMaskedLM')
         if top_n and target:
             raise ValueError('top_n and target are mutually exclusive arguments')
+        self.return_softmax = return_softmax
         self.top_n = top_n
         self.mask = listify(mask)
         self.target = listify(target)
@@ -672,42 +675,44 @@ class BertLMExtractor(BertExtractor):
 
     def _postprocess(self, preds, tok, wds, ons, dur):
         preds = preds[0].numpy()[:,1:-1,:]
-        preds_softmax = scipy.special.softmax(preds, axis=-1)
-        m_idx = [idx for idx, tok in enumerate(tok) if tok == '[MASK]']
+        if self.return_softmax:
+            preds = scipy.special.softmax(preds, axis=-1)
+        if self.target:
+            target_ids = self.tokenizer.convert_tokens_to_ids(self.target)
+            preds = preds[:,:,target_ids]
+        m_idx = [idx for idx, tok in enumerate(tok) if tok == '[MASK]'] # edit so to inherit index from elsewhere
         m_wds, m_ons, m_dur = ([] for i in range(3))
-        top_wd, top_softmax = ([] for i in range(2))
-        gold_softmax, gold_rank = ([] for i in range(2))
-
+        top_wd, top_scores = ([] for i in range(2))
+        gold_scores, gold_rank = ([] for i in range(2))
         top_n = self.top_n or preds.shape[2]
             
         for i in m_idx:
-            sorted_idx = preds[0,i,:].argsort(axis=-1)
 
+            sorted_idx = preds[0,i,:].argsort(axis=-1)
             top_idx = np.flip(sorted_idx[-top_n:])
-            g_idx = self.tokenizer.convert_tokens_to_ids(wds[i])
-            g_rank = len(np.where(preds[0,i,:] >= preds[0,i,g_idx])[0]) + 1
 
             m_wds.append(wds[i])
             m_ons.append(ons[i])
             m_dur.append(dur[i])
 
+
+            g_idx = self.tokenizer.convert_tokens_to_ids(wds[i])
+            g_rank = len(np.where(preds[0,i,:] >= preds[0,i,g_idx])[0]) + 1
             top_wd.append(self.tokenizer.convert_ids_to_tokens(top_idx))
-            top_softmax.append([preds_softmax[0,i,t] for t in top_idx])
-            gold_softmax.append(preds_softmax[0,i,g_idx])
+            top_scores.append([preds[0,i,t] for t in top_idx])
+            gold_scores.append(preds[0,i,g_idx])
             gold_rank.append(g_rank)
-
-
 
         # add target words routine here
         # probability
         # rank
 
         seq = ' '.join(tok)
-        data = [top_wd, top_softmax, gold_softmax, gold_rank, m_wds, seq]
+        data = [top_wd, top_scores, gold_scores, gold_rank, m_wds, seq]
         return data, m_ons, m_dur
 
     def _get_feature_names(self):
-        return ['top_wd', 'top_softmax', 'gold_softmax', 'gold_rank', 
+        return ['top_wd', 'top_scores', 'gold_scores', 'gold_rank', 
                     'masked_word', 'sequence']
     
     def _get_model_attributes(self):
@@ -716,11 +721,11 @@ class BertLMExtractor(BertExtractor):
 
 # TO DOs:
 # Add routine for tracking target words
+# Output as array or columns?
 # Add option to extract other layers/attention heads from BertExtractor
 # Add option to return encodings?
-# Softmax-ed or raw scores (softmax over whole dist?), which metrics? Rank over vocab size?
+# Which metrics? Rank over vocab size?
 # Fix init
-# Move to models
 
 class WordCounterExtractor(ComplexTextExtractor):
 
