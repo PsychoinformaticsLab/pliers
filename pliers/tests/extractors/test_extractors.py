@@ -96,6 +96,9 @@ def test_merge_extractor_results():
     stim2 = ImageStim(join(image_dir, 'obama.jpg'))
     de_names = ['Extractor1', 'Extractor2', 'Extractor3']
     des = [DummyExtractor(name=name) for name in de_names]
+    not_features = ['object_id']
+    for de in des:
+        not_features.append(de._log_attributes)
     results = [de.transform(stim1) for de in des]
     results += [de.transform(stim2) for de in des]
 
@@ -128,12 +131,15 @@ def test_merge_extractor_results():
     assert row['feature'] == 'feature_2'
     assert row['value'] == 475
     assert row['extractor'] == 'Extractor1'
+    assert not set(not_features).intersection(set(df['feature']))
 
     df = merge_results(results, format='long', extractor_names='drop')
     assert df.shape == (1800, 11)
     assert set(_cols) - set(df.columns) == {'extractor'}
+    assert not set(not_features).intersection(set(df['feature']))
 
     df = merge_results(results, format='long', extractor_names='prepend')
     assert df.shape == (1800, 11)
     row = df.iloc[523, :]
     assert row['feature'] == 'Extractor1#feature_2'
+    assert not set(not_features).intersection(set(df['feature']))
