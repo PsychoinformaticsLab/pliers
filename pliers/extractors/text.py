@@ -443,19 +443,12 @@ class BertExtractor(ComplexTextExtractor):
         if framework not in ['pt', 'tf']:
             raise(ValueError('''Invalid framework;
                 must be one of 'pt' (pytorch) or 'tf' (tensorflow)'''))
-
-        if model_kwargs is None:
-            model_kwargs = {}
-        if tokenizer_kwargs is None:
-            tokenizer_kwargs = {}
-
         self.pretrained_model = pretrained_model
         self.tokenizer_type = tokenizer
         self.framework = framework
-        self.tokenizer_kwargs = tokenizer_kwargs
         self.model_class = model_class
-        self.model_kwargs = model_kwargs
-        self.tokenizer_kwargs = tokenizer_kwargs
+        self.model_kwargs = model_kwargs if model_kwargs else {}
+        self.tokenizer_kwargs = tokenizer_kwargs if tokenizer_kwargs else {}
 
         model = model_class if self.framework == 'pt' else 'TF' + model_class
         self.model = getattr(transformers, model).from_pretrained(
@@ -528,11 +521,9 @@ class BertSequenceEncodingExtractor(BertExtractor):
             token.
         model_kwargs (dict): Named arguments for pretrained model.
             See: https://huggingface.co/transformers/main_classes/model.html
-            and https://huggingface.co/transformers/model_doc/bert.html for
-            further info.
+            and https://huggingface.co/transformers/model_doc/bert.html
         tokenizer_kwargs (dict): Named arguments for tokenizer.
             See https://huggingface.co/transformers/main_classes/tokenizer.html
-            for further info.
     '''
 
     _log_attributes = ('pretrained_model', 'framework', 'tokenizer_type', 
@@ -602,7 +593,7 @@ class BertLMExtractor(BertExtractor):
         framework (str): name deep learning framework to use. Must be 'pt'
             (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
         top_n (int): Specifies how many of the highest-probability tokens are
-            to be returned.
+            to be returned. Mutually exclusive with target and threshold.
         mask (int or str): Words to be masked (string) or indices of 
             words in the sequence to be masked (indexing starts at 0). Can 
             be either a single word/index or a list of words/indices.
@@ -611,15 +602,15 @@ class BertLMExtractor(BertExtractor):
         target (str or list): Vocabulary token(s) for which probability is to 
             be returned. Tokens defined in the vocabulary change across 
             tokenizers.
+        threshold (float): If defined, only values above this threshold will
+            be returned. Mutually exclusive with top_n.
         return_softmax (bool): if True, returns probability scores instead of 
             raw predictions scores for language modeling.
         model_kwargs (dict): Named arguments for pretrained model.
             See: https://huggingface.co/transformers/main_classes/model.html
-            and https://huggingface.co/transformers/model_doc/bert.html for
-            further info.
+            and https://huggingface.co/transformers/model_doc/bert.html.
         tokenizer_kwargs (dict): Named arguments for tokenizer.
-            See https://huggingface.co/transformers/main_classes/tokenizer.html
-            for further info.
+            See https://huggingface.co/transformers/main_classes/tokenizer.html.
     '''
 
     _log_attributes = ('pretrained_model', 'framework', 'top_n', 'mask_pos',
@@ -629,10 +620,10 @@ class BertLMExtractor(BertExtractor):
                  pretrained_model='bert-base-uncased',
                  tokenizer='bert-base-uncased',
                  framework='pt',
-                 top_n=100,
                  mask='[MASK]',
-                 target=None,
+                 top_n=100,
                  threshold=None,
+                 target=None,
                  return_softmax=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
