@@ -453,6 +453,9 @@ class BertExtractor(ComplexTextExtractor):
         self.tokenizer_type = tokenizer
         self.framework = framework
         self.tokenizer_kwargs = tokenizer_kwargs
+        self.model_class = model_class
+        self.model_kwargs = model_kwargs
+        self.tokenizer_kwargs = tokenizer_kwargs
 
         model = model_class if self.framework == 'pt' else 'TF' + model_class
         self.model = getattr(transformers, model).from_pretrained(
@@ -475,7 +478,7 @@ class BertExtractor(ComplexTextExtractor):
         return wds, ons, dur, tok, idx
 
     def _postprocess(self, preds, tok, wds, ons, dur):
-        out = preds[0].numpy().squeeze()
+        out = preds[0][:, 1:-1, :].numpy().squeeze()
         data = [out.tolist(), tok, wds]          
         return data, ons, dur
 
@@ -500,10 +503,10 @@ class BertExtractor(ComplexTextExtractor):
         if include_attributes:
             log_dict = {attr: getattr(result.extractor, attr) for
                         attr in self._get_model_attributes()}
-        res_df = pd.DataFrame(res_dict.update(log_dict))
+            res_dict.update(log_dict)
+        res_df = pd.DataFrame(res_dict)
         res_df['object_id'] = range(res_df.shape[0])
         return res_df
-
 
 class BertSequenceEncodingExtractor(BertExtractor):
 
@@ -559,12 +562,11 @@ class BertSequenceEncodingExtractor(BertExtractor):
                 getattr(np, pooling)
             except:
                 raise(ValueError('Pooling must be a valid numpy function.'))
-
         self.return_sep = return_sep
         self.pooling = pooling
     
-    def _postprocess(preds, tok, wds, ons, dur):
-        preds = [p.numpy().squeeze() for p in preds]
+    def _postprocess(self, preds, tok, wds, ons, dur):
+        preds = [p.numpy().squeeze() for p in preds] #check
         tok = [' '.join(wds)]
         try: 
             dur = ons[-1] + dur[-1] - ons[0]
@@ -590,7 +592,7 @@ class BertSequenceEncodingExtractor(BertExtractor):
 
 class BertLMExtractor(BertExtractor):
 
-    ''' Use BERT for masked language model task.
+    ''' Use BERT for masked words prediction.
 
     Args:
         pretrained_model (str): A string specifying which BERT
@@ -603,9 +605,14 @@ class BertLMExtractor(BertExtractor):
             unknown tokens.
         framework (str): name deep learning framework to use. Must be 'pt'
             (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
-        top_n (int): TBD
-        mask (int or str or list): TBD
-        target (str or list): TBD
+        top_n (int): Specifies how many of the highest-probability tokens are
+            to be returned.
+        mask (int or str or list): Words to be masked (string) or indices of 
+            words in the sequence to be masked (indexing starts at 0). Can 
+            be either a single word/index or a list of words/indices.
+        target (str or list): Vocabulary token(s) for which probability is to 
+            be returned. Tokens defined in the vocabulary change across 
+            tokenizers.
         model_kwargs (dict): Named arguments for pretrained model.
             See: https://huggingface.co/transformers/main_classes/model.html
             and https://huggingface.co/transformers/model_doc/bert.html for
@@ -634,35 +641,49 @@ class BertLMExtractor(BertExtractor):
                                               model_kwargs=model_kwargs,
                                               tokenizer_kwargs=tokenizer_kwargs,
                                               model_class='BertForMaskedLM')
+        if top_n and target:
+            raise ValueError('top_n and target are mutually exclusive arguments')
         self.top_n = top_n
         self.mask = listify(mask)
         self.target = listify(target)
+        if self.target:
+            for t in self.target:
+                if t not in list(self.tokenizer.vocab.keys()):
+                    logging.warning(f'{t} is not in vocabulary. Dropping.')
+                    self.target.remove(t)
+            if self.target == []:
+                raise ValueError('No valid target tokens provided. Import '
+                    'transformers and run transformers.BertTokenizer.'
+                    f'from_pretrained(\'{tokenizer}\').vocab.keys() to see'
+                    'which tokens are part of the tokenizer vocabulary.')
 
     def _mask(self, wds):
+        mwds = wds.copy()
         for m in self.mask:
             if type(m) == int:
-                wds[m] = '[MASK]'
+                mwds[m] = '[MASK]'
             elif type(m) == str:
-                wds = ['[MASK]' if w == m else w for i, w in enumerate(wds)]
+                mwds = ['[MASK]' if w==m else w for i, w in enumerate(mwds)]
             else:
                 logging.warning(f'{m} is not a valid mask index or string.') 
-        if '[MASK]' not in wds:
+        if '[MASK]' not in mwds:
             raise ValueError('No valid mask tokens.')
-        return wds
+        return mwds
 
     def _postprocess(self, preds, tok, wds, ons, dur):
-        preds = preds[0].numpy()
+        preds = preds[0].numpy()[:,1:-1,:]
         preds_softmax = scipy.special.softmax(preds, axis=-1)
-
         m_idx = [idx for idx, tok in enumerate(tok) if tok == '[MASK]']
         m_wds, m_ons, m_dur = ([] for i in range(3))
         top_wd, top_softmax = ([] for i in range(2))
         gold_softmax, gold_rank = ([] for i in range(2))
 
         top_n = self.top_n or preds.shape[2]
-
+            
         for i in m_idx:
-            top_pred = np.argsort(preds[0,i,:], axis=-1)[-top_n:]
+            sorted_idx = preds[0,i,:].argsort(axis=-1)
+
+            top_idx = np.flip(sorted_idx[-top_n:])
             g_idx = self.tokenizer.convert_tokens_to_ids(wds[i])
             g_rank = len(np.where(preds[0,i,:] >= preds[0,i,g_idx])[0]) + 1
 
@@ -670,32 +691,34 @@ class BertLMExtractor(BertExtractor):
             m_ons.append(ons[i])
             m_dur.append(dur[i])
 
-            top_wd.append(self.tokenizer.convert_ids_to_tokens(top_pred))
-            top_softmax.append(preds_softmax[0,i,top_pred])
-
+            top_wd.append(self.tokenizer.convert_ids_to_tokens(top_idx))
+            top_softmax.append([preds_softmax[0,i,t] for t in top_idx])
             gold_softmax.append(preds_softmax[0,i,g_idx])
             gold_rank.append(g_rank)
+
+
 
         # add target words routine here
         # probability
         # rank
 
-        data = [top_wd,  top_softmax, gold_softmax, gold_rank, m_wds]
+        seq = ' '.join(tok)
+        data = [top_wd, top_softmax, gold_softmax, gold_rank, m_wds, seq]
         return data, m_ons, m_dur
 
     def _get_feature_names(self):
-        return ['top_wd', 'top_softmax', 'gold_softmax', 'gold_rank', 'masked_word']
+        return ['top_wd', 'top_softmax', 'gold_softmax', 'gold_rank', 
+                    'masked_word', 'sequence']
     
     def _get_model_attributes(self):
         return ['pretrained_model', 'framework', 'top_n', 'mask', 'target',
                 'tokenizer_type']
 
 # TO DOs:
-# fix _to_df
 # Add routine for tracking target words
-# Add option to extract other layers / attention heads from encoding extractor
-# Add option to return encodings for LM?
-# Softmax-ed or raw scores (softmax over whole dist?), which metrics?
+# Add option to extract other layers/attention heads from BertExtractor
+# Add option to return encodings?
+# Softmax-ed or raw scores (softmax over whole dist?), which metrics? Rank over vocab size?
 # Fix init
 # Move to models
 
