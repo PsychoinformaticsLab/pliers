@@ -572,7 +572,7 @@ class AudiosetLabelExtractor(AudioExtractor):
                              
         self.top_n = top_n
         all_labels = pd.read_csv(LABELS_PATH)['display_name'].tolist()
-        if labels:
+        if labels is not None:
             for l in labels:
                 if l not in all_labels:
                     logging.warning(f'Label {l} does not exist. Dropping.')
