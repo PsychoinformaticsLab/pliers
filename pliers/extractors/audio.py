@@ -529,9 +529,9 @@ class AudiosetLabelExtractor(AudioExtractor):
     hop_size (float): size of the audio segment (in seconds) on which label 
         extraction is performed.
     top_n (int): specifies how many of the highest label probabilities are 
-        returned. If None, all labels (or all in label_subset) are returned.
-        Top_n and label_subset are mutually exclusive arguments.
-    label_subset (list): specifies subset of labels for which probabilities 
+        returned. If None, all labels (or all in labels) are returned.
+        Top_n and labels are mutually exclusive arguments.
+    labels (list): specifies subset of labels for which probabilities 
         are to be returned. If None, all labels (or top_n) are returned.
         The full list of labels is available in the audioset/yamnet 
         repository (see yamnet_class_map.csv).
@@ -544,7 +544,7 @@ class AudiosetLabelExtractor(AudioExtractor):
     _log_attributes = ('hop_size', 'top_n', 'labels', 'weights_path',
                        'yamnet_kwargs')
 
-    def __init__(self, hop_size=0.1, top_n=None, label_subset=None,
+    def __init__(self, hop_size=0.1, top_n=None, labels=None,
                  weights_path=None, **yamnet_kwargs):
         try:
             verify_dependencies(['yamnet'])
@@ -564,22 +564,22 @@ class AudiosetLabelExtractor(AudioExtractor):
             if par in self.params.__dict__:
                 setattr(self.params, par, v)
         
-        if top_n and label_subset:
-            raise ValueError('Top_n and label_subset are mutually exclusive '
+        if top_n and labels:
+            raise ValueError('Top_n and labels are mutually exclusive '
                              'arguments. Reinstantiate the extractor setting '
-                             'top_n or subset_label to None (or leaving it '
+                             'top_n or labels to None (or leaving it '
                              'unspecified).')
                              
         self.top_n = top_n
         all_labels = pd.read_csv(LABELS_PATH)['display_name'].tolist()
-        if label_subset:
-            for l in label_subset:
+        if labels:
+            for l in labels:
                 if l not in all_labels:
                     logging.warning(f'Label {l} does not exist. Dropping.')
-                    label_subset.remove(l)
-            self.labels = label_subset
+                    labels.remove(l)
+            self.labels = labels
             self.label_idx = [idx for idx, lab in enumerate(all_labels) 
-                                    if lab in label_subset]
+                                    if lab in labels]
         else:
             self.labels = all_labels
             self.label_idx = range(len(all_labels))
