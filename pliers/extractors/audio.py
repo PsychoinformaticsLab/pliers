@@ -563,12 +563,11 @@ class AudiosetLabelExtractor(AudioExtractor):
         LABELS_PATH = path.join(MODULE_PATH, 'yamnet_class_map.csv')
         self.weights_path = weights_path or path.join(MODULE_PATH, 'yamnet.h5')
         self.hop_size = hop_size
-        self.yamnet_kwargs = yamnet_kwargs
-        self.params = yamnet.params
-        self.params.PATCH_HOP_SECONDS = hop_size
-        for par, v in self.yamnet_kwargs.items():
-            if par in self.params.__dict__:
-                setattr(self.params, par, v)
+        self.yamnet_kwargs = yamnet_kwargs or {}
+        self.params = yamnet.params.__dict__
+        self.params = {k:v for k, v in self.params if k.isupper()}
+        self.params['PATCH_HOP_SECONDS'] = hop_size
+        self.params.update(self.yamnet_kwargs)
                              
         self.top_n = top_n
         all_labels = pd.read_csv(LABELS_PATH)['display_name'].tolist()
@@ -587,27 +586,27 @@ class AudiosetLabelExtractor(AudioExtractor):
 
     def _extract(self, stim):
         params = self.params
-        params.SAMPLE_RATE = stim.sampling_rate
+        params['SAMPLE_RATE'] = stim.sampling_rate
 
-        if params.SAMPLE_RATE >= 2 * params.MEL_MAX_HZ:
-            if params.SAMPLE_RATE != 16000:
+        if params['SAMPLE_RATE'] >= 2 * params['MEL_MAX_HZ']:
+            if params['SAMPLE_RATE'] != 16000:
                 logging.warning(
                     'The sampling rate of the stimulus is '
-                    f'{params.SAMPLE_RATE}Hz. '
+                    '{}Hz. '.format(params['SAMPLE_RATE'])
                     'YAMNet was trained on audio sampled at 16000Hz. ' 
                     'This should not impact predictions, but you can resample ' 
                     'the input using AudioResamplingFilter for full conformity ' 
                     'to training.')
-            if params.MEL_MIN_HZ != 125 or params.MEL_MAX_HZ != 7500:
+            if params.MEL_MIN_HZ != 125 or params['MEL_MAX_HZ'] != 7500:
                 logging.warning(
                     'Custom values for MEL_MIN_HZ and MEL_MAX_HZ '
                     'were passed. Changing these defaults might affect ' 
                     'model performance.')
         else:
             raise ValueError(
-                f'The sampling rate of your stimulus ({params.SAMPLE_RATE}Hz)'
-                ' must be at least twice the value of MEL_MAX_HZ '
-                f'({params.MEL_MAX_HZ}Hz). ' 
+                'The sampling rate of your stimulus '
+                '({}Hz) must be at least twice '.format(params['SAMPLE_RATE'])
+                'the value of MEL_MAX_HZ ({}Hz).'.format(params['MEL_MAX_HZ'])
                 'Upsample your audio stimulus (recommended) or pass a lower '
                 'value of MEL_MAX_HZ when initializing this extractor.')
 
@@ -621,9 +620,9 @@ class AudiosetLabelExtractor(AudioExtractor):
         preds = np.fliplr(preds[:,idx][:,-nr_lab:])
         labels = [self.labels[i] for i in idx][-nr_lab:][::-1]
 
-        durations = params.PATCH_HOP_SECONDS
+        durations = params['PATCH_HOP_SECONDS']
         onsets = np.arange(start=0, stop=stim.duration, step=durations)
-        onsets = onsets[onsets + params.PATCH_WINDOW_SECONDS < stim.duration]
+        onsets = onsets[onsets + params['PATCH_WINDOW_SECONDS'] < stim.duration]
 
         return ExtractorResult(preds, stim, self, features=labels,
                                onsets=onsets, durations=durations,
