@@ -552,6 +552,12 @@ class AudiosetLabelExtractor(AudioExtractor):
             raise MissingDependencyError(dependencies=None,
                                          custom_message=YAMNET_INSTALL_MESSAGE)
         verify_dependencies(['tensorflow'])
+        
+        if top_n and labels:
+            raise ValueError('Top_n and labels are mutually exclusive '
+                             'arguments. Reinstantiate the extractor setting '
+                             'top_n or labels to None (or leaving it '
+                             'unspecified).')
 
         MODULE_PATH = path.dirname(yamnet.__file__)
         LABELS_PATH = path.join(MODULE_PATH, 'yamnet_class_map.csv')
@@ -563,12 +569,6 @@ class AudiosetLabelExtractor(AudioExtractor):
         for par, v in self.yamnet_kwargs.items():
             if par in self.params.__dict__:
                 setattr(self.params, par, v)
-        
-        if top_n and labels:
-            raise ValueError('Top_n and labels are mutually exclusive '
-                             'arguments. Reinstantiate the extractor setting '
-                             'top_n or labels to None (or leaving it '
-                             'unspecified).')
                              
         self.top_n = top_n
         all_labels = pd.read_csv(LABELS_PATH)['display_name'].tolist()
