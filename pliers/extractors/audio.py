@@ -565,7 +565,7 @@ class AudiosetLabelExtractor(AudioExtractor):
         self.hop_size = hop_size
         self.yamnet_kwargs = yamnet_kwargs or {}
         self.params = yamnet.params.__dict__
-        self.params = {k:v for k, v in self.params if k.isupper()}
+        self.params = {k: v for k, v in self.params if k.isupper()}
         self.params['PATCH_HOP_SECONDS'] = hop_size
         self.params.update(self.yamnet_kwargs)
                              
