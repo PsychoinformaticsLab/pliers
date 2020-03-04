@@ -9,23 +9,22 @@ from pliers.support.exceptions import PliersError
 from pliers.support.decorators import requires_nltk_corpus
 from pliers.datasets.text import fetch_dictionary
 from pliers.transformers import BatchTransformerMixin
-from pliers.utils import attempt_to_import, verify_dependencies
+from pliers.utils import (attempt_to_import, verify_dependencies, flatten,
+    listify)
+import itertools
 import numpy as np
 import pandas as pd
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-import os
-import re
 import logging
 from six import string_types
-
 
 keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
                                  ['KeyedVectors'])
 sklearn_text = attempt_to_import('sklearn.feature_extraction.text', 'sklearn_text',
                                  ['CountVectorizer'])
 spacy = attempt_to_import('spacy')
-
+transformers = attempt_to_import('transformers')
 
 class TextExtractor(Extractor):
 
@@ -246,7 +245,8 @@ class WordEmbeddingExtractor(TextExtractor):
     def __init__(self, embedding_file, binary=False, prefix='embedding_dim',
                  unk_vector=None):
         verify_dependencies(['keyedvectors'])
-        self.wvModel = keyedvectors.KeyedVectors.load_word2vec_format(embedding_file, binary=binary)
+        self.wvModel = keyedvectors.KeyedVectors.load_word2vec_format(
+            embedding_file, binary=binary)
         self.prefix = prefix
         self.unk_vector = unk_vector
         super(WordEmbeddingExtractor, self).__init__()
@@ -329,15 +329,13 @@ class VADERSentimentExtractor(TextExtractor):
                                features=features)
 
 
-
 class SpaCyExtractor(TextExtractor):
-    
-    ''' A generic class for Spacy Text extractors 
-    
-   
+
+    ''' A generic class for Spacy Text extractors
+
     Uses SpaCy to extract features from text. Extracts features for every word
     (token) in a sentence.
-    
+
     Args:
         extractor_type(str): The type of feature to extract. Must be one of
             'doc' (analyze an entire sentence/document) or 'token'
@@ -347,7 +345,7 @@ class SpaCyExtractor(TextExtractor):
             all available features for the given extractor type.
         model (str): The name of the language model to use.
     '''
-    
+
     def __init__(self, extractor_type='token', features=None,
                  model='en_core_web_sm'):
 
@@ -368,13 +366,13 @@ class SpaCyExtractor(TextExtractor):
         self.extractor_type = extractor_type.lower()
 
         super(SpaCyExtractor, self).__init__()
-        
+
     def _extract(self, stim):
-   
+
         features_list = []
         elements = self.model(stim.text)
         order_list = []
-        
+
         if self.extractor_type == 'token':
             if self.features is None:
                 self.features = ['text', 'lemma_', 'pos_', 'tag_', 'dep_',
@@ -382,10 +380,10 @@ class SpaCyExtractor(TextExtractor):
                                  'sentiment', 'is_ascii', 'is_digit']
 
         elif self.extractor_type == 'doc':
-             elements = [elem.as_doc() for elem in list(elements.sents)]
-             if self.features is None:
-                 self.features = ['text', 'is_tagged', 'is_parsed',
-                                  'is_sentenced', 'sentiment']
+            elements = [elem.as_doc() for elem in list(elements.sents)]
+            if self.features is None:
+                self.features = ['text', 'is_tagged', 'is_parsed',
+                                 'is_sentenced', 'sentiment']
 
         else:
             raise(ValueError("Invalid extractor_type; must be one of 'token'"
@@ -402,3 +400,179 @@ class SpaCyExtractor(TextExtractor):
 
         return ExtractorResult(features_list, stim, self,
                                features=self.features, orders=order_list)
+
+
+class PretrainedBertEncodingExtractor(ComplexTextExtractor):
+
+    ''' Uses transformers library to extract contextualized encodings for words
+    or text sequences using pre-trained BERT models.
+
+    Args:
+        pretrained_model_or_path (str): A string specifying which BERT
+            model to use. Can be one of pretrained BERT models listed at
+            https://huggingface.co/transformers/pretrained_models.html
+            (valid values include all the models with 'bert' prefix) 
+            or path to custom model.
+        tokenizer (str): Type of tokenization used in the tokenization step.
+            If different from model, out-of-vocabulary tokens may be treated as
+            unknown tokens.
+        framework (str): name deep learning framework to use. Must be 'pt'
+            (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
+        encoding_level (str): A string specifying whether one encoding per token
+            ('token') or a single encoding for the input sequence ('sequence')
+            are to be returned.
+        pooling (str): Optional argument, relevant for sequence-level
+            embeddings only. If None and encoding_level='sequence', encodings
+            for [CLS] tokens are returned. If encoding_level='sequence' and
+            numpy function is specified, token-level embeddings are pooled
+            according to specified method (e.g. 'mean', 'max', 'min').
+        model_kwargs (dict): Named arguments for pretrained model.
+            See: https://huggingface.co/transformers/main_classes/model.html
+            and https://huggingface.co/transformers/model_doc/bert.html for
+            further info.
+        tokenizer_kwargs (dict): Named arguments for tokenizer.
+            See https://huggingface.co/transformers/main_classes/tokenizer.html
+            for further info.
+    '''
+
+    _log_attributes = ('pretrained_model', 'encoding_level',
+                       'pooling', 'framework', 'tokenizer_type',
+                       'model_kwargs', 'tokenizer_kwargs')
+
+    def __init__(self,
+                 pretrained_model_or_path='bert-base-uncased',
+                 tokenizer='bert-base-uncased',
+                 framework='pt',
+                 encoding_level='token',
+                 pooling=None,
+                 model_kwargs=None,
+                 tokenizer_kwargs=None):
+                 
+        verify_dependencies(['transformers'])
+
+        if framework not in ['pt', 'tf']:
+            raise(ValueError('''Invalid framework;
+                must be one of 'pt' (pytorch) or 'tf' (tensorflow)'''))
+
+        if encoding_level not in ['token', 'sequence']:
+            raise(ValueError('''Invalid encoding_level;
+                must be one of 'token' or 'sequence'.'''))
+
+        if model_kwargs is None:
+            model_kwargs = {}
+
+        if tokenizer_kwargs is None:
+            tokenizer_kwargs = {}
+
+        self.pretrained_model = pretrained_model_or_path
+        self.tokenizer_type = tokenizer
+        self.framework = framework
+        self.encoding_level = encoding_level
+        self.pooling = pooling
+        self.model_kwargs = model_kwargs
+        self.tokenizer_kwargs = tokenizer_kwargs
+        model_name = 'BertModel' if self.framework == 'pt' else 'TFBertModel'
+
+        self.tokenizer = transformers.BertTokenizer.from_pretrained(
+            tokenizer, **tokenizer_kwargs)
+        self.model = getattr(transformers, model_name).from_pretrained(
+            pretrained_model_or_path, **model_kwargs)
+
+        super(PretrainedBertEncodingExtractor, self).__init__()
+
+    def _extract(self, stims):
+        if stims.name == '':
+            stims.name = ' '.join([s.text for s in stims.elements])
+
+        text, onsets, durations = zip(
+            *((s.text, s.onset, s.duration) for s in stims.elements))
+        tokens = [self.tokenizer.tokenize(t) for t in text]
+        tokens_flat = list(flatten(tokens))
+
+        def cast_to_token_level(word_level_list):
+            token_level_list = [itertools.repeat(word_level_list[i], len(tok))
+                                for i, tok in enumerate(tokens)]
+            token_level_list = list(flatten(token_level_list))
+            return token_level_list
+
+        t_text, t_ons, t_dur = map(cast_to_token_level,
+                                   [text, onsets, durations])
+        tensor_tokens = self.tokenizer.encode(tokens_flat,
+                                              return_tensors=self.framework)
+        output = self.model(tensor_tokens)
+        output = [out.detach().numpy() if self.framework == 'pt' else
+                  out.numpy() for out in output]
+
+        if self.encoding_level == 'token':
+            encoded_tokens = tokens_flat
+            encodings = output[0][:, 1:-1, :].squeeze()
+
+        elif self.encoding_level == 'sequence':
+            encoded_tokens = [' '.join(text)]
+            t_text = ['None']
+            if not any(val is None for val in [t_ons[-1],t_dur[-1],t_ons[0]]):
+                t_dur = t_ons[-1] + t_dur[-1] - t_ons[0]
+            else:
+                t_dur = None
+            t_ons = t_ons[0]
+
+            if self.pooling:
+                pooling_function = getattr(np, self.pooling)
+                encodings = pooling_function(output[0][:, 1:-1, :],
+                                             axis=1, keepdims=True)
+            else:
+                encodings = output[1]
+
+        data = [encodings.tolist(), encoded_tokens, t_text]
+        features = ['encoding', 'token', 'word']
+
+        return ExtractorResult(data, stims, self,
+                               features=features,
+                               onsets=t_ons, durations=t_dur)
+
+    def _to_df(self, result, model_attributes=True):
+        df_dict = dict(zip(result.features, result._data))
+
+        if model_attributes:
+            log_dict = {attr: getattr(result.extractor, attr) for
+                        attr in ['pretrained_model', 'encoding_level',
+                        'pooling', 'framework', 'tokenizer_type']}
+            df_dict.update(log_dict)
+
+        result_df = pd.DataFrame(df_dict)
+        result_df['object_id'] = range(result_df.shape[0])
+
+        return result_df
+
+      
+class WordCounterExtractor(ComplexTextExtractor):
+
+    ''' Extracts number of times each unique word has occurred within text
+
+    Args:
+        log_scale(bool): specifies if count values are to be returned in log-
+                         scale (defaults to False)
+        '''
+
+    _log_attributes = ('case_sensitive', 'log_scale')
+
+    def __init__(self, case_sensitive=False, log_scale=False):
+
+        self.log_scale = log_scale
+        self.case_sensitive = case_sensitive
+        self.features = ['log_word_count'] if self.log_scale else ['word_count']
+        super(WordCounterExtractor, self).__init__()
+
+    def _extract(self, stims):
+        onsets = [s.onset for s in stims]
+        durations = [s.duration for s in stims]
+        tokens = [s.text for s in stims]
+        tokens = [t if self.case_sensitive else t.lower() for t in tokens]
+        word_counter = pd.Series(tokens).groupby(tokens).cumcount() + 1
+        if self.log_scale:
+            word_counter = np.log(word_counter)
+
+        return ExtractorResult(word_counter, stims, self,
+                               features=self.features,
+                               onsets=onsets, durations=durations)
+
