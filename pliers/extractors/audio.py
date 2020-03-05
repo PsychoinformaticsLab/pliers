@@ -550,15 +550,15 @@ class AudiosetLabelExtractor(AudioExtractor):
         self.weights_path = weights_path or path.join(MODULE_PATH, 'yamnet.h5')
         self.hop_size = hop_size
         self.yamnet_kwargs = yamnet_kwargs or {}
-        if self.yamnet_kwargs['PATCH_WINDOW_SECONDS']:
-            logging.warning('Custom values for PATCH_WINDOW_SECONDS were '
-                'passed. YAMNet was trained on windows of 0.96s. Different '
-                'values might yield unreliable results.')
         self.params = yamnet.params.__dict__
         self.params = {k: v for k, v in self.params.items() if k.isupper()}
         self.params['PATCH_HOP_SECONDS'] = hop_size
         self.params.update(self.yamnet_kwargs)
-                             
+        if self.params['PATCH_WINDOW_SECONDS'] != 0.96:
+            logging.warning('Custom values for PATCH_WINDOW_SECONDS were '
+                'passed. YAMNet was trained on windows of 0.96s. Different '
+                'values might yield unreliable results.')
+
         self.top_n = top_n
         all_labels = pd.read_csv(LABELS_PATH)['display_name'].tolist()
         if labels is not None:
