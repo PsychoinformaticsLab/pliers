@@ -1,4 +1,5 @@
 from os.path import join
+from os import environ
 from ..utils import get_test_data_path
 from pliers.extractors import (LibrosaFeatureExtractor,
                                STFTAudioExtractor,
@@ -360,7 +361,7 @@ def test_percussion_extractor():
 @pytest.mark.parametrize('hop_size', [0.1, 1])
 @pytest.mark.parametrize('top_n', [5, 10])
 @pytest.mark.parametrize('target_sr', [22000, 14000])
-def test_audioset_extractor(hop_size, top_n, target_sr):
+def test_audioset_extractor(hop_size, top_n, target_sr, yamnet_path=None):
 
     def compute_expected_length(stim, ext):
         bins = int(stim.duration / ext.hop_size)
@@ -373,7 +374,7 @@ def test_audioset_extractor(hop_size, top_n, target_sr):
     audio_resampled = audio_filter.transform(audio_stim)
 
     # test with defaults and 44100 stimulus
-    ext = AudiosetLabelExtractor(hop_size=hop_size)
+    ext = AudiosetLabelExtractor(hop_size=hop_size, yamnet_path=yamnet_path)
     r_orig = ext.transform(audio_stim).to_df()
     assert r_orig.shape[0] == compute_expected_length(audio_stim, ext)
     assert r_orig.shape[1] == 525
@@ -393,7 +394,7 @@ def test_audioset_extractor(hop_size, top_n, target_sr):
                     for substr in ['Upsample' , str(target_sr)]])
 
     # test top_n option
-    ext_top_n = AudiosetLabelExtractor(top_n=top_n)
+    ext_top_n = AudiosetLabelExtractor(top_n=top_n, yamnet_path=yamnet_path)
     r_top_n = ext_top_n.transform(audio_stim).to_df()
     assert r_top_n.shape[1] == ext_top_n.top_n + 4
     assert np.argmax(r_top_n.to_numpy()[:,4:].mean(axis=0)) == 0
@@ -401,11 +402,13 @@ def test_audioset_extractor(hop_size, top_n, target_sr):
     # test label subset
     labels = ['Speech', 'Silence', 'Harmonic', 'Bark', 'Music', 'Bell', 
               'Steam', 'Rain']
-    ext_labels_only = AudiosetLabelExtractor(label_subset=labels)
+    ext_labels_only = AudiosetLabelExtractor(label_subset=labels, 
+                                             yamnet_path=yamnet_path)
     r_labels_only = ext_labels_only.transform(audio_stim).to_df()
     assert r_labels_only.shape[1] == len(labels) + 4
     
     # test top_n/labels error
     with pytest.raises(ValueError) as err:
-        AudiosetLabelExtractor(top_n=10, label_subset=labels)
+        AudiosetLabelExtractor(top_n=10, label_subset=labels, 
+                               yamnet_path=yamnet_path)
     assert 'Top_n and label_subset are mutually exclusive' in str(err.value)

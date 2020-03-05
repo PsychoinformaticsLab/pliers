@@ -43,12 +43,7 @@ install:
 - pip install -r requirements.txt --upgrade
 - pip install -r optional-dependencies.txt --upgrade
 - pip install --upgrade coveralls pytest-cov
-- git clone --depth 1 -b master https://github.com/tensorflow/models
-- cd models/research/audioset/yamnet
-- curl -O https://storage.googleapis.com/audioset/yamnet.h5
-- python yamnet_test.py
-- export PYTHONPATH=$PYTHONPATH:$PWD
-- cd /home/travis/build/tyarkoni/pliers
+- python -m pliers.support.setup_yamnet
 
 before_script:
 - python -m pliers.support.download

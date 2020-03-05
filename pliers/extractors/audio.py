@@ -614,7 +614,7 @@ class AudiosetLabelExtractor(AudioExtractor):
         stft_hop = params['STFT_HOP_SECONDS']
         stft_window = params['STFT_WINDOW_SECONDS']
         dur = window + stft_window - stft_hop
-        onsets = np.arange(start=hop/2, stop=stim.duration - hop/2, step=hop)
+        onsets = np.arange(start=0, stop=stim.duration + dur, step=hop)
 
         return ExtractorResult(preds, stim, self, features=labels,
                                onsets=onsets, durations=dur,
