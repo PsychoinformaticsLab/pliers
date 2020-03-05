@@ -15,7 +15,6 @@ import sys
 import logging
 
 librosa = attempt_to_import('librosa')
-yamnet = attempt_to_import('yamnet')
 tf = attempt_to_import('tensorflow')
 
 class AudioExtractor(Extractor):
@@ -529,8 +528,9 @@ class AudiosetLabelExtractor(AudioExtractor):
                  weights_path=None, yamnet_path=None, **yamnet_kwargs):
         if yamnet_path is None:
             yamnet_path = YAMNET_PATH
-        sys.path.insert(0, str(yamnet_path))
         try:
+            sys.path.insert(0, str(yamnet_path))
+            yamnet = attempt_to_import('yamnet')
             verify_dependencies(['yamnet'])
         except MissingDependencyError: 
             msg = ('Yamnet could not be imported. To download and set up '
@@ -550,8 +550,8 @@ class AudiosetLabelExtractor(AudioExtractor):
         self.weights_path = weights_path or path.join(MODULE_PATH, 'yamnet.h5')
         self.hop_size = hop_size
         self.yamnet_kwargs = yamnet_kwargs or {}
-        params_dict = yamnet.params.__dict__
-        self.params = {k: v for k, v in params_dict if k.isupper()}
+        self.params = yamnet.params.__dict__
+        self.params = {k: v for k, v in self.params.items() if k.isupper()}
         self.params['PATCH_HOP_SECONDS'] = hop_size
         self.params.update(self.yamnet_kwargs)
                              

@@ -6,13 +6,14 @@ from pathlib import Path
 import sys
 import runpy
 
-YAMNET_PATH = Path.home() / 'pliers_data'
+DOWNLOAD_PATH = Path.home() / 'pliers_data'
+YAMNET_PATH = DOWNLOAD_PATH / 'models-master' / 'research' / 'audioset' / 'yamnet'
 
 def setup_yamnet(download_dir=None):
     if download_dir is not None:
         download_dir = Path(download_dir)
     else:
-        download_dir = YAMNET_PATH
+        download_dir = DOWNLOAD_PATH
     
     model_dir = download_dir / 'models-master' / 'research' / 'audioset' / 'yamnet'
     repo_url = 'https://github.com/tensorflow/models/archive/master.zip'
