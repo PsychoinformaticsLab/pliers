@@ -605,10 +605,11 @@ class AudiosetLabelExtractor(AudioExtractor):
         preds = np.fliplr(preds[:,idx][:,-nr_lab:])
         labels = [self.labels[i] for i in idx][-nr_lab:][::-1]
 
-        durations = params['PATCH_HOP_SECONDS']
-        onsets = np.arange(start=0, stop=stim.duration, step=durations)
+        hop = params['PATCH_HOP_SECONDS']
+        window = params['PATCH_WINDOW_SECONDS']
+        onsets = np.arange(start=0, stop=stim.duration, step=hop)
         onsets = onsets[:params.shape[0]]
 
         return ExtractorResult(preds, stim, self, features=labels,
-                               onsets=onsets, durations=durations,
+                               onsets=onsets, durations=window,
                                orders=list(range(len(onsets))))
