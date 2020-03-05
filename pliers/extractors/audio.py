@@ -616,5 +616,5 @@ class AudiosetLabelExtractor(AudioExtractor):
         onsets = np.arange(start=0, stop=stim.duration - dur, step=hop)
 
         return ExtractorResult(preds, stim, self, features=labels,
-                               onsets=onsets, durations=dur,
+                               onsets=onsets, durations=[dur]*len(onsets),
                                orders=list(range(len(onsets))))
