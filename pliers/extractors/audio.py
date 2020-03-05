@@ -552,8 +552,7 @@ class AudiosetLabelExtractor(AudioExtractor):
         self.params = self.yamnet.params
         self.params.PATCH_HOP_SECONDS = hop_size
         for par, v in self.yamnet_kwargs.items():
-            if par in self.params.__dict__:
-                setattr(self.params, par, v)
+            setattr(self.params, par, v)
         if self.params.PATCH_WINDOW_SECONDS != 0.96:
             logging.warning('Custom values for PATCH_WINDOW_SECONDS were '
                 'passed. YAMNet was trained on windows of 0.96s. Different '
