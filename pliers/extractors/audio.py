@@ -550,6 +550,10 @@ class AudiosetLabelExtractor(AudioExtractor):
         self.weights_path = weights_path or path.join(MODULE_PATH, 'yamnet.h5')
         self.hop_size = hop_size
         self.yamnet_kwargs = yamnet_kwargs or {}
+        if self.yamnet_kwargs['PATCH_WINDOW_SECONDS']:
+            logging.warning('Custom values for PATCH_WINDOW_SECONDS were '
+                'passed. YAMNet was trained on windows of 0.96s. Different '
+                'values might yield unreliable results.')
         self.params = yamnet.params.__dict__
         self.params = {k: v for k, v in self.params.items() if k.isupper()}
         self.params['PATCH_HOP_SECONDS'] = hop_size
@@ -608,10 +612,9 @@ class AudiosetLabelExtractor(AudioExtractor):
         hop = params['PATCH_HOP_SECONDS']
         window = params['PATCH_WINDOW_SECONDS']
         stft_params = params['STFT_WINDOW_SECONDS'] - params['STFT_HOP_SECONDS']
-        window = window + stft_params
-        onsets = np.arange(start=0, stop=stim.duration, step=hop)
-        onsets = onsets[onsets + window < stim.duration]
+        dur = window + stft_params
+        onsets = np.arange(start=hop/2, stop=stim.duration - hop/2, step=hop)
 
         return ExtractorResult(preds, stim, self, features=labels,
-                               onsets=onsets, durations=window,
+                               onsets=onsets, durations=dur,
                                orders=list(range(len(onsets))))
