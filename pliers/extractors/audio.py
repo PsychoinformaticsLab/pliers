@@ -586,7 +586,7 @@ class AudiosetLabelExtractor(AudioExtractor):
                     'This should not impact predictions, but you can resample ' 
                     'the input using AudioResamplingFilter for full conformity ' 
                     'to training.'.format(params['SAMPLE_RATE']))
-            if params.MEL_MIN_HZ != 125 or params['MEL_MAX_HZ'] != 7500:
+            if params['MEL_MIN_HZ'] != 125 or params['MEL_MAX_HZ'] != 7500:
                 logging.warning(
                     'Custom values for MEL_MIN_HZ and MEL_MAX_HZ '
                     'were passed. Changing these defaults might affect ' 
