@@ -4,12 +4,14 @@ from pliers.stimuli.text import ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.utils import attempt_to_import, verify_dependencies, listify
 from pliers.support.exceptions import MissingDependencyError
+from pliers.support.setup_yamnet import YAMNET_PATH
 import numpy as np
 from scipy import fft
 import pandas as pd
 import soundfile as sf
 from abc import ABCMeta
 from os import path
+import sys
 import logging
 
 librosa = attempt_to_import('librosa')
@@ -498,27 +500,6 @@ class PercussiveExtractor(LibrosaFeatureExtractor):
     _feature = 'percussive'
 
 
-YAMNET_INSTALL_MESSAGE = '''
-yamnet cannot be imported. To download and set up yamnet, open a terminal
-window and do the following
-- cd DOWNLOAD_PATH (path where you want yamnet to be downloaded)
-- git clone --depth 1 -b master https://github.com/tensorflow/models
-- cd models/research/audioset/yamnet
-- curl -O https://storage.googleapis.com/audioset/yamnet.h5
-- python yamnet_test.py
-
-If you're a Mac or Linux user:
-- open ~/.bash_profile
-- add "export PYTHONPATH=$PYTHONPATH:DOWNLOAD_PATH/models/research/audioset/yamnet" 
-to the end of the file
-- save and close
-
-If you're a Windows user, do:
-- set PYTHONPATH=%PYTHONPATH%;DOWNLOAD_PATH/models/research/audioset/yamnet
-- To make the change permanent, you have to add this line to your autoexec.bat
-'''
-
-
 class AudiosetLabelExtractor(AudioExtractor):
     
     ''' Extract probability of 521 audio event classes based on AudioSet
@@ -545,12 +526,17 @@ class AudiosetLabelExtractor(AudioExtractor):
                        'yamnet_kwargs')
 
     def __init__(self, hop_size=0.1, top_n=None, labels=None,
-                 weights_path=None, **yamnet_kwargs):
+                 weights_path=None, yamnet_path=None, **yamnet_kwargs):
+        if yamnet_path is None:
+            yamnet_path = YAMNET_PATH
+        sys.path.insert(0, str(yamnet_path))
         try:
             verify_dependencies(['yamnet'])
         except MissingDependencyError: 
+            msg = ('Yamnet could not be imported. To download and set up '
+                  'yamnet, run:\n\tpython -m pliers.support.setup_yamnet')
             raise MissingDependencyError(dependencies=None,
-                                         custom_message=YAMNET_INSTALL_MESSAGE)
+                                         custom_message=msg)
         verify_dependencies(['tensorflow'])
         
         if top_n and labels:
@@ -564,8 +550,8 @@ class AudiosetLabelExtractor(AudioExtractor):
         self.weights_path = weights_path or path.join(MODULE_PATH, 'yamnet.h5')
         self.hop_size = hop_size
         self.yamnet_kwargs = yamnet_kwargs or {}
-        self.params = yamnet.params.__dict__
-        self.params = {k: v for k, v in self.params if k.isupper()}
+        params_dict = yamnet.params.__dict__
+        self.params = {k: v for k, v in params_dict if k.isupper()}
         self.params['PATCH_HOP_SECONDS'] = hop_size
         self.params.update(self.yamnet_kwargs)
                              
@@ -592,11 +578,10 @@ class AudiosetLabelExtractor(AudioExtractor):
             if params['SAMPLE_RATE'] != 16000:
                 logging.warning(
                     'The sampling rate of the stimulus is '
-                    '{}Hz. '.format(params['SAMPLE_RATE'])
-                    'YAMNet was trained on audio sampled at 16000Hz. ' 
+                    '{}Hz. YAMNet was trained on audio sampled at 16000Hz. ' 
                     'This should not impact predictions, but you can resample ' 
                     'the input using AudioResamplingFilter for full conformity ' 
-                    'to training.')
+                    'to training.'.format(params['SAMPLE_RATE']))
             if params.MEL_MIN_HZ != 125 or params['MEL_MAX_HZ'] != 7500:
                 logging.warning(
                     'Custom values for MEL_MIN_HZ and MEL_MAX_HZ '
@@ -604,11 +589,11 @@ class AudiosetLabelExtractor(AudioExtractor):
                     'model performance.')
         else:
             raise ValueError(
-                'The sampling rate of your stimulus '
-                '({}Hz) must be at least twice '.format(params['SAMPLE_RATE'])
-                'the value of MEL_MAX_HZ ({}Hz).'.format(params['MEL_MAX_HZ'])
-                'Upsample your audio stimulus (recommended) or pass a lower '
-                'value of MEL_MAX_HZ when initializing this extractor.')
+                'The sampling rate of your stimulus ({}Hz) must be at least '
+                'twice the value of MEL_MAX_HZ ({}Hz). Upsample your audio '
+                'stimulus (recommended) or pass a lower value of MEL_MAX_HZ '
+                'when initializing the extractor'
+                '.'.format(params['SAMPLE_RATE'], params['MEL_MAX_HZ']))
 
         model = yamnet.yamnet_frames_model(params)
         model.load_weights(self.weights_path)
@@ -622,7 +607,7 @@ class AudiosetLabelExtractor(AudioExtractor):
 
         durations = params['PATCH_HOP_SECONDS']
         onsets = np.arange(start=0, stop=stim.duration, step=durations)
-        onsets = onsets[onsets + params['PATCH_WINDOW_SECONDS'] < stim.duration]
+        onsets = onsets[:params.shape[0]]
 
         return ExtractorResult(preds, stim, self, features=labels,
                                onsets=onsets, durations=durations,
