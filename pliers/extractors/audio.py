@@ -530,7 +530,7 @@ class AudiosetLabelExtractor(AudioExtractor):
             yamnet_path = YAMNET_PATH
         try:
             sys.path.insert(0, str(yamnet_path))
-            yamnet = attempt_to_import('yamnet')
+            self.yamnet = attempt_to_import('yamnet')
             verify_dependencies(['yamnet'])
         except MissingDependencyError: 
             msg = ('Yamnet could not be imported. To download and set up '
@@ -538,23 +538,23 @@ class AudiosetLabelExtractor(AudioExtractor):
             raise MissingDependencyError(dependencies=None,
                                          custom_message=msg)
         verify_dependencies(['tensorflow'])
-        
         if top_n and labels:
             raise ValueError('Top_n and labels are mutually exclusive '
                              'arguments. Reinstantiate the extractor setting '
                              'top_n or labels to None (or leaving it '
                              'unspecified).')
 
-        MODULE_PATH = path.dirname(yamnet.__file__)
+        MODULE_PATH = path.dirname(self.yamnet.__file__)
         LABELS_PATH = path.join(MODULE_PATH, 'yamnet_class_map.csv')
         self.weights_path = weights_path or path.join(MODULE_PATH, 'yamnet.h5')
         self.hop_size = hop_size
         self.yamnet_kwargs = yamnet_kwargs or {}
-        self.params = yamnet.params.__dict__
-        self.params = {k: v for k, v in self.params.items() if k.isupper()}
-        self.params['PATCH_HOP_SECONDS'] = hop_size
-        self.params.update(self.yamnet_kwargs)
-        if self.params['PATCH_WINDOW_SECONDS'] != 0.96:
+        self.params = self.yamnet.params
+        self.params.PATCH_HOP_SECONDS = hop_size
+        for par, v in self.yamnet_kwargs.items():
+            if par in self.params.__dict__:
+                setattr(self.params, par, v)
+        if self.params.PATCH_WINDOW_SECONDS != 0.96:
             logging.warning('Custom values for PATCH_WINDOW_SECONDS were '
                 'passed. YAMNet was trained on windows of 0.96s. Different '
                 'values might yield unreliable results.')
@@ -575,31 +575,31 @@ class AudiosetLabelExtractor(AudioExtractor):
         super(AudiosetLabelExtractor, self).__init__()
 
     def _extract(self, stim):
-        params = self.params
-        params['SAMPLE_RATE'] = stim.sampling_rate
+        self.params.SAMPLE_RATE = stim.sampling_rate
 
-        if params['SAMPLE_RATE'] >= 2 * params['MEL_MAX_HZ']:
-            if params['SAMPLE_RATE'] != 16000:
+        if self.params.SAMPLE_RATE >= 2 * self.params.MEL_MAX_HZ:
+            if self.params.SAMPLE_RATE != 16000:
                 logging.warning(
                     'The sampling rate of the stimulus is '
-                    '{}Hz. YAMNet was trained on audio sampled at 16000Hz. ' 
-                    'This should not impact predictions, but you can resample ' 
-                    'the input using AudioResamplingFilter for full conformity ' 
-                    'to training.'.format(params['SAMPLE_RATE']))
-            if params['MEL_MIN_HZ'] != 125 or params['MEL_MAX_HZ'] != 7500:
+                    f'{self.params.SAMPLE_RATE}Hz. YAMNet was trained on '
+                    ' audio sampled at 16000Hz. This should not impact '
+                    'predictions, but you can resample the input using '
+                    'AudioResamplingFilter for full conformity ' 
+                    'to training.')
+            if self.params.MEL_MIN_HZ != 125 or self.params.MEL_MAX_HZ != 7500:
                 logging.warning(
                     'Custom values for MEL_MIN_HZ and MEL_MAX_HZ '
-                    'were passed. Changing these defaults might affect ' 
+                    'were passed. Changing these defaults might affect '
                     'model performance.')
         else:
             raise ValueError(
-                'The sampling rate of your stimulus ({}Hz) must be at least '
-                'twice the value of MEL_MAX_HZ ({}Hz). Upsample your audio '
-                'stimulus (recommended) or pass a lower value of MEL_MAX_HZ '
-                'when initializing the extractor'
-                '.'.format(params['SAMPLE_RATE'], params['MEL_MAX_HZ']))
+                'The sampling rate of your stimulus '
+                f'({self.params.SAMPLE_RATE}Hz) must be at least twice the '
+                f'value of MEL_MAX_HZ ({self.params.MEL_MAX_HZ}Hz). Upsample'
+                ' your audio stimulus (recommended) or pass a lower value of '
+                'MEL_MAX_HZ when initializing the extractor.')
 
-        model = yamnet.yamnet_frames_model(params)
+        model = self.yamnet.yamnet_frames_model(self.params)
         model.load_weights(self.weights_path)
         preds, _ = model.predict_on_batch(np.reshape(stim.data, [1,-1]))
         preds = preds.numpy()[:,self.label_idx]
@@ -609,12 +609,12 @@ class AudiosetLabelExtractor(AudioExtractor):
         preds = np.fliplr(preds[:,idx][:,-nr_lab:])
         labels = [self.labels[i] for i in idx][-nr_lab:][::-1]
 
-        hop = params['PATCH_HOP_SECONDS']
-        window = params['PATCH_WINDOW_SECONDS']
-        stft_hop = params['STFT_HOP_SECONDS']
-        stft_window = params['STFT_WINDOW_SECONDS']
+        hop = self.params.PATCH_HOP_SECONDS
+        window = self.params.PATCH_WINDOW_SECONDS
+        stft_window = self.params.STFT_WINDOW_SECONDS
+        stft_hop = self.params.STFT_HOP_SECONDS
         dur = window + stft_window - stft_hop
-        onsets = np.arange(start=0, stop=stim.duration + dur, step=hop)
+        onsets = np.arange(start=0, stop=stim.duration - dur, step=hop)
 
         return ExtractorResult(preds, stim, self, features=labels,
                                onsets=onsets, durations=dur,

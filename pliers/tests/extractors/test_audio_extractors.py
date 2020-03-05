@@ -364,10 +364,10 @@ def test_percussion_extractor():
 def test_audioset_extractor(hop_size, top_n, target_sr, yamnet_path=None):
 
     def compute_expected_length(stim, ext):
-        bins = int(stim.duration / ext.hop_size)
-        nr_incomplete = ext.params.PATCH_WINDOW_SECONDS / ext.hop_size - 1
-        exp_length = int(bins - nr_incomplete)
-        return exp_length
+        stft_par = ext.params.STFT_WINDOW_SECONDS - ext.params.STFT_HOP_SECONDS
+        tot_window = ext.params.PATCH_WINDOW_SECONDS + stft_par
+        ons = np.arange(start=0, stop=stim.duration - tot_window, step=hop_size)
+        return len(ons)
 
     audio_stim = AudioStim(join(AUDIO_DIR, 'crowd.mp3'))
     audio_filter = AudioResamplingFilter(target_sr=target_sr)
@@ -379,7 +379,7 @@ def test_audioset_extractor(hop_size, top_n, target_sr, yamnet_path=None):
     assert r_orig.shape[0] == compute_expected_length(audio_stim, ext)
     assert r_orig.shape[1] == 525
     assert np.argmax(r_orig.to_numpy()[:,4:].mean(axis=0)) == 0
-    assert r_orig['duration'][0] == ext.hop_size
+    assert r_orig['duration'][0] == .975
     assert all([np.isclose(r_orig['onset'][i] - r_orig['onset'][i-1], hop_size)
                 for i in range(1,r_orig.shape[0])])
 
@@ -402,13 +402,13 @@ def test_audioset_extractor(hop_size, top_n, target_sr, yamnet_path=None):
     # test label subset
     labels = ['Speech', 'Silence', 'Harmonic', 'Bark', 'Music', 'Bell', 
               'Steam', 'Rain']
-    ext_labels_only = AudiosetLabelExtractor(label_subset=labels, 
+    ext_labels_only = AudiosetLabelExtractor(labels=labels, 
                                              yamnet_path=yamnet_path)
     r_labels_only = ext_labels_only.transform(audio_stim).to_df()
     assert r_labels_only.shape[1] == len(labels) + 4
     
     # test top_n/labels error
     with pytest.raises(ValueError) as err:
-        AudiosetLabelExtractor(top_n=10, label_subset=labels, 
+        AudiosetLabelExtractor(top_n=10, labels=labels, 
                                yamnet_path=yamnet_path)
-    assert 'Top_n and label_subset are mutually exclusive' in str(err.value)
+    assert 'Top_n and labels are mutually exclusive' in str(err.value)
