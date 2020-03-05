@@ -5,7 +5,7 @@ from six import with_metaclass
 import pandas as pd
 import numpy as np
 from pliers.transformers import Transformer
-from pliers.utils import isgenerator, flatten
+from pliers.utils import isgenerator, flatten, listify
 from pandas.api.types import is_numeric_dtype
 
 
@@ -136,6 +136,9 @@ class ExtractorResult(object):
         durations = np.nan if durations is None else durations
         orders = getattr(self, '_orders', self.order)
         orders = np.nan if orders is None else orders
+        onsets = listify(onsets)
+        durations = listify(durations)
+        assert len(onsets) == len(durations)
 
         # If any features clash with protected keys, append underscore
         protected = ['onset', 'order', 'duration', 'extractor', 'stim_name',
