@@ -457,13 +457,13 @@ class BertExtractor(ComplexTextExtractor):
             tokenizer, **tokenizer_kwargs)
         super(BertExtractor, self).__init__()
 
-    def _mask(self, wds):
+    def _mask(self, wds, mask):
         return wds
 
-    def _preprocess(self, stims):
+    def _preprocess(self, stims, mask):
         wds, ons, dur = zip(*[(s.text, s.onset, s.duration) for s in stims.elements])
         wds, ons, dur = map(list, [wds, ons, dur])
-        tok = [self.tokenizer.tokenize(w) for w in self._mask(wds)]
+        tok = [self.tokenizer.tokenize(w) for w in self._mask(wds, mask)]
         n_tok = [len(t) for t in tok]
         wds, ons, dur = map(lambda x: np.repeat(x, n_tok), [wds, ons, dur])
         tok = list(flatten(tok))
@@ -476,8 +476,9 @@ class BertExtractor(ComplexTextExtractor):
         feat =  ['encoding', 'token', 'word']        
         return data, feat, ons, dur
 
-    def _extract(self, stims):
-        wds, ons, dur, tok, idx = self._preprocess(stims)
+    def _extract(self, stims, **kwargs):
+        mask = kwargs['mask'] if 'mask' in kwargs else None
+        wds, ons, dur, tok, idx = self._preprocess(stims, mask)
         preds = self.model(idx)
         preds = [p.detach() if self.framework == 'pt' else p for p in preds]
         data, feat, ons, dur = self._postprocess(preds, tok, wds, ons, dur)
@@ -643,15 +644,6 @@ class BertLMExtractor(BertExtractor):
             raise ValueError('top_n and threshold are mutually exclusive')
         self.top_n = top_n
 
-        if type(mask) == int:
-            self.mask_pos = mask
-            self.mask_token = None
-        if type(mask) == str:
-            self.mask_pos = None
-            self.mask_token = mask
-        else:
-            raise ValueError('mask argument must be an integer or a string')
-
         self.target = listify(target)
         if self.target:
             for t in self.target:
@@ -668,15 +660,17 @@ class BertLMExtractor(BertExtractor):
         self.threshold = threshold
         self.return_true = return_true
 
-    def _mask(self, wds):
+    def _mask(self, wds, mask):
         mwds = wds.copy()
-        if self.mask_pos:
+        if type(mask) == int:
             mwds[self.mask_pos] = '[MASK]'
-            self.mask_token = wds[self.mask_pos]
-        elif self.mask_token:
-            w_idx = np.where(np.array(mwds)==self.mask_token)[0][0]
+            self.mask_pos, self.mask_token = (mask, wds[self.mask_pos])
+        if type(mask) == str:
+            w_idx = np.where(np.array(mwds)==mask)[0][0]
             mwds[w_idx] = '[MASK]'
-            self.mask_pos = w_idx
+            self.mask_token, self.mask_pos = (mask, w_idx)
+        else:
+            raise ValueError('mask argument must be an integer or a string')
         nr_masks = len(np.where(np.array(mwds)=='[MASK]')[0])
         if nr_masks == 0:
             raise ValueError('No valid mask tokens found.')
@@ -686,10 +680,8 @@ class BertLMExtractor(BertExtractor):
 
     def _postprocess(self, preds, tok, wds, ons, dur):
         preds = preds[0].numpy()[:,1:-1,:]
-
         if self.return_softmax:
             preds = scipy.special.softmax(preds, axis=-1)
-
         out_idx = preds[0,self.mask_pos,:].argsort(axis=-1)[::-1]
         if self.target:
             target_idx = self.tokenizer.convert_tokens_to_ids(self.target)
@@ -716,9 +708,6 @@ class BertLMExtractor(BertExtractor):
     def _get_model_attributes(self):
         return ['pretrained_model', 'framework', 'top_n', 'mask_idx',
          'target', 'mask_token', 'tokenizer_type']
-
-# TO DO:
-# Target words called in extract
 
 
 class WordCounterExtractor(ComplexTextExtractor):
