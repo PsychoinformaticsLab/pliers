@@ -29,11 +29,12 @@ from pliers.extractors import (LibrosaFeatureExtractor,
 from pliers.stimuli import (ComplexTextStim, AudioStim,
                             TranscribedAudioCompoundStim)
 from pliers.filters import AudioResamplingFilter
+from pliers.utils import attempt_to_import, verify_dependencies
 import numpy as np
 import pytest
 
 AUDIO_DIR = join(get_test_data_path(), 'audio')
-
+tf = attempt_to_import('tensorflow')
 
 def test_stft_extractor():
     stim = AudioStim(join(AUDIO_DIR, 'barber.wav'), onset=4.2)
@@ -362,6 +363,7 @@ def test_percussion_extractor():
 @pytest.mark.parametrize('top_n', [5, 10])
 @pytest.mark.parametrize('target_sr', [22000, 14000])
 def test_audioset_extractor(hop_size, top_n, target_sr, yamnet_path=None):
+    verify_dependencies(['tensorflow'])
 
     def compute_expected_length(stim, ext):
         stft_par = ext.params.STFT_WINDOW_SECONDS - ext.params.STFT_HOP_SECONDS

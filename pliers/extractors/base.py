@@ -136,7 +136,6 @@ class ExtractorResult(object):
         durations = np.nan if durations is None else durations
         orders = getattr(self, '_orders', self.order)
         orders = np.nan if orders is None else orders
-        assert len(pd.Series(onsets)) == len(pd.Series(durations))
 
         # If any features clash with protected keys, append underscore
         protected = ['onset', 'order', 'duration', 'extractor', 'stim_name',
