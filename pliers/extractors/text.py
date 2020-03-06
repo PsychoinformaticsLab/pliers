@@ -406,7 +406,7 @@ class SpaCyExtractor(TextExtractor):
 class BertExtractor(ComplexTextExtractor):
 
     ''' Base class for all Extractors based on pretrained BERT.
-        This model returns the last hidden layer (including special tokens)
+        This model returns the last hidden layer (wihtout special tokens)
 
     Args:
         pretrained_model (str): A string specifying which BERT
@@ -570,15 +570,15 @@ class BertSequenceEncodingExtractor(BertExtractor):
         else:
             out = preds[1]
         data = [out.tolist(), tok]  
-        feat =  ['encoding', 'sequence']      
+        feat = ['encoding', 'sequence']      
         return data, feat, ons, dur
     
     def _get_model_attributes(self):
         return ['pretrained_model', 'framework', 'model_class', 
                 'pooling', 'return_sep', 'tokenizer_type']
 
-class BertLMExtractor(BertExtractor):
 
+class BertLMExtractor(BertExtractor):
     ''' Use BERT for masked words prediction.
 
     Args:
@@ -606,6 +606,8 @@ class BertLMExtractor(BertExtractor):
             be returned. Mutually exclusive with top_n.
         return_softmax (bool): if True, returns probability scores instead of 
             raw predictions scores for language modeling.
+        return_true (bool): if True, returns masked word (if defined in the
+            tokenizer dictionary) and its probability.
         model_kwargs (dict): Named arguments for pretrained model.
             See: https://huggingface.co/transformers/main_classes/model.html
             and https://huggingface.co/transformers/model_doc/bert.html.
@@ -625,6 +627,7 @@ class BertLMExtractor(BertExtractor):
                  threshold=None,
                  target=None,
                  return_softmax=False,
+                 return_true=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
         
@@ -663,6 +666,7 @@ class BertLMExtractor(BertExtractor):
 
         self.return_softmax = return_softmax
         self.threshold = threshold
+        self.return_true = return_true
 
     def _mask(self, wds):
         mwds = wds.copy()
@@ -693,23 +697,29 @@ class BertLMExtractor(BertExtractor):
         elif self.top_n:
             out_idx = out_idx[:self.top_n]
         if self.threshold:
-            th_idx = np.where(preds[0,self.mask_pos,:] > self.threshold)[0]
-            out_idx = list(set(out_idx) & set(th_idx))
-        out_wds = self.tokenizer.convert_ids_to_tokens(out_idx)
-        out_scores = preds[0,self.mask_pos,out_idx]
-        
-        data = out_scores 
-        return data, out_wds, listify(ons[self.mask_pos]), listify(dur[self.mask_pos])
+            thr_idx = np.where(preds[0,self.mask_pos,:] > self.threshold)[0]
+            out_idx = list(set(out_idx) & set(thr_idx))
+        feats = self.tokenizer.convert_ids_to_tokens(out_idx)
+        data = preds[0,self.mask_pos,out_idx]
+        if self.return_true:
+            if self.mask_token in self.tokenizer.vocab:
+                true_vocab_idx = self.tokenizer.vocab[self.mask_token]
+                true_score = preds[0, self.mask_pos, true_vocab_idx]
+            else:
+                true_vocab_idx, true_score = ('true_word', np.nan)
+            feats += ['true_word', 'true_word_score']
+            data += [self.mask_token, true_score]
+
+        return data, feats, listify(ons[self.mask_pos]), \
+            listify(dur[self.mask_pos])
     
     def _get_model_attributes(self):
         return ['pretrained_model', 'framework', 'top_n', 'mask_idx',
          'target', 'mask_token', 'tokenizer_type']
 
 # TO DO:
-# Add option to support additional metadata to to_df
-# Check output as columns and init
-# Add option to extract other layers/attention heads from BertExtractor
-# Add option to return encodings from LM or SentModels
+# Target words called in extract
+
 
 class WordCounterExtractor(ComplexTextExtractor):
 
