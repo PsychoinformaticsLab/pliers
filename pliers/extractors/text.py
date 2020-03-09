@@ -663,8 +663,8 @@ class BertLMExtractor(BertExtractor):
     def _mask(self, wds, mask):
         mwds = wds.copy()
         if type(mask) == int:
-            mwds[self.mask_pos] = '[MASK]'
-            self.mask_pos, self.mask_token = (mask, wds[self.mask_pos])
+            mwds[mask] = '[MASK]'
+            self.mask_pos, self.mask_token = (mask, wds[mask])
         if type(mask) == str:
             w_idx = np.where(np.array(mwds)==mask)[0][0]
             mwds[w_idx] = '[MASK]'
