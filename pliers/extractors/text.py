@@ -578,6 +578,8 @@ class BertSequenceEncodingExtractor(BertExtractor):
             out = pool_func(preds[0][:, 1:-1, :], axis=1, keepdims=True)
         else:
             out = preds[1]
+        data = [out.tolist()]
+        feat = ['encoding']
         if self.return_metadata:
             data += [tok]
             feat += ['sequence']   
@@ -589,6 +591,7 @@ class BertSequenceEncodingExtractor(BertExtractor):
 
 
 class BertLMExtractor(BertExtractor):
+
     ''' Use BERT for masked words prediction.
 
     Args:
@@ -695,11 +698,11 @@ class BertLMExtractor(BertExtractor):
         feat = self.tokenizer.convert_ids_to_tokens(out_idx)
         data = preds[0,self.mask_pos,out_idx]
         if self.return_metadata:
-            feat, data = self._retrieve_true_token(preds, feat, data)
+            feat, data = self._return_true_token(preds, feat, data)
         ons, dur = map(lambda x: listify(x[self.mask_pos]), [ons, dur])
         return data, feat, ons, dur
 
-    def _retrieve_true_token(self, preds, feat, data):
+    def _return_true_token(self, preds, feat, data):
         if self.mask_token in self.tokenizer.vocab:
             true_vocab_idx = self.tokenizer.vocab[self.mask_token]
             true_score = preds[0, self.mask_pos, true_vocab_idx]
@@ -714,8 +717,11 @@ class BertLMExtractor(BertExtractor):
          'target', 'threshold', 'mask_token', 'tokenizer_type']
 
 # What to do with SEP token? Does it need to be there?
-# Return other layers
-# Return attention
+# Return other layers and/or attentions?
+# Couple of mixins (sequence coherence, probability)
+# Look into the sentiment extractor
+# Discuss probability mixin with Tal
+# Metadata as features / Add other field to store additional info?
 
 class WordCounterExtractor(ComplexTextExtractor):
 
