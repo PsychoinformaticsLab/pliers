@@ -456,9 +456,9 @@ class BertExtractor(ComplexTextExtractor):
 
         model = model_class if self.framework == 'pt' else 'TF' + model_class
         self.model = getattr(transformers, model).from_pretrained(
-            pretrained_model, **model_kwargs)
+            pretrained_model, **self.model_kwargs)
         self.tokenizer = transformers.BertTokenizer.from_pretrained(
-            tokenizer, **tokenizer_kwargs)
+            tokenizer, **self.tokenizer_kwargs)
         super(BertExtractor, self).__init__()
 
     def _mask(self, wds, mask):
@@ -474,9 +474,9 @@ class BertExtractor(ComplexTextExtractor):
         idx = self.tokenizer.encode(tok, return_tensors=self.framework)
         return wds, ons, dur, tok, idx
 
-    def _extract(self, stims, **kwargs):
-        mask = kwargs['mask'] if 'mask' in kwargs else None
-        wds, ons, dur, tok, idx = self._preprocess(stims, mask)
+    def _extract(self, stims):
+        mask = self.mask or None
+        wds, ons, dur, tok, idx = self._preprocess(stims, mask=mask)
         preds = self.model(idx)
         preds = [p.detach() if self.framework == 'pt' else p for p in preds]
         data, feat, ons, dur = self._postprocess(preds, tok, wds, ons, dur)
@@ -605,6 +605,11 @@ class BertLMExtractor(BertExtractor):
             unknown tokens.
         framework (str): name deep learning framework to use. Must be 'pt'
             (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
+        mask (int or str): Words to be masked (string) or indices of 
+            words in the sequence to be masked (indexing starts at 0). Can
+            be either a single word/index or a list of words/indices.
+            If str is passed and more than one word in the input matches 
+            the string, only the first one is masked. 
         top_n (int): Specifies how many of the highest-probability tokens are
             to be returned. Mutually exclusive with target and threshold.
         target (str or list): Vocabulary token(s) for which probability is to 
@@ -623,8 +628,7 @@ class BertLMExtractor(BertExtractor):
             See https://huggingface.co/transformers/main_classes/tokenizer.html.
     '''
 
-    _log_attributes = ('pretrained_model', 'framework', 'top_n', 'mask_pos',
-        'mask_token', 'target', 'tokenizer_type', 'return_softmax')
+    _log_attributes = ('pretrained_model', 'framework', 'top_n', 'target', 'tokenizer_type', 'return_softmax')
 
     def __init__(self,
                  pretrained_model='bert-base-uncased',
@@ -662,6 +666,7 @@ class BertLMExtractor(BertExtractor):
                     f'(\'{tokenizer}\').vocab.keys() to see available tokens')
         self.return_softmax = return_softmax
         self.return_true = return_true
+        self.mask = mask
 
     def _mask(self, wds, mask):
         if not type(mask) in [int, str]:
@@ -671,17 +676,6 @@ class BertLMExtractor(BertExtractor):
         self.mask_pos = np.where(np.array(mwds)==self.mask_token)[0][0]
         mwds[self.mask_pos] = '[MASK]'
         return mwds
-
-    def _extract(self, stims, mask):
-        '''
-        Args:
-            mask (int or str): Words to be masked (string) or indices of 
-                words in the sequence to be masked (indexing starts at 0). Can
-                 be either a single word/index or a list of words/indices.
-                If str is passed and more than one word in the input matches 
-                the string, only the first one is masked. 
-        '''
-        return super()._extract(stims=stims, mask=mask)
 
     def _postprocess(self, preds, tok, wds, ons, dur):
         preds = preds[0].numpy()[:,1:-1,:]
@@ -706,22 +700,28 @@ class BertLMExtractor(BertExtractor):
         if self.mask_token in self.tokenizer.vocab:
             true_vocab_idx = self.tokenizer.vocab[self.mask_token]
             true_score = preds[0, self.mask_pos, true_vocab_idx]
-            feat += ['true_word', 'true_word_score']
-            data += [self.mask_token, true_score]
         else:
-            logging.warning('True token not in vocabulary, cannot return')
+            true_score = np.nan
+            logging.warning('True token not in vocabulary. Returning NaN')
+        feat += ['true_word', 'true_word_score']
+        data += [self.mask_token, true_score]
         return feat, data
     
     def _get_model_attributes(self):
-        return ['pretrained_model', 'framework', 'top_n', 'mask_pos',
-         'target', 'threshold', 'mask_token', 'tokenizer_type']
+        return ['pretrained_model', 'framework', 'top_n', 'mask',
+         'target', 'threshold', 'tokenizer_type']
 
+# To discuss:
 # What to do with SEP token? Does it need to be there?
 # Return other layers and/or attentions?
 # Couple of mixins (sequence coherence, probability)
 # Look into the sentiment extractor
 # Discuss probability mixin with Tal
-# Metadata as features / Add other field to store additional info?
+
+# To dos:
+# Metadata as features / Add other field to store additional info (?)
+# Log input sequence in LM extractor
+# NB: a bit suboptimal to set mask in init, but handier
 
 class WordCounterExtractor(ComplexTextExtractor):
 
