@@ -421,6 +421,8 @@ class BertExtractor(ComplexTextExtractor):
             'BertModel' or 'BertForLM'.
         framework (str): name deep learning framework to use. Must be 'pt'
             (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
+        return_metadata (bool): if True, the extractor returns encoded token
+            and encoded word as features.
         model_kwargs (dict): Named arguments for transformer model.
             See https://huggingface.co/transformers/main_classes/model.html
         tokenizer_kwargs (dict): Named arguments for tokenizer.
@@ -435,6 +437,7 @@ class BertExtractor(ComplexTextExtractor):
                  tokenizer='bert-base-uncased',
                  model_class='BertModel',
                  framework='pt',
+                 return_metadata=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
                  
@@ -445,8 +448,9 @@ class BertExtractor(ComplexTextExtractor):
                 must be one of 'pt' (pytorch) or 'tf' (tensorflow)'''))
         self.pretrained_model = pretrained_model
         self.tokenizer_type = tokenizer
-        self.framework = framework
         self.model_class = model_class
+        self.framework = framework
+        self.return_metadata = return_metadata
         self.model_kwargs = model_kwargs if model_kwargs else {}
         self.tokenizer_kwargs = tokenizer_kwargs if tokenizer_kwargs else {}
 
@@ -461,8 +465,8 @@ class BertExtractor(ComplexTextExtractor):
         return wds
 
     def _preprocess(self, stims, mask):
-        wds, ons, dur = zip(*[(s.text, s.onset, s.duration) for s in stims.elements])
-        wds, ons, dur = map(list, [wds, ons, dur])
+        els = [(e.text, e.onset, e.duration) for e in stims.elements]
+        wds, ons, dur = map(list, zip(*els))
         tok = [self.tokenizer.tokenize(w) for w in self._mask(wds, mask)]
         n_tok = [len(t) for t in tok]
         wds, ons, dur = map(lambda x: np.repeat(x, n_tok), [wds, ons, dur])
@@ -470,20 +474,23 @@ class BertExtractor(ComplexTextExtractor):
         idx = self.tokenizer.encode(tok, return_tensors=self.framework)
         return wds, ons, dur, tok, idx
 
-    def _postprocess(self, preds, tok, wds, ons, dur):
-        out = preds[0][:, 1:-1, :].numpy().squeeze()
-        data = [out.tolist(), tok, wds]
-        feat =  ['encoding', 'token', 'word']        
-        return data, feat, ons, dur
-
     def _extract(self, stims, **kwargs):
         mask = kwargs['mask'] if 'mask' in kwargs else None
         wds, ons, dur, tok, idx = self._preprocess(stims, mask)
         preds = self.model(idx)
         preds = [p.detach() if self.framework == 'pt' else p for p in preds]
         data, feat, ons, dur = self._postprocess(preds, tok, wds, ons, dur)
-        return ExtractorResult(data, stims, self, 
-                               features=feat, onsets=ons, durations=dur)
+        return ExtractorResult(data, stims, self, features=feat, onsets=ons, 
+                               durations=dur)
+
+    def _postprocess(self, preds, tok, wds, ons, dur):
+        out = preds[0][:, 1:-1, :].numpy().squeeze()
+        data = [out.tolist()]
+        feat = ['encoding']
+        if self.return_metadata:
+            data += [tok, wds]
+            feat += ['token', 'word']
+        return data, feat, ons, dur
 
     def _get_model_attributes(self):
         return ['pretrained_model', 'framework', 'model_class', 
@@ -495,7 +502,6 @@ class BertExtractor(ComplexTextExtractor):
             log_dict = {attr: getattr(result.extractor, attr) for
                         attr in self._get_model_attributes()}
             res_dict.update(log_dict)
-        # include sequence?
         res_df = pd.DataFrame(res_dict)
         res_df['object_id'] = range(res_df.shape[0])
         return res_df
@@ -520,6 +526,8 @@ class BertSequenceEncodingExtractor(BertExtractor):
             encodings.
         return_sep (bool): defines whether to return encoding for the [SEP]
             token.
+        return_metadata (bool): If True, the extractor returns an additional 
+            feature column with the encoded sequence.
         model_kwargs (dict): Named arguments for pretrained model.
             See: https://huggingface.co/transformers/main_classes/model.html
             and https://huggingface.co/transformers/model_doc/bert.html
@@ -537,13 +545,13 @@ class BertSequenceEncodingExtractor(BertExtractor):
                  framework='pt',
                  pooling=None,
                  return_sep=False,
+                 return_metadata=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
 
         super(BertSequenceEncodingExtractor, self).__init__(pretrained_model,
-            tokenizer, framework, model_kwargs, tokenizer_kwargs, 
-            model_class='BertModel')
-        
+            tokenizer, framework, return_metadata, model_kwargs, 
+            tokenizer_kwargs, model_class='BertModel')
         if pooling:
             if return_sep:
                 raise(ValueError('Pooling and return_seq argument are '
@@ -552,11 +560,11 @@ class BertSequenceEncodingExtractor(BertExtractor):
                 getattr(np, pooling)
             except:
                 raise(ValueError('Pooling must be a valid numpy function.'))
-        self.return_sep = return_sep
         self.pooling = pooling
+        self.return_sep = return_sep
     
     def _postprocess(self, preds, tok, wds, ons, dur):
-        preds = [p.numpy().squeeze() for p in preds] #check
+        preds = [p.numpy().squeeze() for p in preds]
         tok = [' '.join(wds)]
         try: 
             dur = ons[-1] + dur[-1] - ons[0]
@@ -570,8 +578,9 @@ class BertSequenceEncodingExtractor(BertExtractor):
             out = pool_func(preds[0][:, 1:-1, :], axis=1, keepdims=True)
         else:
             out = preds[1]
-        data = [out.tolist(), tok]  
-        feat = ['encoding', 'sequence']      
+        if self.return_metadata:
+            data += [tok]
+            feat += ['sequence']   
         return data, feat, ons, dur
     
     def _get_model_attributes(self):
@@ -595,20 +604,15 @@ class BertLMExtractor(BertExtractor):
             (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
         top_n (int): Specifies how many of the highest-probability tokens are
             to be returned. Mutually exclusive with target and threshold.
-        mask (int or str): Words to be masked (string) or indices of 
-            words in the sequence to be masked (indexing starts at 0). Can 
-            be either a single word/index or a list of words/indices.
-            If str is passed and more than one word in the input matches the 
-            string, only the first one is masked.
         target (str or list): Vocabulary token(s) for which probability is to 
             be returned. Tokens defined in the vocabulary change across 
-            tokenizers.
+            tokenizers. Mutually exclusive with top_n and threshold.
         threshold (float): If defined, only values above this threshold will
-            be returned. Mutually exclusive with top_n.
+            be returned. Mutually exclusive with top_n and target.
         return_softmax (bool): if True, returns probability scores instead of 
-            raw predictions scores for language modeling.
-        return_true (bool): if True, returns masked word (if defined in the
-            tokenizer dictionary) and its probability.
+            raw predictions scores.
+        return_metadata (bool): if True, returns masked word (if defined in the
+            tokenizer vocabulary) and its probability.
         model_kwargs (dict): Named arguments for pretrained model.
             See: https://huggingface.co/transformers/main_classes/model.html
             and https://huggingface.co/transformers/model_doc/bert.html.
@@ -638,77 +642,80 @@ class BertLMExtractor(BertExtractor):
                                               model_kwargs=model_kwargs,
                                               tokenizer_kwargs=tokenizer_kwargs,
                                               model_class='BertForMaskedLM')
-        if top_n and target:
-            raise ValueError('top_n and target are mutually exclusive')
-        if top_n and threshold:
-            raise ValueError('top_n and threshold are mutually exclusive')
+        if any([top_n and target, top_n and threshold, threshold and target]):
+            raise ValueError('top_n, threshold and target arguments '
+                             'are mutually exclusive')
         self.top_n = top_n
-
+        self.threshold = threshold
         self.target = listify(target)
         if self.target:
-            for t in self.target:
-                if t not in list(self.tokenizer.vocab.keys()):
-                    logging.warning(f'{t} is not in vocabulary. Dropping.')
-                    self.target.remove(t)
+            missing = set(self.target) - set(self.tokenizer.vocab.keys())
+            if missing:
+                logging.warning(f'{missing} is not in vocabulary. Dropping.')
+            self.target = set(self.target) & set(self.tokenizer.vocab.keys())
             if self.target == []:
-                raise ValueError('No valid target tokens provided. Import '
-                    'transformers and run transformers.BertTokenizer.'
-                    f'from_pretrained(\'{tokenizer}\').vocab.keys() to see'
-                    'which tokens are part of the tokenizer vocabulary.')
-
+                raise ValueError('No valid target token. Import transformers'
+                    ' and run transformers.BertTokenizer.from_pretrained'
+                    f'(\'{tokenizer}\').vocab.keys() to see available tokens')
         self.return_softmax = return_softmax
-        self.threshold = threshold
         self.return_true = return_true
 
     def _mask(self, wds, mask):
-        mwds = wds.copy()
-        if type(mask) == int:
-            mwds[mask] = '[MASK]'
-            self.mask_pos, self.mask_token = (mask, wds[mask])
-        if type(mask) == str:
-            w_idx = np.where(np.array(mwds)==mask)[0][0]
-            mwds[w_idx] = '[MASK]'
-            self.mask_token, self.mask_pos = (mask, w_idx)
-        else:
+        if not type(mask) in [int, str]:
             raise ValueError('mask argument must be an integer or a string')
-        nr_masks = len(np.where(np.array(mwds)=='[MASK]')[0])
-        if nr_masks == 0:
-            raise ValueError('No valid mask tokens found.')
-        elif nr_masks > 1:
-            raise ValueError('Too many masked items.')
+        mwds = wds.copy()
+        self.mask_token = mask if type(mask) == str else mwds[mask]
+        self.mask_pos = np.where(np.array(mwds)==self.mask_token)[0][0]
+        mwds[self.mask_pos] = '[MASK]'
         return mwds
+
+    def _extract(self, stims, mask):
+        '''
+        Args:
+            mask (int or str): Words to be masked (string) or indices of 
+                words in the sequence to be masked (indexing starts at 0). Can
+                 be either a single word/index or a list of words/indices.
+                If str is passed and more than one word in the input matches 
+                the string, only the first one is masked. 
+        '''
+        return super()._extract(stims=stims, mask=mask)
 
     def _postprocess(self, preds, tok, wds, ons, dur):
         preds = preds[0].numpy()[:,1:-1,:]
         if self.return_softmax:
             preds = scipy.special.softmax(preds, axis=-1)
         out_idx = preds[0,self.mask_pos,:].argsort(axis=-1)[::-1]
-        if self.target:
-            target_idx = self.tokenizer.convert_tokens_to_ids(self.target)
-            out_idx = list(set(out_idx) & set(target_idx))
-        elif self.top_n:
-            out_idx = out_idx[:self.top_n]
-        if self.threshold:
-            thr_idx = np.where(preds[0,self.mask_pos,:] > self.threshold)[0]
-            out_idx = list(set(out_idx) & set(thr_idx))
-        feats = self.tokenizer.convert_ids_to_tokens(out_idx)
+        if self.top_n:
+            sub_idx = range(self.top_n)
+        elif self.target:
+            sub_idx = self.tokenizer.convert_tokens_to_ids(self.target)
+        elif self.threshold:
+            sub_idx = np.where(preds[0,self.mask_pos,:] > self.threshold)[0]
+        out_idx = list(set(out_idx) & set(sub_idx)) if sub_idx else out_idx
+        feat = self.tokenizer.convert_ids_to_tokens(out_idx)
         data = preds[0,self.mask_pos,out_idx]
-        if self.return_true:
-            if self.mask_token in self.tokenizer.vocab:
-                true_vocab_idx = self.tokenizer.vocab[self.mask_token]
-                true_score = preds[0, self.mask_pos, true_vocab_idx]
-            else:
-                true_vocab_idx, true_score = ('true_word', np.nan)
-            feats += ['true_word', 'true_word_score']
-            data += [self.mask_token, true_score]
+        if self.return_metadata:
+            feat, data = self._retrieve_true_token(preds, feat, data)
+        ons, dur = map(lambda x: listify(x[self.mask_pos]), [ons, dur])
+        return data, feat, ons, dur
 
-        return data, feats, listify(ons[self.mask_pos]), \
-            listify(dur[self.mask_pos])
+    def _retrieve_true_token(self, preds, feat, data):
+        if self.mask_token in self.tokenizer.vocab:
+            true_vocab_idx = self.tokenizer.vocab[self.mask_token]
+            true_score = preds[0, self.mask_pos, true_vocab_idx]
+            feat += ['true_word', 'true_word_score']
+            data += [self.mask_token, true_score]
+        else:
+            logging.warning('True token not in vocabulary, cannot return')
+        return feat, data
     
     def _get_model_attributes(self):
-        return ['pretrained_model', 'framework', 'top_n', 'mask_idx',
-         'target', 'mask_token', 'tokenizer_type']
+        return ['pretrained_model', 'framework', 'top_n', 'mask_pos',
+         'target', 'threshold', 'mask_token', 'tokenizer_type']
 
+# What to do with SEP token? Does it need to be there?
+# Return other layers
+# Return attention
 
 class WordCounterExtractor(ComplexTextExtractor):
 
