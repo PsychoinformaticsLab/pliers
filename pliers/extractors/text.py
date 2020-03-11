@@ -681,16 +681,16 @@ class BertLMExtractor(BertExtractor):
         preds = preds[0].numpy()[:,1:-1,:]
         if self.return_softmax:
             preds = scipy.special.softmax(preds, axis=-1)
-        out_idx = preds[0,self.mask_pos,:].argsort(axis=-1)[::-1]
+        out_idx = preds[0,self.mask_pos,:].argsort()[::-1]
         if self.top_n:
-            sub_idx = range(self.top_n)
+            sub_idx = out_idx[:self.top_n]
         elif self.target:
             sub_idx = self.tokenizer.convert_tokens_to_ids(self.target)
         elif self.threshold:
             sub_idx = np.where(preds[0,self.mask_pos,:] > self.threshold)[0]
-        out_idx = list(set(out_idx) & set(sub_idx)) if sub_idx else out_idx
+        out_idx = [idx for idx in out_idx if idx in sub_idx]
         feat = self.tokenizer.convert_ids_to_tokens(out_idx)
-        data = preds[0,self.mask_pos,out_idx]
+        data = [listify(p) for p in preds[0,self.mask_pos,out_idx]]
         if self.return_metadata:
             feat, data = self._return_true_token(preds, feat, data)
         ons, dur = map(lambda x: listify(x[self.mask_pos]), [ons, dur])
