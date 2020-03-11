@@ -711,17 +711,16 @@ class BertLMExtractor(BertExtractor):
         return ['pretrained_model', 'framework', 'top_n', 'mask',
          'target', 'threshold', 'tokenizer_type']
 
-# To discuss:
-# What to do with SEP token? Does it need to be there?
-# Return other layers and/or attentions?
-# Couple of mixins (sequence coherence, probability)
-# Look into the sentiment extractor
-# Discuss probability mixin with Tal
-
 # To dos:
 # Metadata as features / Add other field to store additional info (?)
 # Log input sequence in LM extractor
 # NB: a bit suboptimal to set mask in init, but handier
+
+# To discuss:
+# Return other layers and/or attentions?
+# Couple of mixins (sequence coherence, probability)?
+# Look into the sentiment extractor
+# Sep token for sliding window
 
 class WordCounterExtractor(ComplexTextExtractor):
 
