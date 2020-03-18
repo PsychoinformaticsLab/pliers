@@ -409,16 +409,20 @@ class BertExtractor(ComplexTextExtractor):
         This model returns the last hidden layer (without special tokens)
 
     Args:
-        pretrained_model (str): A string specifying which BERT
-            model to use. Can be one of pretrained BERT models listed at
+        pretrained_model (str): A string specifying which transformer
+            model to use. Can be any pretrained BERT or BERT-derived (ALBERT, 
+            DistilBERT, RoBERTa, CamemBERT etc.) models listed at
             https://huggingface.co/transformers/pretrained_models.html
-            (valid values include all the models with 'bert' prefix) 
             or path to custom model.
         tokenizer (str): Type of tokenization used in the tokenization step.
             If different from model, out-of-vocabulary tokens may be treated 
             as unknown tokens.
-        model_class (str): Specifies class of Bert model. Must be one of 
-            'BertModel' or 'BertForLM'.
+        model_class (str): Specifies model type. Must be one of 'AutoModel' 
+            (encoding extractor) or  'AutoModelWithLMHead' (language model).
+            These are generic model classes, which use the value of 
+            pretrained_model to infer the model-specific transformers 
+            class (e.g. BertModel or BertForMaskedLM for BERT, RobertaModel 
+            or RobertaForMaskedLM for RoBERTa). Fixed by each subclass.
         framework (str): name deep learning framework to use. Must be 'pt'
             (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
         return_metadata (bool): if True, the extractor returns encoded token
@@ -440,8 +444,8 @@ class BertExtractor(ComplexTextExtractor):
     def __init__(self,
                  pretrained_model='bert-base-uncased',
                  tokenizer='bert-base-uncased',
-                 model_class='BertModel',
                  framework='pt',
+                 model_class='AutoModel',
                  return_tokens=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None,
@@ -552,10 +556,10 @@ class BertSequenceEncodingExtractor(BertExtractor):
     ''' Extract contextualized encodings for words or sequences using
         pretrained BertModel.
     Args:
-        pretrained_model (str): A string specifying which BERT
-            model to use. Can be one of pretrained BERT models listed at
+        pretrained_model (str): A string specifying which transformer
+            model to use. Can be any pretrained BERT or BERT-derived (ALBERT, 
+            DistilBERT, RoBERTa, CamemBERT etc.) models listed at
             https://huggingface.co/transformers/pretrained_models.html
-            (valid values include all the models with 'bert' prefix) 
             or path to custom model.
         tokenizer (str): Type of tokenization used in the tokenization step.
             If different from model, out-of-vocabulary tokens may be treated as
@@ -604,8 +608,7 @@ class BertSequenceEncodingExtractor(BertExtractor):
         self.return_sep = return_sep
         self.return_sequence = return_sequence
         super(BertSequenceEncodingExtractor, self).__init__(pretrained_model,
-            tokenizer, framework, mask, model_kwargs, tokenizer_kwargs, 
-            model_class='BertModel')
+            tokenizer, framework, mask, model_kwargs, tokenizer_kwargs)
     
     def _postprocess(self, preds, tok, wds, ons, dur):
         preds = [p.numpy().squeeze() for p in preds]
@@ -635,10 +638,10 @@ class BertLMExtractor(BertExtractor):
     ''' Use BERT for masked words prediction.
 
     Args:
-        pretrained_model (str): A string specifying which BERT
-            model to use. Can be one of pretrained BERT models listed at
+        pretrained_model (str): A string specifying which transformer
+            model to use. Can be any pretrained BERT or BERT-derived (ALBERT, 
+            DistilBERT, RoBERTa, CamemBERT etc.) models listed at
             https://huggingface.co/transformers/pretrained_models.html
-            (valid values include all the models with 'bert' prefix) 
             or path to custom model.
         tokenizer (str): Type of tokenization used in the tokenization step.
             If different from model, out-of-vocabulary tokens may be treated as
@@ -705,7 +708,7 @@ class BertLMExtractor(BertExtractor):
         super(BertLMExtractor, self).__init__(pretrained_model=pretrained_model,
             tokenizer=tokenizer, framework=framework, model_kwargs=model_kwargs,
             tokenizer_kwargs=tokenizer_kwargs, mask=mask, 
-            model_class='BertForMaskedLM')
+            model_class='AutoModelWithLMHead')
         
     def _mask_words(self, wds):
         if not type(self.mask) in [int, str]:
