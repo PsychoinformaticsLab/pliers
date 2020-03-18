@@ -469,6 +469,7 @@ class BertExtractor(ComplexTextExtractor):
         wds, ons, dur = map(list, zip(*els))
         tok = [self.tokenizer.tokenize(w) for w in self._mask(wds, mask)]
         n_tok = [len(t) for t in tok]
+        stims.name = ' '.join(wds) if stims.name == '' else stims.name
         wds, ons, dur = map(lambda x: np.repeat(x, n_tok), [wds, ons, dur])
         tok = list(flatten(tok))
         idx = self.tokenizer.encode(tok, return_tensors=self.framework)
@@ -628,7 +629,8 @@ class BertLMExtractor(BertExtractor):
             See https://huggingface.co/transformers/main_classes/tokenizer.html.
     '''
 
-    _log_attributes = ('pretrained_model', 'framework', 'top_n', 'target', 'tokenizer_type', 'return_softmax')
+    _log_attributes = ('pretrained_model', 'framework', 'top_n', 'target', 
+                       'tokenizer_type', 'return_softmax')
 
     def __init__(self,
                  pretrained_model='bert-base-uncased',
@@ -711,16 +713,6 @@ class BertLMExtractor(BertExtractor):
         return ['pretrained_model', 'framework', 'top_n', 'mask',
          'target', 'threshold', 'tokenizer_type']
 
-# To dos:
-# Metadata as features / Add other field to store additional info (?)
-# Log input sequence in LM extractor
-# NB: a bit suboptimal to set mask in init, but handier
-
-# To discuss:
-# Return other layers and/or attentions?
-# Couple of mixins (sequence coherence, probability)?
-# Look into the sentiment extractor
-# Sep token for sliding window
 
 class WordCounterExtractor(ComplexTextExtractor):
 
