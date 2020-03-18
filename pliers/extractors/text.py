@@ -618,7 +618,7 @@ class BertLMExtractor(BertExtractor):
         threshold (float): If defined, only values above this threshold will
             be returned. Mutually exclusive with top_n and target.
         return_softmax (bool): if True, returns probability scores instead of 
-            raw predictions scores.
+            raw predictions.
         return_metadata (bool): if True, returns masked word (if defined in the
             tokenizer vocabulary) and its probability.
         model_kwargs (dict): Named arguments for pretrained model.
