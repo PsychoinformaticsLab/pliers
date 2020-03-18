@@ -486,11 +486,20 @@ class BertExtractor(ComplexTextExtractor):
 
     def _preprocess(self, stims):
         ''' Extracts text, onset, duration from ComplexTextStim, masks target
-            words (if relevant), tokenizes the input, and casts word, onset,
-            and duration information to token level lists. This is fairly 
-            model-specific, so it needs to be overridden by each subclass.
+            words (if relevant), tokenizes the input, and casts words, onsets,
+            and durations to token-level lists. Called within _extract method 
+            to prepare input for the model. Same for all subclasses.
         Args:
             stims (Stim): the ComplexTextStim input
+        Outputs:
+            tok (list): list of tokens (strings)
+            wds (list): list of words in stimulus sequence. Same length as tok, 
+                needed to keep mapping between transformers sub-word tokens 
+                and whole words.
+            ons (list): list of onsets (one per token)
+            dur (list): list of durations (one per token)
+            idx (list): index of each token in model vocabulary
+
         '''
         els = [(e.text, e.onset, e.duration) for e in stims.elements]
         wds, ons, dur = map(list, zip(*els))
@@ -511,16 +520,13 @@ class BertExtractor(ComplexTextExtractor):
                                durations=dur)
 
     def _postprocess(self, preds, tok, wds, ons, dur):
-        ''' Processes the output of the model (subsets relevant information,
-            transforms it where relevant, adds model metadata if requested).
-            Needs to be overridden by subclasses.
+        ''' Takes model output as input and processes it (subsets relevant 
+            information,transforms it where relevant, adds model metadata 
+            if requested). Fairly model-specific, therefore overridden by 
+            each subclass.
         Args:
             preds (array): model output
-            tok (list): list of tokens (strings) used as input for the model
-            wds (list): list of words in the original sequence each token is 
-                part of.
-            ons (list): list of onsets (one per token)
-            dur (list): list of durations (one per token)
+            tok, wds, ons, dur, tok: see output of _preprocess method.
         '''
         out = preds[0][:, 1:-1, :].numpy().squeeze()
         data = [out.tolist()]
