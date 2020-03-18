@@ -19,7 +19,7 @@ def setup_yamnet():
     model_filename =  YAMNET_PATH / model_url.split('/')[-1]
     
     if not model_filename.exists():
-        tmp_dir.mkdir(exist_ok=True)
+        PLIERS_DATA_PATH.mkdir(exist_ok=True)
         with request.urlopen(repo_url) as z:
             print('Downloading model repository...')
             with ZipFile(BytesIO(z.read())) as zfile:
@@ -33,6 +33,7 @@ def setup_yamnet():
         request.urlretrieve(model_url, str(model_filename))
         print(f'Model file downloaded.\n')
 
+    print(YAMNET_PATH)
     test_path = YAMNET_PATH / 'yamnet_test.py'
     sys.path.insert(0, str(YAMNET_PATH))
     os.chdir(YAMNET_PATH)
