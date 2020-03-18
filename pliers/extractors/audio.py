@@ -525,12 +525,10 @@ class AudiosetLabelExtractor(AudioExtractor):
                        'yamnet_kwargs')
 
     def __init__(self, hop_size=0.1, top_n=None, labels=None,
-                 weights_path=None, yamnet_path=None, **yamnet_kwargs):
+                 weights_path=None, **yamnet_kwargs):
         verify_dependencies(['tensorflow'])
-        if yamnet_path is None:
-            yamnet_path = YAMNET_PATH
         try:
-            sys.path.insert(0, str(yamnet_path))
+            sys.path.insert(0, str(YAMNET_PATH))
             self.yamnet = attempt_to_import('yamnet')
             verify_dependencies(['yamnet'])
         except MissingDependencyError: 
