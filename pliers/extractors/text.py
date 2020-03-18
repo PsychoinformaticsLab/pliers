@@ -431,6 +431,8 @@ class BertExtractor(ComplexTextExtractor):
 
     _log_attributes = ('pretrained_model', 'framework', 'tokenizer_type',
         'model_class', 'model_kwargs', 'tokenizer_kwargs')
+    _model_attributes = ('pretrained_model', 'framework', 'model_class', 
+        'tokenizer_type')
 
     def __init__(self,
                  pretrained_model='bert-base-uncased',
@@ -493,19 +495,16 @@ class BertExtractor(ComplexTextExtractor):
             feat += ['token', 'word']
         return data, feat, ons, dur
 
-    def _get_model_attributes(self):
-        return ['pretrained_model', 'framework', 'model_class', 
-                'tokenizer_type']
-
     def _to_df(self, result, include_attributes=True):
         res_dict = dict(zip(result.features, result._data))
         if include_attributes:
             log_dict = {attr: getattr(result.extractor, attr) for
-                        attr in self._get_model_attributes()}
+                        attr in self._model_attributes}
             res_dict.update(log_dict)
         res_df = pd.DataFrame(res_dict)
         res_df['object_id'] = range(res_df.shape[0])
         return res_df
+
 
 class BertSequenceEncodingExtractor(BertExtractor):
 
@@ -537,8 +536,10 @@ class BertSequenceEncodingExtractor(BertExtractor):
     '''
 
     _log_attributes = ('pretrained_model', 'framework', 'tokenizer_type', 
-                       'pooling', 'return_sep', 'model_class', 'model_kwargs',
-                       'tokenizer_kwargs')
+        'pooling', 'return_sep', 'model_class', 'model_kwargs', 
+        'tokenizer_kwargs')
+    _model_attributes = ('pretrained_model', 'framework', 'model_class', 
+        'pooling', 'return_sep', 'tokenizer_type')
 
     def __init__(self,
                  pretrained_model='bert-base-uncased',
@@ -585,10 +586,6 @@ class BertSequenceEncodingExtractor(BertExtractor):
             data += [tok]
             feat += ['sequence']   
         return data, feat, ons, dur
-    
-    def _get_model_attributes(self):
-        return ['pretrained_model', 'framework', 'model_class', 
-                'pooling', 'return_sep', 'tokenizer_type']
 
 
 class BertLMExtractor(BertExtractor):
@@ -630,7 +627,9 @@ class BertLMExtractor(BertExtractor):
     '''
 
     _log_attributes = ('pretrained_model', 'framework', 'top_n', 'target', 
-                       'tokenizer_type', 'return_softmax')
+        'tokenizer_type', 'return_softmax')
+    _model_attributes = ('pretrained_model', 'framework', 'top_n', 'mask',
+         'target', 'threshold', 'tokenizer_type')
 
     def __init__(self,
                  pretrained_model='bert-base-uncased',
@@ -709,10 +708,6 @@ class BertLMExtractor(BertExtractor):
         data += [self.mask_token, true_score]
         return feat, data
     
-    def _get_model_attributes(self):
-        return ['pretrained_model', 'framework', 'top_n', 'mask',
-         'target', 'threshold', 'tokenizer_type']
-
 
 class WordCounterExtractor(ComplexTextExtractor):
 
