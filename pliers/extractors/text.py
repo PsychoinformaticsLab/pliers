@@ -550,10 +550,6 @@ class BertSequenceEncodingExtractor(BertExtractor):
                  return_metadata=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
-
-        super(BertSequenceEncodingExtractor, self).__init__(pretrained_model,
-            tokenizer, framework, return_metadata, model_kwargs, 
-            tokenizer_kwargs, model_class='BertModel')
         if pooling:
             if return_sep:
                 raise(ValueError('Pooling and return_seq argument are '
@@ -562,6 +558,9 @@ class BertSequenceEncodingExtractor(BertExtractor):
                 getattr(np, pooling)
             except:
                 raise(ValueError('Pooling must be a valid numpy function.'))
+        super(BertSequenceEncodingExtractor, self).__init__(pretrained_model,
+            tokenizer, framework, return_metadata, model_kwargs, 
+            tokenizer_kwargs, model_class='BertModel')
         self.pooling = pooling
         self.return_sep = return_sep
     
