@@ -570,7 +570,7 @@ class AudiosetLabelExtractor(AudioExtractor):
                               if l in labels]
         else:
             self.labels = all_labels
-            self.label_idx = range(len(all_labels))
+            self.label_idx = list(range(len(all_labels)))
         super(AudiosetLabelExtractor, self).__init__()
 
     def _extract(self, stim):
