@@ -442,7 +442,7 @@ class BertExtractor(ComplexTextExtractor):
                  tokenizer='bert-base-uncased',
                  model_class='BertModel',
                  framework='pt',
-                 return_metadata=False,
+                 return_tokens=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None,
                  mask=None):
@@ -455,7 +455,7 @@ class BertExtractor(ComplexTextExtractor):
         self.tokenizer_type = tokenizer
         self.model_class = model_class
         self.framework = framework
-        self.return_metadata = return_metadata
+        self.return_tokens = return_tokens
         self.mask = mask
         self.model_kwargs = model_kwargs if model_kwargs else {}
         self.tokenizer_kwargs = tokenizer_kwargs if tokenizer_kwargs else {}
@@ -531,7 +531,7 @@ class BertExtractor(ComplexTextExtractor):
         out = preds[0][:, 1:-1, :].numpy().squeeze()
         data = [out.tolist()]
         feat = ['encoding']
-        if self.return_metadata:
+        if self.return_tokens:
             data += [tok, wds]
             feat += ['token', 'word']
         return data, feat, ons, dur
@@ -567,7 +567,7 @@ class BertSequenceEncodingExtractor(BertExtractor):
             encodings.
         return_sep (bool): defines whether to return encoding for the [SEP]
             token.
-        return_metadata (bool): If True, the extractor returns an additional 
+        return_sequence (bool): If True, the extractor returns an additional 
             feature column with the encoded sequence.
         model_kwargs (dict): Named arguments for pretrained model.
             See: https://huggingface.co/transformers/main_classes/model.html
@@ -588,7 +588,7 @@ class BertSequenceEncodingExtractor(BertExtractor):
                  framework='pt',
                  pooling=None,
                  return_sep=False,
-                 return_metadata=False,
+                 return_sequence=False,
                  mask=None,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
@@ -602,9 +602,10 @@ class BertSequenceEncodingExtractor(BertExtractor):
                 raise(ValueError('Pooling must be a valid numpy function.'))
         self.pooling = pooling
         self.return_sep = return_sep
+        self.return_sequence = return_sequence
         super(BertSequenceEncodingExtractor, self).__init__(pretrained_model,
-            tokenizer, framework, return_metadata, mask, model_kwargs, 
-            tokenizer_kwargs, model_class='BertModel')
+            tokenizer, framework, mask, model_kwargs, tokenizer_kwargs, 
+            model_class='BertModel')
     
     def _postprocess(self, preds, tok, wds, ons, dur):
         preds = [p.numpy().squeeze() for p in preds]
@@ -623,7 +624,7 @@ class BertSequenceEncodingExtractor(BertExtractor):
             out = preds[1]
         data = [out.tolist()]
         feat = ['encoding']
-        if self.return_metadata:
+        if self.return_sequence:
             data += [tok]
             feat += ['sequence']   
         return data, feat, ons, dur
@@ -658,8 +659,8 @@ class BertLMExtractor(BertExtractor):
             be returned. Mutually exclusive with top_n and target.
         return_softmax (bool): if True, returns probability scores instead of 
             raw predictions.
-        return_true (bool): if True, returns masked word (if defined in the
-            tokenizer vocabulary) and its probability.
+        return_masked_word (bool): if True, returns masked word (if defined 
+            in the tokenizer vocabulary) and its probability.
         model_kwargs (dict): Named arguments for pretrained model.
             See: https://huggingface.co/transformers/main_classes/model.html
             and https://huggingface.co/transformers/model_doc/bert.html.
@@ -681,7 +682,7 @@ class BertLMExtractor(BertExtractor):
                  threshold=None,
                  target=None,
                  return_softmax=False,
-                 return_true=False,
+                 return_masked_word=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
         if any([top_n and target, top_n and threshold, threshold and target]):
@@ -700,14 +701,11 @@ class BertLMExtractor(BertExtractor):
                     ' and run transformers.BertTokenizer.from_pretrained'
                     f'(\'{tokenizer}\').vocab.keys() to see available tokens')
         self.return_softmax = return_softmax
-        self.return_true = return_true
-        super(BertLMExtractor, self).__init__(pretrained_model=pretrained_model, 
-                                    tokenizer=tokenizer, 
-                                    framework=framework,
-                                    model_kwargs=model_kwargs,
-                                    tokenizer_kwargs=tokenizer_kwargs,
-                                    mask=mask,
-                                    model_class='BertForMaskedLM')
+        self.return_masked_word = return_masked_word
+        super(BertLMExtractor, self).__init__(pretrained_model=pretrained_model,
+            tokenizer=tokenizer, framework=framework, model_kwargs=model_kwargs,
+            tokenizer_kwargs=tokenizer_kwargs, mask=mask, 
+            model_class='BertForMaskedLM')
         
     def _mask_words(self, wds):
         if not type(self.mask) in [int, str]:
@@ -732,12 +730,12 @@ class BertLMExtractor(BertExtractor):
         out_idx = [idx for idx in out_idx if idx in sub_idx]
         feat = self.tokenizer.convert_ids_to_tokens(out_idx)
         data = [listify(p) for p in preds[0,self.mask_pos,out_idx]]
-        if self.return_true:
-            feat, data = self._return_true(preds, feat, data)
+        if self.return_masked_word:
+            feat, data = self._return_masked_word(preds, feat, data)
         ons, dur = map(lambda x: listify(x[self.mask_pos]), [ons, dur])
         return data, feat, ons, dur
 
-    def _return_true(self, preds, feat, data):
+    def _return_masked_word(self, preds, feat, data):
         if self.mask_token in self.tokenizer.vocab:
             true_vocab_idx = self.tokenizer.vocab[self.mask_token]
             true_score = preds[0, self.mask_pos, true_vocab_idx]
