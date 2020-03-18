@@ -406,7 +406,7 @@ class SpaCyExtractor(TextExtractor):
 class BertExtractor(ComplexTextExtractor):
 
     ''' Base class for all Extractors based on pretrained BERT.
-        This model returns the last hidden layer (wihtout special tokens)
+        This model returns the last hidden layer (without special tokens)
 
     Args:
         pretrained_model (str): A string specifying which BERT
@@ -619,7 +619,7 @@ class BertLMExtractor(BertExtractor):
         threshold (float): If defined, only values above this threshold will
             be returned. Mutually exclusive with top_n and target.
         return_softmax (bool): if True, returns probability scores instead of 
-            raw predictions scores.
+            raw predictions.
         return_metadata (bool): if True, returns masked word (if defined in the
             tokenizer vocabulary) and its probability.
         model_kwargs (dict): Named arguments for pretrained model.
