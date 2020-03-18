@@ -406,7 +406,7 @@ class SpaCyExtractor(TextExtractor):
 class BertExtractor(ComplexTextExtractor):
 
     ''' Base class for all Extractors based on pretrained BERT.
-        This model returns the last hidden layer (wihtout special tokens)
+        This model returns the last hidden layer (without special tokens)
 
     Args:
         pretrained_model (str): A string specifying which BERT
