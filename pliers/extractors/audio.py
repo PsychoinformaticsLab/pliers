@@ -526,6 +526,7 @@ class AudiosetLabelExtractor(AudioExtractor):
 
     def __init__(self, hop_size=0.1, top_n=None, labels=None,
                  weights_path=None, yamnet_path=None, **yamnet_kwargs):
+        verify_dependencies(['tensorflow'])
         if yamnet_path is None:
             yamnet_path = YAMNET_PATH
         try:
@@ -537,7 +538,6 @@ class AudiosetLabelExtractor(AudioExtractor):
                   'yamnet, run:\n\tpython -m pliers.support.setup_yamnet')
             raise MissingDependencyError(dependencies=None,
                                          custom_message=msg)
-        verify_dependencies(['tensorflow'])
         if top_n and labels:
             raise ValueError('Top_n and labels are mutually exclusive '
                              'arguments. Reinstantiate the extractor setting '
