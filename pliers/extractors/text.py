@@ -558,11 +558,11 @@ class BertSequenceEncodingExtractor(BertExtractor):
                 getattr(np, pooling)
             except:
                 raise(ValueError('Pooling must be a valid numpy function.'))
+        self.pooling = pooling
+        self.return_sep = return_sep
         super(BertSequenceEncodingExtractor, self).__init__(pretrained_model,
             tokenizer, framework, return_metadata, model_kwargs, 
             tokenizer_kwargs, model_class='BertModel')
-        self.pooling = pooling
-        self.return_sep = return_sep
     
     def _postprocess(self, preds, tok, wds, ons, dur):
         preds = [p.numpy().squeeze() for p in preds]
@@ -642,13 +642,6 @@ class BertLMExtractor(BertExtractor):
                  return_true=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
-        
-        super(BertLMExtractor, self).__init__(pretrained_model=pretrained_model, 
-                                              tokenizer=tokenizer, 
-                                              framework=framework,
-                                              model_kwargs=model_kwargs,
-                                              tokenizer_kwargs=tokenizer_kwargs,
-                                              model_class='BertForMaskedLM')
         if any([top_n and target, top_n and threshold, threshold and target]):
             raise ValueError('top_n, threshold and target arguments '
                              'are mutually exclusive')
@@ -667,7 +660,13 @@ class BertLMExtractor(BertExtractor):
         self.return_softmax = return_softmax
         self.return_true = return_true
         self.mask = mask
-
+        super(BertLMExtractor, self).__init__(pretrained_model=pretrained_model, 
+                                    tokenizer=tokenizer, 
+                                    framework=framework,
+                                    model_kwargs=model_kwargs,
+                                    tokenizer_kwargs=tokenizer_kwargs,
+                                    model_class='BertForMaskedLM')
+        
     def _mask(self, wds, mask):
         if not type(mask) in [int, str]:
             raise ValueError('mask argument must be an integer or a string')
