@@ -21,7 +21,7 @@ def setup_yamnet():
     if not model_filename.exists():
         PLIERS_DATA_PATH.mkdir(exist_ok=True)
         with request.urlopen(repo_url) as z:
-            print('Downloading model repository...')
+            print('Downloading model repository...\n')
             with ZipFile(BytesIO(z.read())) as zfile:
                 zfile.extractall(str(tmp_dir))
         shutil.move(str(tmp_yamnet_dir), str(PLIERS_DATA_PATH))
