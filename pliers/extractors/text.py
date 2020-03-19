@@ -449,7 +449,6 @@ class BertBaseExtractor(ComplexTextExtractor, metaclass=ABCMeta):
                  model_kwargs=None,
                  tokenizer_kwargs=None,
                  mask=None):
-                 
         verify_dependencies(['transformers'])
         if framework not in ['pt', 'tf']:
             raise(ValueError('''Invalid framework;
@@ -471,11 +470,9 @@ class BertBaseExtractor(ComplexTextExtractor, metaclass=ABCMeta):
 
     @abstractmethod
     def _mask_words(self, wds):
-        ''' Preprocessing step called by _preprocess method. Replaces word 
-            in the input sequence with [MASK] token. 
-        Args:
-            wds (list): list of words in the input sequence (i.e. the .text 
-                attribute of the input ComplexTextStim)
+        ''' Called by _preprocess method. Replaces word with [MASK] token. 
+            Takes list of words in the Stim as input (i.e. the .text attribute
+            for each TextStim in the ComplexTextStim)
         '''
         pass
 
@@ -496,6 +493,8 @@ class BertBaseExtractor(ComplexTextExtractor, metaclass=ABCMeta):
         return wds, ons, dur, tok, idx
 
     def _extract(self, stims):
+        ''' Takes stim as input, preprocesses it, feeds it to Bert model, 
+        then postprocesses the output '''
         wds, ons, dur, tok, idx = self._preprocess(stims)
         preds = self.model(idx)
         preds = [p.detach() if self.framework == 'pt' else p for p in preds]
@@ -504,14 +503,11 @@ class BertBaseExtractor(ComplexTextExtractor, metaclass=ABCMeta):
                                durations=dur)
 
     @abstractmethod
-    def _postprocess(self):
-        ''' Takes model output as input and processes it (subsets relevant 
-            information,transforms it where relevant, adds model metadata 
-            if requested). Fairly model-specific, therefore overridden by 
-            each subclass.
-        Args:
-            preds (array): model output
-            tok, wds, ons, dur, tok: see output of _preprocess method.
+    def _postprocess(self, preds, tok, wds, ons, dur):
+        ''' Postprocesses model output (subsets relevant information,
+            transforms it where relevant, adds model metadata). 
+            Takes prediction array, token list, word list, onsets 
+            and durations and input.
         '''
         pass
 
@@ -526,51 +522,10 @@ class BertBaseExtractor(ComplexTextExtractor, metaclass=ABCMeta):
         return res_df
 
 class BertEncodingExtractor(BertBaseExtractor):
-
-    ''' Extractor returning encodings from Bert or Bert-derived (ALBERT,
-        DistilBERT, RoBERTa, CamemBERT, etc.) encodings from the last 
-        hidden layer (excludes special tokens).
-
-    Args:
-        pretrained_model (str): A string specifying which transformer
-            model to use. Can be any pretrained BERT or BERT-derived (ALBERT, 
-            DistilBERT, RoBERTa, CamemBERT etc.) models listed at
-            https://huggingface.co/transformers/pretrained_models.html
-            or path to custom model.
-        tokenizer (str): Type of tokenization used in the tokenization step.
-            If different from model, out-of-vocabulary tokens may be treated 
-            as unknown tokens.
-        model_class (str): Specifies model type. Must be one of 'AutoModel' 
-            (encoding extractor) or  'AutoModelWithLMHead' (language model).
-            These are generic model classes, which use the value of 
-            pretrained_model to infer the model-specific transformers 
-            class (e.g. BertModel or BertForMaskedLM for BERT, RobertaModel 
-            or RobertaForMaskedLM for RoBERTa). Fixed by each subclass.
-        framework (str): name deep learning framework to use. Must be 'pt'
-            (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
-        return_tokens (bool): if True, the extractor returns encoded token
-            and encoded word as features.
-        mask (str or int): if defined, specifies which word is to be replaced 
-            with [MASK] token either by its index (int) in the input sequence, 
-            or by specifying the word itself (str).
-        model_kwargs (dict): Named arguments for transformer model.
-            See https://huggingface.co/transformers/main_classes/model.html
-        tokenizer_kwargs (dict): Named arguments for tokenizer.
-            See https://huggingface.co/transformers/main_classes/tokenizer.html
+    ''' Returns from Bert or Bert-derived (ALBERT, DistilBERT, RoBERTa, 
+    CamemBERT) encodings from the last hidden layer (excludes special tokens).
     '''
-
-    _log_attributes = ('pretrained_model', 'framework', 'tokenizer_type',
-        'model_class', 'model_kwargs', 'tokenizer_kwargs')
-    _model_attributes = ('pretrained_model', 'framework', 'model_class', 
-        'tokenizer_type')
-
     def _mask_words(self, wds):
-        ''' Preprocessing step called by _preprocess method. Replaces word 
-            in the input sequence with [MASK] token. 
-        Args:
-            wds (list): list of words in the input sequence (i.e. the .text 
-                attribute of the input ComplexTextStim)
-        '''
         if self.mask:
             if type(self.mask) == int:
                 wds[self.mask] = '[MASK]'
@@ -582,14 +537,7 @@ class BertEncodingExtractor(BertBaseExtractor):
         return wds
 
     def _postprocess(self, preds, tok, wds, ons, dur):
-        ''' Takes model output as input and processes it (subsets relevant 
-            information,transforms it where relevant, adds model metadata 
-            if requested). Fairly model-specific, therefore overridden by 
-            each subclass.
-        Args:
-            preds (array): model output
-            tok, wds, ons, dur, tok: see output of _preprocess method.
-        '''
+        ' Only returns encoding for tokens (excludes special tokens) '
         out = preds[0][:, 1:-1, :].numpy().squeeze()
         data = [out.tolist()]
         feat = ['encoding']
@@ -600,7 +548,6 @@ class BertEncodingExtractor(BertBaseExtractor):
 
 
 class BertSequenceEncodingExtractor(BertBaseExtractor):
-
     ''' Extract contextualized encodings for words or sequences using
         pretrained BertModel.
     Args:
@@ -634,8 +581,7 @@ class BertSequenceEncodingExtractor(BertBaseExtractor):
     _model_attributes = ('pretrained_model', 'framework', 'model_class', 
         'pooling', 'return_sep', 'tokenizer_type')
 
-    def __init__(self,
-                 pretrained_model='bert-base-uncased',
+    def __init__(self, pretrained_model='bert-base-uncased',
                  tokenizer='bert-base-uncased',
                  framework='pt',
                  pooling=None,
@@ -682,9 +628,7 @@ class BertSequenceEncodingExtractor(BertBaseExtractor):
 
 
 class BertLMExtractor(BertBaseExtractor):
-
-    ''' Use BERT for masked words prediction.
-
+    ''' Returns masked words predictions for BERT (or BERT-derived) models.
     Args:
         pretrained_model (str): A string specifying which transformer
             model to use. Can be any pretrained BERT or BERT-derived (ALBERT, 
