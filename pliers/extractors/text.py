@@ -445,10 +445,8 @@ class BertBaseExtractor(ComplexTextExtractor, metaclass=ABCMeta):
                  tokenizer='bert-base-uncased',
                  framework='pt',
                  model_class='AutoModel',
-                 return_tokens=False,
                  model_kwargs=None,
-                 tokenizer_kwargs=None,
-                 mask=None):
+                 tokenizer_kwargs=None):
         verify_dependencies(['transformers'])
         if framework not in ['pt', 'tf']:
             raise(ValueError('''Invalid framework;
@@ -457,8 +455,6 @@ class BertBaseExtractor(ComplexTextExtractor, metaclass=ABCMeta):
         self.tokenizer_type = tokenizer
         self.model_class = model_class
         self.framework = framework
-        self.return_tokens = return_tokens
-        self.mask = mask
         self.model_kwargs = model_kwargs if model_kwargs else {}
         self.tokenizer_kwargs = tokenizer_kwargs if tokenizer_kwargs else {}
         model = model_class if self.framework == 'pt' else 'TF' + model_class
@@ -468,13 +464,14 @@ class BertBaseExtractor(ComplexTextExtractor, metaclass=ABCMeta):
             tokenizer, **self.tokenizer_kwargs)
         super(BertBaseExtractor, self).__init__()
 
-    @abstractmethod
     def _mask_words(self, wds):
-        ''' Called by _preprocess method. Replaces word with [MASK] token. 
-            Takes list of words in the Stim as input (i.e. the .text attribute
-            for each TextStim in the ComplexTextStim)
+        ''' Called by _preprocess method. Takes list of words in the Stim as
+            input (i.e. the .text attribute for each TextStim in the 
+            ComplexTextStim). If class has mask attribute, replaces word in 
+            the input sequence with [MASK] token based on the value of mask 
+            (either index in the sequence, or word to replace)
         '''
-        pass
+        return wds
 
     def _preprocess(self, stims):
         ''' Extracts text, onset, duration from ComplexTextStim, masks target
@@ -521,20 +518,22 @@ class BertBaseExtractor(ComplexTextExtractor, metaclass=ABCMeta):
         res_df['object_id'] = range(res_df.shape[0])
         return res_df
 
+
 class BertEncodingExtractor(BertBaseExtractor):
     ''' Returns from Bert or Bert-derived (ALBERT, DistilBERT, RoBERTa, 
     CamemBERT) encodings from the last hidden layer (excludes special tokens).
     '''
-    def _mask_words(self, wds):
-        if self.mask:
-            if type(self.mask) == int:
-                wds[self.mask] = '[MASK]'
-            elif type(self.mask) == str:
-                idx = np.where(np.array(wds)==self.mask)[0][0]
-                wds[idx] = '[MASK]'
-            else:
-                raise ValueError('Invalid mask argument')
-        return wds
+    def __init__(self,
+                 pretrained_model='bert-base-uncased',
+                 tokenizer='bert-base-uncased',
+                 framework='pt',
+                 return_tokens=None,
+                 model_kwargs=None,
+                 tokenizer_kwargs=None):
+        super(BertEncodingExtractor, self).__init__(pretrained_model, 
+            tokenizer, framework, 'AutoModelWithLMHead', model_kwargs, 
+            tokenizer_kwargs)
+        self.return_tokens = return_tokens
 
     def _postprocess(self, preds, tok, wds, ons, dur):
         ' Only returns encoding for tokens (excludes special tokens) '
@@ -587,7 +586,6 @@ class BertSequenceEncodingExtractor(BertBaseExtractor):
                  pooling=None,
                  return_sep=False,
                  return_sequence=False,
-                 mask=None,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
         if pooling:
@@ -601,9 +599,9 @@ class BertSequenceEncodingExtractor(BertBaseExtractor):
         self.pooling = pooling
         self.return_sep = return_sep
         self.return_sequence = return_sequence
-        super(BertSequenceEncodingExtractor, self).__init__(pretrained_model,
-            tokenizer, framework, mask, model_kwargs, tokenizer_kwargs)
-    
+        super(BertSequenceEncodingExtractor, self).__init__(pretrained_model, 
+            tokenizer, framework, 'AutoModel', model_kwargs, tokenizer_kwargs)
+
     def _postprocess(self, preds, tok, wds, ons, dur):
         preds = [p.numpy().squeeze() for p in preds]
         tok = [' '.join(wds)]
@@ -683,6 +681,8 @@ class BertLMExtractor(BertBaseExtractor):
         if any([top_n and target, top_n and threshold, threshold and target]):
             raise ValueError('top_n, threshold and target arguments '
                              'are mutually exclusive')
+        if type(mask) not in [int, str]:
+            raise ValueError('Mask must be a string or an integer.')
         self.top_n = top_n
         self.threshold = threshold
         self.target = listify(target)
@@ -699,12 +699,14 @@ class BertLMExtractor(BertBaseExtractor):
         self.return_masked_word = return_masked_word
         super(BertLMExtractor, self).__init__(pretrained_model=pretrained_model,
             tokenizer=tokenizer, framework=framework, model_kwargs=model_kwargs,
-            tokenizer_kwargs=tokenizer_kwargs, mask=mask, 
-            model_class='AutoModelWithLMHead')
+            tokenizer_kwargs=tokenizer_kwargs, model_class='AutoModelWithLMHead')
         
+    def update_mask(self, new_mask):
+        if type(new_mask) not in [str, int]:
+            raise ValueError('Mask must be an integer or a string')
+        self.mask = new_mask
+
     def _mask_words(self, wds):
-        if not type(self.mask) in [int, str]:
-            raise ValueError('mask argument must be an integer or a string')
         mwds = wds.copy()
         self.mask_token = self.mask if type(self.mask) == str else mwds[self.mask]
         self.mask_pos = np.where(np.array(mwds)==self.mask_token)[0][0]
