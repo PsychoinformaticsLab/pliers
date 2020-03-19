@@ -744,6 +744,61 @@ class BertLMExtractor(BertBaseExtractor):
         return feat, data
     
 
+class BertSentimentExtractor(BertBaseExtractor):
+    ''' Extracts sentiment for sequences using Bert or Bert-derived models
+        fine-tuned for sentiment classification.
+    Args:
+        pretrained_model (str): A string specifying which transformer
+            model to use (must be one fine-tuned for sentiment classification)
+        tokenizer (str): Type of tokenization used in the tokenization step.
+        framework (str): name deep learning framework to use. Must be 'pt'
+            (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
+        return_softmax (bool): If True, the extractor returns softmaxed 
+            sentiment scores instead of raw model predictions.
+        return_sequence (bool): If True, the extractor returns an additional 
+            feature column with the encoded sequence.
+        model_kwargs (dict): Named arguments for pretrained model.
+        tokenizer_kwargs (dict): Named arguments for tokenizer.
+    '''
+
+    _log_attributes = ('pretrained_model', 'framework', 'tokenizer_type', 
+        'return_softmax', 'return_sequence', 'model_class', 'model_kwargs', 
+        'tokenizer_kwargs')
+    _model_attributes = ('pretrained_model', 'framework',  'tokenizer_type',
+        'return_sequence', 'return_softmax',)
+
+    def __init__(self, 
+                 pretrained_model='distilbert-base-uncased-finetuned-sst-2-english',
+                 tokenizer='distilbert-base-uncased',
+                 framework='pt',
+                 return_softmax=True,
+                 return_sequence=True,
+                 model_kwargs=None,
+                 tokenizer_kwargs=None):  
+        self.return_sequence = return_sequence
+        self.return_softmax = return_softmax
+        super(BertSentimentExtractor, self).__init__(pretrained_model, 
+                tokenizer, framework, 'AutoModelForSequenceClassification', 
+                model_kwargs, tokenizer_kwargs)  
+
+    def _postprocess(self, preds, tok, wds, ons, dur):
+        data = preds[0].numpy().squeeze()
+        if self.return_softmax:
+            data = scipy.special.softmax(data) 
+        data = data.tolist()
+        tok = [' '.join(wds)]
+        try: 
+            dur = ons[-1] + dur[-1] - ons[0]
+        except:
+            dur = None
+        ons = ons[0]
+        feat = ['sent_pos', 'sent_neg']
+        if self.return_sequence:
+            data += [tok]
+            feat += ['sequence']   
+        return data, feat, ons, dur
+
+
 class WordCounterExtractor(ComplexTextExtractor):
 
     ''' Extracts number of times each unique word has occurred within text
