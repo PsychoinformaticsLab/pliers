@@ -2,7 +2,7 @@
 Extractors that operate primarily or exclusively on Text stimuli.
 '''
 import sys
-
+from abc import ABCMeta, abstractmethod
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.exceptions import PliersError
@@ -403,8 +403,7 @@ class SpaCyExtractor(TextExtractor):
                                features=self.features, orders=order_list)
 
 
-class BertExtractor(ComplexTextExtractor):
-
+class BertBaseExtractor(ComplexTextExtractor, metaclass=ABCMeta):
     ''' Base class for all Extractors based on pretrained BERT.
         This model returns the last hidden layer (without special tokens)
 
@@ -425,7 +424,7 @@ class BertExtractor(ComplexTextExtractor):
             or RobertaForMaskedLM for RoBERTa). Fixed by each subclass.
         framework (str): name deep learning framework to use. Must be 'pt'
             (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
-        return_metadata (bool): if True, the extractor returns encoded token
+        return_tokens (bool): if True, the extractor returns encoded token
             and encoded word as features.
         mask (str or int): if defined, specifies which word is to be replaced 
             with [MASK] token either by its index (int) in the input sequence, 
@@ -463,14 +462,14 @@ class BertExtractor(ComplexTextExtractor):
         self.mask = mask
         self.model_kwargs = model_kwargs if model_kwargs else {}
         self.tokenizer_kwargs = tokenizer_kwargs if tokenizer_kwargs else {}
-
         model = model_class if self.framework == 'pt' else 'TF' + model_class
         self.model = getattr(transformers, model).from_pretrained(
             pretrained_model, **self.model_kwargs)
         self.tokenizer = transformers.BertTokenizer.from_pretrained(
             tokenizer, **self.tokenizer_kwargs)
-        super(BertExtractor, self).__init__()
+        super(BertBaseExtractor, self).__init__()
 
+    @abstractmethod
     def _mask_words(self, wds):
         ''' Preprocessing step called by _preprocess method. Replaces word 
             in the input sequence with [MASK] token. 
@@ -478,32 +477,13 @@ class BertExtractor(ComplexTextExtractor):
             wds (list): list of words in the input sequence (i.e. the .text 
                 attribute of the input ComplexTextStim)
         '''
-        if self.mask:
-            if type(self.mask) == int:
-                wds[self.mask] = '[MASK]'
-            elif type(self.mask) == str:
-                idx = np.where(np.array(wds)==self.mask)[0][0]
-                wds[idx] = '[MASK]'
-            else:
-                raise ValueError('Invalid mask argument')
-        return wds
+        pass
 
     def _preprocess(self, stims):
         ''' Extracts text, onset, duration from ComplexTextStim, masks target
             words (if relevant), tokenizes the input, and casts words, onsets,
             and durations to token-level lists. Called within _extract method 
-            to prepare input for the model. Same for all subclasses.
-        Args:
-            stims (Stim): the ComplexTextStim input
-        Outputs:
-            tok (list): list of tokens (strings)
-            wds (list): list of words in stimulus sequence. Same length as tok, 
-                needed to keep mapping between transformers sub-word tokens 
-                and whole words.
-            ons (list): list of onsets (one per token)
-            dur (list): list of durations (one per token)
-            idx (list): index of each token in model vocabulary
-
+            to prepare input for the model.
         '''
         els = [(e.text, e.onset, e.duration) for e in stims.elements]
         wds, ons, dur = map(list, zip(*els))
@@ -523,6 +503,84 @@ class BertExtractor(ComplexTextExtractor):
         return ExtractorResult(data, stims, self, features=feat, onsets=ons, 
                                durations=dur)
 
+    @abstractmethod
+    def _postprocess(self):
+        ''' Takes model output as input and processes it (subsets relevant 
+            information,transforms it where relevant, adds model metadata 
+            if requested). Fairly model-specific, therefore overridden by 
+            each subclass.
+        Args:
+            preds (array): model output
+            tok, wds, ons, dur, tok: see output of _preprocess method.
+        '''
+        pass
+
+    def _to_df(self, result, include_attributes=True):
+        res_dict = dict(zip(result.features, result._data))
+        if include_attributes:
+            log_dict = {attr: getattr(result.extractor, attr) for
+                        attr in self._model_attributes}
+            res_dict.update(log_dict)
+        res_df = pd.DataFrame(res_dict)
+        res_df['object_id'] = range(res_df.shape[0])
+        return res_df
+
+class BertEncodingExtractor(BertBaseExtractor):
+
+    ''' Extractor returning encodings from Bert or Bert-derived (ALBERT,
+        DistilBERT, RoBERTa, CamemBERT, etc.) encodings from the last 
+        hidden layer (excludes special tokens).
+
+    Args:
+        pretrained_model (str): A string specifying which transformer
+            model to use. Can be any pretrained BERT or BERT-derived (ALBERT, 
+            DistilBERT, RoBERTa, CamemBERT etc.) models listed at
+            https://huggingface.co/transformers/pretrained_models.html
+            or path to custom model.
+        tokenizer (str): Type of tokenization used in the tokenization step.
+            If different from model, out-of-vocabulary tokens may be treated 
+            as unknown tokens.
+        model_class (str): Specifies model type. Must be one of 'AutoModel' 
+            (encoding extractor) or  'AutoModelWithLMHead' (language model).
+            These are generic model classes, which use the value of 
+            pretrained_model to infer the model-specific transformers 
+            class (e.g. BertModel or BertForMaskedLM for BERT, RobertaModel 
+            or RobertaForMaskedLM for RoBERTa). Fixed by each subclass.
+        framework (str): name deep learning framework to use. Must be 'pt'
+            (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
+        return_tokens (bool): if True, the extractor returns encoded token
+            and encoded word as features.
+        mask (str or int): if defined, specifies which word is to be replaced 
+            with [MASK] token either by its index (int) in the input sequence, 
+            or by specifying the word itself (str).
+        model_kwargs (dict): Named arguments for transformer model.
+            See https://huggingface.co/transformers/main_classes/model.html
+        tokenizer_kwargs (dict): Named arguments for tokenizer.
+            See https://huggingface.co/transformers/main_classes/tokenizer.html
+    '''
+
+    _log_attributes = ('pretrained_model', 'framework', 'tokenizer_type',
+        'model_class', 'model_kwargs', 'tokenizer_kwargs')
+    _model_attributes = ('pretrained_model', 'framework', 'model_class', 
+        'tokenizer_type')
+
+    def _mask_words(self, wds):
+        ''' Preprocessing step called by _preprocess method. Replaces word 
+            in the input sequence with [MASK] token. 
+        Args:
+            wds (list): list of words in the input sequence (i.e. the .text 
+                attribute of the input ComplexTextStim)
+        '''
+        if self.mask:
+            if type(self.mask) == int:
+                wds[self.mask] = '[MASK]'
+            elif type(self.mask) == str:
+                idx = np.where(np.array(wds)==self.mask)[0][0]
+                wds[idx] = '[MASK]'
+            else:
+                raise ValueError('Invalid mask argument')
+        return wds
+
     def _postprocess(self, preds, tok, wds, ons, dur):
         ''' Takes model output as input and processes it (subsets relevant 
             information,transforms it where relevant, adds model metadata 
@@ -540,18 +598,8 @@ class BertExtractor(ComplexTextExtractor):
             feat += ['token', 'word']
         return data, feat, ons, dur
 
-    def _to_df(self, result, include_attributes=True):
-        res_dict = dict(zip(result.features, result._data))
-        if include_attributes:
-            log_dict = {attr: getattr(result.extractor, attr) for
-                        attr in self._model_attributes}
-            res_dict.update(log_dict)
-        res_df = pd.DataFrame(res_dict)
-        res_df['object_id'] = range(res_df.shape[0])
-        return res_df
 
-
-class BertSequenceEncodingExtractor(BertExtractor):
+class BertSequenceEncodingExtractor(BertBaseExtractor):
 
     ''' Extract contextualized encodings for words or sequences using
         pretrained BertModel.
@@ -633,7 +681,7 @@ class BertSequenceEncodingExtractor(BertExtractor):
         return data, feat, ons, dur
 
 
-class BertLMExtractor(BertExtractor):
+class BertLMExtractor(BertBaseExtractor):
 
     ''' Use BERT for masked words prediction.
 
