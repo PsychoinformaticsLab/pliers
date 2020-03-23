@@ -15,6 +15,7 @@ pytesseract
 python-twitter
 scikit-learn
 seaborn
+soundfile
 spacy
 SpeechRecognition>=3.6.0
 tensorflow>=1.0.0

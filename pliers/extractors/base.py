@@ -5,7 +5,7 @@ from six import with_metaclass
 import pandas as pd
 import numpy as np
 from pliers.transformers import Transformer
-from pliers.utils import isgenerator, flatten
+from pliers.utils import isgenerator, flatten, listify
 from pandas.api.types import is_numeric_dtype
 
 

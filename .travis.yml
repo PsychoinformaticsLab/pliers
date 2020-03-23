@@ -37,13 +37,14 @@ before_install:
 - conda create -q -n test-env python=$PYTHON_VERSION
 - source activate test-env
 install:
+- python -m pip install --upgrade pip wheel
 - sudo apt-get install libboost-python-dev
 - pip install --upgrade --ignore-installed setuptools
 - pip install -r requirements.txt --upgrade
 - pip install -r optional-dependencies.txt --upgrade
 - pip install --upgrade coveralls pytest-cov
-
 before_script:
+- python -m pliers.support.setup_yamnet
 - python -m pliers.support.download
 - python -m spacy download en_core_web_sm
 script:
