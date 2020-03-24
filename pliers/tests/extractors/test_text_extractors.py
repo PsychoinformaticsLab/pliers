@@ -318,7 +318,12 @@ def test_pretrained_bert_large_extractor():
     res = ext.transform(stim).to_df()
     assert len(res['encoding'][0]) == 1024
 
+def test_bert_sequence_extract():
 
+def test_bert_LM_extractor():
+
+def test_bert_sentiment_extractor():
+    
 def test_word_counter_extractor():
     stim_txt = ComplexTextStim(text='This is a text where certain words occur'
                                     ' again and again Sometimes they are '
