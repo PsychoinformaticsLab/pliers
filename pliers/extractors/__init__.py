@@ -64,7 +64,8 @@ from .text import (ComplexTextExtractor, DictionaryExtractor,
                    WordEmbeddingExtractor, TextVectorizerExtractor,
                    VADERSentimentExtractor, SpaCyExtractor,
                    WordCounterExtractor, BertExtractor,
-                   BertSequenceEncodingExtractor, BertLMExtractor)
+                   BertSequenceEncodingExtractor, BertLMExtractor,
+                   BertSentimentExtractor)
 from .video import (FarnebackOpticalFlowExtractor)
 
 __all__ = [
@@ -142,5 +143,6 @@ __all__ = [
     'BertExtractor',
     'BertSequenceEncodingExtractor',
     'BertLMExtractor',
+    'BertSentimentExtractor',
     'WordCounterExtractor'
 ]

@@ -514,7 +514,6 @@ class BertExtractor(ComplexTextExtractor):
         return data, feat, ons, dur
     
     def _to_df(self, result, include_attributes=True):
-        pass
         res_dict = dict(zip(result.features, result._data))
         if include_attributes:
             log_dict = {attr: getattr(result.extractor, attr) for
@@ -578,11 +577,14 @@ class BertSequenceEncodingExtractor(BertExtractor):
         self.pooling = pooling
         self.return_sep = return_sep
         self.return_sequence = return_sequence
-        super(BertSequenceEncodingExtractor, self).__init__(pretrained_model, 
-            tokenizer, framework, 'AutoModel', model_kwargs, tokenizer_kwargs)
+        super(BertSequenceEncodingExtractor, self).__init__(
+            pretrained_model=pretrained_model, tokenizer=tokenizer, 
+            model_class='AutoModel', framework=framework, model_kwargs=model_kwargs, 
+            tokenizer_kwargs=tokenizer_kwargs)
 
     def _postprocess(self, preds, tok, wds, ons, dur):
         preds = [p.numpy().squeeze() for p in preds]
+        self.preds = preds
         tok = [' '.join(wds)]
         try: 
             dur = ons[-1] + dur[-1] - ons[0]
@@ -590,13 +592,13 @@ class BertSequenceEncodingExtractor(BertExtractor):
             dur = None
         ons = ons[0]
         if self.return_sep:
-            out = preds[0][:,-1,:]
+            out = preds[0][-1,:]
         elif self.pooling:
             pool_func = getattr(np, self.pooling)
-            out = pool_func(preds[0][:, 1:-1, :], axis=1, keepdims=True)
+            out = pool_func(preds[0][1:-1, :], axis=1, keepdims=True)
         else:
             out = preds[1]
-        data = [out.tolist()]
+        data = [[out.tolist()]]
         feat = ['encoding']
         if self.return_sequence:
             data += [tok]
@@ -650,7 +652,7 @@ class BertLMExtractor(BertExtractor):
                  tokenizer='bert-base-uncased',
                  framework='pt',
                  mask='[MASK]',
-                 top_n=100,
+                 top_n=None,
                  threshold=None,
                  target=None,
                  return_softmax=False,
@@ -662,23 +664,25 @@ class BertLMExtractor(BertExtractor):
                              'are mutually exclusive')
         if type(mask) not in [int, str]:
             raise ValueError('Mask must be a string or an integer.')
-        self.top_n = top_n
-        self.threshold = threshold
+        super(BertLMExtractor, self).__init__(pretrained_model=pretrained_model,
+            tokenizer=tokenizer, framework=framework, model_kwargs=model_kwargs,
+            tokenizer_kwargs=tokenizer_kwargs, model_class='AutoModelWithLMHead')
         self.target = listify(target)
         if self.target:
             missing = set(self.target) - set(self.tokenizer.vocab.keys())
             if missing:
                 logging.warning(f'{missing} is not in vocabulary. Dropping.')
-            self.target = set(self.target) & set(self.tokenizer.vocab.keys())
+            present = set(self.target) & set(self.tokenizer.vocab.keys())
+            self.target = list(present)
             if self.target == []:
                 raise ValueError('No valid target token. Import transformers'
                     ' and run transformers.BertTokenizer.from_pretrained'
                     f'(\'{tokenizer}\').vocab.keys() to see available tokens')
+        self.mask = mask
+        self.top_n = top_n
+        self.threshold = threshold
         self.return_softmax = return_softmax
         self.return_masked_word = return_masked_word
-        super(BertLMExtractor, self).__init__(pretrained_model=pretrained_model,
-            tokenizer=tokenizer, framework=framework, model_kwargs=model_kwargs,
-            tokenizer_kwargs=tokenizer_kwargs, model_class='AutoModelWithLMHead')
         
     def update_mask(self, new_mask):
         if type(new_mask) not in [str, int]:
@@ -708,6 +712,8 @@ class BertLMExtractor(BertExtractor):
         data = [listify(p) for p in preds[0,self.mask_pos,out_idx]]
         if self.return_masked_word:
             feat, data = self._return_masked_word(preds, feat, data)
+        if len(self.target) > 1:
+            self.target = [self.target]
         ons, dur = map(lambda x: listify(x[self.mask_pos]), [ons, dur])
         return data, feat, ons, dur
 

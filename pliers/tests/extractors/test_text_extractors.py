@@ -313,8 +313,9 @@ def test_pretrained_bert_encoding_extractor():
                                 reason='model too large')
 def test_pretrained_bert_large_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
-    ext = PretrainedBertEncodingExtractor(pretrained_model_or_path='bert-large-uncased',
-                                               tokenizer='bert-large-uncased')
+    ext = PretrainedBertEncodingExtractor(
+        pretrained_model_or_path='bert-large-uncased',
+        tokenizer='bert-large-uncased')
     res = ext.transform(stim).to_df()
     assert len(res['encoding'][0]) == 1024
 
