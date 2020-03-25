@@ -125,7 +125,7 @@ class ExtractorResult(object):
         if features is not None:
             index_cols = list(set(df.columns) - set(features))
         else:
-            index_cols = list(set(df.columns))
+            index_cols = []
 
         if hasattr(self, '_onsets'):
             onsets = np.array(self._onsets)
