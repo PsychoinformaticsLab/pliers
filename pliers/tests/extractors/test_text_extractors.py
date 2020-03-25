@@ -8,6 +8,7 @@ from pliers.extractors import (DictionaryExtractor,
                                VADERSentimentExtractor,
                                SpaCyExtractor,
                                BertExtractor,
+                               BertSequenceEncodingExtractor,
                                WordCounterExtractor)
 
 from pliers.extractors.base import merge_results
@@ -274,10 +275,11 @@ def test_bert_extractor():
     ext_large = BertExtractor(pretrained_model='bert-large-uncased')
     ext_tf = BertExtractor(pretrained_model='bert-base-uncased', framework='tf')
     ext_base_token = BertExtractor(pretrained_model='bert-base-uncased', 
-                                   return_tokens=True)
+                                   return_input=True)
     ext_distilbert = BertExtractor(pretrained_model='distilbert-base-uncased')
     ext_roberta = BertExtractor(pretrained_model='roberta-base')
-    ext_camembert = BertExtractor(pretrained_model='camembert-base')
+    ext_camembert = BertExtractor(pretrained_model='camembert-base', 
+                                  return_input=True)
     
     base_result = ext_base.transform(stim)
     res = base_result.to_df()
@@ -286,9 +288,9 @@ def test_bert_extractor():
     res_tf = ext_tf.transform(stim).to_df()
     res_token = ext_base_token.transform(stim).to_df()
     res_file = ext_base.transform(stim_file).to_df()
-    res_distilbert = ext_base.transform(stim).to_df()
-    res_roberta = ext_base.transform(stim).to_df()
-    res_camembert = ext_base.transform(stim_cam).to_df()
+    res_distilbert = ext_distilbert.transform(stim).to_df()
+    res_roberta = ext_roberta.transform(stim).to_df()
+    res_camembert = ext_camembert.transform(stim_cam).to_df()
     
     # Test encoding shape
     assert len(res['encoding'][0]) == 768
@@ -316,10 +318,79 @@ def test_bert_extractor():
             for i in range(res.shape[0])]
     assert all(np.isclose(cors, 1))
 
+    # test camembert
+    assert res_camembert['token'][4] == 'est'
+
     # test model attributes
     assert all([a in res_model_attr.columns for a in ext_base._model_attributes])
 
-def test_bert_sequence_extract():
+    # catch error if framework is invalid
+    with pytest.raises(ValueError) as err:
+        BertExtractor(framework='keras')
+    assert 'Invalid framework' in str(err.value)
+    
+
+def test_bert_sequence_extractor():
+    stim = ComplexTextStim(text='This is not a tokenized sentence.')
+    stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
+
+    ext = BertSequenceEncodingExtractor()
+    ext_tf = BertSequenceEncodingExtractor(framework='tf')
+    ext_sequence = BertSequenceEncodingExtractor(return_input=True)
+    ext_sep = BertSequenceEncodingExtractor(return_sep=True)
+    ext_mean = BertSequenceEncodingExtractor(pooling='mean')
+    ext_max = BertSequenceEncodingExtractor(pooling='max')
+    #ext_distil = BertSequenceEncodingExtractor(pretrained_model='distilbert-base-uncased')
+
+    res = ext.transform(stim).to_df()
+    res_tf = ext.transform(stim).to_df()
+    res_file = ext.transform(stim_file).to_df()
+    res_sequence = ext_sequence.transform(stim).to_df()
+    res_sep = ext_sep.transform(stim).to_df()
+    res_mean = ext_mean.transform(stim).to_df()
+    res_max = ext_max.transform(stim).to_df()
+    #res_distil = ext_distil.transform(stim).to_df()
+
+    # Check shape
+    assert len(res['encoding'][0]) == 768
+    assert len(res_sep['encoding'][0]) == 768
+    assert len(res_mean['encoding'][0]) == 768
+    assert len(res_max['encoding'][0]) == 768
+    #assert len(res_distil['encoding']) == 768
+    assert res.shape[0] == 1
+    assert res_sep.shape[0] == 1
+    assert res_mean.shape[0] == 1
+    assert res_max.shape[0] == 1
+    #assert res_distil.shape[0] == 1
+
+    # Make sure pool/sep/no arguments return different encodings
+    assert res['encoding'][0] != res_sep['encoding'][0]
+    assert res['encoding'][0] != res_mean['encoding'][0]
+    assert res_sep['encoding'][0] != res_mean['encoding'][0]
+    assert res_max['encoding'][0] != res_mean['encoding'][0]
+    assert all(res_max['encoding'][0] >= res_mean['encoding'][0])
+    
+    # test return sequence
+    assert res_sequence['sequence'][0] == 'This is not a tokenized sentence .'
+
+    # test file stim
+    assert res_file['duration'][0] == 3.1
+    assert res_file['onset'][0] == 0.2
+
+    # test tf vs. torch
+    cor = np.corrcoef(res['encoding'][0], res_tf['encoding'][0])[0,1]
+    assert np.isclose(cor, 1)
+
+    # catch error with wrong numpy function
+    with pytest.raises(ValueError) as err:
+        BertSequenceEncodingExtractor(pooling='avg')
+    assert 'valid numpy function' in str(err.value)
+
+    # catch error when both pooling and return_sep are defined
+    with pytest.raises(ValueError) as err:
+        BertSequenceEncodingExtractor(return_sep=True, pooling='mean')
+    assert 'mutually exclusive' in str(err.value)
+
 
 def test_bert_LM_extractor():
 

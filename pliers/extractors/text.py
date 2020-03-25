@@ -424,7 +424,7 @@ class BertExtractor(ComplexTextExtractor):
             or RobertaForMaskedLM for RoBERTa). Fixed by each subclass.
         framework (str): name deep learning framework to use. Must be 'pt'
             (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
-        return_tokens (bool): if True, the extractor returns encoded token
+        return_input (bool): if True, the extractor returns encoded token
             and encoded word as features.
         model_kwargs (dict): Named arguments for transformer model.
             See https://huggingface.co/transformers/main_classes/model.html
@@ -433,7 +433,7 @@ class BertExtractor(ComplexTextExtractor):
     '''
 
     _log_attributes = ('pretrained_model', 'framework', 'tokenizer_type',
-        'model_class', 'return_tokens', 'model_kwargs', 'tokenizer_kwargs')
+        'model_class', 'return_input', 'model_kwargs', 'tokenizer_kwargs')
     _model_attributes = ('pretrained_model', 'framework', 'model_class', 
         'tokenizer_type')
 
@@ -442,7 +442,7 @@ class BertExtractor(ComplexTextExtractor):
                  tokenizer='bert-base-uncased',
                  model_class='AutoModel',
                  framework='pt',
-                 return_tokens=False,
+                 return_input=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
         verify_dependencies(['transformers'])
@@ -453,7 +453,7 @@ class BertExtractor(ComplexTextExtractor):
         self.tokenizer_type = tokenizer
         self.model_class = model_class
         self.framework = framework
-        self.return_tokens=return_tokens
+        self.return_input=return_input
         self.model_kwargs = model_kwargs if model_kwargs else {}
         self.tokenizer_kwargs = tokenizer_kwargs if tokenizer_kwargs else {}
         model = model_class if self.framework == 'pt' else 'TF' + model_class
@@ -508,7 +508,7 @@ class BertExtractor(ComplexTextExtractor):
         out = preds[0][:, 1:-1, :].numpy().squeeze()
         data = [out.tolist()]
         feat = ['encoding']
-        if self.return_tokens:
+        if self.return_input:
             data += [tok, wds]
             feat += ['token', 'word']
         return data, feat, ons, dur
@@ -543,7 +543,7 @@ class BertSequenceEncodingExtractor(BertExtractor):
             encodings.
         return_sep (bool): defines whether to return encoding for the [SEP]
             token.
-        return_sequence (bool): If True, the extractor returns an additional 
+        return_input (bool): If True, the extractor returns an additional 
             feature column with the encoded sequence.
         model_kwargs (dict): Named arguments for pretrained model.
             See: https://huggingface.co/transformers/main_classes/model.html
@@ -553,7 +553,7 @@ class BertSequenceEncodingExtractor(BertExtractor):
     '''
 
     _log_attributes = ('pretrained_model', 'framework', 'tokenizer_type', 
-        'pooling', 'return_sep', 'return_sequence', 'model_class', 
+        'pooling', 'return_sep', 'return_input', 'model_class', 
         'model_kwargs', 'tokenizer_kwargs')
     _model_attributes = ('pretrained_model', 'framework', 'model_class', 
         'pooling', 'return_sep', 'tokenizer_type')
@@ -563,7 +563,7 @@ class BertSequenceEncodingExtractor(BertExtractor):
                  framework='pt',
                  pooling=None,
                  return_sep=False,
-                 return_sequence=False,
+                 return_input=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
         if pooling:
@@ -576,10 +576,10 @@ class BertSequenceEncodingExtractor(BertExtractor):
                 raise(ValueError('Pooling must be a valid numpy function.'))
         self.pooling = pooling
         self.return_sep = return_sep
-        self.return_sequence = return_sequence
         super(BertSequenceEncodingExtractor, self).__init__(
             pretrained_model=pretrained_model, tokenizer=tokenizer, 
-            model_class='AutoModel', framework=framework, model_kwargs=model_kwargs, 
+            return_input=return_input, model_class='AutoModel', 
+            framework=framework, model_kwargs=model_kwargs, 
             tokenizer_kwargs=tokenizer_kwargs)
 
     def _postprocess(self, preds, tok, wds, ons, dur):
@@ -600,7 +600,7 @@ class BertSequenceEncodingExtractor(BertExtractor):
             out = preds[1]
         data = [[out.tolist()]]
         feat = ['encoding']
-        if self.return_sequence:
+        if self.return_input:
             data += [tok]
             feat += ['sequence']   
         return data, feat, ons, dur
@@ -657,7 +657,7 @@ class BertLMExtractor(BertExtractor):
                  target=None,
                  return_softmax=False,
                  return_masked_word=False,
-                 return_sequence=False,
+                 return_input=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
         if any([top_n and target, top_n and threshold, threshold and target]):
@@ -666,8 +666,9 @@ class BertLMExtractor(BertExtractor):
         if type(mask) not in [int, str]:
             raise ValueError('Mask must be a string or an integer.')
         super(BertLMExtractor, self).__init__(pretrained_model=pretrained_model,
-            tokenizer=tokenizer, framework=framework, model_kwargs=model_kwargs,
-            tokenizer_kwargs=tokenizer_kwargs, model_class='AutoModelWithLMHead')
+            tokenizer=tokenizer, framework=framework, return_input=return_input, 
+            model_class='AutoModelWithLMHead', model_kwargs=model_kwargs, 
+            tokenizer_kwargs=tokenizer_kwargs, )
         self.target = listify(target)
         if self.target:
             missing = set(self.target) - set(self.tokenizer.vocab.keys())
@@ -684,7 +685,6 @@ class BertLMExtractor(BertExtractor):
         self.threshold = threshold
         self.return_softmax = return_softmax
         self.return_masked_word = return_masked_word
-        self.return_sequence = return_sequence
         
     def update_mask(self, new_mask):
         if type(new_mask) not in [str, int]:
@@ -714,7 +714,7 @@ class BertLMExtractor(BertExtractor):
         data = [listify(p) for p in preds[0,self.mask_pos,out_idx]]
         if self.return_masked_word:
             feat, data = self._return_masked_word(preds, feat, data)
-        if self.return_sequence:
+        if self.return_input:
             data += [' '.join(wds)]
             feat += ['sequence']
         if len(self.target) > 1:
@@ -745,31 +745,32 @@ class BertSentimentExtractor(BertExtractor):
             (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
         return_softmax (bool): If True, the extractor returns softmaxed 
             sentiment scores instead of raw model predictions.
-        return_sequence (bool): If True, the extractor returns an additional 
+        return_input (bool): If True, the extractor returns an additional 
             feature column with the encoded sequence.
         model_kwargs (dict): Named arguments for pretrained model.
         tokenizer_kwargs (dict): Named arguments for tokenizer.
     '''
 
     _log_attributes = ('pretrained_model', 'framework', 'tokenizer_type', 
-        'return_softmax', 'return_sequence', 'model_class', 'model_kwargs', 
+        'return_softmax', 'return_input', 'model_class', 'model_kwargs', 
         'tokenizer_kwargs')
     _model_attributes = ('pretrained_model', 'framework',  'tokenizer_type',
-        'return_sequence', 'return_softmax',)
+        'return_input', 'return_softmax',)
 
     def __init__(self, 
                  pretrained_model='distilbert-base-uncased-finetuned-sst-2-english',
                  tokenizer='distilbert-base-uncased',
                  framework='pt',
                  return_softmax=True,
-                 return_sequence=True,
+                 return_input=True,
                  model_kwargs=None,
-                 tokenizer_kwargs=None):  
-        self.return_sequence = return_sequence
+                 tokenizer_kwargs=None):
         self.return_softmax = return_softmax
-        super(BertSentimentExtractor, self).__init__(pretrained_model, 
-                tokenizer, framework, 'AutoModelForSequenceClassification', 
-                model_kwargs, tokenizer_kwargs)  
+        super(BertSentimentExtractor, self).__init__(
+                pretrained_model=pretrained_model, tokenizer=tokenizer, 
+                framework=framework, return_input=return_input,
+                model_class='AutoModelForSequenceClassification',
+                model_kwargs=model_kwargs, tokenizer_kwargs=tokenizer_kwargs)
 
     def _postprocess(self, preds, tok, wds, ons, dur):
         data = preds[0].numpy().squeeze()
@@ -783,7 +784,7 @@ class BertSentimentExtractor(BertExtractor):
             dur = None
         ons = ons[0]
         feat = ['sent_pos', 'sent_neg']
-        if self.return_sequence:
+        if self.return_input:
             data += [tok]
             feat += ['sequence']   
         return data, feat, ons, dur
