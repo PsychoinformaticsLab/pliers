@@ -7,7 +7,7 @@ from pliers.extractors import (DictionaryExtractor,
                                WordEmbeddingExtractor,
                                VADERSentimentExtractor,
                                SpaCyExtractor,
-                               PretrainedBertEncodingExtractor,
+                               BertExtractor,
                                WordCounterExtractor)
 
 from pliers.extractors.base import merge_results
@@ -265,59 +265,59 @@ def test_spacy_doc_extractor():
     assert result['is_sentenced'][3]
 
 
-def test_pretrained_bert_encoding_extractor():
+def test_bert_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
+    stim_cam = ComplexTextStim(text='ceci n\'est pas un pipe')
     
-    ext_base = PretrainedBertEncodingExtractor(pretrained_model_or_path='bert-base-uncased')
-    ext_base_tf = PretrainedBertEncodingExtractor(framework='tf')
-    ext_sequence = PretrainedBertEncodingExtractor(encoding_level='sequence')
-    ext_sequence_pooling = PretrainedBertEncodingExtractor(encoding_level='sequence', pooling='mean')
+    ext_base = BertExtractor(pretrained_model='bert-base-uncased')
+    ext_large = BertExtractor(pretrained_model='bert-large-uncased')
+    ext_tf = BertExtractor(pretrained_model='bert-base-uncased', framework='tf')
+    ext_base_token = BertExtractor(pretrained_model='bert-base-uncased', 
+                                   return_tokens=True)
+    ext_distilbert = BertExtractor(pretrained_model='distilbert-base-uncased')
+    ext_roberta = BertExtractor(pretrained_model='roberta-base')
+    ext_camembert = BertExtractor(pretrained_model='camembert-base')
     
-    res = ext_base.transform(stim).to_df(metadata=True)
-    res_file = ext_base.transform(stim_file).to_df(metadata=True)
-    res_base_tf = ext_base_tf.transform(stim).to_df(metadata=True)
-    res_sequence = ext_sequence.transform(stim).to_df(metadata=True)
-    res_sequence_pooling = ext_sequence_pooling.transform(stim).to_df(metadata=True)
+    base_result = ext_base.transform(stim)
+    res = base_result.to_df()
+    res_model_attr = base_result.to_df(include_attributes=True)
+    res_large = ext_large.transform(stim).to_df()
+    res_tf = ext_tf.transform(stim).to_df()
+    res_token = ext_base_token.transform(stim).to_df()
+    res_file = ext_base.transform(stim_file).to_df()
+    res_distilbert = ext_base.transform(stim).to_df()
+    res_roberta = ext_base.transform(stim).to_df()
+    res_camembert = ext_base.transform(stim_cam).to_df()
     
+    # Test encoding shape
     assert len(res['encoding'][0]) == 768
+    assert len(res_large['encoding'][0]) == 1024
+    assert len(res_file['encoding'][0]) == 768
+    assert len(res_distilbert['encoding'][0]) == 768
+    assert len(res_roberta['encoding'][0]) == 768
+    assert len(res_camembert['encoding'][0]) == 768
+
+    # test base extractor
     assert res.shape[0] == 8
-    assert res['token'][5] == '##ized'
-    assert res['word'][5] == 'tokenized'
-    assert res['object_id'][5] == 5
-       
-    assert len(res_base_tf['encoding'][0]) == 768
-    assert all(np.round(res_base_tf['encoding'][0],3) == np.round(res['encoding'][0],3))
+    assert res_token.shape[0] == 8
+    assert res_token['token'][5] == '##ized'
+    assert res_token['word'][5] == 'tokenized'
+    assert res_token['object_id'][5] == 5
     
+    # test base extractor on file
     assert res_file.shape[0] == 8
     assert res_file['onset'][3] == 1.3
     assert res_file['duration'][5] == 0.5
-    assert res_file['duration'][5] == 0.5
-    assert res_file['token'][5] == 'transform'
-    assert res_file['word'][5] == 'transformer'
     assert res_file['object_id'][5] == 5
-    
-    assert res_sequence.shape[0] == 1
-    assert len(res_sequence['encoding'][0]) == 768
-    assert res_sequence_pooling.shape[0] == 1
-    assert res_sequence_pooling['pooling'][0] == 'mean'
-    assert res_sequence['encoding'][0] != res_sequence_pooling['encoding'][0]
-    assert res_sequence['token'][0] == 'This is not a tokenized sentence .'
-    assert res_sequence['word'][0] == 'None'
 
-    del ext_base, ext_base_tf, ext_sequence, ext_sequence_pooling
-    del res, res_file, res_base_tf, res_sequence, res_sequence_pooling
+    # test tensorflow vs torch
+    cors = [np.corrcoef(res['encoding'][i], res_tf['encoding'][i])[0,1] 
+            for i in range(res.shape[0])]
+    assert all(np.isclose(cors, 1))
 
-
-@pytest.mark.skipif(environ.get('TRAVIS', False) == 'true',
-                                reason='model too large')
-def test_pretrained_bert_large_extractor():
-    stim = ComplexTextStim(text='This is not a tokenized sentence.')
-    ext = PretrainedBertEncodingExtractor(
-        pretrained_model_or_path='bert-large-uncased',
-        tokenizer='bert-large-uncased')
-    res = ext.transform(stim).to_df()
-    assert len(res['encoding'][0]) == 1024
+    # test model attributes
+    assert all([a in res_model_attr.columns for a in ext_base._model_attributes])
 
 def test_bert_sequence_extract():
 

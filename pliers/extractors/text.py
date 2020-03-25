@@ -433,7 +433,7 @@ class BertExtractor(ComplexTextExtractor):
     '''
 
     _log_attributes = ('pretrained_model', 'framework', 'tokenizer_type',
-        'model_class', 'model_kwargs', 'tokenizer_kwargs')
+        'model_class', 'return_tokens', 'model_kwargs', 'tokenizer_kwargs')
     _model_attributes = ('pretrained_model', 'framework', 'model_class', 
         'tokenizer_type')
 
@@ -553,8 +553,8 @@ class BertSequenceEncodingExtractor(BertExtractor):
     '''
 
     _log_attributes = ('pretrained_model', 'framework', 'tokenizer_type', 
-        'pooling', 'return_sep', 'model_class', 'model_kwargs', 
-        'tokenizer_kwargs')
+        'pooling', 'return_sep', 'return_sequence', 'model_class', 
+        'model_kwargs', 'tokenizer_kwargs')
     _model_attributes = ('pretrained_model', 'framework', 'model_class', 
         'pooling', 'return_sep', 'tokenizer_type')
 
@@ -643,7 +643,7 @@ class BertLMExtractor(BertExtractor):
     '''
 
     _log_attributes = ('pretrained_model', 'framework', 'top_n', 'target', 
-        'tokenizer_type', 'return_softmax')
+        'tokenizer_type', 'return_softmax', 'return_masked_word')
     _model_attributes = ('pretrained_model', 'framework', 'top_n', 'mask',
          'target', 'threshold', 'tokenizer_type')
 
@@ -657,6 +657,7 @@ class BertLMExtractor(BertExtractor):
                  target=None,
                  return_softmax=False,
                  return_masked_word=False,
+                 return_sequence=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
         if any([top_n and target, top_n and threshold, threshold and target]):
@@ -683,6 +684,7 @@ class BertLMExtractor(BertExtractor):
         self.threshold = threshold
         self.return_softmax = return_softmax
         self.return_masked_word = return_masked_word
+        self.return_sequence = return_sequence
         
     def update_mask(self, new_mask):
         if type(new_mask) not in [str, int]:
@@ -712,6 +714,9 @@ class BertLMExtractor(BertExtractor):
         data = [listify(p) for p in preds[0,self.mask_pos,out_idx]]
         if self.return_masked_word:
             feat, data = self._return_masked_word(preds, feat, data)
+        if self.return_sequence:
+            data += [' '.join(wds)]
+            feat += ['sequence']
         if len(self.target) > 1:
             self.target = [self.target]
         ons, dur = map(lambda x: listify(x[self.mask_pos]), [ons, dur])
