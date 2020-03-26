@@ -681,7 +681,7 @@ class BertLMExtractor(BertExtractor):
         super(BertLMExtractor, self).__init__(pretrained_model=pretrained_model,
             tokenizer=tokenizer, framework=framework, return_input=return_input, 
             model_class='AutoModelWithLMHead', model_kwargs=model_kwargs, 
-            tokenizer_kwargs=tokenizer_kwargs, )
+            tokenizer_kwargs=tokenizer_kwargs)
         self.target = listify(target)
         if self.target:
             missing = set(self.target) - set(self.tokenizer.vocab.keys())

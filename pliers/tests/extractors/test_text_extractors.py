@@ -272,14 +272,18 @@ def test_bert_extractor():
     stim_cam = ComplexTextStim(text='ceci n\'est pas un pipe')
     
     ext_base = BertExtractor(pretrained_model='bert-base-uncased')
-    ext_large = BertExtractor(pretrained_model='bert-large-uncased')
-    ext_tf = BertExtractor(pretrained_model='bert-base-uncased', framework='tf')
+    ext_large = BertExtractor(pretrained_model='bert-large-uncased', 
+                              tokenizer='bert-large-uncased')
+    ext_tf = BertExtractor(pretrained_model='bert-base-uncased', 
+                           framework='tf')
     ext_base_token = BertExtractor(pretrained_model='bert-base-uncased', 
                                    return_input=True)
-    ext_distilbert = BertExtractor(pretrained_model='distilbert-base-uncased')
-    ext_roberta = BertExtractor(pretrained_model='roberta-base')
-    ext_camembert = BertExtractor(pretrained_model='camembert-base', 
-                                  return_input=True)
+    ext_distilbert = BertExtractor(pretrained_model='distilbert-base-uncased',
+                                   tokenizer='distilbert-base-uncased')
+    ext_roberta = BertExtractor(pretrained_model='roberta-base',
+                                tokenizer='roberta-base')
+    ext_camembert = BertExtractor(pretrained_model='camembert-base',
+                                  tokenizer='camembert-base', return_input=True)
     
     base_result = ext_base.transform(stim)
     res = base_result.to_df()
@@ -340,7 +344,8 @@ def test_bert_sequence_extractor():
     ext_cls = BertSequenceEncodingExtractor(return_special='[CLS]')
     ext_pooler = BertSequenceEncodingExtractor(return_special='pooler_output')
     ext_max = BertSequenceEncodingExtractor(pooling='max')
-    ext_distil = BertSequenceEncodingExtractor(pretrained_model='distilbert-base-uncased')
+    ext_distil = BertSequenceEncodingExtractor(pretrained_model='distilbert-base-uncased', 
+                                               tokenizer='distilbert-base-uncased')
 
     # Test correct behavior when setting return_special
     assert ext_cls.pooling is None
@@ -397,6 +402,47 @@ def test_bert_sequence_extractor():
 
 
 def test_bert_LM_extractor():
+    stim = ComplexTextStim(text='This is not a tokenized sentence.')
+    stim_masked = ComplexTextStim(text='This is [MASK] tokenized sentence.')
+    stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
+
+    with pytest.raises(ValueError) as err:
+        BertLMExtractor(top_n=100, target='test')
+    assert 'mutually exclusive' in str(err.value)
+    with pytest.raises(ValueError) as err:
+        BertLMExtractor(top_n=100, threshold=.5)
+    assert 'mutually exclusive' in str(err.value)
+    with pytest.raises*(ValueError) as err:
+        BertLMExtractor(target='test', threshold=.5)
+    assert 'mutually exclusive' in str(err.value)
+    with pytest.raises(ValueError) as err:
+        BertLMExtractor(mask=['test', 'mask'])
+    assert 'must be a string' in str(err.value)
+    with pytest.raises(ValueError) as err:
+        BertLMExtractor(target='nonwd')
+    assert 'No valid target token' in str(err.value)
+    
+    ext = BertLMExtractor(mask=2)
+    ext_masked = BertLMExtractor()
+    ext_target = BertLMExtractor(target=['target','word'])
+    ext_distil = BertLMExtractor(mask=2, pretrained_model='distilbert-base-uncased',
+                                 tokenizer='distilbert-base-uncased')
+
+    res = ext.transform(stim).to_df()
+    res_masked = ext_masked.transform(stim_masked).to_df()
+    res_file = ext.transform(stim_file).to_df()
+    res_target = ext_target(stim).to_df()
+    res_distil = ext_distil.transform(stim).to_df()
+
+    assert res.shape[0] == 1
+    assert res_distil.shape[0] == 1
+
+    # test onset/duration
+    assert res_file['onset'][0] == 1.0
+    assert res_file['duration'][0] == 0.2
+
+
+
 
 def test_bert_sentiment_extractor():
     
