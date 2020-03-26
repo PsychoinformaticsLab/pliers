@@ -337,59 +337,63 @@ def test_bert_sequence_extractor():
     ext = BertSequenceEncodingExtractor()
     ext_tf = BertSequenceEncodingExtractor(framework='tf')
     ext_sequence = BertSequenceEncodingExtractor(return_input=True)
-    ext_sep = BertSequenceEncodingExtractor(return_sep=True)
-    ext_mean = BertSequenceEncodingExtractor(pooling='mean')
+    ext_cls = BertSequenceEncodingExtractor(return_special='[CLS]')
+    ext_pooler = BertSequenceEncodingExtractor(return_special='pooler_output')
     ext_max = BertSequenceEncodingExtractor(pooling='max')
-    #ext_distil = BertSequenceEncodingExtractor(pretrained_model='distilbert-base-uncased')
+    ext_distil = BertSequenceEncodingExtractor(pretrained_model='distilbert-base-uncased')
+
+    # Test correct behavior when setting return_special
+    assert ext_cls.pooling is None
+    assert ext_pooler.pooling is None
+    assert ext_cls.return_special == '[CLS]'
+    assert ext_pooler.return_special == 'pooler_output'
 
     res = ext.transform(stim).to_df()
     res_tf = ext.transform(stim).to_df()
     res_file = ext.transform(stim_file).to_df()
     res_sequence = ext_sequence.transform(stim).to_df()
-    res_sep = ext_sep.transform(stim).to_df()
-    res_mean = ext_mean.transform(stim).to_df()
+    res_cls = ext_cls.transform(stim).to_df()
+    res_pooler = ext_pooler.transform(stim).to_df()
     res_max = ext_max.transform(stim).to_df()
-    #res_distil = ext_distil.transform(stim).to_df()
+    res_distil = ext_distil.transform(stim).to_df()
 
     # Check shape
     assert len(res['encoding'][0]) == 768
-    assert len(res_sep['encoding'][0]) == 768
-    assert len(res_mean['encoding'][0]) == 768
+    assert len(res_cls['encoding'][0]) == 768
+    assert len(res_pooler['encoding'][0]) == 768
     assert len(res_max['encoding'][0]) == 768
-    #assert len(res_distil['encoding']) == 768
+    assert len(res_distil['encoding'][0]) == 768
     assert res.shape[0] == 1
-    assert res_sep.shape[0] == 1
-    assert res_mean.shape[0] == 1
+    assert res_cls.shape[0] == 1
+    assert res_pooler.shape[0] == 1
     assert res_max.shape[0] == 1
-    #assert res_distil.shape[0] == 1
+    assert res_distil.shape[0] == 1
 
-    # Make sure pool/sep/no arguments return different encodings
-    assert res['encoding'][0] != res_sep['encoding'][0]
-    assert res['encoding'][0] != res_mean['encoding'][0]
-    assert res_sep['encoding'][0] != res_mean['encoding'][0]
-    assert res_max['encoding'][0] != res_mean['encoding'][0]
-    assert all(res_max['encoding'][0] >= res_mean['encoding'][0])
-    
+    # Make sure pooler/cls/no arguments return different encodings
+    assert res['encoding'][0] != res_cls['encoding'][0]
+    assert res['encoding'][0] != res_pooler['encoding'][0]
+    assert res['encoding'][0] != res_max['encoding'][0]
+    assert all([res_max['encoding'][0][i] >= res['encoding'][0][i]
+                                              for i in range(768)])
+
     # test return sequence
     assert res_sequence['sequence'][0] == 'This is not a tokenized sentence .'
 
     # test file stim
-    assert res_file['duration'][0] == 3.1
+    assert res_file['duration'][0] == 2.9
     assert res_file['onset'][0] == 0.2
 
     # test tf vs. torch
     cor = np.corrcoef(res['encoding'][0], res_tf['encoding'][0])[0,1]
     assert np.isclose(cor, 1)
 
-    # catch error with wrong numpy function
+    # catch error with wrong numpy function and wrong special token arg
     with pytest.raises(ValueError) as err:
         BertSequenceEncodingExtractor(pooling='avg')
     assert 'valid numpy function' in str(err.value)
-
-    # catch error when both pooling and return_sep are defined
     with pytest.raises(ValueError) as err:
-        BertSequenceEncodingExtractor(return_sep=True, pooling='mean')
-    assert 'mutually exclusive' in str(err.value)
+        BertSequenceEncodingExtractor(return_special='[MASK]')
+    assert 'must be one of' in str(err.value)
 
 
 def test_bert_LM_extractor():

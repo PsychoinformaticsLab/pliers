@@ -498,7 +498,7 @@ class BertExtractor(ComplexTextExtractor):
         return ExtractorResult(data, stims, self, features=feat, onsets=ons, 
                                durations=dur)
 
-    def _postprocess(self, preds, tok, wds, ons, dur):
+    def _postprocess(self, stims, preds, tok, wds, ons, dur):
         ''' Postprocesses model output (subsets relevant information,
             transforms it where relevant, adds model metadata). 
             Takes prediction array, token list, word list, onsets 
@@ -538,11 +538,17 @@ class BertSequenceEncodingExtractor(BertExtractor):
             unknown tokens.
         framework (str): name deep learning framework to use. Must be 'pt'
             (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
-        pooling (str): defines whether to return encoding for [CLS] token 
-            (None, default), or the numpy function to use to pool token-level 
-            encodings.
-        return_sep (bool): defines whether to return encoding for the [SEP]
-            token.
+        pooling (str): defines numpy function to use to pool token-level 
+            encodings (excludes special tokens).
+        return_special (str): defines whether to return encoding for special 
+            sequence tokens ('[CLS]' or '[SEP]'), instead of pooling of 
+            other tokens. Must be '[CLS]', '[SEP]', or 'pooler_output'.
+            The latter option returns last layer hidden-state of [CLS] token 
+            further processed by a linear layer and tanh activation function,
+            with linear weights trained on the next sentence classification 
+            task. Note that some Bert-derived models, such as DistilBert, 
+            were not trained on this task. For these models, setting this 
+            argument to 'pooler_output' will return an error.
         return_input (bool): If True, the extractor returns an additional 
             feature column with the encoded sequence.
         model_kwargs (dict): Named arguments for pretrained model.
@@ -553,55 +559,62 @@ class BertSequenceEncodingExtractor(BertExtractor):
     '''
 
     _log_attributes = ('pretrained_model', 'framework', 'tokenizer_type', 
-        'pooling', 'return_sep', 'return_input', 'model_class', 
+        'pooling', 'return_special', 'return_input', 'model_class', 
         'model_kwargs', 'tokenizer_kwargs')
     _model_attributes = ('pretrained_model', 'framework', 'model_class', 
-        'pooling', 'return_sep', 'tokenizer_type')
+        'pooling', 'return_special', 'tokenizer_type')
 
     def __init__(self, pretrained_model='bert-base-uncased',
                  tokenizer='bert-base-uncased',
                  framework='pt',
-                 pooling=None,
-                 return_sep=False,
+                 pooling='mean',
+                 return_special=None,
                  return_input=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
+        if return_special and pooling:
+            logging.warning('Pooling and return_special argument are '
+                'mutually exclusive. Setting pooling to None.')
+            pooling = None
         if pooling:
-            if return_sep:
-                raise(ValueError('Pooling and return_seq argument are '
-                'mutually exclusive.'))
             try: 
                 getattr(np, pooling)
             except:
                 raise(ValueError('Pooling must be a valid numpy function.'))
+        elif return_special:
+            if return_special not in ['[CLS]', '[SEP]', 'pooler_output']:
+                raise(ValueError('Value of return_special argument must be '
+                    'one of \'[CLS]\', \'[SEP]\' or \'pooler_output\''))
         self.pooling = pooling
-        self.return_sep = return_sep
+        self.return_special = return_special
         super(BertSequenceEncodingExtractor, self).__init__(
             pretrained_model=pretrained_model, tokenizer=tokenizer, 
             return_input=return_input, model_class='AutoModel', 
             framework=framework, model_kwargs=model_kwargs, 
             tokenizer_kwargs=tokenizer_kwargs)
 
-    def _postprocess(self, preds, tok, wds, ons, dur):
+    def _postprocess(self, stims, preds, tok, wds, ons, dur):
         preds = [p.numpy().squeeze() for p in preds]
         self.preds = preds
-        tok = [' '.join(wds)]
         try: 
             dur = ons[-1] + dur[-1] - ons[0]
         except:
             dur = None
         ons = ons[0]
-        if self.return_sep:
-            out = preds[0][-1,:]
-        elif self.pooling:
+        if self.pooling:
             pool_func = getattr(np, self.pooling)
-            out = pool_func(preds[0][1:-1, :], axis=1, keepdims=True)
-        else:
-            out = preds[1]
+            out = pool_func(preds[0][1:-1, :], axis=0)
+        elif self.return_special:
+            if self.return_special == '[CLS]':
+                out = preds[0][0,:] 
+            elif self.return_special == '[SEP]':
+                out = preds[0][1,:]
+            else:
+                out = preds[1]
         data = [[out.tolist()]]
         feat = ['encoding']
         if self.return_input:
-            data += [tok]
+            data += [stims.name]
             feat += ['sequence']   
         return data, feat, ons, dur
 
@@ -698,7 +711,7 @@ class BertLMExtractor(BertExtractor):
         mwds[self.mask_pos] = '[MASK]'
         return mwds
 
-    def _postprocess(self, preds, tok, wds, ons, dur):
+    def _postprocess(self, stims,preds, tok, wds, ons, dur):
         preds = preds[0].numpy()[:,1:-1,:]
         if self.return_softmax:
             preds = scipy.special.softmax(preds, axis=-1)
@@ -715,7 +728,7 @@ class BertLMExtractor(BertExtractor):
         if self.return_masked_word:
             feat, data = self._return_masked_word(preds, feat, data)
         if self.return_input:
-            data += [' '.join(wds)]
+            data += [stims.name]
             feat += ['sequence']
         if len(self.target) > 1:
             self.target = [self.target]
