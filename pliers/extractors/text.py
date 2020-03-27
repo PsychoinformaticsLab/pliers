@@ -494,7 +494,7 @@ class BertExtractor(ComplexTextExtractor):
         wds, ons, dur, tok, idx = self._preprocess(stims)
         preds = self.model(idx)
         preds = [p.detach() if self.framework == 'pt' else p for p in preds]
-        data, feat, ons, dur = self._postprocess(preds, tok, wds, ons, dur)
+        data, feat, ons, dur = self._postprocess(stims, preds, tok, wds, ons, dur)
         return ExtractorResult(data, stims, self, features=feat, onsets=ons, 
                                durations=dur)
 
@@ -516,7 +516,7 @@ class BertExtractor(ComplexTextExtractor):
     def _to_df(self, result, include_attributes=True):
         res_dict = dict(zip(result.features, result._data))
         if include_attributes:
-            log_dict = {attr: getattr(result.extractor, attr) for
+            log_dict = {attr: [getattr(result.extractor, attr)] for
                         attr in self._model_attributes}
             res_dict.update(log_dict)
         res_df = pd.DataFrame(res_dict)
@@ -656,7 +656,7 @@ class BertLMExtractor(BertExtractor):
     '''
 
     _log_attributes = ('pretrained_model', 'framework', 'top_n', 'target', 
-        'tokenizer_type', 'return_softmax', 'return_masked_word')
+        'mask', 'tokenizer_type', 'return_softmax', 'return_masked_word')
     _model_attributes = ('pretrained_model', 'framework', 'top_n', 'mask',
          'target', 'threshold', 'tokenizer_type')
 
@@ -664,7 +664,7 @@ class BertLMExtractor(BertExtractor):
                  pretrained_model='bert-base-uncased',
                  tokenizer='bert-base-uncased',
                  framework='pt',
-                 mask='[MASK]',
+                 mask='MASK',
                  top_n=None,
                  threshold=None,
                  target=None,
@@ -673,7 +673,9 @@ class BertLMExtractor(BertExtractor):
                  return_input=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
-        if any([top_n and target, top_n and threshold, threshold and target]):
+        if any([top_n and target, 
+                top_n and threshold, 
+                threshold and target]):
             raise ValueError('top_n, threshold and target arguments '
                              'are mutually exclusive')
         if type(mask) not in [int, str]:
@@ -686,7 +688,7 @@ class BertLMExtractor(BertExtractor):
         if self.target:
             missing = set(self.target) - set(self.tokenizer.vocab.keys())
             if missing:
-                logging.warning(f'{missing} is not in vocabulary. Dropping.')
+                logging.warning(f'{missing} not in vocabulary. Dropping.')
             present = set(self.target) & set(self.tokenizer.vocab.keys())
             self.target = list(present)
             if self.target == []:
@@ -701,7 +703,7 @@ class BertLMExtractor(BertExtractor):
         
     def update_mask(self, new_mask):
         if type(new_mask) not in [str, int]:
-            raise ValueError('Mask must be an integer or a string')
+            raise ValueError('Mask must be a string or an integer.')
         self.mask = new_mask
 
     def _mask_words(self, wds):
@@ -711,7 +713,7 @@ class BertLMExtractor(BertExtractor):
         mwds[self.mask_pos] = '[MASK]'
         return mwds
 
-    def _postprocess(self, stims,preds, tok, wds, ons, dur):
+    def _postprocess(self, stims, preds, tok, wds, ons, dur):
         preds = preds[0].numpy()[:,1:-1,:]
         if self.return_softmax:
             preds = scipy.special.softmax(preds, axis=-1)
@@ -721,24 +723,25 @@ class BertLMExtractor(BertExtractor):
         elif self.target:
             sub_idx = self.tokenizer.convert_tokens_to_ids(self.target)
         elif self.threshold:
-            sub_idx = np.where(preds[0,self.mask_pos,:] > self.threshold)[0]
+            sub_idx = np.where(preds[0,self.mask_pos,:] >= self.threshold)[0]
+        else:
+            sub_idx = out_idx
         out_idx = [idx for idx in out_idx if idx in sub_idx]
         feat = self.tokenizer.convert_ids_to_tokens(out_idx)
+        feat = [f.upper() for f in feat]
         data = [listify(p) for p in preds[0,self.mask_pos,out_idx]]
         if self.return_masked_word:
             feat, data = self._return_masked_word(preds, feat, data)
         if self.return_input:
             data += [stims.name]
             feat += ['sequence']
-        if len(self.target) > 1:
-            self.target = [self.target]
         ons, dur = map(lambda x: listify(x[self.mask_pos]), [ons, dur])
         return data, feat, ons, dur
 
     def _return_masked_word(self, preds, feat, data):
         if self.mask_token in self.tokenizer.vocab:
             true_vocab_idx = self.tokenizer.vocab[self.mask_token]
-            true_score = preds[0, self.mask_pos, true_vocab_idx]
+            true_score = preds[0,self.mask_pos,true_vocab_idx]
         else:
             true_score = np.nan
             logging.warning('True token not in vocabulary. Returning NaN')
@@ -772,10 +775,10 @@ class BertSentimentExtractor(BertExtractor):
 
     def __init__(self, 
                  pretrained_model='distilbert-base-uncased-finetuned-sst-2-english',
-                 tokenizer='distilbert-base-uncased',
+                 tokenizer='bert-base-uncased',
                  framework='pt',
                  return_softmax=True,
-                 return_input=True,
+                 return_input=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
         self.return_softmax = return_softmax
@@ -785,7 +788,7 @@ class BertSentimentExtractor(BertExtractor):
                 model_class='AutoModelForSequenceClassification',
                 model_kwargs=model_kwargs, tokenizer_kwargs=tokenizer_kwargs)
 
-    def _postprocess(self, preds, tok, wds, ons, dur):
+    def _postprocess(self, stims, preds, tok, wds, ons, dur):
         data = preds[0].numpy().squeeze()
         if self.return_softmax:
             data = scipy.special.softmax(data) 
