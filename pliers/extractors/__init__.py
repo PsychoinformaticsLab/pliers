@@ -146,6 +146,5 @@ __all__ = [
     'BertLMExtractor',
     'BertSentimentExtractor',
     'AudiosetLabelExtractor',
-    'PretrainedBertEncodingExtractor',
     'WordCounterExtractor'
 ]
