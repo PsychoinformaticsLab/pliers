@@ -728,7 +728,7 @@ class BertLMExtractor(BertExtractor):
             sub_idx = out_idx
         out_idx = [idx for idx in out_idx if idx in sub_idx]
         feat = self.tokenizer.convert_ids_to_tokens(out_idx)
-        feat = [f.upper() for f in feat]
+        feat = [f.capitalize() for f in feat]
         data = [listify(p) for p in preds[0,self.mask_pos,out_idx]]
         if self.return_masked_word:
             feat, data = self._return_masked_word(preds, feat, data)

@@ -1,3 +1,4 @@
+from pliers import config
 from pliers.extractors import (DictionaryExtractor,
                                PartOfSpeechExtractor,
                                LengthExtractor,
@@ -401,6 +402,7 @@ def test_bert_sequence_extractor():
 
 
 def test_bert_LM_extractor():
+    config.set_option('cache_transformers', False)
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_masked = ComplexTextStim(text='This is MASK tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
@@ -453,7 +455,7 @@ def test_bert_LM_extractor():
     assert res_file['duration'][0] == 0.2
 
     # Check target words
-    assert all([w.upper() in res_target.columns for w in target_wds])
+    assert all([w.capitalize() in res_target.columns for w in target_wds])
     assert res_target.shape[1] == 13
 
     # Check top_n
@@ -464,21 +466,21 @@ def test_bert_LM_extractor():
     tknz = BertTokenizer.from_pretrained('bert-base-uncased')
     vocab = tknz.vocab.keys()
     for v in vocab:
-        if v.upper() in res_threshold.columns:
-            assert res_threshold[v.upper()][0] >= .1
-            assert res_threshold[v.upper()][0] <= 1
+        if v.capitalize() in res_threshold.columns:
+            assert res_threshold[v.capitalize()][0] >= .1
+            assert res_threshold[v.capitalize()][0] <= 1
     
     # torch vs tf
-    assert all([np.isclose(res_target[t.upper()][0], 
-                           res_target_tf[t.upper()][0]) for t in target_wds])
+    assert all([np.isclose(res_target[t.capitalize()][0], 
+                           res_target_tf[t.capitalize()][0]) for t in target_wds])
 
     # Test update mask method
     assert ext_target.mask == 1
     ext_target.update_mask(new_mask='sentence')
     assert ext_target.mask == 'sentence'
     res_target_new = ext_target.transform(stim).to_df()
-    #assert all([res_target[c][0] != res_target_new[c][0]
-    #            for c in ['TARGET', 'WORD', 'mask']])
+    assert all([res_target[c][0] != res_target_new[c][0]
+                for c in ['TARGET', 'WORD', 'mask']])
     with pytest.raises(ValueError) as err:
         ext_target.update_mask(new_mask=['some', 'mask'])
     assert 'must be a string' in str(err.value)
