@@ -16,7 +16,6 @@ from pliers.extractors import (DictionaryExtractor,
 from pliers.extractors.base import merge_results
 from pliers.stimuli import TextStim, ComplexTextStim
 from pliers.tests.utils import get_test_data_path
-
 import numpy as np
 from os.path import join
 import pytest
