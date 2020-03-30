@@ -7,6 +7,7 @@ import numpy as np
 from pliers.transformers import Transformer
 from pliers.utils import isgenerator, flatten, listify
 from pandas.api.types import is_numeric_dtype
+from copy import deepcopy
 
 
 class Extractor(with_metaclass(ABCMeta, Transformer)):
@@ -56,7 +57,7 @@ class ExtractorResult(object):
                  durations=None, orders=None):
         self._data = data
         self.stim = stim
-        self.extractor = extractor
+        self.extractor = deepcopy(extractor)
         self.features = features
         self._history = None
         self.onset = onsets
