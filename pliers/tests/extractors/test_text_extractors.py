@@ -402,7 +402,6 @@ def test_bert_sequence_extractor():
 
 
 def test_bert_LM_extractor():
-    config.set_option('cache_transformers', False)
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_masked = ComplexTextStim(text='This is MASK tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
@@ -480,7 +479,7 @@ def test_bert_LM_extractor():
     assert ext_target.mask == 'sentence'
     res_target_new = ext_target.transform(stim).to_df()
     assert all([res_target[c][0] != res_target_new[c][0]
-                for c in ['TARGET', 'WORD', 'mask']])
+                for c in ['Target', 'Word', 'mask']])
     with pytest.raises(ValueError) as err:
         ext_target.update_mask(new_mask=['some', 'mask'])
     assert 'must be a string' in str(err.value)
