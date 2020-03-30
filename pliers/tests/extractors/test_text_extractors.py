@@ -15,7 +15,7 @@ from pliers.extractors import (DictionaryExtractor,
                                WordCounterExtractor)
 from pliers.extractors.base import merge_results
 from pliers.stimuli import TextStim, ComplexTextStim
-from ..utils import get_test_data_path
+from pliers.tests.utils import get_test_data_path
 
 import numpy as np
 from os.path import join

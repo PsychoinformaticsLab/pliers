@@ -514,12 +514,10 @@ class BertExtractor(ComplexTextExtractor):
         return data, feat, ons, dur
     
     def _to_df(self, result, include_attributes=True):
-        res_dict = dict(zip(result.features, result._data))
+        res_df = pd.DataFrame(dict(zip(result.features, result._data)))
         if include_attributes:
-            log_dict = {attr: [getattr(result.extractor, attr)] for
-                        attr in self._model_attributes}
-            res_dict.update(log_dict)
-        res_df = pd.DataFrame(res_dict)
+            for attr in self._model_attributes:
+                res_df[attr] = pd.Series([getattr(result.extractor, attr)])
         res_df['object_id'] = range(res_df.shape[0])
         return res_df
 
@@ -792,7 +790,7 @@ class BertSentimentExtractor(BertExtractor):
         data = preds[0].numpy().squeeze()
         if self.return_softmax:
             data = scipy.special.softmax(data) 
-        data = data.tolist()
+        data = [listify(d) for d in data.tolist()]
         tok = [' '.join(wds)]
         try: 
             dur = ons[-1] + dur[-1] - ons[0]
@@ -801,7 +799,7 @@ class BertSentimentExtractor(BertExtractor):
         ons = ons[0]
         feat = ['sent_pos', 'sent_neg']
         if self.return_input:
-            data += [tok]
+            data += tok
             feat += ['sequence']   
         return data, feat, ons, dur
 
