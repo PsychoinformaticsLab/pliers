@@ -271,38 +271,20 @@ def test_spacy_doc_extractor():
 def test_bert_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
-    stim_cam = ComplexTextStim(text='ceci n\'est pas un pipe')
     
     ext_base = BertExtractor(pretrained_model='bert-base-uncased')
-    ext_large = BertExtractor(pretrained_model='bert-large-uncased', 
-                              tokenizer='bert-large-uncased')
-    #ext_tf = BertExtractor(pretrained_model='bert-base-uncased', 
-    #                       framework='tf')
-    ext_base_token = BertExtractor(pretrained_model='bert-base-uncased', 
+    ext_base_token = BertExtractor(pretrained_model='bert-base-uncased',
                                    return_input=True)
-    ext_distilbert = BertExtractor(pretrained_model='distilbert-base-uncased')
-    ext_roberta = BertExtractor(pretrained_model='roberta-base')
-    ext_camembert = BertExtractor(pretrained_model='camembert-base', 
-                                  return_input=True)
     
     base_result = ext_base.transform(stim)
     res = base_result.to_df()
     res_model_attr = base_result.to_df(include_attributes=True)
-    res_large = ext_large.transform(stim).to_df()
-    #res_tf = ext_tf.transform(stim).to_df()
     res_token = ext_base_token.transform(stim).to_df()
     res_file = ext_base.transform(stim_file).to_df()
-    res_distilbert = ext_distilbert.transform(stim).to_df()
-    res_roberta = ext_roberta.transform(stim).to_df()
-    res_camembert = ext_camembert.transform(stim_cam).to_df()
     
     # Test encoding shape
     assert len(res['encoding'][0]) == 768
-    assert len(res_large['encoding'][0]) == 1024
     assert len(res_file['encoding'][0]) == 768
-    assert len(res_distilbert['encoding'][0]) == 768
-    assert len(res_roberta['encoding'][0]) == 768
-    assert len(res_camembert['encoding'][0]) == 768
 
     # test base extractor
     assert res.shape[0] == 8
@@ -317,14 +299,6 @@ def test_bert_extractor():
     assert res_file['duration'][5] == 0.5
     assert res_file['object_id'][5] == 5
 
-    # test tensorflow vs torch
-    #cors = [np.corrcoef(res['encoding'][i], res_tf['encoding'][i])[0,1] 
-    #        for i in range(res.shape[0])]
-    #assert all(np.isclose(cors, 1))
-
-    # test camembert
-    assert res_camembert['token'][4] == 'est'
-
     # test model attributes
     assert all([a in res_model_attr.columns for a in ext_base._model_attributes])
 
@@ -332,6 +306,28 @@ def test_bert_extractor():
     with pytest.raises(ValueError) as err:
         BertExtractor(framework='keras')
     assert 'Invalid framework' in str(err.value)
+
+models = ['bert-large-uncased', 'distilbert-base-uncased',
+          'roberta-base','camembert-base']
+@pytest.mark.parametrize('model', models)
+def test_bert_other_models():
+    if model == 'camembert-base':
+        stim = ComplexTextStim(text='ceci n\'est pas un pipe')
+    else:
+        stim = ComplexTextStim(text='This is not a tokenized sentence.')
+    ext = BertExtractor(pretrained_model=model, return_input=True)
+    res = ext.transform(stim).to_df()
+    if model == 'bert-large-uncased':
+        shape = 1024
+    else:
+        shape = 768
+    assert len(res['encoding'][0]) == shape
+    if model == 'camembert-base':
+        assert res_camembert['token'][4] == 'est'
+
+    
+
+
 
 '''
 
