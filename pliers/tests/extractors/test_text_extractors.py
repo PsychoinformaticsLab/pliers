@@ -309,6 +309,11 @@ def test_bert_extractor():
         BertExtractor(framework='keras')
     assert 'Invalid framework' in str(err.value)
 
+    # delete the model
+    home = Path.home()
+    model_path = str(home / '.cache' / 'torch' / 'transformers')
+    shutil.rmtree(model_path)
+
     # Delete the models
     del res, res_token, res_file, ext_base, ext_base_token
 
@@ -340,20 +345,15 @@ def test_bert_other_models(model):
     del ext, res, stim
 
 
-
-'''
-
 def test_bert_sequence_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
 
     ext = BertSequenceEncodingExtractor()
-    ext_tf = BertSequenceEncodingExtractor(framework='tf')
     ext_sequence = BertSequenceEncodingExtractor(return_input=True)
     ext_cls = BertSequenceEncodingExtractor(return_special='[CLS]')
     ext_pooler = BertSequenceEncodingExtractor(return_special='pooler_output')
     ext_max = BertSequenceEncodingExtractor(pooling='max')
-    ext_distil = BertSequenceEncodingExtractor(pretrained_model='distilbert-base-uncased')
 
     # Test correct behavior when setting return_special
     assert ext_cls.pooling is None
@@ -362,25 +362,21 @@ def test_bert_sequence_extractor():
     assert ext_pooler.return_special == 'pooler_output'
 
     res = ext.transform(stim).to_df()
-    res_tf = ext.transform(stim).to_df()
     res_file = ext.transform(stim_file).to_df()
     res_sequence = ext_sequence.transform(stim).to_df()
     res_cls = ext_cls.transform(stim).to_df()
     res_pooler = ext_pooler.transform(stim).to_df()
     res_max = ext_max.transform(stim).to_df()
-    res_distil = ext_distil.transform(stim).to_df()
 
     # Check shape
     assert len(res['encoding'][0]) == 768
     assert len(res_cls['encoding'][0]) == 768
     assert len(res_pooler['encoding'][0]) == 768
     assert len(res_max['encoding'][0]) == 768
-    assert len(res_distil['encoding'][0]) == 768
     assert res.shape[0] == 1
     assert res_cls.shape[0] == 1
     assert res_pooler.shape[0] == 1
     assert res_max.shape[0] == 1
-    assert res_distil.shape[0] == 1
 
     # Make sure pooler/cls/no arguments return different encodings
     assert res['encoding'][0] != res_cls['encoding'][0]
@@ -397,7 +393,6 @@ def test_bert_sequence_extractor():
     assert res_file['onset'][0] == 0.2
 
     # test tf vs. torch
-    cor = np.corrcoef(res['encoding'][0], res_tf['encoding'][0])[0,1]
     assert np.isclose(cor, 1)
 
     # catch error with wrong numpy function and wrong special token arg
@@ -407,6 +402,13 @@ def test_bert_sequence_extractor():
     with pytest.raises(ValueError) as err:
         BertSequenceEncodingExtractor(return_special='[MASK]')
     assert 'must be one of' in str(err.value)
+
+    # delete the model
+    home = Path.home()
+    model_path = str(home / '.cache' / 'torch' / 'transformers')
+    shutil.rmtree(model_path)
+
+    del ext, ext_sequence, ext_cls, ext_pooler, ext_max
 
 
 def test_bert_LM_extractor():
@@ -435,10 +437,8 @@ def test_bert_LM_extractor():
     ext = BertLMExtractor(mask=2)
     ext_masked = BertLMExtractor()
     ext_target = BertLMExtractor(mask=1, target=target_wds)
-    ext_target_tf = BertLMExtractor(framework='tf', mask=1, target=target_wds)
     ext_topn = BertLMExtractor(mask=3, top_n=100)
     ext_threshold = BertLMExtractor(mask=4, threshold=.1, return_softmax=True)
-    ext_distil = BertLMExtractor(mask=2, pretrained_model='distilbert-base-uncased')
     ext_default = BertLMExtractor()
     ext_return_mask = BertLMExtractor(mask=1, top_n=10, 
                                       return_masked_word=True, return_input=True)
@@ -447,15 +447,12 @@ def test_bert_LM_extractor():
     res_masked = ext_masked.transform(stim_masked).to_df()
     res_file = ext.transform(stim_file).to_df()
     res_target = ext_target.transform(stim).to_df()
-    res_target_tf = ext_target_tf.transform(stim).to_df()
     res_topn = ext_topn.transform(stim).to_df()
     res_threshold = ext_threshold.transform(stim).to_df()
-    res_distil = ext_distil.transform(stim).to_df()
     res_default = ext_default.transform(stim_masked).to_df()
     res_return_mask = ext_return_mask.transform(stim).to_df()
 
     assert res.shape[0] == 1
-    assert res_distil.shape[0] == 1
 
     # test onset/duration
     assert res_file['onset'][0] == 1.0
@@ -476,10 +473,6 @@ def test_bert_LM_extractor():
         if v.capitalize() in res_threshold.columns:
             assert res_threshold[v.capitalize()][0] >= .1
             assert res_threshold[v.capitalize()][0] <= 1
-    
-    # torch vs tf
-    assert all([np.isclose(res_target[t.capitalize()][0], 
-                           res_target_tf[t.capitalize()][0]) for t in target_wds])
 
     # Test update mask method
     assert ext_target.mask == 1
@@ -501,19 +494,27 @@ def test_bert_LM_extractor():
     assert 'true_word_score' in res_return_mask.columns
     assert res_return_mask['sequence'][0] == 'This is not a tokenized sentence .'
 
+    # delete the model
+    home = Path.home()
+    model_path = str(home / '.cache' / 'torch' / 'transformers')
+    shutil.rmtree(model_path)
+
+    # remove variables
+    del ext, ext_masked, ext_target, ext_topn, ext_threshold, ext_default, \
+        ext_return_mask
+    del res, res_masked, res_file, res_target, res_topn, res_threshold, \
+        res_default, res_return_mask
 
 def test_bert_sentiment_extractor():
     stim = ComplexTextStim(text='This is the best day of my life.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
 
     ext = BertSentimentExtractor()
-    ext_tf = BertSentimentExtractor(framework='tf')
     ext_seq = BertSentimentExtractor(return_input=True)
     ext_softmax = BertSentimentExtractor(return_softmax=True)
 
     res = ext.transform(stim).to_df()
     res_file = ext.transform(stim_file).to_df()
-    res_tf = ext_tf.transform(stim).to_df()
     res_seq = ext_seq.transform(stim).to_df()
     res_softmax = ext_softmax.transform(stim).to_df()
 
@@ -521,11 +522,17 @@ def test_bert_sentiment_extractor():
     assert res_file['onset'][0] == 0.2
     assert res_file['duration'][0] == 2.9
     assert all([s in res.columns for s in ['sent_pos', 'sent_neg']])
-    assert np.isclose(res['sent_pos'][0], res_tf['sent_pos'][0])
-    assert np.isclose(res['sent_neg'][0], res_tf['sent_neg'][0])
     assert res_seq['sequence'][0] == 'This is the best day of my life .'
     assert all([res_softmax[s][0] >= 0 for s in ['sent_pos','sent_neg'] ])
     assert all([res_softmax[s][0] <= 1 for s in ['sent_pos','sent_neg'] ])
+
+    # delete the model
+    home = Path.home()
+    model_path = str(home / '.cache' / 'torch' / 'transformers')
+    shutil.rmtree(model_path)
+
+    del ext, ext_seq, ext_softmax
+    del res, res_file, res_seq, res_softmax
 
 
 def test_word_counter_extractor():
@@ -558,4 +565,3 @@ def test_word_counter_extractor():
     assert result_stim_txt['log_word_count'][15] == np.log(2)
     assert result_stim_txt['log_word_count'][44] == np.log(3)
 
-'''
