@@ -515,9 +515,6 @@ class BertExtractor(ComplexTextExtractor):
     
     def _to_df(self, result, include_attributes=True):
         res_df = pd.DataFrame(dict(zip(result.features, result._data)))
-        if include_attributes:
-            for attr in self._model_attributes:
-                res_df[attr] = pd.Series([getattr(result.extractor, attr)])
         res_df['object_id'] = range(res_df.shape[0])
         return res_df
 
