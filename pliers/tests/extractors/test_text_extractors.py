@@ -329,10 +329,10 @@ def test_bert_other_models(model):
         shape = 768
     assert len(res['encoding'][0]) == shape
     if model == 'camembert-base':
-        assert res_camembert['token'][4] == 'est'
+        assert res['token'][4] == 'est'
 
     # delete the model
-    home = str(Path.home())
+    home = Path.home()
     model_path = str(home / '.cache' / 'torch' / 'transformers')
     shutil.rmtree(model_path)
 
