@@ -408,6 +408,8 @@ def test_bert_sequence_extractor():
     model_path = str(home / '.cache' / 'torch' / 'transformers')
     shutil.rmtree(model_path)
 
+    print('DONE WITH SEQUENCE!')
+
     del ext, ext_sequence, ext_cls, ext_pooler, ext_max
 
 
@@ -499,7 +501,7 @@ def test_bert_LM_extractor():
     model_path = str(home / '.cache' / 'torch' / 'transformers')
     shutil.rmtree(model_path)
 
-    # remove variables
+    # remove
     del ext, ext_masked, ext_target, ext_topn, ext_threshold, ext_default, \
         ext_return_mask
     del res, res_masked, res_file, res_target, res_topn, res_threshold, \
