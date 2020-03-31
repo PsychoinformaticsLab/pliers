@@ -344,7 +344,7 @@ def test_bert_other_models(model):
     # remove variables
     del ext, res, stim
 
-''' 
+ 
 def test_bert_sequence_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
@@ -411,7 +411,7 @@ def test_bert_sequence_extractor():
     shutil.rmtree(model_path)
 
     del ext, ext_sequence, ext_cls, ext_pooler, ext_max
-
+'''
 
 def test_bert_LM_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
