@@ -317,7 +317,7 @@ def test_bert_extractor():
     # Delete the models
     del res, res_token, res_file, ext_base, ext_base_token
 
-
+'''
 @pytest.mark.parametrize('model', ['bert-large-uncased', 
                                    'distilbert-base-uncased',
                                    'roberta-base','camembert-base'])
@@ -535,7 +535,7 @@ def test_bert_sentiment_extractor():
 
     del ext, ext_seq, ext_softmax
     del res, res_file, res_seq, res_softmax
-'''
+
 
 def test_word_counter_extractor():
     stim_txt = ComplexTextStim(text='This is a text where certain words occur'
