@@ -349,11 +349,14 @@ def test_bert_sequence_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
 
-    ext = BertSequenceEncodingExtractor()
     ext_sequence = BertSequenceEncodingExtractor(return_input=True)
+    print('Initialized ext_seq')
     ext_cls = BertSequenceEncodingExtractor(return_special='[CLS]')
+    print('Initialized ext_cls')
     ext_pooler = BertSequenceEncodingExtractor(return_special='pooler_output')
+    print('Initialized ext_pooler')
     ext_max = BertSequenceEncodingExtractor(pooling='max')
+    print('Initialized ext_max')
 
     # Test correct behavior when setting return_special
     assert ext_cls.pooling is None
@@ -361,28 +364,27 @@ def test_bert_sequence_extractor():
     assert ext_cls.return_special == '[CLS]'
     assert ext_pooler.return_special == 'pooler_output'
 
-    res = ext.transform(stim).to_df()
-    res_file = ext.transform(stim_file).to_df()
     res_sequence = ext_sequence.transform(stim).to_df()
+    res_file = ext.transform(stim_file).to_df()
     res_cls = ext_cls.transform(stim).to_df()
     res_pooler = ext_pooler.transform(stim).to_df()
     res_max = ext_max.transform(stim).to_df()
 
     # Check shape
-    assert len(res['encoding'][0]) == 768
+    assert len(res_sequence['encoding'][0]) == 768
     assert len(res_cls['encoding'][0]) == 768
     assert len(res_pooler['encoding'][0]) == 768
     assert len(res_max['encoding'][0]) == 768
-    assert res.shape[0] == 1
+    assert res_sequence.shape[0] == 1
     assert res_cls.shape[0] == 1
     assert res_pooler.shape[0] == 1
     assert res_max.shape[0] == 1
 
     # Make sure pooler/cls/no arguments return different encodings
-    assert res['encoding'][0] != res_cls['encoding'][0]
-    assert res['encoding'][0] != res_pooler['encoding'][0]
-    assert res['encoding'][0] != res_max['encoding'][0]
-    assert all([res_max['encoding'][0][i] >= res['encoding'][0][i]
+    assert res_sequence['encoding'][0] != res_cls['encoding'][0]
+    assert res_sequence['encoding'][0] != res_pooler['encoding'][0]
+    assert res_sequence['encoding'][0] != res_max['encoding'][0]
+    assert all([res_max['encoding'][0][i] >= res_sequence['encoding'][0][i]
                                               for i in range(768)])
 
     # test return sequence
@@ -407,8 +409,6 @@ def test_bert_sequence_extractor():
     home = Path.home()
     model_path = str(home / '.cache' / 'torch' / 'transformers')
     shutil.rmtree(model_path)
-
-    print('DONE WITH SEQUENCE!')
 
     del ext, ext_sequence, ext_cls, ext_pooler, ext_max
 
