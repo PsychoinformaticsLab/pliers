@@ -317,7 +317,7 @@ def test_bert_extractor():
     # Delete the models
     del res, res_token, res_file, ext_base, ext_base_token
 
-
+'''
 @pytest.mark.parametrize('model', ['bert-large-uncased', 
                                    'distilbert-base-uncased',
                                    'roberta-base','camembert-base'])
@@ -343,7 +343,7 @@ def test_bert_other_models(model):
 
     # remove variables
     del ext, res, stim
-
+'''
  
 def test_bert_sequence_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
@@ -412,7 +412,7 @@ def test_bert_sequence_extractor():
 
     del ext, ext_sequence, ext_cls, ext_pooler, ext_max
 
-
+'''
 def test_bert_LM_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_masked = ComplexTextStim(text='This is MASK tokenized sentence.')
@@ -506,7 +506,7 @@ def test_bert_LM_extractor():
         ext_return_mask
     del res, res_masked, res_file, res_target, res_topn, res_threshold, \
         res_default, res_return_mask
-
+'''
 
 def test_bert_sentiment_extractor():
     stim = ComplexTextStim(text='This is the best day of my life.')
