@@ -18,6 +18,8 @@ from pliers.stimuli import TextStim, ComplexTextStim
 from pliers.tests.utils import get_test_data_path
 import numpy as np
 from os.path import join
+from pathlib import Path
+import shutil
 import pytest
 import spacy
 from os import environ
@@ -307,10 +309,14 @@ def test_bert_extractor():
         BertExtractor(framework='keras')
     assert 'Invalid framework' in str(err.value)
 
-models = ['bert-large-uncased', 'distilbert-base-uncased',
-          'roberta-base','camembert-base']
-@pytest.mark.parametrize('model', models)
-def test_bert_other_models():
+    # Delete the models
+    del res, res_token, res_file, ext_base, ext_base_token
+
+
+@pytest.mark.parametrize('model', ['bert-large-uncased', 
+                                   'distilbert-base-uncased',
+                                   'roberta-base','camembert-base'])
+def test_bert_other_models(model):
     if model == 'camembert-base':
         stim = ComplexTextStim(text='ceci n\'est pas un pipe')
     else:
@@ -325,7 +331,13 @@ def test_bert_other_models():
     if model == 'camembert-base':
         assert res_camembert['token'][4] == 'est'
 
-    
+    # delete the model
+    home = str(Path.home())
+    model_path = str(home / '.cache' / 'torch' / 'transformers')
+    shutil.rmtree(model_path)
+
+    # remove variables
+    del ext, res, stim
 
 
 
