@@ -300,16 +300,15 @@ def merge_results(results, format='wide', timing=True, metadata=True,
     if object_id == 'auto' and data['object_id'].nunique() == 1:
         data = data.drop('object_id', axis=1)
 
+    unique_ext =  data['extractor'] + '#' + data['feature'].astype(str)
     if extractor_names in ['prepend', 'multi']:
-        data['feature'] = data['extractor'] + '#' + data['feature'].astype(str)
-
-    if extractor_names != 'column':
-        data = data.drop('extractor', axis=1)
+        data['feature'] = unique_ext
 
     if format == 'wide':
         ind_cols = {'stim_name', 'onset', 'order', 'duration', 'object_id',
                     'class', 'filename', 'history', 'source_file'}
         ind_cols = list(ind_cols & set(data.columns))
+
         # pandas groupby/index operations can't handle NaNs in index, (see
         # issue at https://github.com/pandas-dev/pandas/issues/3729), so we
         # replace NaNs with a placeholder and then re-substitute after
@@ -319,13 +318,23 @@ def merge_results(results, format='wide', timing=True, metadata=True,
 
         # Set default aggfunc based on column type, otherwise bad things happen
         if aggfunc is None:
-            aggfunc = 'mean' if is_numeric_dtype(data['value']) else 'first'
+            aggfunc = 'mean' if is_numeric_dtype(data['value']) else 'first' 
 
+        # add conditional on value of extractor_names
+        if log_attributes:
+            data['unique_extractor'] = unique_ext.astype(str) + '#log_attributes'
+            logs = data.pivot_table(index=ind_cols, columns='unique_extractor',
+                                    values='log_attributes', aggfunc='first').reset_index()
         data = data.pivot_table(index=ind_cols, columns='feature',
                                 values='value', aggfunc=aggfunc).reset_index()
+        #if log_attributes:
+        #    data = pd.concat([data, logs], axis=1).reset_index(drop=True)
         data.columns.name = None  # vestigial--is set to 'feature'
         data[ind_cols] = data[ind_cols].replace('PlAcEholdER', np.nan)
         data[ind_cols] = data[ind_cols].astype(dict(zip(ind_cols, dtypes)))
+
+    if extractor_names != 'column' and 'extractor' in data.columns:
+        data = data.drop('extractor', axis=1)
 
     if timing == 'auto' and 'onset' in data.columns:
         if data['onset'].isnull().all():
