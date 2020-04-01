@@ -7,6 +7,7 @@ import numpy as np
 from pliers.transformers import Transformer
 from pliers.utils import isgenerator, flatten, listify
 from pandas.api.types import is_numeric_dtype
+import json
 
 
 class Extractor(with_metaclass(ABCMeta, Transformer)):
@@ -75,7 +76,8 @@ class ExtractorResult(object):
         return self.to_df()
 
     def to_df(self, timing=True, metadata=False, format='wide',
-              extractor_name=False, object_id=True, **to_df_kwargs):
+              extractor_name=False, object_id=True, log_attributes=False,
+              **to_df_kwargs):
         ''' Convert current instance to a pandas DatasFrame.
 
         Args:
@@ -102,6 +104,8 @@ class ExtractorResult(object):
                 values, the special value 'auto' can be passed, in which case
                 the object_id column will only be inserted if the resulting
                 constant would be non-constant.
+            log_attributes (bool): if True, returns log_attributes of the 
+                extractor as serialized dictionary in log_attributes column.
 
         Returns:
             A pandas DataFrame.
@@ -186,6 +190,9 @@ class ExtractorResult(object):
             hist = '' if self.stim.history is None else str(self.stim.history)
             df['history'] = hist
             df['source_file'] = self.history.to_df().iloc[0].source_file
+
+        if log_attributes:
+            df['log_attributes'] = json.dumps(self.history.transformer_params)
         return df
 
     @property
