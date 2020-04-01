@@ -306,11 +306,6 @@ def test_bert_extractor():
         BertExtractor(framework='keras')
     assert 'Invalid framework' in str(err.value)
 
-    # delete the model
-    home = Path.home()
-    model_path = str(home / '.cache' / 'torch' / 'transformers')
-    shutil.rmtree(model_path)
-
     # Delete the models
     del res, res_token, res_file, ext_base, ext_base_token
 
@@ -387,9 +382,6 @@ def test_bert_sequence_extractor():
     assert res_file['duration'][0] == 2.9
     assert res_file['onset'][0] == 0.2
 
-    # test tf vs. torch
-    assert np.isclose(cor, 1)
-
     # catch error with wrong numpy function and wrong special token arg
     with pytest.raises(ValueError) as err:
         BertSequenceEncodingExtractor(pooling='avg')
@@ -397,11 +389,6 @@ def test_bert_sequence_extractor():
     with pytest.raises(ValueError) as err:
         BertSequenceEncodingExtractor(return_special='[MASK]')
     assert 'must be one of' in str(err.value)
-
-    # delete the model
-    home = Path.home()
-    model_path = str(home / '.cache' / 'torch' / 'transformers')
-    shutil.rmtree(model_path)
 
     del ext, ext_sequence, ext_cls, ext_pooler, ext_max
 
@@ -458,7 +445,7 @@ def test_bert_LM_extractor():
     assert res_target.shape[1] == 6
 
     # Check top_n
-    assert res_topn.shape[1] == 111
+    assert res_topn.shape[1] == 104
     assert all([res_topn.iloc[:,3][0] > res_topn.iloc[:,i][0] for i in range(4,103)])
 
     # Check threshold and return_softmax
@@ -488,11 +475,6 @@ def test_bert_LM_extractor():
     assert 'true_word_score' in res_return_mask.columns
     assert res_return_mask['sequence'][0] == 'This is not a tokenized sentence .'
 
-    # delete the model
-    home = Path.home()
-    model_path = str(home / '.cache' / 'torch' / 'transformers')
-    shutil.rmtree(model_path)
-
     # remove
     del ext, ext_masked, ext_target, ext_topn, ext_threshold, ext_default, \
         ext_return_mask
@@ -520,11 +502,6 @@ def test_bert_sentiment_extractor():
     assert res_seq['sequence'][0] == 'This is the best day of my life .'
     assert all([res_softmax[s][0] >= 0 for s in ['sent_pos','sent_neg'] ])
     assert all([res_softmax[s][0] <= 1 for s in ['sent_pos','sent_neg'] ])
-
-    # delete the model
-    home = Path.home()
-    model_path = str(home / '.cache' / 'torch' / 'transformers')
-    shutil.rmtree(model_path)
 
     del ext, ext_seq, ext_softmax
     del res, res_file, res_seq, res_softmax
