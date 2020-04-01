@@ -11,6 +11,7 @@ from pliers.extractors.base import ExtractorResult, merge_results
 from pliers import config
 import numpy as np
 import pytest
+import json
 
 TEXT_DIR = join(get_test_data_path(), 'text')
 
@@ -139,6 +140,25 @@ def test_merge_extractor_results():
     assert not set(not_features).intersection(set(df['feature']))
 
     df = merge_results(results, format='long', extractor_names='prepend')
+    assert df.shape == (1800, 11)
+    row = df.iloc[523, :]
+    assert row['feature'] == 'Extractor1#feature_2'
+    assert not set(not_features).intersection(set(df['feature']))
+
+    df = merge_results(results, format='wide', log_attributes=True)
+    logattr = []
+    for de in des:
+        logattr.append(de._log_attributes)
+    assert 'log_attributes' in df.columns
+    for idx,row in df.iterrows():
+        if 'Extractor1' in df['feature'][idx]:
+            log_attr = json.loads(df['log_attributes'][idx])
+            for l in logattr[0]:
+                assert l in log_attr['keys']
+
+
+
+
     assert df.shape == (1800, 11)
     row = df.iloc[523, :]
     assert row['feature'] == 'Extractor1#feature_2'
