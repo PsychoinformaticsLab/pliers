@@ -343,7 +343,7 @@ def test_bert_other_models(model):
 
     # remove variables
     del ext, res, stim
-'''
+
  
 def test_bert_sequence_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
@@ -531,7 +531,7 @@ def test_bert_sentiment_extractor():
 
     del ext, ext_seq, ext_softmax
     del res, res_file, res_seq, res_softmax
-
+'''
 
 def test_word_counter_extractor():
     stim_txt = ComplexTextStim(text='This is a text where certain words occur'
