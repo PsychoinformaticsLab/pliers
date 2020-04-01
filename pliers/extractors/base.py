@@ -308,7 +308,7 @@ def merge_results(results, format='wide', timing=True, metadata=True,
 
     if format == 'wide':
         ind_cols = {'stim_name', 'onset', 'order', 'duration', 'object_id',
-                    'class', 'filename', 'history', 'source_file'}
+                    'log_attributes', 'class', 'filename', 'history', 'source_file'}
         ind_cols = list(ind_cols & set(data.columns))
         # pandas groupby/index operations can't handle NaNs in index, (see
         # issue at https://github.com/pandas-dev/pandas/issues/3729), so we
