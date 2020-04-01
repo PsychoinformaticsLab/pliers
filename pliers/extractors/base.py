@@ -206,8 +206,8 @@ class ExtractorResult(object):
 
 
 def merge_results(results, format='wide', timing=True, metadata=True,
-                  extractor_names=True, object_id=True, aggfunc=None,
-                  invalid_results='ignore', **to_df_kwargs):
+                  extractor_names=True, object_id=True, log_attributes=False,
+                  aggfunc=None, invalid_results='ignore', **to_df_kwargs):
     ''' Merges a list of ExtractorResults instances and returns a pandas DF.
 
     Args:
@@ -283,7 +283,8 @@ def merge_results(results, format='wide', timing=True, metadata=True,
         if isinstance(r, ExtractorResult):
             dfs.append(r.to_df(timing=_timing, metadata=metadata,
                                format='long', extractor_name=True,
-                               object_id=_object_id, log_attributes=False,
+                               object_id=_object_id, 
+                               log_attributes=log_attributes,
                                **to_df_kwargs))
         elif invalid_results == 'fail':
             raise ValueError("At least one of the provided results was not an"
