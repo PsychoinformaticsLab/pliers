@@ -301,9 +301,6 @@ def test_bert_extractor():
     assert res_file['duration'][5] == 0.5
     assert res_file['object_id'][5] == 5
 
-    # test model attributes
-    assert all([a in res_model_attr.columns for a in ext_base._model_attributes])
-
     # catch error if framework is invalid
     with pytest.raises(ValueError) as err:
         BertExtractor(framework='keras')
@@ -317,7 +314,7 @@ def test_bert_extractor():
     # Delete the models
     del res, res_token, res_file, ext_base, ext_base_token
 
-'''
+
 @pytest.mark.parametrize('model', ['bert-large-uncased', 
                                    'distilbert-base-uncased',
                                    'roberta-base','camembert-base'])
@@ -361,7 +358,7 @@ def test_bert_sequence_extractor():
     assert ext_pooler.return_special == 'pooler_output'
 
     res_sequence = ext_sequence.transform(stim).to_df()
-    res_file = ext.transform(stim_file).to_df()
+    res_file = ext_sequence.transform(stim_file).to_df()
     res_cls = ext_cls.transform(stim).to_df()
     res_pooler = ext_pooler.transform(stim).to_df()
     res_max = ext_max.transform(stim).to_df()
@@ -458,7 +455,7 @@ def test_bert_LM_extractor():
 
     # Check target words
     assert all([w.capitalize() in res_target.columns for w in target_wds])
-    assert res_target.shape[1] == 13
+    assert res_target.shape[1] == 6
 
     # Check top_n
     assert res_topn.shape[1] == 111
@@ -531,7 +528,7 @@ def test_bert_sentiment_extractor():
 
     del ext, ext_seq, ext_softmax
     del res, res_file, res_seq, res_softmax
-'''
+
 
 def test_word_counter_extractor():
     stim_txt = ComplexTextStim(text='This is a text where certain words occur'
