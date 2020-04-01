@@ -324,11 +324,12 @@ def merge_results(results, format='wide', timing=True, metadata=True,
         if log_attributes:
             data['unique_extractor'] = unique_ext.astype(str) + '#log_attributes'
             logs = data.pivot_table(index=ind_cols, columns='unique_extractor',
-                                    values='log_attributes', aggfunc='first').reset_index()
+                                    values='log_attributes', aggfunc='first')
         data = data.pivot_table(index=ind_cols, columns='feature',
-                                values='value', aggfunc=aggfunc).reset_index()
-        #if log_attributes:
-        #    data = pd.concat([data, logs], axis=1).reset_index(drop=True)
+                                values='value', aggfunc=aggfunc)
+        if log_attributes:
+            data = pd.concat([data,logs], axis=1)
+        data = data.reset_index()
         data.columns.name = None  # vestigial--is set to 'feature'
         data[ind_cols] = data[ind_cols].replace('PlAcEholdER', np.nan)
         data[ind_cols] = data[ind_cols].astype(dict(zip(ind_cols, dtypes)))
