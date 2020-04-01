@@ -283,7 +283,8 @@ def merge_results(results, format='wide', timing=True, metadata=True,
         if isinstance(r, ExtractorResult):
             dfs.append(r.to_df(timing=_timing, metadata=metadata,
                                format='long', extractor_name=True,
-                               object_id=_object_id, **to_df_kwargs))
+                               object_id=_object_id, log_attributes=False,
+                               **to_df_kwargs))
         elif invalid_results == 'fail':
             raise ValueError("At least one of the provided results was not an"
                              "ExtractorResult. Set the invalid_results"
@@ -306,7 +307,8 @@ def merge_results(results, format='wide', timing=True, metadata=True,
 
     if format == 'wide':
         ind_cols = {'stim_name', 'onset', 'order', 'duration', 'object_id',
-                    'class', 'filename', 'history', 'source_file'}
+                    'log_attributes', 'class', 'filename', 'history', 
+                    'source_file'}
         ind_cols = list(ind_cols & set(data.columns))
         # pandas groupby/index operations can't handle NaNs in index, (see
         # issue at https://github.com/pandas-dev/pandas/issues/3729), so we
