@@ -1,5 +1,6 @@
 from os.path import join
-from ..utils import get_test_data_path, DummyExtractor, ClashingFeatureExtractor
+from pliers.tests.utils import (get_test_data_path, DummyExtractor, 
+                                ClashingFeatureExtractor)
 from pliers.extractors import (LengthExtractor,
                                BrightnessExtractor,
                                SharpnessExtractor,
@@ -146,27 +147,20 @@ def test_merge_extractor_results():
     assert not set(not_features).intersection(set(df['feature']))
 
     df = merge_results(results, format='wide', log_attributes=True)
-    logattr = []
+    logattr =  {}
     for de in des:
-        logattr.append(de._log_attributes) #stores log attributes to be found for each extractor
-    for eidx, ename in enumerate(de_names):
+        logattr[de.name] = de._log_attributes #stores log attributes to be found for each extractor
         for feat in ['feature_1', 'feature_2', 'feature_3']:
-            idx_str = f'{ename}#{feat}#log_attributes'
+            idx_str = f'{de.name}#{feat}#log_attributes'
             assert idx_str in df.columns
-            logattr
-
-    for idx,row in df.iterrows():
-        if 'Extractor1' in df['feature'][idx]:
-            log_attr = json.loads(df['log_attributes'][idx])
-            for l in logattr[0]:
-                assert l in log_attr['keys']
-
+            df_log_attr = json.loads(df[idx_str][0])
+            for l in logattr[de.name]:
+                assert l in df_log_attr.keys()
+    
     df = merge_results(results, format='long', log_attributes=True)
-
-
-
-
-    assert df.shape == (1800, 11)
-    row = df.iloc[523, :]
-    assert row['feature'] == 'Extractor1#feature_2'
-    assert not set(not_features).intersection(set(df['feature']))
+    for idx, row in df.iterrows():
+        de_name = row['feature'].split('#')[0]
+        logs = logattr[de_name]
+        df_logs = row['log_attributes']
+        for l in logs:
+            assert l in json.loads(df_logs).keys()

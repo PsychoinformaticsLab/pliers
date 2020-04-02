@@ -192,7 +192,8 @@ class ExtractorResult(object):
             df['source_file'] = self.history.to_df().iloc[0].source_file
 
         if log_attributes:
-            df['log_attributes'] = json.dumps(self.history.transformer_params)
+            dict_params = eval(self.history.transformer_params)
+            df['log_attributes'] = json.dumps(dict_params)
         return df
 
     @property
@@ -242,7 +243,6 @@ def merge_results(results, format='wide', timing=True, metadata=True,
                   Extractor name and the second level containing the feature
                   name. This value is invalid if format='long' (and will raise
                   and error).
-
         object_id (bool): If True, attempts to intelligently add an
             'object_id' column that differentiates between multiple objects in
             the results that may share onsets/orders/durations (and would
@@ -250,6 +250,10 @@ def merge_results(results, format='wide', timing=True, metadata=True,
             ImageExtractors that identify multiple target objects (e.g., faces)
             within a single ImageStim. Default is 'auto', which includes the
             'object_id' column if and only if it has a non-constant value.
+        log_attributes (bool): If True, returns serialized log_attributes of
+            the extractor. If format='wide', merge_results returns one column
+            per extractor named ExtractorName#FeatureName#log_attributes.
+            If format='long', returns only one column named 'log_attributes'.
         aggfunc (str, Callable): If format='wide' and extractor_names='drop',
             it's possible for name clashes between features to occur. In such
             cases, the aggfunc argument is passed onto pandas' pivot_table
