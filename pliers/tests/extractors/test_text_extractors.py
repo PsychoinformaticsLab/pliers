@@ -341,22 +341,22 @@ def test_bert_sequence_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
 
-    ext_sequence = BertSequenceEncodingExtractor(return_input=True)
-    ext_cls = BertSequenceEncodingExtractor(return_special='[CLS]')
-    ext_pooler = BertSequenceEncodingExtractor(return_special='pooler_output')
-    ext_max = BertSequenceEncodingExtractor(pooling='max')
+    #ext_sequence = BertSequenceEncodingExtractor(return_input=True)
+    #ext_cls = BertSequenceEncodingExtractor(return_special='[CLS]')
+    #ext_pooler = BertSequenceEncodingExtractor(return_special='pooler_output')
+    #ext_max = BertSequenceEncodingExtractor(pooling='max')
 
     # Test correct behavior when setting return_special
-    assert ext_cls.pooling is None
-    assert ext_pooler.pooling is None
-    assert ext_cls.return_special == '[CLS]'
-    assert ext_pooler.return_special == 'pooler_output'
+    #assert ext_cls.pooling is None
+    #assert ext_pooler.pooling is None
+    #assert ext_cls.return_special == '[CLS]'
+    #assert ext_pooler.return_special == 'pooler_output'
 
-    res_sequence = ext_sequence.transform(stim).to_df()
-    res_file = ext_sequence.transform(stim_file).to_df()
-    res_cls = ext_cls.transform(stim).to_df()
-    res_pooler = ext_pooler.transform(stim).to_df()
-    res_max = ext_max.transform(stim).to_df()
+    res_sequence = BertSequenceEncodingExtractor(return_input=True).transform(stim).to_df()
+    res_file =  BertSequenceEncodingExtractor(return_input=True).transform(stim_file).to_df()
+    res_cls = BertSequenceEncodingExtractor(return_special='[CLS]').transform(stim).to_df()
+    res_pooler = BertSequenceEncodingExtractor(return_special='pooler_output').transform(stim).to_df()
+    res_max = BertSequenceEncodingExtractor(pooling='max').transform(stim).to_df()
 
     # Check shape
     assert len(res_sequence['encoding'][0]) == 768
@@ -390,7 +390,7 @@ def test_bert_sequence_extractor():
         BertSequenceEncodingExtractor(return_special='[MASK]')
     assert 'must be one of' in str(err.value)
 
-    del ext, ext_sequence, ext_cls, ext_pooler, ext_max
+    #del ext, ext_sequence, ext_cls, ext_pooler, ext_max
 
 
 def test_bert_LM_extractor():
@@ -416,23 +416,23 @@ def test_bert_LM_extractor():
     assert 'No valid target token' in str(err.value)
 
     target_wds = ['target','word']
-    ext = BertLMExtractor(mask=2)
-    ext_masked = BertLMExtractor()
+    #ext = BertLMExtractor(mask=2)
+    #ext_masked = BertLMExtractor()
     ext_target = BertLMExtractor(mask=1, target=target_wds)
-    ext_topn = BertLMExtractor(mask=3, top_n=100)
-    ext_threshold = BertLMExtractor(mask=4, threshold=.1, return_softmax=True)
-    ext_default = BertLMExtractor()
-    ext_return_mask = BertLMExtractor(mask=1, top_n=10, 
-                                      return_masked_word=True, return_input=True)
+    #ext_topn = BertLMExtractor(mask=3, top_n=100)
+    #ext_threshold = BertLMExtractor(mask=4, threshold=.1, return_softmax=True)
+    #ext_default = BertLMExtractor()
+    #ext_return_mask = BertLMExtractor(mask=1, top_n=10, 
+    #                                  return_masked_word=True, return_input=True)
 
-    res = ext.transform(stim).to_df()
-    res_masked = ext_masked.transform(stim_masked).to_df()
-    res_file = ext.transform(stim_file).to_df()
+    res =  BertLMExtractor(mask=2).transform(stim).to_df()
+    res_masked = BertLMExtractor().transform(stim_masked).to_df()
+    res_file =  BertLMExtractor(mask=2).transform(stim_file).to_df()
     res_target = ext_target.transform(stim).to_df()
-    res_topn = ext_topn.transform(stim).to_df()
-    res_threshold = ext_threshold.transform(stim).to_df()
-    res_default = ext_default.transform(stim_masked).to_df()
-    res_return_mask = ext_return_mask.transform(stim).to_df()
+    res_topn = BertLMExtractor(mask=3, top_n=100).transform(stim).to_df()
+    res_threshold = BertLMExtractor(mask=4, threshold=.1, return_softmax=True).transform(stim).to_df()
+    res_default = BertLMExtractor().transform(stim_masked).to_df()
+    res_return_mask = BertLMExtractor(mask=1, top_n=10, return_masked_word=True, return_input=True).transform(stim).to_df()
 
     assert res.shape[0] == 1
 
@@ -476,24 +476,24 @@ def test_bert_LM_extractor():
     assert res_return_mask['sequence'][0] == 'This is not a tokenized sentence .'
 
     # remove
-    del ext, ext_masked, ext_target, ext_topn, ext_threshold, ext_default, \
-        ext_return_mask
-    del res, res_masked, res_file, res_target, res_topn, res_threshold, \
-        res_default, res_return_mask
+    #del ext, ext_masked, ext_target, ext_topn, ext_threshold, ext_default, \
+    #    ext_return_mask
+    #del res, res_masked, res_file, res_target, res_topn, res_threshold, \
+    #    res_default, res_return_mask
 
 
 def test_bert_sentiment_extractor():
     stim = ComplexTextStim(text='This is the best day of my life.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
 
-    ext = BertSentimentExtractor()
-    ext_seq = BertSentimentExtractor(return_input=True)
-    ext_softmax = BertSentimentExtractor(return_softmax=True)
+    #ext = BertSentimentExtractor()
+    #ext_seq = BertSentimentExtractor(return_input=True)
+    #ext_softmax = BertSentimentExtractor(return_softmax=True)
 
-    res = ext.transform(stim).to_df()
-    res_file = ext.transform(stim_file).to_df()
-    res_seq = ext_seq.transform(stim).to_df()
-    res_softmax = ext_softmax.transform(stim).to_df()
+    res = BertSentimentExtractor().transform(stim).to_df()
+    res_file = BertSentimentExtractor().transform(stim_file).to_df()
+    res_seq = BertSentimentExtractor(return_input=True).transform(stim).to_df()
+    res_softmax = BertSentimentExtractor(return_softmax=True).transform(stim).to_df()
 
     assert res.shape[0] == 1
     assert res_file['onset'][0] == 0.2
@@ -503,7 +503,7 @@ def test_bert_sentiment_extractor():
     assert all([res_softmax[s][0] >= 0 for s in ['sent_pos','sent_neg'] ])
     assert all([res_softmax[s][0] <= 1 for s in ['sent_pos','sent_neg'] ])
 
-    del ext, ext_seq, ext_softmax
+    #del ext, ext_seq, ext_softmax
     del res, res_file, res_seq, res_softmax
 
 
