@@ -148,13 +148,20 @@ def test_merge_extractor_results():
     df = merge_results(results, format='wide', log_attributes=True)
     logattr = []
     for de in des:
-        logattr.append(de._log_attributes)
-    assert 'log_attributes' in df.columns
+        logattr.append(de._log_attributes) #stores log attributes to be found for each extractor
+    for eidx, ename in enumerate(de_names):
+        for feat in ['feature_1', 'feature_2', 'feature_3']:
+            idx_str = f'{ename}#{feat}#log_attributes'
+            assert idx_str in df.columns
+            logattr
+
     for idx,row in df.iterrows():
         if 'Extractor1' in df['feature'][idx]:
             log_attr = json.loads(df['log_attributes'][idx])
             for l in logattr[0]:
                 assert l in log_attr['keys']
+
+    df = merge_results(results, format='long', log_attributes=True)
 
 
 
