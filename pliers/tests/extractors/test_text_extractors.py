@@ -309,7 +309,7 @@ def test_bert_extractor():
     # Delete the models
     del res, res_token, res_file, ext_base, ext_base_token
 
-'''
+
 @pytest.mark.parametrize('model', ['bert-large-uncased', 
                                    'distilbert-base-uncased',
                                    'roberta-base','camembert-base'])
@@ -334,21 +334,16 @@ def test_bert_other_models(model):
 
     # remove variables
     del res, stim
-'''
+
  
 def test_bert_sequence_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
 
-    #ext_sequence = BertSequenceEncodingExtractor(return_input=True)
-    #ext_cls = BertSequenceEncodingExtractor(return_special='[CLS]')
     #ext_pooler = BertSequenceEncodingExtractor(return_special='pooler_output')
-    #ext_max = BertSequenceEncodingExtractor(pooling='max')
 
     # Test correct behavior when setting return_special
-    #assert ext_cls.pooling is None
     #assert ext_pooler.pooling is None
-    #assert ext_cls.return_special == '[CLS]'
     #assert ext_pooler.return_special == 'pooler_output'
 
     res_sequence = BertSequenceEncodingExtractor(return_input=True).transform(stim).to_df()
@@ -389,8 +384,6 @@ def test_bert_sequence_extractor():
         BertSequenceEncodingExtractor(return_special='[MASK]')
     assert 'must be one of' in str(err.value)
 
-    #del ext, ext_sequence, ext_cls, ext_pooler, ext_max
-
 
 def test_bert_LM_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
@@ -415,13 +408,7 @@ def test_bert_LM_extractor():
     assert 'No valid target token' in str(err.value)
 
     target_wds = ['target','word']
-    #ext = BertLMExtractor(mask=2)
     ext_target = BertLMExtractor(mask=1, target=target_wds)
-    #ext_topn = BertLMExtractor(mask=3, top_n=100)
-    #ext_threshold = BertLMExtractor(mask=4, threshold=.1, return_softmax=True)
-    #ext_default = BertLMExtractor()
-    #ext_return_mask = BertLMExtractor(mask=1, top_n=10, 
-    #                                  return_masked_word=True, return_input=True)
 
     res =  BertLMExtractor(mask=2).transform(stim).to_df()
     res_file =  BertLMExtractor(mask=2).transform(stim_file).to_df()
@@ -472,20 +459,10 @@ def test_bert_LM_extractor():
     assert 'true_word_score' in res_return_mask.columns
     assert res_return_mask['sequence'][0] == 'This is not a tokenized sentence .'
 
-    # remove
-    #del ext, ext_masked, ext_target, ext_topn, ext_threshold, ext_default, \
-    #    ext_return_mask
-    #del res, res_masked, res_file, res_target, res_topn, res_threshold, \
-    #    res_default, res_return_mask
 
-'''
 def test_bert_sentiment_extractor():
     stim = ComplexTextStim(text='This is the best day of my life.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
-
-    #ext = BertSentimentExtractor()
-    #ext_seq = BertSentimentExtractor(return_input=True)
-    #ext_softmax = BertSentimentExtractor(return_softmax=True)
 
     res = BertSentimentExtractor().transform(stim).to_df()
     res_file = BertSentimentExtractor().transform(stim_file).to_df()
@@ -500,9 +477,6 @@ def test_bert_sentiment_extractor():
     assert all([res_softmax[s][0] >= 0 for s in ['sent_pos','sent_neg'] ])
     assert all([res_softmax[s][0] <= 1 for s in ['sent_pos','sent_neg'] ])
 
-    #del ext, ext_seq, ext_softmax
-    del res, res_file, res_seq, res_softmax
-'''
 
 def test_word_counter_extractor():
     stim_txt = ComplexTextStim(text='This is a text where certain words occur'
