@@ -146,21 +146,21 @@ def test_merge_extractor_results():
     assert row['feature'] == 'Extractor1#feature_2'
     assert not set(not_features).intersection(set(df['feature']))
 
-    df = merge_results(results, format='wide', log_attributes=True)
+    df = merge_results(results, format='wide', estimator_params=True)
     logattr =  {}
     for de in des:
         logattr[de.name] = de._log_attributes #stores log attributes to be found for each extractor
         for feat in ['feature_1', 'feature_2', 'feature_3']:
-            idx_str = f'{de.name}#{feat}#log_attributes'
+            idx_str = f'{de.name}#{feat}#estimator_params'
             assert idx_str in df.columns
             df_log_attr = json.loads(df[idx_str][0])
             for l in logattr[de.name]:
                 assert l in df_log_attr.keys()
     
-    df = merge_results(results, format='long', log_attributes=True)
+    df = merge_results(results, format='long', estimator_params=True)
     for idx, row in df.iterrows():
         de_name = row['feature'].split('#')[0]
         logs = logattr[de_name]
-        df_logs = row['log_attributes']
+        df_logs = row['estimator_params']
         for l in logs:
             assert l in json.loads(df_logs).keys()
