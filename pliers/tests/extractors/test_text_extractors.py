@@ -277,12 +277,14 @@ def test_bert_extractor():
     ext_base = BertExtractor(pretrained_model='bert-base-uncased')
     ext_base_token = BertExtractor(pretrained_model='bert-base-uncased',
                                    return_input=True)
+    ext_tf = BertExtractor(pretrained_model='bert-base-uncased', framework='tf')
     
     base_result = ext_base.transform(stim)
     res = base_result.to_df()
     res_model_attr = base_result.to_df(include_attributes=True)
     res_token = ext_base_token.transform(stim).to_df()
     res_file = ext_base.transform(stim_file).to_df()
+    res_tf = ext_tf.transform(stim_file).to_df()
     
     # Test encoding shape
     assert len(res['encoding'][0]) == 768
@@ -300,6 +302,11 @@ def test_bert_extractor():
     assert res_file['onset'][3] == 1.3
     assert res_file['duration'][5] == 0.5
     assert res_file['object_id'][5] == 5
+
+    # test tf vs torch
+    cors = [np.corrcoef(res['encoding'][i], res_tf['encoding'][i])[0,1] 
+            for i in range(res.shape[0])]
+    assert all(np.isclose(cors, 1))
 
     # catch error if framework is invalid
     with pytest.raises(ValueError) as err:
@@ -340,16 +347,16 @@ def test_bert_sequence_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
 
-    #ext_pooler = BertSequenceEncodingExtractor(return_special='pooler_output')
+    ext_pooler = BertSequenceEncodingExtractor(return_special='pooler_output')
 
     # Test correct behavior when setting return_special
-    #assert ext_pooler.pooling is None
-    #assert ext_pooler.return_special == 'pooler_output'
+    assert ext_pooler.pooling is None
+    assert ext_pooler.return_special == 'pooler_output'
 
     res_sequence = BertSequenceEncodingExtractor(return_input=True).transform(stim).to_df()
     res_file =  BertSequenceEncodingExtractor(return_input=True).transform(stim_file).to_df()
     res_cls = BertSequenceEncodingExtractor(return_special='[CLS]').transform(stim).to_df()
-    res_pooler = BertSequenceEncodingExtractor(return_special='pooler_output').transform(stim).to_df()
+    res_pooler = ext_pooler.transform(stim).to_df()
     res_max = BertSequenceEncodingExtractor(pooling='max').transform(stim).to_df()
 
     # Check shape
@@ -390,7 +397,7 @@ def test_bert_sequence_extractor():
     shutil.rmtree(model_path)
 
     # remove variables
-    del res, stim
+    del ext_pooler, res_cls, res_max, res_pooler, res_sequence, res_file, stim
 
 
 def test_bert_LM_extractor():
@@ -416,11 +423,11 @@ def test_bert_LM_extractor():
     assert 'No valid target token' in str(err.value)
 
     target_wds = ['target','word']
-    #ext_target = BertLMExtractor(mask=1, target=target_wds)
+    ext_target = BertLMExtractor(mask=1, target=target_wds)
 
     res =  BertLMExtractor(mask=2).transform(stim).to_df()
     res_file =  BertLMExtractor(mask=2).transform(stim_file).to_df()
-    #res_target = ext_target.transform(stim).to_df()
+    res_target = ext_target.transform(stim).to_df()
     res_topn = BertLMExtractor(mask=3, top_n=100).transform(stim).to_df()
     res_threshold = BertLMExtractor(mask=4, threshold=.1, return_softmax=True).transform(stim).to_df()
     res_default = BertLMExtractor().transform(stim_masked).to_df()
@@ -433,8 +440,8 @@ def test_bert_LM_extractor():
     assert res_file['duration'][0] == 0.2
 
     # Check target words
-    #assert all([w.capitalize() in res_target.columns for w in target_wds])
-    #assert res_target.shape[1] == 6
+    assert all([w.capitalize() in res_target.columns for w in target_wds])
+    assert res_target.shape[1] == 6
 
     # Check top_n
     assert res_topn.shape[1] == 104
@@ -449,15 +456,15 @@ def test_bert_LM_extractor():
             assert res_threshold[v.capitalize()][0] <= 1
 
     # Test update mask method
-    #assert ext_target.mask == 1
-    #ext_target.update_mask(new_mask='sentence')
-    #assert ext_target.mask == 'sentence'
-    #res_target_new = ext_target.transform(stim).to_df()
-    #assert all([res_target[c][0] != res_target_new[c][0]
-    #            for c in ['Target', 'Word']])
-    #with pytest.raises(ValueError) as err:
-    #    ext_target.update_mask(new_mask=['some', 'mask'])
-    #assert 'must be a string' in str(err.value)
+    assert ext_target.mask == 1
+    ext_target.update_mask(new_mask='sentence')
+    assert ext_target.mask == 'sentence'
+    res_target_new = ext_target.transform(stim).to_df()
+    assert all([res_target[c][0] != res_target_new[c][0]
+                for c in ['Target', 'Word']])
+    with pytest.raises(ValueError) as err:
+        ext_target.update_mask(new_mask=['some', 'mask'])
+    assert 'must be a string' in str(err.value)
     
     # Test default mask
     assert res_default.shape[0] == 1
@@ -473,7 +480,8 @@ def test_bert_LM_extractor():
     shutil.rmtree(model_path)
 
     # remove variables
-    del res, stim
+    del ext_target, res, res_file, res_target, res_topn, \
+        res_threshold, res_default, res_return_mask
 
 def test_bert_sentiment_extractor():
     stim = ComplexTextStim(text='This is the best day of my life.')
@@ -498,7 +506,7 @@ def test_bert_sentiment_extractor():
     shutil.rmtree(model_path)
 
     # remove variables
-    del res, stim
+    del res, res_file, res_seq, res_softmax
 
 
 def test_word_counter_extractor():
