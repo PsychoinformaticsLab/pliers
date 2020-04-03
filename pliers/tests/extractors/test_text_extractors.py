@@ -334,11 +334,6 @@ def test_bert_other_models(model):
     if model == 'camembert-base':
         assert res['token'][4] == 'est'
 
-    # delete the model
-    home = Path.home()
-    model_path = str(home / '.cache' / 'torch' / 'transformers')
-    shutil.rmtree(model_path)
-
     # remove variables
     del res, stim
 
@@ -390,11 +385,6 @@ def test_bert_sequence_extractor():
     with pytest.raises(ValueError) as err:
         BertSequenceEncodingExtractor(return_special='[MASK]')
     assert 'must be one of' in str(err.value)
-
-    # delete the model
-    home = Path.home()
-    model_path = str(home / '.cache' / 'torch' / 'transformers')
-    shutil.rmtree(model_path)
 
     # remove variables
     del ext_pooler, res_cls, res_max, res_pooler, res_sequence, res_file, stim
@@ -474,11 +464,6 @@ def test_bert_LM_extractor():
     assert 'true_word_score' in res_return_mask.columns
     assert res_return_mask['sequence'][0] == 'This is not a tokenized sentence .'
 
-    # delete the model
-    home = Path.home()
-    model_path = str(home / '.cache' / 'torch' / 'transformers')
-    shutil.rmtree(model_path)
-
     # remove variables
     del ext_target, res, res_file, res_target, res_topn, \
         res_threshold, res_default, res_return_mask
@@ -499,11 +484,6 @@ def test_bert_sentiment_extractor():
     assert res_seq['sequence'][0] == 'This is the best day of my life .'
     assert all([res_softmax[s][0] >= 0 for s in ['sent_pos','sent_neg'] ])
     assert all([res_softmax[s][0] <= 1 for s in ['sent_pos','sent_neg'] ])
-
-    # delete the model
-    home = Path.home()
-    model_path = str(home / '.cache' / 'torch' / 'transformers')
-    shutil.rmtree(model_path)
 
     # remove variables
     del res, res_file, res_seq, res_softmax
