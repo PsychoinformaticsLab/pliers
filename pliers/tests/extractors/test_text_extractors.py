@@ -408,11 +408,11 @@ def test_bert_LM_extractor():
     assert 'No valid target token' in str(err.value)
 
     target_wds = ['target','word']
-    ext_target = BertLMExtractor(mask=1, target=target_wds)
+    #ext_target = BertLMExtractor(mask=1, target=target_wds)
 
     res =  BertLMExtractor(mask=2).transform(stim).to_df()
     res_file =  BertLMExtractor(mask=2).transform(stim_file).to_df()
-    res_target = ext_target.transform(stim).to_df()
+    #res_target = ext_target.transform(stim).to_df()
     res_topn = BertLMExtractor(mask=3, top_n=100).transform(stim).to_df()
     res_threshold = BertLMExtractor(mask=4, threshold=.1, return_softmax=True).transform(stim).to_df()
     res_default = BertLMExtractor().transform(stim_masked).to_df()
@@ -425,8 +425,8 @@ def test_bert_LM_extractor():
     assert res_file['duration'][0] == 0.2
 
     # Check target words
-    assert all([w.capitalize() in res_target.columns for w in target_wds])
-    assert res_target.shape[1] == 6
+    #assert all([w.capitalize() in res_target.columns for w in target_wds])
+    #assert res_target.shape[1] == 6
 
     # Check top_n
     assert res_topn.shape[1] == 104
@@ -441,15 +441,15 @@ def test_bert_LM_extractor():
             assert res_threshold[v.capitalize()][0] <= 1
 
     # Test update mask method
-    assert ext_target.mask == 1
-    ext_target.update_mask(new_mask='sentence')
-    assert ext_target.mask == 'sentence'
-    res_target_new = ext_target.transform(stim).to_df()
-    assert all([res_target[c][0] != res_target_new[c][0]
-                for c in ['Target', 'Word']])
-    with pytest.raises(ValueError) as err:
-        ext_target.update_mask(new_mask=['some', 'mask'])
-    assert 'must be a string' in str(err.value)
+    #assert ext_target.mask == 1
+    #ext_target.update_mask(new_mask='sentence')
+    #assert ext_target.mask == 'sentence'
+    #res_target_new = ext_target.transform(stim).to_df()
+    #assert all([res_target[c][0] != res_target_new[c][0]
+    #            for c in ['Target', 'Word']])
+    #with pytest.raises(ValueError) as err:
+    #    ext_target.update_mask(new_mask=['some', 'mask'])
+    #assert 'must be a string' in str(err.value)
     
     # Test default mask
     assert res_default.shape[0] == 1
