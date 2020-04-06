@@ -316,7 +316,7 @@ def test_bert_extractor():
     # Delete the models
     del res, res_token, res_file, ext_base, ext_base_token
 
-
+@pytest.mark.high_mem
 @pytest.mark.parametrize('model', ['bert-large-uncased', 
                                    'distilbert-base-uncased',
                                    'roberta-base','camembert-base'])
@@ -337,7 +337,6 @@ def test_bert_other_models(model):
     # remove variables
     del res, stim
 
- 
 def test_bert_sequence_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
@@ -468,6 +467,7 @@ def test_bert_LM_extractor():
     del ext_target, res, res_file, res_target, res_topn, \
         res_threshold, res_default, res_return_mask
 
+@pytest.mark.high_mem
 def test_bert_sentiment_extractor():
     stim = ComplexTextStim(text='This is the best day of my life.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
