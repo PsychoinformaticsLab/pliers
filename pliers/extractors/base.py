@@ -76,7 +76,7 @@ class ExtractorResult(object):
         return self.to_df()
 
     def to_df(self, timing=True, metadata=False, format='wide',
-              extractor_name=False, object_id=True, estimator_params=False,
+              extractor_name=False, object_id=True, extractor_params=False,
               **to_df_kwargs):
         ''' Convert current instance to a pandas DatasFrame.
 
@@ -104,10 +104,10 @@ class ExtractorResult(object):
                 values, the special value 'auto' can be passed, in which case
                 the object_id column will only be inserted if the resulting
                 constant would be non-constant.
-            estimator_params (bool): if True, returns log_attributes of 
+            extractor_params (bool): if True, returns log_attributes of 
                 at extraction time, as stored in transformer_params attribute
                 in ExtractorResult.history. These are returned as serialized 
-                dictionary in estimator_params column.
+                dictionary in extractor_params column.
 
         Returns:
             A pandas DataFrame.
@@ -193,9 +193,9 @@ class ExtractorResult(object):
             df['history'] = hist
             df['source_file'] = self.history.to_df().iloc[0].source_file
 
-        if estimator_params:
+        if extractor_params:
             dict_params = eval(self.history.transformer_params)
-            df['estimator_params'] = json.dumps(dict_params)
+            df['extractor_params'] = json.dumps(dict_params)
         return df
 
     @property
@@ -209,7 +209,7 @@ class ExtractorResult(object):
 
 
 def merge_results(results, format='wide', timing=True, metadata=True,
-                  extractor_names=True, object_id=True, estimator_params=False,
+                  extractor_names=True, object_id=True, extractor_params=False,
                   aggfunc=None, invalid_results='ignore', **to_df_kwargs):
     ''' Merges a list of ExtractorResults instances and returns a pandas DF.
 
@@ -252,11 +252,11 @@ def merge_results(results, format='wide', timing=True, metadata=True,
             ImageExtractors that identify multiple target objects (e.g., faces)
             within a single ImageStim. Default is 'auto', which includes the
             'object_id' column if and only if it has a non-constant value.
-        estimator_params (bool): If True, returns serialized estimator_params 
+        extractor_params (bool): If True, returns serialized extractor_params 
             of the extractor, i.e. log_attributes at time of extraction. 
             If format='wide', merge_results returns one column per extractor, 
-            each named ExtractorName#FeatureName#estimator_params.
-            If format='long', returns only one column named estimator_params.
+            each named ExtractorName#FeatureName#extractor_params.
+            If format='long', returns only one column named extractor_params.
         aggfunc (str, Callable): If format='wide' and extractor_names='drop',
             it's possible for name clashes between features to occur. In such
             cases, the aggfunc argument is passed onto pandas' pivot_table
@@ -291,7 +291,7 @@ def merge_results(results, format='wide', timing=True, metadata=True,
             dfs.append(r.to_df(timing=_timing, metadata=metadata,
                                format='long', extractor_name=True,
                                object_id=_object_id, 
-                               estimator_params=estimator_params,
+                               extractor_params=extractor_params,
                                **to_df_kwargs))
         elif invalid_results == 'fail':
             raise ValueError("At least one of the provided results was not an"
@@ -328,13 +328,13 @@ def merge_results(results, format='wide', timing=True, metadata=True,
             aggfunc = 'mean' if is_numeric_dtype(data['value']) else 'first' 
 
         # add conditional on value of extractor_names
-        if estimator_params:
-            data['unique_extractor'] = unique_ext.astype(str) + '#estimator_params'
+        if extractor_params:
+            data['unique_extractor'] = unique_ext.astype(str) + '#extractor_params'
             attrs = data.pivot_table(index=ind_cols, columns='unique_extractor',
-                                    values='estimator_params', aggfunc='first')
+                                    values='extractor_params', aggfunc='first')
         data = data.pivot_table(index=ind_cols, columns='feature',
                                 values='value', aggfunc=aggfunc)
-        if estimator_params:
+        if extractor_params:
             data = pd.concat([data,attrs], axis=1)
         data = data.reset_index()
         data.columns.name = None  # vestigial--is set to 'feature'
