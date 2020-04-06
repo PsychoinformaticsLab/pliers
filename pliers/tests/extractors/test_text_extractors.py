@@ -284,7 +284,7 @@ def test_bert_extractor():
     res_model_attr = base_result.to_df(include_attributes=True)
     res_token = ext_base_token.transform(stim).to_df()
     res_file = ext_base.transform(stim_file).to_df()
-    res_tf = ext_tf.transform(stim_file).to_df()
+    res_tf = ext_tf.transform(stim).to_df()
     
     # Test encoding shape
     assert len(res['encoding'][0]) == 768
