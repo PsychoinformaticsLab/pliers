@@ -269,7 +269,6 @@ def test_spacy_doc_extractor():
     assert result['is_tagged'][3]
     assert result['is_sentenced'][3]
 
-
 def test_bert_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
@@ -337,6 +336,7 @@ def test_bert_other_models(model):
     # remove variables
     del res, stim
 
+@pytest.mark.high_mem
 def test_bert_sequence_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
@@ -388,7 +388,7 @@ def test_bert_sequence_extractor():
     # remove variables
     del ext_pooler, res_cls, res_max, res_pooler, res_sequence, res_file, stim
 
-
+@pytest.mark.high_mem
 def test_bert_LM_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_masked = ComplexTextStim(text='This is MASK tokenized sentence.')
@@ -487,7 +487,6 @@ def test_bert_sentiment_extractor():
 
     # remove variables
     del res, res_file, res_seq, res_softmax
-
 
 def test_word_counter_extractor():
     stim_txt = ComplexTextStim(text='This is a text where certain words occur'
