@@ -269,6 +269,7 @@ def test_spacy_doc_extractor():
     assert result['is_tagged'][3]
     assert result['is_sentenced'][3]
 
+
 def test_bert_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
@@ -315,9 +316,10 @@ def test_bert_extractor():
     # Delete the models
     del res, res_token, res_file, ext_base, ext_base_token
 
+
 @pytest.mark.skipif(environ.get('TRAVIS', False) == 'true',
                                 reason='high memory')
-@pytest.mark.parametrize('model', ['bert-large-uncased', 
+@pytest.mark.parametrize('model', ['bert-large-uncased',
                                    'distilbert-base-uncased',
                                    'roberta-base','camembert-base'])
 def test_bert_other_models(model):
@@ -337,6 +339,7 @@ def test_bert_other_models(model):
     # remove variables
     del res, stim
 
+
 def test_bert_sequence_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
@@ -348,7 +351,7 @@ def test_bert_sequence_extractor():
     assert ext_pooler.return_special == 'pooler_output'
 
     res_sequence = BertSequenceEncodingExtractor(return_input=True).transform(stim).to_df()
-    res_file =  BertSequenceEncodingExtractor(return_input=True).transform(stim_file).to_df()
+    res_file = BertSequenceEncodingExtractor(return_input=True).transform(stim_file).to_df()
     res_cls = BertSequenceEncodingExtractor(return_special='[CLS]').transform(stim).to_df()
     res_pooler = ext_pooler.transform(stim).to_df()
     res_max = BertSequenceEncodingExtractor(pooling='max').transform(stim).to_df()
@@ -387,6 +390,7 @@ def test_bert_sequence_extractor():
 
     # remove variables
     del ext_pooler, res_cls, res_max, res_pooler, res_sequence, res_file, stim
+
 
 def test_bert_LM_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
@@ -466,6 +470,7 @@ def test_bert_LM_extractor():
     del ext_target, res, res_file, res_target, res_topn, \
         res_threshold, res_default, res_return_mask
 
+
 @pytest.mark.skipif(environ.get('TRAVIS', False) == 'true',
                                 reason='high memory')
 def test_bert_sentiment_extractor():
@@ -487,6 +492,7 @@ def test_bert_sentiment_extractor():
 
     # remove variables
     del res, res_file, res_seq, res_softmax
+
 
 def test_word_counter_extractor():
     stim_txt = ComplexTextStim(text='This is a text where certain words occur'
