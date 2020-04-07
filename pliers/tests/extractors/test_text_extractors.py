@@ -394,6 +394,8 @@ def test_bert_sequence_extractor():
     del ext_pooler, res_cls, res_max, res_pooler, res_sequence, res_file, stim
 
 
+@pytest.mark.skipif(environ.get('TRAVIS', False) == 'true',
+                                reason='high memory')
 def test_bert_LM_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_masked = ComplexTextStim(text='This is MASK tokenized sentence.')
