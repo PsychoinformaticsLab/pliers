@@ -340,6 +340,8 @@ def test_bert_other_models(model):
     del res, stim
 
 
+@pytest.mark.skipif(environ.get('TRAVIS', False) == 'true',
+                                reason='high memory')
 def test_bert_sequence_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
