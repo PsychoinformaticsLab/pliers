@@ -2,7 +2,6 @@
 Extractors that operate primarily or exclusively on Text stimuli.
 '''
 import sys
-from abc import ABCMeta, abstractmethod
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.exceptions import PliersError
