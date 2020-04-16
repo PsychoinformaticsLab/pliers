@@ -697,6 +697,11 @@ class BertLMExtractor(BertExtractor):
         self.return_masked_word = return_masked_word
         
     def update_mask(self, new_mask):
+        ''' Updates mask attribute with value of new_mask. 
+        Args:
+            new_mask (str or int): word to mask (str) or index/position of the
+                word to mask in input sequence (int). Indexing starts at 0.
+        '''
         if type(new_mask) not in [str, int]:
             raise ValueError('Mask must be a string or an integer.')
         self.mask = new_mask
