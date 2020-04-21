@@ -6,9 +6,7 @@ import scipy
 from os.path import join
 import pytest
 
-
 VECTOR_DIR = join(get_test_data_path(), 'vector')
-
 
 def test_vector_metric_extractor():
 
