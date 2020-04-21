@@ -278,9 +278,10 @@ def test_remote_stims():
     text = TextStim(url=url)
     assert len(text.text) > 1
 
-    url = ''
+    url = 'https://raw.githubusercontent.com/rbroc/pliers/prob_extractor/pliers/tests/data/vector/vector_dict.json'
     vec = VectorStim(url=url)
-    assert 'a'
+    assert vec.array.shape[0] == 5
+    assert len(vec.labels) == 5
 
 
 def test_get_filename():
