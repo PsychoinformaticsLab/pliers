@@ -7,6 +7,7 @@ from .audio import AudioStim
 from .compound import CompoundStim, TranscribedAudioCompoundStim
 from .image import ImageStim
 from .text import TextStim, ComplexTextStim
+from .vector import VectorStim
 from .video import VideoStim, VideoFrameCollectionStim, VideoFrameStim
 
 
@@ -17,6 +18,7 @@ __all__ = [
     'ImageStim',
     'TextStim',
     'ComplexTextStim',
+    'VectorStim',
     'VideoStim',
     'VideoFrameCollectionStim',
     'VideoFrameStim',
