@@ -40,10 +40,10 @@ class VectorStim(Stim):
 
     _default_file_extension='.json'
 
-    def __init__(self, filename=None, data_column=None, label_column=None, 
-        array=None, labels=None, data_dict=None, onset=None, duration=None, 
+    def __init__(self, array=None, labels=None, filename=None, data_dict=None,
+        data_column=None, label_column=None, onset=None, duration=None, 
         order=None, name=None, sort_data=None, url=None):
-    
+
         if filename is not None:
             if filename.endswith('.json'):
                 with open(filename) as f:
