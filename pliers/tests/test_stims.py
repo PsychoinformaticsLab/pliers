@@ -278,6 +278,10 @@ def test_remote_stims():
     text = TextStim(url=url)
     assert len(text.text) > 1
 
+    url = ''
+    vec = VectorStim(url=url)
+    assert 'a'
+
 
 def test_get_filename():
     url = 'http://www.bobainsworth.com/wav/simpsons/themodyn.wav'
@@ -372,6 +376,14 @@ def test_vector_from_values():
 
     stim_no_lab = VectorStim(array=v_array)
     assert all([stim_no_lab.labels[n] == str(n) for n in range(10)])
+
+    with pytest.raises(ValueError) as err:
+        VectorStim(array=v_array, labels=keys[:-1])
+    assert 'same length' in err.value
+
+    with pytest.raises(ValueError) as err:
+        VectorStim(array=np.random.randn(5,4))
+    assert 'one-dimensional' in err.value
 
 def test_vector_from_file():
     fname_json = join(get_test_data_path(), 'vector', 'vector_dict.json')

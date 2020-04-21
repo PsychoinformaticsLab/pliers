@@ -72,7 +72,7 @@ class VectorStim(Stim):
         self.array = array
 
         if len(self.labels) != self.array.shape[0]:
-            raise ValueError('Label and data must have same length')
+            raise ValueError('Label and data must be of the same length')
         super(VectorStim, self).__init__(filename, onset, duration, order, name)
 
     def _sort(self, array, labels, sort_data):
