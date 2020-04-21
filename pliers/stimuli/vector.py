@@ -7,16 +7,7 @@ from .base import Stim
 
 
 class VectorStim(Stim):
-    ''' Base class for all vector or matrix stimulus ''' 
-    def __init__():
-        pass
-
-    def transform():
-        pass
-
-
-class ProbStim(Stim):
-    ''' Probability distribution stimulus (numpy vector of probability values)
+    ''' Vector stimulus (1-D numpy array)
 
     Args:
         filename (str): Path to input file, if one exists. Can be a tsv file 
@@ -41,7 +32,8 @@ class ProbStim(Stim):
         name (str): Optional name to give to the Stim instance. If None is
             provided, the name will be derived from the filename if one is
             defined. If no filename is defined, name will be an empty string.
-        sort_data (str): 'descending' or 'ascending'. Sorts data
+        sort_data (str): 'descending' or 'ascending'. Sorts array (and labels)
+            in ascending or descending order.
         url (str): Optional url to read contents from. Must be json readable
             dictionary with labels as keys and values as probability values.
     '''
@@ -66,7 +58,10 @@ class ProbStim(Stim):
             labels = list(data_dict.keys())
             array = np.array(list(data_dict.values()))
 
-        array = np.array(array)
+        array = np.array(array).squeeze()
+        if len(array.shape) != 1:
+            raise ValueError('')
+
         if sort_data in ['ascending', 'descending']:
             array, labels = self._sort(array, labels, sort_data)
 
@@ -75,7 +70,7 @@ class ProbStim(Stim):
         else: 
             self.labels = [str(idx) for idx in range(array.shape[0])]
         self.array = array
-        super(ProbStim, self).__init__(filename, onset, duration, order, name)
+        super(VectorStim, self).__init__(filename, onset, duration, order, name)
 
     def _sort(self, array, labels, sort_data):
         idxs = np.argsort(array)
@@ -98,14 +93,3 @@ class ProbStim(Stim):
             df = pd.DataFrame(data=zip(self.labels, self.data),
                               columns=['label', 'value'])
             df.to_csv(path, sep='\t')
-            
-    def transform(self): # e.g. temp scaling
-        pass
-
-    def _check_values(self):
-    # check that values btw 0 and 1, otherwise convert?
-        pass
-
-
-class TimeSeriesStim():
-    pass
