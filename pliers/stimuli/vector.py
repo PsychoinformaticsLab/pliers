@@ -3,7 +3,7 @@ import pandas as pd
 import requests
 import json
 from pliers.utils import attempt_to_import, verify_dependencies
-from .base import Stim
+from pliers.stimuli.base import Stim
 
 
 class VectorStim(Stim):
@@ -38,19 +38,24 @@ class VectorStim(Stim):
             dictionary with labels as keys and values as probability values.
     '''
 
+    _default_file_extension='.json'
+
     def __init__(self, filename=None, data_column=None, label_column=None, 
         array=None, labels=None, data_dict=None, onset=None, duration=None, 
         order=None, name=None, sort_data=None, url=None):
     
         if filename is not None:
             if filename.endswith('.json'):
-                data_dict = json.loads(filename)
+                with open(filename) as f:
+                    data_dict = json.loads(f.read())
             else:
-                array = pd.read_csv(filename, sep='\t')
+                df = pd.read_csv(filename, sep='\t')
                 if data_column is not None:
-                    array = np.array(array[data_column].values)
+                    array = np.array(df[data_column].values)
+                else:
+                    array = df
                 if label_column is not None:
-                    labels = list(array[label_column])
+                    labels = list(df[label_column])
         elif url is not None:
             data_dict = requests.get(url).json()
         
@@ -88,10 +93,16 @@ class VectorStim(Stim):
     def data(self):
         return self.array
 
-    def save(self, path, format='json'):
-        if format == 'json':
+    def save(self, path, as_json=True):
+        ''' Saves stimulus to file
+        Args:
+            path (str): filename or path
+            as_json (bool): If True, saves as json dictionary with labels as keys.
+                Otherwise, saves as tsv with 'labels' and 'value' columns. 
+        '''
+        if as_json:
             with open(path, 'w') as f:
-                json.dump(zip(self.labels, self.data), f)
+                json.dump(dict(zip(self.labels, self.data)), f)
         else:
             df = pd.DataFrame(data=zip(self.labels, self.data),
                               columns=['label', 'value'])

@@ -1,4 +1,4 @@
-from .utils import get_test_data_path
+from pliers.tests.utils import get_test_data_path
 from pliers.stimuli import (VideoStim, VideoFrameStim, ComplexTextStim,
                             AudioStim, ImageStim, CompoundStim,
                             TranscribedAudioCompoundStim,
@@ -305,7 +305,8 @@ def test_save():
     text_stim = TextStim(text='hello')
     audio_stim = AudioStim(join(get_test_data_path(), 'audio', 'crowd.mp3'))
     image_stim = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
-    vector_stim = VectorStim(join(get_test_data_path(), 'vector', 'vector_df.txt'))
+    vector_stim = VectorStim(join(get_test_data_path(), 'vector', 'vector_df.txt'),
+                             data_column='value', label_column='label')
     # Video gives travis problems
     stims = [complextext_stim, text_stim, audio_stim, image_stim, vector_stim]
     for s in stims:
@@ -313,6 +314,12 @@ def test_save():
         s.save(path)
         assert exists(path)
         os.remove(path)
+    
+    # test vector save as tsv
+    txt_path = tempfile.mktemp() + '.txt'
+    vector_stim.save(path=txt_path, as_json=False)
+    assert exists(txt_path)
+    os.remove(txt_path)
 
 
 @pytest.mark.skipif("'TWITTER_ACCESS_TOKEN_KEY' not in os.environ")
@@ -347,7 +354,6 @@ def test_vector_from_dict():
     values = np.random.randn(20)
     stim = VectorStim(data_dict=dict(zip(keys, values)), 
                       onset=2.0, duration=.5)
-    assert stim.data == stim.array
     assert type(stim.data == np.ndarray)
     assert stim.array.shape[0] == 20
     assert stim.labels == keys
@@ -380,11 +386,11 @@ def test_vector_from_values():
 
     with pytest.raises(ValueError) as err:
         VectorStim(array=v_array, labels=keys[:-1])
-    assert 'same length' in err.value
+    assert 'same length' in str(err.value)
 
     with pytest.raises(ValueError) as err:
         VectorStim(array=np.random.randn(5,4))
-    assert 'one-dimensional' in err.value
+    assert 'one-dimensional' in str(err.value)
 
 def test_vector_from_file():
     fname_json = join(get_test_data_path(), 'vector', 'vector_dict.json')
@@ -393,7 +399,7 @@ def test_vector_from_file():
     assert stim_json.array.shape[0] == 5
     assert len(stim_json.labels) == 5
     assert stim_json.labels[2] == 'set'
-    assert np.isclose(stim_json.array[3], 1.0086)
+    assert np.isclose(stim_json.array[3], -1.0086, rtol=0.0001)
 
     fname_df = join(get_test_data_path(), 'vector', 'vector_df.txt')
     stim_df = VectorStim(filename=fname_df, label_column='label', data_column='value')
@@ -401,4 +407,4 @@ def test_vector_from_file():
     assert stim_df.array.shape[0] == 20
     assert len(stim_df.labels) == 20
     assert stim_df.labels[5] == 'label5'
-    assert np.isclose(stim_df.array[6], 0.817)
+    assert np.isclose(stim_df.array[6], 0.8169, rtol=0.0001)
