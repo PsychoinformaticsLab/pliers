@@ -51,7 +51,7 @@ def test_vector_metric_extractor():
     assert r_df['mean'][0] == 2.5
     assert np.isclose(r_file_df['mean'][0], -0.655, rtol=0.001)
     assert all([m in r_multiple_df.columns for m in ['mean', 'entropy']])
-    assert r_multiple_df['min'][0] == 1.
+    assert r_multiple_df['amin'][0] == 1.
     assert r_multiple_df['dummy'][0] == 1.
     assert r_multiple_df['dummy_list'][0][0] == np.linspace(1., 4., 20)[0]
     assert r_multiple_df['dummy_list'][0][1] == np.linspace(1., 4., 20)[1]
