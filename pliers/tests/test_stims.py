@@ -4,7 +4,8 @@ from pliers.stimuli import (VideoStim, VideoFrameStim, ComplexTextStim,
                             TranscribedAudioCompoundStim,
                             TextStim,
                             TweetStimFactory,
-                            TweetStim)
+                            TweetStim, 
+                            VectorStim)
 from pliers.stimuli.base import Stim, _get_stim_class
 from pliers.extractors import (BrightnessExtractor, LengthExtractor,
                                ComplexTextExtractor)
@@ -299,8 +300,9 @@ def test_save():
     text_stim = TextStim(text='hello')
     audio_stim = AudioStim(join(get_test_data_path(), 'audio', 'crowd.mp3'))
     image_stim = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
+    vector_stim = VectorStim(join(get_test_data_path(), 'vector', 'vector_df.txt'))
     # Video gives travis problems
-    stims = [complextext_stim, text_stim, audio_stim, image_stim]
+    stims = [complextext_stim, text_stim, audio_stim, image_stim, vector_stim]
     for s in stims:
         path = tempfile.mktemp() + s._default_file_extension
         s.save(path)
@@ -333,3 +335,57 @@ def test_twitter():
     res = ext.transform(ut_tweet)[0].to_df()
     brightness = res['brightness'][0]
     assert np.isclose(brightness, 0.54057, 1e-5)
+
+
+def test_vector_from_dict():
+    keys = [f'label{str(n)}' for n in range(20)]
+    values = np.random.randn(20)
+    stim = VectorStim(data_dict=dict(zip(keys, values)), 
+                      onset=2.0, duration=.5)
+    assert stim.data == stim.array
+    assert type(stim.data == np.ndarray)
+    assert stim.array.shape[0] == 20
+    assert stim.labels == keys
+    assert stim.onset == 2.0
+    assert stim.duration == .5
+
+def test_vector_from_values():
+    keys = [f'label{str(n)}' for n in range(10)]
+    v_array = np.random.randn(10)
+    v_series = pd.Series(v_array)
+    v_list = list(v_array)
+
+    stim_array = VectorStim(array=v_array, labels=keys)
+    assert type(stim_array.data == np.ndarray)
+    assert len(stim_array.labels) == 10
+    assert stim_array.array.shape[0] == 10
+
+    stim_series = VectorStim(array=v_series, labels=keys)
+    assert type(stim_series.data == np.ndarray)
+    assert len(stim_series.labels) == 10
+    assert stim_series.array.shape[0] == 10 
+
+    stim_list = VectorStim(array=v_list, labels=keys)
+    assert type(stim_list.data == np.ndarray)
+    assert len(stim_list.labels) == 10
+    assert stim_list.array.shape[0] == 10
+
+    stim_no_lab = VectorStim(array=v_array)
+    assert all([stim_no_lab.labels[n] == str(n) for n in range(10)])
+
+def test_vector_from_file():
+    fname_json = join(get_test_data_path(), 'vector', 'vector_dict.json')
+    stim_json = VectorStim(filename=fname_json)
+    assert type(stim_json.array == np.ndarray)
+    assert stim_json.array.shape[0] == 5
+    assert len(stim_json.labels) == 5
+    assert stim_json.labels[2] == 'set'
+    assert np.isclose(stim_json.array[3], 1.0086)
+
+    fname_df = join(get_test_data_path(), 'vector', 'vector_df.txt')
+    stim_df = VectorStim(filename=fname_df, label_column='label', data_column='value')
+    assert type(stim_df.array == np.ndarray)
+    assert stim_df.array.shape[0] == 20
+    assert len(stim_df.labels) == 20
+    assert stim_df.labels[5] == 'label5'
+    assert np.isclose(stim_df.array[6], 0.817)

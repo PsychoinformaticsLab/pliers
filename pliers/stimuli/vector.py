@@ -10,19 +10,19 @@ class VectorStim(Stim):
     ''' Vector stimulus (1-D numpy array)
 
     Args:
-        filename (str): Path to input file, if one exists. Can be a tsv file 
-            with probability distribution values in one column, or a json file
-            with labels as keys and probability values as values.
-        data_column (str): If filename is defined, defines column to read
-            in as probability distribution
-        label_column (str): If filename is defined, defines columns where 
-            labels can be found.
-        array (np.ndarray, list or pd.Series): Vector of values. Can be list, 
+         array (np.ndarray, list or pd.Series): Vector of values. Can be list, 
             array or pandas Series. Gets converted to 1-D numpy array.
         labels (list): List of labels to which probability values refer, if 
             that applies.
         data_dict (dict): If defined, overwrites array and labels. Keys are 
             passed to labels argument, values are passed to array argument.
+        filename (str): Path to file, if array has to be read from file. 
+            Can be a tsv file with vector values in one column, or json file
+            with labels as keys and array values as values.
+        data_column (str): If filename is defined, defines column to read
+            in as probability distribution
+        label_column (str): If filename is defined, defines columns where 
+            labels can be found.
         onset (float): Optional onset of the event the probability 
             distribution refers to.
         duration (float): Optional duration of the event the probability 
@@ -60,7 +60,7 @@ class VectorStim(Stim):
 
         array = np.array(array).squeeze()
         if len(array.shape) != 1:
-            raise ValueError('')
+            raise ValueError('Array must be one-dimensional')
 
         if sort_data in ['ascending', 'descending']:
             array, labels = self._sort(array, labels, sort_data)
@@ -70,6 +70,9 @@ class VectorStim(Stim):
         else: 
             self.labels = [str(idx) for idx in range(array.shape[0])]
         self.array = array
+
+        if len(self.labels) != self.array.shape[0]:
+            raise ValueError('Label and data must have same length')
         super(VectorStim, self).__init__(filename, onset, duration, order, name)
 
     def _sort(self, array, labels, sort_data):
