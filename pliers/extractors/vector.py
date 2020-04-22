@@ -8,7 +8,7 @@ import scipy
 import numpy as np
 import pandas as pd
 from collections.abc import Iterable
-import logging
+from importlib import import_module
 
 class VectorMetricExtractor(Extractor):
     ''' Extracts summary metrics from 1D-array using numpy, scipy or custom 
@@ -18,9 +18,8 @@ class VectorMetricExtractor(Extractor):
         or custom functions to be applied to 1-dimensional numpy arrays.
             Functions can be passed directly (e.g. passing scipy.stats.entropy) if 
             the package/module they belong to has been imported, or as strings 
-            (e.g. 'np.mean'). Custom functions returning integers or iterables 
-            can also be passed, either directly, or as strings (evaluated via 
-            eval() method).
+            (e.g. 'numpy.mean'). Custom functions returning integers or iterables 
+            can also be passed by passing the function itself.
         var_names (list): optional list of custom alias names for each metric
         kwargs: named arguments for function call
     ''' 
@@ -37,14 +36,10 @@ class VectorMetricExtractor(Extractor):
                                  'functions')
         for idx, f in enumerate(functions):
             if isinstance(f, str):
-                f = f.replace('numpy', 'np')
                 try:
-                    f_list = f.split('.')
-                    if len(f_list) > 1 and 'lambda' not in f:
-                        functions[idx] = getattr(eval('.'.join(f_list[:-1])), 
-                                                f_list[-1])
-                    else:
-                        functions[idx] = eval(f)
+                    f_module = f.split('.')[:-1]
+                    f_func = f.split('.')[-1]
+                    functions[idx] = getattr(import_module(f_module), f_func)
                 except:
                     raise ValueError(f"{f} is not a valid function")
         if var_names is None:

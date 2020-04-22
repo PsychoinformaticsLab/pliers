@@ -16,21 +16,19 @@ def test_vector_metric_extractor():
     def dummy_list(array):
         return array[0], array[1]
 
-    str_func = 'lambda x: np.mean(x) ** 2'
-
     tsv_filename=join(VECTOR_DIR, 'vector_df.txt')
     stim = VectorStim(array=np.linspace(1., 4., 20), onset=2., duration=.5)
     stim_file = VectorStim(filename=tsv_filename)
 
-    ext_single = VectorMetricExtractor(functions='np.mean')
-    ext_multiple = VectorMetricExtractor(functions=['np.mean', 'numpy.min', 
+    ext_single = VectorMetricExtractor(functions='numpy.mean')
+    ext_multiple = VectorMetricExtractor(functions=['numpy.mean', 'numpy.min', 
                                          scipy.stats.entropy, dummy,
-                                         dummy_list, str_func])
-    ext_names = VectorMetricExtractor(functions=['np.mean', 'numpy.min', 
+                                         dummy_list])
+    ext_names = VectorMetricExtractor(functions=['numpy.mean', 'numpy.min', 
                                          scipy.stats.entropy, dummy,
-                                         dummy_list, str_func],
+                                         dummy_list],
                                       var_names = ['mean', 'min', 'entropy',
-                                      'custom1', 'custom2', 'custom3'])
+                                      'custom1', 'custom2'])
 
     r = ext_single.transform(stim)
     r_file = ext_single.transform(stim_file)
@@ -56,7 +54,5 @@ def test_vector_metric_extractor():
     assert r_multiple_df['dummy_list'][0][0] == np.linspace(1., 4., 20)[0]
     assert r_multiple_df['dummy_list'][0][1] == np.linspace(1., 4., 20)[1]
     assert type(r_multiple_df['dummy_list'][0]) == np.ndarray
-    assert r_names_df.columns[-3] == 'custom1'
-    assert r_names_df.columns[-2] == 'custom2'
-    assert r_names_df.columns[-1] == 'custom3'
-    assert r_names_df['custom3'][0] == 2.5 ** 2
+    assert r_names_df.columns[-2] == 'custom1'
+    assert r_names_df.columns[-1] == 'custom2'
