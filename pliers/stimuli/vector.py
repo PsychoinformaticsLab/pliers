@@ -14,8 +14,6 @@ class VectorStim(Stim):
             array or pandas Series. Gets converted to 1-D numpy array.
         labels (list): List of labels to which probability values refer, if 
             that applies.
-        data_dict (dict): If defined, overwrites array and labels. Keys are 
-            passed to labels argument, values are passed to array argument.
         filename (str): Path to file, if array has to be read from file. 
             Can be a tsv file with vector values in one column, or json file
             with labels as keys and array values as values.
@@ -40,7 +38,7 @@ class VectorStim(Stim):
 
     _default_file_extension='.json'
 
-    def __init__(self, array=None, labels=None, filename=None, data_dict=None,
+    def __init__(self, array=None, labels=None, filename=None,
         data_column=None, label_column=None, onset=None, duration=None, 
         order=None, name=None, sort_data=None, url=None):
 
