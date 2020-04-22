@@ -36,10 +36,10 @@ class VectorStim(Stim):
             in ascending or descending order.
     '''
 
-    _default_file_extension='.json'
+    _default_file_extension='.txt'
 
     def __init__(self, array=None, labels=None, filename=None,
-        data_column='value', label_column='label', onset=None, duration=None, 
+        data_column='value', label_column='label', onset=None, duration=None,
         order=None, name=None, sort_data=None, url=None):
 
         tsv = filename or url or None

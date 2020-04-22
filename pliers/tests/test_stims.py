@@ -278,7 +278,7 @@ def test_remote_stims():
     text = TextStim(url=url)
     assert len(text.text) > 1
 
-    url = 'https://raw.githubusercontent.com/rbroc/pliers/prob_extractor/pliers/tests/data/vector/vector_dict.json'
+    url = 'https://raw.githubusercontent.com/rbroc/pliers/prob_extractor/pliers/tests/data/vector/vector_df.txt'
     vec = VectorStim(url=url)
     assert vec.array.shape[0] == 5
     assert len(vec.labels) == 5
@@ -305,8 +305,8 @@ def test_save():
     text_stim = TextStim(text='hello')
     audio_stim = AudioStim(join(get_test_data_path(), 'audio', 'crowd.mp3'))
     image_stim = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
-    vector_stim = VectorStim(join(get_test_data_path(), 'vector', 'vector_df.txt'),
-                             data_column='value', label_column='label')
+    vector_stim = VectorStim(join(get_test_data_path(), 'vector', 'vector_df.txt'))
+
     # Video gives travis problems
     stims = [complextext_stim, text_stim, audio_stim, image_stim, vector_stim]
     for s in stims:
@@ -314,12 +314,6 @@ def test_save():
         s.save(path)
         assert exists(path)
         os.remove(path)
-    
-    # test vector save as tsv
-    txt_path = tempfile.mktemp() + '.txt'
-    vector_stim.save(path=txt_path, as_json=False)
-    assert exists(txt_path)
-    os.remove(txt_path)
 
 
 @pytest.mark.skipif("'TWITTER_ACCESS_TOKEN_KEY' not in os.environ")
@@ -385,16 +379,8 @@ def test_vector_from_values():
     assert 'one-dimensional' in str(err.value)
 
 def test_vector_from_file():
-    fname_json = join(get_test_data_path(), 'vector', 'vector_dict.json')
-    stim_json = VectorStim(filename=fname_json)
-    assert type(stim_json.array == np.ndarray)
-    assert stim_json.array.shape[0] == 5
-    assert len(stim_json.labels) == 5
-    assert stim_json.labels[2] == 'set'
-    assert np.isclose(stim_json.array[3], -1.0086, rtol=0.0001)
-
     fname_df = join(get_test_data_path(), 'vector', 'vector_df.txt')
-    stim_df = VectorStim(filename=fname_df, label_column='label', data_column='value')
+    stim_df = VectorStim(filename=fname_df)
     assert type(stim_df.array == np.ndarray)
     assert stim_df.array.shape[0] == 20
     assert len(stim_df.labels) == 20
