@@ -18,9 +18,9 @@ def test_vector_metric_extractor():
 
     str_func = 'lambda x: np.mean(x) ** 2'
 
-    json_filename=join(VECTOR_DIR, 'vector_dict.json')
+    tsv_filename=join(VECTOR_DIR, 'vector_df.txt')
     stim = VectorStim(array=np.linspace(1., 4., 20), onset=2., duration=.5)
-    stim_file = VectorStim(filename=json_filename)
+    stim_file = VectorStim(filename=tsv_filename)
 
     ext_single = VectorMetricExtractor(functions='np.mean')
     ext_multiple = VectorMetricExtractor(functions=['np.mean', 'numpy.min', 
@@ -49,7 +49,7 @@ def test_vector_metric_extractor():
     assert r_df['onset'][0] == 2.
     assert r_df['duration'][0] == .5
     assert r_df['mean'][0] == 2.5
-    assert np.isclose(r_file_df['mean'][0], -0.655, rtol=0.001)
+    assert np.isclose(r_file_df['mean'][0], -0.131, rtol=0.001)
     assert all([m in r_multiple_df.columns for m in ['mean', 'entropy']])
     assert r_multiple_df['amin'][0] == 1.
     assert r_multiple_df['dummy'][0] == 1.
