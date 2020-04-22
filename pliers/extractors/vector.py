@@ -28,8 +28,7 @@ class VectorMetricExtractor(Extractor):
     _input_type = VectorStim
     _log_attributes = ('functions',)
 
-    def __init__(self, functions=['np.mean', 'np.std', 'np.max', 'np.min'], 
-                 var_names=None, **kwargs):
+    def __init__(self, functions=None, var_names=None, **kwargs):
         functions = listify(functions)
         var_names = listify(var_names)
         if var_names is not None:
