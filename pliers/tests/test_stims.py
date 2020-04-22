@@ -349,27 +349,19 @@ def test_twitter():
     assert np.isclose(brightness, 0.54057, 1e-5)
 
 
-def test_vector_from_dict():
-    keys = [f'label{str(n)}' for n in range(20)]
-    values = np.random.randn(20)
-    stim = VectorStim(data_dict=dict(zip(keys, values)), 
-                      onset=2.0, duration=.5)
-    assert type(stim.data == np.ndarray)
-    assert stim.array.shape[0] == 20
-    assert stim.labels == keys
-    assert stim.onset == 2.0
-    assert stim.duration == .5
-
 def test_vector_from_values():
     keys = [f'label{str(n)}' for n in range(10)]
     v_array = np.random.randn(10)
     v_series = pd.Series(v_array)
     v_list = list(v_array)
 
-    stim_array = VectorStim(array=v_array, labels=keys)
+    stim_array = VectorStim(array=v_array, labels=keys, 
+                      onset=2.0, duration=.5)
     assert type(stim_array.data == np.ndarray)
     assert len(stim_array.labels) == 10
     assert stim_array.array.shape[0] == 10
+    assert stim_array.onset == 2.0
+    assert stim_array.duration == .5
 
     stim_series = VectorStim(array=v_series, labels=keys)
     assert type(stim_series.data == np.ndarray)
