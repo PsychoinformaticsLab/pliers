@@ -21,7 +21,7 @@ class VectorMetricExtractor(Extractor):
             (e.g. 'np.mean'). Custom functions returning integers or iterables 
             can also be passed, either directly, or as strings (evaluated via 
             eval() method).
-        var_names (optional): list of custom alias names for each metric
+        var_names (list): optional list of custom alias names for each metric
         kwargs: named arguments for function call
     ''' 
 
@@ -31,6 +31,7 @@ class VectorMetricExtractor(Extractor):
     def __init__(self, functions=['np.mean', 'np.std', 'np.max', 'np.min'], 
                  var_names=None, **kwargs):
         functions = listify(functions)
+        var_names = listify(var_names)
         if var_names is not None:
             if len(var_names) != len(functions):
                 raise ValueError('Length or var_names must match number of '
