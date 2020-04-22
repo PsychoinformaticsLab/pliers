@@ -36,7 +36,7 @@ class VectorMetricExtractor(Extractor):
                 raise ValueError('Length or var_names must match number of '
                                  'functions')
         for idx, f in enumerate(functions):
-            if type(f) == str:
+            if isinstance(f, str):
                 f = f.replace('numpy', 'np')
                 try:
                     f_list = f.split('.')
