@@ -39,27 +39,17 @@ class VectorStim(Stim):
     _default_file_extension='.json'
 
     def __init__(self, array=None, labels=None, filename=None,
-        data_column=None, label_column=None, onset=None, duration=None, 
+        data_column='value', label_column='label', onset=None, duration=None, 
         order=None, name=None, sort_data=None, url=None):
 
         if filename is not None:
-            if filename.endswith('.json'):
-                with open(filename) as f:
-                    data_dict = json.loads(f.read())
+            df = pd.read_csv(filename, sep='\t')
+            if data_column is not None:
+                array = np.array(df[data_column].values)
             else:
-                df = pd.read_csv(filename, sep='\t')
-                if data_column is not None:
-                    array = np.array(df[data_column].values)
-                else:
-                    array = df
-                if label_column is not None:
-                    labels = list(df[label_column])
-        elif url is not None:
-            data_dict = requests.get(url).json()
-        
-        if data_dict:
-            labels = list(data_dict.keys())
-            array = np.array(list(data_dict.values()))
+                array = df
+            if label_column is not None:
+                labels = list(df[label_column])
 
         array = np.array(array).squeeze()
         if len(array.shape) != 1:
@@ -91,17 +81,7 @@ class VectorStim(Stim):
     def data(self):
         return self.array
 
-    def save(self, path, as_json=True):
-        ''' Saves stimulus to file
-        Args:
-            path (str): filename or path
-            as_json (bool): If True, saves as json dictionary with labels as keys.
-                Otherwise, saves as tsv with 'labels' and 'value' columns. 
-        '''
-        if as_json:
-            with open(path, 'w') as f:
-                json.dump(dict(zip(self.labels, self.data)), f)
-        else:
-            df = pd.DataFrame(data=zip(self.labels, self.data),
+    def save(self, path):
+        df = pd.DataFrame(data=zip(self.labels, self.data),
                               columns=['label', 'value'])
-            df.to_csv(path, sep='\t')
+        df.to_csv(path, sep='\t')

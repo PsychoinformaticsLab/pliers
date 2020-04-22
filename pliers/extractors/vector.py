@@ -1,5 +1,5 @@
 '''
-Extractors that operate primarily or exclusively on Vector stimuli.
+Extractors that operate on Vector stimuli.
 '''
 from pliers.stimuli.vector import VectorStim
 from pliers.extractors.base import Extractor, ExtractorResult
@@ -30,8 +30,8 @@ class VectorMetricExtractor(Extractor):
 
     def __init__(self, functions=None, var_names=None, **kwargs):
         functions = listify(functions)
-        var_names = listify(var_names)
         if var_names is not None:
+            var_names = listify(var_names)
             if len(var_names) != len(functions):
                 raise ValueError('Length or var_names must match number of '
                                  'functions')
