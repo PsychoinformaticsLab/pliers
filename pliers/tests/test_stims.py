@@ -305,8 +305,8 @@ def test_save():
     text_stim = TextStim(text='hello')
     audio_stim = AudioStim(join(get_test_data_path(), 'audio', 'crowd.mp3'))
     image_stim = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
-    vector_stim = VectorStim(array=join(get_test_data_path(), 'vector', 
-                             'vector_df.txt'))
+    vector_stim = VectorStim(filename=join(get_test_data_path(), 'vector',
+                                           'vector_df.txt'))
 
     # Video gives travis problems
     stims = [complextext_stim, text_stim, audio_stim, image_stim, vector_stim]
