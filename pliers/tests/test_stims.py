@@ -280,7 +280,7 @@ def test_remote_stims():
 
     url = 'https://raw.githubusercontent.com/rbroc/pliers/prob_extractor/pliers/tests/data/vector/vector_df.txt'
     vec = VectorStim(url=url)
-    assert vec.array.shape[0] == 5
+    assert vec.array.shape[0] == 20
     assert len(vec.labels) == 5
 
 

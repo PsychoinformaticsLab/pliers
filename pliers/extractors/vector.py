@@ -37,9 +37,10 @@ class VectorMetricExtractor(Extractor):
         for idx, f in enumerate(functions):
             if isinstance(f, str):
                 try:
-                    f_module = f.split('.')[:-1]
+                    f_mod = f.split('.')[:-1]
                     f_func = f.split('.')[-1]
-                    functions[idx] = getattr(import_module(f_module), f_func)
+                    functions[idx] = getattr(import_module('.'.join(f_mod)),
+                                             f_func)
                 except:
                     raise ValueError(f"{f} is not a valid function")
         if var_names is None:
