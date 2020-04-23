@@ -43,7 +43,7 @@ def test_vector_metric_extractor():
 
     for res in [r_df, r_file_df, r_multiple_df]:
         assert res.shape[0] == 1
-    assert r_long.shape[1] == len(ext_multiple.functions)
+    assert r_long.shape[0] == len(ext_multiple.functions)
     assert r_df['onset'][0] == 2
     assert r_df['duration'][0] == .5
     assert r_df['mean'][0] == 2.5
