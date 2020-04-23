@@ -25,10 +25,10 @@ def test_vector_metric_extractor():
                                          scipy.stats.entropy, dummy,
                                          dummy_list])
     ext_names = VectorMetricExtractor(functions=['numpy.mean', 'numpy.min', 
-                                         scipy.stats.entropy, dummy,
-                                         dummy_list],
+                                      scipy.stats.entropy, dummy,
+                                      dummy_list, 'tensorflow.reduce_mean'],
                                       var_names = ['mean', 'min', 'entropy',
-                                      'custom1', 'custom2'])
+                                      'custom1', 'custom2', 'tf_mean'])
 
     r = ext_single.transform(stim)
     r_file = ext_single.transform(stim_file)
@@ -47,12 +47,14 @@ def test_vector_metric_extractor():
     assert r_df['onset'][0] == 2
     assert r_df['duration'][0] == .5
     assert r_df['mean'][0] == 2.5
-    assert np.isclose(r_file_df['mean'][0], -0.131, rtol=0.001)
+    assert np.isclose(r_file_df['mean'][0], -0.1312, rtol=0.001)
     assert all([m in r_multiple_df.columns for m in ['mean', 'entropy']])
     assert r_multiple_df['amin'][0] == 1.
     assert r_multiple_df['dummy'][0] == 1.
     assert r_multiple_df['dummy_list'][0][0] == np.linspace(1., 4., 20)[0]
     assert r_multiple_df['dummy_list'][0][1] == np.linspace(1., 4., 20)[1]
     assert type(r_multiple_df['dummy_list'][0]) == np.ndarray
-    assert r_names_df.columns[-2] == 'custom1'
-    assert r_names_df.columns[-1] == 'custom2'
+    assert r_names_df.columns[-3] == 'custom1'
+    assert r_names_df.columns[-2] == 'custom2'
+    assert r_names_df.columns[-1] == 'tf_mean'
+    assert np.isclose(r_names_df['mean'][0], r_names_df['tf_mean'][0])

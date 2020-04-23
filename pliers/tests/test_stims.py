@@ -349,6 +349,7 @@ def test_vector_from_values():
     v_array = np.random.randn(10)
     v_series = pd.Series(v_array)
     v_list = list(v_array)
+    v_tensor = tf.
 
     stim_array = VectorStim(array=v_array, labels=keys, 
                       onset=2.0, duration=.5)
