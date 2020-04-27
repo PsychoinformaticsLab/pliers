@@ -1,5 +1,6 @@
-''' The `Converter` hierarchy contains Transformer classes that take a `Stim`
-of one type as input and return a `Stim` of a different type as output.
+''' The `Converter` hierarchy contains Transformer classes that take an object
+of arbitrary class (but almost always a `Stim` subclass) as input, and return a
+`Stim` instance (of different class) as output.
 '''
 
 from .api import (WitTranscriptionConverter,
@@ -14,6 +15,8 @@ from .iterators import (VideoFrameIterator, VideoFrameCollectionIterator,
                         ComplexTextIterator)
 from .multistep import VideoToTextConverter, VideoToComplexTextConverter
 from .video import VideoToAudioConverter
+from .misc import ExtractorResultToDFConverter
+
 
 __all__ = [
     'WitTranscriptionConverter',
@@ -29,6 +32,7 @@ __all__ = [
     'VideoToComplexTextConverter',
     'VideoToAudioConverter',
     'RevAISpeechAPIConverter',
+    'ExtractorResultToDFConverter',
     'Converter',
     'get_converter'
 ]
