@@ -1,13 +1,14 @@
 ''' Filters that operate on TextStim inputs. '''
 
-import nltk
 import string
 import re
 
+import nltk
 from nltk import stem
 from nltk.tokenize import word_tokenize
 from nltk.tokenize import * # noqa
 from nltk.tokenize.api import TokenizerI
+
 from pliers.stimuli.text import TextStim
 from pliers.support.decorators import requires_nltk_corpus
 from .base import Filter

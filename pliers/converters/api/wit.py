@@ -3,12 +3,13 @@
 import logging
 import os
 from abc import abstractproperty
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError
+
 from pliers.stimuli.text import ComplexTextStim
 from pliers.utils import attempt_to_import, verify_dependencies
 from pliers.converters.audio import AudioToTextConverter
 from pliers.transformers.api import APITransformer
-from urllib.request import Request, urlopen
-from urllib.error import HTTPError
 
 sr = attempt_to_import('speech_recognition', 'sr')
 

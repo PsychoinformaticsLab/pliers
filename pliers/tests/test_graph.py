@@ -1,4 +1,11 @@
+from os.path import join, exists
+import tempfile
+import os
+
+from numpy.testing import assert_almost_equal
+import pandas as pd
 import pytest
+
 from pliers.graph import Graph, Node
 from pliers.converters import (TesseractConverter,
                                VideoToAudioConverter,
@@ -8,11 +15,6 @@ from pliers.extractors import (BrightnessExtractor, VibranceExtractor,
                                LengthExtractor, merge_results)
 from pliers.stimuli import (ImageStim, TextStim, VideoStim)
 from .utils import get_test_data_path, DummyExtractor
-from os.path import join, exists
-from numpy.testing import assert_almost_equal
-import pandas as pd
-import tempfile
-import os
 
 
 def test_node_init():

@@ -2,11 +2,11 @@
 Extractors that operate primarily or exclusively on Video stimuli.
 '''
 
+import numpy as np
+
 from pliers.stimuli.video import VideoStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.utils import attempt_to_import, verify_dependencies
-
-import numpy as np
 
 cv2 = attempt_to_import('cv2')
 

@@ -2,12 +2,12 @@
 Extractors that interact with Microsoft Azure Cognitive Services API.
 '''
 
+import pandas as pd
+
 from pliers.extractors.base import ExtractorResult
 from pliers.extractors.image import ImageExtractor
 from pliers.transformers import (MicrosoftAPITransformer,
                                  MicrosoftVisionAPITransformer)
-
-import pandas as pd
 
 
 class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):

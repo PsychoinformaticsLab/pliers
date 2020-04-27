@@ -1,4 +1,8 @@
 ''' Core transformer logic. '''
+from abc import ABCMeta, abstractmethod, abstractproperty
+import importlib
+import logging
+from functools import wraps
 
 from pliers import config
 from pliers.stimuli.base import Stim, _log_transformation, load_stims
@@ -7,10 +11,7 @@ from pliers.utils import (progress_bar_wrapper, isiterable,
                           isgenerator, listify, batch_iterable,
                           attempt_to_import, set_iterable_type)
 import pliers
-from abc import ABCMeta, abstractmethod, abstractproperty
-import importlib
-import logging
-from functools import wraps
+
 
 multiprocessing = attempt_to_import('pathos.multiprocessing',
                                     'multiprocessing', ['ProcessingPool'])

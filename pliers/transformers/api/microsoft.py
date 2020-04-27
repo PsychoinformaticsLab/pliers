@@ -1,6 +1,8 @@
 import logging
 import os
+
 import requests
+
 from pliers.transformers.api import APITransformer
 
 

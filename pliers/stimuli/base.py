@@ -1,6 +1,5 @@
 ''' Base class for all Stims and associated functionality. '''
 
-
 from abc import ABCMeta, abstractmethod
 from os.path import isdir, join, basename, realpath, isfile
 from glob import glob
@@ -8,12 +7,14 @@ from urllib.request import urlopen
 from urllib.parse import urlparse
 from collections import namedtuple
 from contextlib import contextmanager
-from pliers import config
-from pliers.utils import isiterable
-import pandas as pd
 import os
 import tempfile
 import base64
+
+import pandas as pd
+
+from pliers import config
+from pliers.utils import isiterable
 
 
 class Stim(metaclass=ABCMeta):

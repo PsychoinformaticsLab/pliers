@@ -1,6 +1,9 @@
-from pliers.utils.updater import check_updates
 from tempfile import NamedTemporaryFile
+
 import pandas as pd
+
+from pliers.utils.updater import check_updates
+
 
 def test_updater():
     datastore_file = NamedTemporaryFile().name

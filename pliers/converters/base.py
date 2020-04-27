@@ -1,11 +1,12 @@
 ''' Base Converter class and utilities. '''
 
 from abc import ABCMeta, abstractmethod, abstractproperty
+import inspect
+
 from pliers.transformers import Transformer
 from pliers.utils import listify, EnvironmentKeyMixin
 from pliers import config
 import pliers
-import inspect
 
 
 class Converter(Transformer, metaclass=ABCMeta):

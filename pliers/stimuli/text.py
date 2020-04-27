@@ -1,8 +1,10 @@
 ''' Classes that represent text or sequences of text. '''
 
 import re
-import pandas as pd
 from urllib.request import urlopen
+
+import pandas as pd
+
 from pliers.support.decorators import requires_nltk_corpus
 from pliers.utils import attempt_to_import, verify_dependencies
 from .base import Stim

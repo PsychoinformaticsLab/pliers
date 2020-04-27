@@ -1,4 +1,8 @@
 from os.path import join
+
+import numpy as np
+import pytest
+
 from ..utils import get_test_data_path
 from pliers.extractors import (BrightnessExtractor,
                                SharpnessExtractor,
@@ -10,8 +14,7 @@ from pliers.extractors import (BrightnessExtractor,
                                FaceRecognitionFaceEncodingsExtractor)
 from pliers.stimuli import ImageStim
 from pliers.extractors.base import merge_results
-import numpy as np
-import pytest
+
 
 IMAGE_DIR = join(get_test_data_path(), 'image')
 

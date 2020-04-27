@@ -1,11 +1,11 @@
 ''' Base Filter class and associated functionality. '''
 
 from abc import ABCMeta, abstractmethod
+import logging
+
 from pliers.stimuli import AudioStim, VideoStim
 from pliers.transformers import Transformer
 from pliers.utils import listify
-
-import logging
 
 
 class Filter(Transformer, metaclass=ABCMeta):

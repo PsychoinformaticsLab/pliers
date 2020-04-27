@@ -3,11 +3,13 @@
 import collections
 import os
 from abc import ABCMeta, abstractmethod, abstractproperty
-from tqdm import tqdm
-from pliers import config
-from pliers.support.exceptions import MissingDependencyError
 from types import GeneratorType
 from itertools import islice
+
+from tqdm import tqdm
+
+from pliers import config
+from pliers.support.exceptions import MissingDependencyError
 
 
 def listify(obj):

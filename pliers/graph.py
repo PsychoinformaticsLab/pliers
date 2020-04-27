@@ -1,15 +1,14 @@
 ''' The `graph` module contains tools for constructing and executing graphs
 of pliers Transformers. '''
+from itertools import chain
+from collections import OrderedDict
+import json
 
 from pliers.extractors.base import merge_results
 from pliers.stimuli import __all__ as stim_list
 from pliers.transformers import get_transformer
 from pliers.utils import (listify, flatten, isgenerator, attempt_to_import,
                           verify_dependencies)
-from itertools import chain
-from collections import OrderedDict
-
-import json
 
 pgv = attempt_to_import('pygraphviz', 'pgv')
 stim_list.insert(0, 'ExtractorResult')

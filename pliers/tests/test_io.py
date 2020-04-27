@@ -1,8 +1,9 @@
-from .utils import get_test_data_path
-from pliers.stimuli import load_stims
 from os.path import join
+
 import pytest
 
+from .utils import get_test_data_path
+from pliers.stimuli import load_stims
 
 def test_magic_loader():
     text_file = join(get_test_data_path(), 'text', 'sample_text.txt')

@@ -1,3 +1,9 @@
+import json
+from os.path import join
+
+import pytest
+import numpy as np
+
 from pliers import config
 from pliers.filters import FrameSamplingFilter
 from pliers.extractors import (GoogleVisionAPIFaceExtractor,
@@ -20,11 +26,8 @@ from pliers.extractors import (GoogleVisionAPIFaceExtractor,
 from pliers.extractors.api.google import GoogleVisionAPIExtractor
 from pliers.stimuli import ImageStim, VideoStim, TextStim
 from pliers.utils import attempt_to_import, verify_dependencies
-import pytest
-import json
-from os.path import join
 from ...utils import get_test_data_path
-import numpy as np
+
 
 googleapiclient = attempt_to_import('googleapiclient', fromlist=['discovery'])
 

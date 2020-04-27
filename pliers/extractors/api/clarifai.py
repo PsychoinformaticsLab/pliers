@@ -5,13 +5,16 @@ Extractors that interact with the Clarifai API.
 import logging
 import os
 from contextlib import ExitStack
+
+import pandas as pd
+
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.video import VideoExtractor
 from pliers.extractors.base import ExtractorResult
 from pliers.transformers import BatchTransformerMixin
 from pliers.transformers.api import APITransformer
 from pliers.utils import listify, attempt_to_import, verify_dependencies
-import pandas as pd
+
 
 clarifai_client = attempt_to_import('clarifai.rest.client', 'clarifai_client',
                                     ['ClarifaiApp',

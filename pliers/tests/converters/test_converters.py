@@ -1,4 +1,7 @@
 from os.path import join
+
+import pytest
+
 from ..utils import get_test_data_path
 from pliers.converters import (get_converter,
                                VideoToAudioConverter,
@@ -8,7 +11,6 @@ from pliers.converters import (get_converter,
 from pliers.converters.image import ImageToTextConverter
 from pliers.stimuli import (VideoStim, TextStim,
                             ComplexTextStim, ImageStim)
-import pytest
 
 
 def test_get_converter():
