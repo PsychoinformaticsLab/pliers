@@ -1,7 +1,6 @@
 from .utils import get_test_data_path
 from pliers.stimuli import load_stims
 from os.path import join
-from six import string_types
 import pytest
 
 
@@ -13,7 +12,7 @@ def test_magic_loader():
     stims = load_stims(stim_files)
     assert len(stims) == 3
     assert round(stims[1].duration) == 57
-    assert isinstance(stims[0].text, string_types)
+    assert isinstance(stims[0].text, str)
     assert stims[2].width == 560
 
 

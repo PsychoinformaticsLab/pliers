@@ -3,7 +3,7 @@
 import collections
 import os
 from abc import ABCMeta, abstractmethod, abstractproperty
-from six import string_types, with_metaclass
+from six with_metaclass
 from tqdm import tqdm
 from pliers import config
 from pliers.support.exceptions import MissingDependencyError
@@ -20,7 +20,7 @@ def listify(obj):
 def flatten(l):
     ''' Flatten an iterable. '''
     for el in l:
-        if isinstance(el, collections.Iterable) and not isinstance(el, string_types):
+        if isinstance(el, collections.Iterable) and not isinstance(el, str):
             for sub in flatten(el):
                 yield sub
         else:

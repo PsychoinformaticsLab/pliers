@@ -7,7 +7,7 @@ from pliers.utils import (progress_bar_wrapper, isiterable,
                           isgenerator, listify, batch_iterable,
                           attempt_to_import, set_iterable_type)
 import pliers
-from six import with_metaclass, string_types
+from six import with_metaclass, str
 from abc import ABCMeta, abstractmethod, abstractproperty
 import importlib
 import logging
@@ -48,7 +48,7 @@ class Transformer(with_metaclass(ABCMeta)):
         @wraps(transform)
         def wrapper(self, stim, *args, **kwargs):
             use_cache = config.get_option('cache_transformers') \
-                and isinstance(stim, (Stim, string_types))
+                and isinstance(stim, (Stim, str))
             if use_cache:
                 key = hash((hash(self), hash(stim)))
                 if key in _cache:
@@ -88,7 +88,7 @@ class Transformer(with_metaclass(ABCMeta)):
                 _transform call.
         '''
 
-        if isinstance(stims, string_types):
+        if isinstance(stims, str):
             stims = load_stims(stims)
 
         # If stims is a CompoundStim and the Transformer is expecting a single

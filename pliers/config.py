@@ -4,7 +4,7 @@ manipulating them. '''
 import json
 from os.path import join, expanduser, exists
 import os
-from six import string_types
+
 
 __all__ = ['set_option', 'set_options', 'get_option']
 
@@ -52,7 +52,7 @@ def get_option(key):
 
 
 def from_file(filenames, error_on_missing=True):
-    if isinstance(filenames, string_types):
+    if isinstance(filenames, str):
         filenames = [filenames]
     for f in filenames:
         if exists(f):

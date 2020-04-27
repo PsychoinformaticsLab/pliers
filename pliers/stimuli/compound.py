@@ -1,7 +1,6 @@
 ''' A CompoundStim class represents a combination of constituent Stim classes.
 '''
 
-from six import string_types
 from pliers.utils import listify
 from .base import _get_stim_class
 from .audio import AudioStim
@@ -68,7 +67,7 @@ class CompoundStim(object):
             list if no elements match). If return_all is False, returns the
             first matching Stim, or None if no elements match.
         '''
-        if isinstance(type_, string_types):
+        if isinstance(type_, str):
             type_ = _get_stim_class(type_)
         matches = []
         for s in self.elements:

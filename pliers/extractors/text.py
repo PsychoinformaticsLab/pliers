@@ -17,7 +17,7 @@ import scipy
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import logging
-from six import string_types
+
 
 keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
                                  ['KeyedVectors'])
@@ -68,7 +68,7 @@ class DictionaryExtractor(TextExtractor):
     VERSION = '1.0'
 
     def __init__(self, dictionary, variables=None, missing=np.nan):
-        if isinstance(dictionary, string_types):
+        if isinstance(dictionary, str):
             self.dictionary = dictionary  # for TranformationHistory logging
             dictionary = pd.read_csv(dictionary, sep='\t', index_col=0)
         else:
