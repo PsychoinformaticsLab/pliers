@@ -38,7 +38,7 @@ class SeriesStim(Stim):
             if filename is None and url is None:
                 raise ValueError("No data provided! One of the data, filename,"
                                  "or url arguments must be passed.")
-            source = data or url
+            source = filename or url
             data = pd.read_csv(source, squeeze=True, **pd_args)
             if isinstance(data, pd.DataFrame):
                 if column is None:
