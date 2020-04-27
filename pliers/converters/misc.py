@@ -15,11 +15,11 @@ class ExtractorResultToSeriesConverter(Converter):
         df = result.to_df(timing=False, metadata=False, object_id=False)
         n_rows = df.shape[0]
         stims = []
-        for i in n_rows:
+        for i in range(n_rows):
             data = df.iloc[i, :]
-            onset = result.onset[i]
-            duration = result.duration[i]
-            order = result.order[i]
-            st = SeriesStim(data, onset=onset, duration=duration, order=order)
+            onset = result.onset[i] if result.onset is not None else None
+            dur = result.duration[i] if result.duration is not None else None
+            order = result.order[i] if result.order is not None else i
+            st = SeriesStim(data, onset=onset, duration=dur, order=order)
             stims.append(st)
         return stims
