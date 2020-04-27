@@ -75,5 +75,5 @@ class WitTranscriptionConverter(SpeechRecognitionAPIConverter):
             urlopen(request)
             return True
         except HTTPError as e:
-            logging.warn(str(e))
+            logging.warning(str(e))
             return False

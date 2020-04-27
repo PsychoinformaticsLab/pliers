@@ -69,7 +69,7 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
             self._send_request(request)
             return True
         except Exception as e:
-            logging.warn(str(e))
+            logging.warning(str(e))
             return False
 
     def _convert(self, audio):

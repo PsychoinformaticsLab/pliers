@@ -118,7 +118,7 @@ class Transformer(with_metaclass(ABCMeta)):
                 if validation == 'strict':
                     raise err
                 elif validation == 'warn':
-                    logging.warn(str(err))
+                    logging.warning(str(err))
                     return
                 elif validation == 'loose':
                     return

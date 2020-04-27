@@ -59,7 +59,7 @@ class TemporalTrimmingFilter(Filter):
         end = self.end / getattr(stim, rate) if self.frames else self.end
         if end and end > stim.duration:
             if self.validation == 'warn':
-                logging.warn("Attempted to trim beyond the duration of the"
+                logging.warning("Attempted to trim beyond the duration of the"
                              "clip, instead trimming to the end of the clip")
                 end = stim.duration
             else:
