@@ -315,3 +315,4 @@ def get_transformer(name, base=None, *args, **kwargs):
                 return cls(*args, **kwargs)
 
     raise KeyError("No transformer named '%s' found." % name)
+

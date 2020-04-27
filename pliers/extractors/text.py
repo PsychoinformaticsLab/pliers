@@ -2,7 +2,6 @@
 Extractors that operate primarily or exclusively on Text stimuli.
 '''
 import sys
-
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.exceptions import PliersError
@@ -14,6 +13,7 @@ from pliers.utils import (attempt_to_import, verify_dependencies, flatten,
 import itertools
 import numpy as np
 import pandas as pd
+import scipy
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import logging
@@ -402,149 +402,409 @@ class SpaCyExtractor(TextExtractor):
                                features=self.features, orders=order_list)
 
 
-class PretrainedBertEncodingExtractor(ComplexTextExtractor):
-
-    ''' Uses transformers library to extract contextualized encodings for words
-    or text sequences using pre-trained BERT models.
-
+class BertExtractor(ComplexTextExtractor):
+    ''' Returns encodings from the last hidden layer of a Bert or Bert-derived
+    model (ALBERT, DistilBERT, RoBERTa, CamemBERT). Excludes special tokens.
+    Base class for other Bert extractors.
     Args:
-        pretrained_model_or_path (str): A string specifying which BERT
-            model to use. Can be one of pretrained BERT models listed at
+        pretrained_model (str): A string specifying which transformer
+            model to use. Can be any pretrained BERT or BERT-derived (ALBERT, 
+            DistilBERT, RoBERTa, CamemBERT etc.) models listed at
             https://huggingface.co/transformers/pretrained_models.html
-            (valid values include all the models with 'bert' prefix) 
+            or path to custom model.
+        tokenizer (str): Type of tokenization used in the tokenization step.
+            If different from model, out-of-vocabulary tokens may be treated 
+            as unknown tokens.
+        model_class (str): Specifies model type. Must be one of 'AutoModel' 
+            (encoding extractor) or  'AutoModelWithLMHead' (language model).
+            These are generic model classes, which use the value of 
+            pretrained_model to infer the model-specific transformers 
+            class (e.g. BertModel or BertForMaskedLM for BERT, RobertaModel 
+            or RobertaForMaskedLM for RoBERTa). Fixed by each subclass.
+        framework (str): name deep learning framework to use. Must be 'pt'
+            (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
+        return_input (bool): if True, the extractor returns encoded token
+            and encoded word as features.
+        model_kwargs (dict): Named arguments for transformer model.
+            See https://huggingface.co/transformers/main_classes/model.html
+        tokenizer_kwargs (dict): Named arguments for tokenizer.
+            See https://huggingface.co/transformers/main_classes/tokenizer.html
+    '''
+
+    _log_attributes = ('pretrained_model', 'framework', 'tokenizer_type',
+        'model_class', 'return_input', 'model_kwargs', 'tokenizer_kwargs')
+    _model_attributes = ('pretrained_model', 'framework', 'model_class', 
+        'tokenizer_type')
+
+    def __init__(self,
+                 pretrained_model='bert-base-uncased',
+                 tokenizer='bert-base-uncased',
+                 model_class='AutoModel',
+                 framework='pt',
+                 return_input=False,
+                 model_kwargs=None,
+                 tokenizer_kwargs=None):
+        verify_dependencies(['transformers'])
+        if framework not in ['pt', 'tf']:
+            raise(ValueError('''Invalid framework;
+                must be one of 'pt' (pytorch) or 'tf' (tensorflow)'''))
+        self.pretrained_model = pretrained_model
+        self.tokenizer_type = tokenizer
+        self.model_class = model_class
+        self.framework = framework
+        self.return_input=return_input
+        self.model_kwargs = model_kwargs if model_kwargs else {}
+        self.tokenizer_kwargs = tokenizer_kwargs if tokenizer_kwargs else {}
+        model = model_class if self.framework == 'pt' else 'TF' + model_class
+        self.model = getattr(transformers, model).from_pretrained(
+            pretrained_model, **self.model_kwargs)
+        self.tokenizer = transformers.BertTokenizer.from_pretrained(
+            tokenizer, **self.tokenizer_kwargs)
+        super(BertExtractor, self).__init__()
+
+    def _mask_words(self, wds):
+        ''' Called by _preprocess method. Takes list of words in the Stim as
+            input (i.e. the .text attribute for each TextStim in the 
+            ComplexTextStim). If class has mask attribute, replaces word in 
+            the input sequence with [MASK] token based on the value of mask 
+            (either index in the sequence, or word to replace). Here, returns
+            list of words (without masking)
+        '''
+        return wds
+
+    def _preprocess(self, stims):
+        ''' Extracts text, onset, duration from ComplexTextStim, masks target
+            words (if relevant), tokenizes the input, and casts words, onsets,
+            and durations to token-level lists. Called within _extract method 
+            to prepare input for the model. '''
+        els = [(e.text, e.onset, e.duration) for e in stims.elements]
+        wds, ons, dur = map(list, zip(*els))
+        tok = [self.tokenizer.tokenize(w) for w in self._mask_words(wds)]
+        n_tok = [len(t) for t in tok]
+        stims.name = ' '.join(wds) if stims.name == '' else stims.name
+        wds, ons, dur = map(lambda x: np.repeat(x, n_tok), [wds, ons, dur])
+        tok = list(flatten(tok))
+        idx = self.tokenizer.encode(tok, return_tensors=self.framework)
+        return wds, ons, dur, tok, idx
+
+    def _extract(self, stims):
+        ''' Takes stim as input, preprocesses it, feeds it to Bert model, 
+            then postprocesses the output '''
+        wds, ons, dur, tok, idx = self._preprocess(stims)
+        preds = self.model(idx)
+        preds = [p.detach() if self.framework == 'pt' else p for p in preds]
+        data, feat, ons, dur = self._postprocess(stims, preds, tok, wds, ons, dur)
+        return ExtractorResult(data, stims, self, features=feat, onsets=ons, 
+                               durations=dur)
+
+    def _postprocess(self, stims, preds, tok, wds, ons, dur):
+        ''' Postprocesses model output (subsets relevant information,
+            transforms it where relevant, adds model metadata). 
+            Takes prediction array, token list, word list, onsets 
+            and durations and input. Here, returns token-level encodings 
+            (excluding special tokens).
+        '''
+        out = preds[0][:, 1:-1, :].numpy().squeeze()
+        data = [out.tolist()]
+        feat = ['encoding']
+        if self.return_input:
+            data += [tok, wds]
+            feat += ['token', 'word']
+        return data, feat, ons, dur
+    
+    def _to_df(self, result, include_attributes=True):
+        res_df = pd.DataFrame(dict(zip(result.features, result._data)))
+        res_df['object_id'] = range(res_df.shape[0])
+        return res_df
+
+
+class BertSequenceEncodingExtractor(BertExtractor):
+    ''' Extract contextualized encodings for words or sequences using
+        pretrained BertModel.
+    Args:
+        pretrained_model (str): A string specifying which transformer
+            model to use. Can be any pretrained BERT or BERT-derived (ALBERT, 
+            DistilBERT, RoBERTa, CamemBERT etc.) models listed at
+            https://huggingface.co/transformers/pretrained_models.html
             or path to custom model.
         tokenizer (str): Type of tokenization used in the tokenization step.
             If different from model, out-of-vocabulary tokens may be treated as
             unknown tokens.
         framework (str): name deep learning framework to use. Must be 'pt'
             (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
-        encoding_level (str): A string specifying whether one encoding per token
-            ('token') or a single encoding for the input sequence ('sequence')
-            are to be returned.
-        pooling (str): Optional argument, relevant for sequence-level
-            embeddings only. If None and encoding_level='sequence', encodings
-            for [CLS] tokens are returned. If encoding_level='sequence' and
-            numpy function is specified, token-level embeddings are pooled
-            according to specified method (e.g. 'mean', 'max', 'min').
+        pooling (str): defines numpy function to use to pool token-level 
+            encodings (excludes special tokens).
+        return_special (str): defines whether to return encoding for special 
+            sequence tokens ('[CLS]' or '[SEP]'), instead of pooling of 
+            other tokens. Must be '[CLS]', '[SEP]', or 'pooler_output'.
+            The latter option returns last layer hidden-state of [CLS] token 
+            further processed by a linear layer and tanh activation function,
+            with linear weights trained on the next sentence classification 
+            task. Note that some Bert-derived models, such as DistilBert, 
+            were not trained on this task. For these models, setting this 
+            argument to 'pooler_output' will return an error.
+        return_input (bool): If True, the extractor returns an additional 
+            feature column with the encoded sequence.
         model_kwargs (dict): Named arguments for pretrained model.
             See: https://huggingface.co/transformers/main_classes/model.html
-            and https://huggingface.co/transformers/model_doc/bert.html for
-            further info.
+            and https://huggingface.co/transformers/model_doc/bert.html
         tokenizer_kwargs (dict): Named arguments for tokenizer.
             See https://huggingface.co/transformers/main_classes/tokenizer.html
-            for further info.
     '''
 
-    _log_attributes = ('pretrained_model', 'encoding_level',
-                       'pooling', 'framework', 'tokenizer_type',
-                       'model_kwargs', 'tokenizer_kwargs')
+    _log_attributes = ('pretrained_model', 'framework', 'tokenizer_type', 
+        'pooling', 'return_special', 'return_input', 'model_class', 
+        'model_kwargs', 'tokenizer_kwargs')
+    _model_attributes = ('pretrained_model', 'framework', 'model_class', 
+        'pooling', 'return_special', 'tokenizer_type')
 
-    def __init__(self,
-                 pretrained_model_or_path='bert-base-uncased',
+    def __init__(self, pretrained_model='bert-base-uncased',
                  tokenizer='bert-base-uncased',
                  framework='pt',
-                 encoding_level='token',
-                 pooling=None,
+                 pooling='mean',
+                 return_special=None,
+                 return_input=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
-                 
-        verify_dependencies(['transformers'])
-
-        if framework not in ['pt', 'tf']:
-            raise(ValueError('''Invalid framework;
-                must be one of 'pt' (pytorch) or 'tf' (tensorflow)'''))
-
-        if encoding_level not in ['token', 'sequence']:
-            raise(ValueError('''Invalid encoding_level;
-                must be one of 'token' or 'sequence'.'''))
-
-        if model_kwargs is None:
-            model_kwargs = {}
-
-        if tokenizer_kwargs is None:
-            tokenizer_kwargs = {}
-
-        self.pretrained_model = pretrained_model_or_path
-        self.tokenizer_type = tokenizer
-        self.framework = framework
-        self.encoding_level = encoding_level
+        if return_special and pooling:
+            logging.warning('Pooling and return_special argument are '
+                'mutually exclusive. Setting pooling to None.')
+            pooling = None
+        if pooling:
+            try: 
+                getattr(np, pooling)
+            except:
+                raise(ValueError('Pooling must be a valid numpy function.'))
+        elif return_special:
+            if return_special not in ['[CLS]', '[SEP]', 'pooler_output']:
+                raise(ValueError('Value of return_special argument must be '
+                    'one of \'[CLS]\', \'[SEP]\' or \'pooler_output\''))
         self.pooling = pooling
-        self.model_kwargs = model_kwargs
-        self.tokenizer_kwargs = tokenizer_kwargs
-        model_name = 'BertModel' if self.framework == 'pt' else 'TFBertModel'
+        self.return_special = return_special
+        super(BertSequenceEncodingExtractor, self).__init__(
+            pretrained_model=pretrained_model, tokenizer=tokenizer, 
+            return_input=return_input, model_class='AutoModel', 
+            framework=framework, model_kwargs=model_kwargs, 
+            tokenizer_kwargs=tokenizer_kwargs)
 
-        self.tokenizer = transformers.BertTokenizer.from_pretrained(
-            tokenizer, **tokenizer_kwargs)
-        self.model = getattr(transformers, model_name).from_pretrained(
-            pretrained_model_or_path, **model_kwargs)
-
-        super(PretrainedBertEncodingExtractor, self).__init__()
-
-    def _extract(self, stims):
-        if stims.name == '':
-            stims.name = ' '.join([s.text for s in stims.elements])
-
-        text, onsets, durations = zip(
-            *((s.text, s.onset, s.duration) for s in stims.elements))
-        tokens = [self.tokenizer.tokenize(t) for t in text]
-        tokens_flat = list(flatten(tokens))
-
-        def cast_to_token_level(word_level_list):
-            token_level_list = [itertools.repeat(word_level_list[i], len(tok))
-                                for i, tok in enumerate(tokens)]
-            token_level_list = list(flatten(token_level_list))
-            return token_level_list
-
-        t_text, t_ons, t_dur = map(cast_to_token_level,
-                                   [text, onsets, durations])
-        tensor_tokens = self.tokenizer.encode(tokens_flat,
-                                              return_tensors=self.framework)
-        output = self.model(tensor_tokens)
-        output = [out.detach().numpy() if self.framework == 'pt' else
-                  out.numpy() for out in output]
-
-        if self.encoding_level == 'token':
-            encoded_tokens = tokens_flat
-            encodings = output[0][:, 1:-1, :].squeeze()
-
-        elif self.encoding_level == 'sequence':
-            encoded_tokens = [' '.join(text)]
-            t_text = ['None']
-            if not any(val is None for val in [t_ons[-1],t_dur[-1],t_ons[0]]):
-                t_dur = t_ons[-1] + t_dur[-1] - t_ons[0]
+    def _postprocess(self, stims, preds, tok, wds, ons, dur):
+        preds = [p.numpy().squeeze() for p in preds]
+        self.preds = preds
+        try: 
+            dur = ons[-1] + dur[-1] - ons[0]
+        except:
+            dur = None
+        ons = ons[0]
+        if self.pooling:
+            pool_func = getattr(np, self.pooling)
+            out = pool_func(preds[0][1:-1, :], axis=0)
+        elif self.return_special:
+            if self.return_special == '[CLS]':
+                out = preds[0][0,:] 
+            elif self.return_special == '[SEP]':
+                out = preds[0][1,:]
             else:
-                t_dur = None
-            t_ons = t_ons[0]
+                out = preds[1]
+        data = [[out.tolist()]]
+        feat = ['encoding']
+        if self.return_input:
+            data += [stims.name]
+            feat += ['sequence']   
+        return data, feat, ons, dur
 
-            if self.pooling:
-                pooling_function = getattr(np, self.pooling)
-                encodings = pooling_function(output[0][:, 1:-1, :],
-                                             axis=1, keepdims=True)
-            else:
-                encodings = output[1]
 
-        data = [encodings.tolist(), encoded_tokens, t_text]
-        features = ['encoding', 'token', 'word']
+class BertLMExtractor(BertExtractor):
+    ''' Returns masked words predictions for BERT (or BERT-derived) models.
+    Args:
+        pretrained_model (str): A string specifying which transformer
+            model to use. Can be any pretrained BERT or BERT-derived (ALBERT, 
+            DistilBERT, RoBERTa, CamemBERT etc.) models listed at
+            https://huggingface.co/transformers/pretrained_models.html
+            or path to custom model.
+        tokenizer (str): Type of tokenization used in the tokenization step.
+            If different from model, out-of-vocabulary tokens may be treated as
+            unknown tokens.
+        framework (str): name deep learning framework to use. Must be 'pt'
+            (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
+        mask (int or str): Words to be masked (string) or indices of 
+            words in the sequence to be masked (indexing starts at 0). Can
+            be either a single word/index or a list of words/indices.
+            If str is passed and more than one word in the input matches 
+            the string, only the first one is masked. 
+        top_n (int): Specifies how many of the highest-probability tokens are
+            to be returned. Mutually exclusive with target and threshold.
+        target (str or list): Vocabulary token(s) for which probability is to 
+            be returned. Tokens defined in the vocabulary change across 
+            tokenizers. Mutually exclusive with top_n and threshold.
+        threshold (float): If defined, only values above this threshold will
+            be returned. Mutually exclusive with top_n and target.
+        return_softmax (bool): if True, returns probability scores instead of 
+            raw predictions.
+        return_masked_word (bool): if True, returns masked word (if defined 
+            in the tokenizer vocabulary) and its probability.
+        model_kwargs (dict): Named arguments for pretrained model.
+            See: https://huggingface.co/transformers/main_classes/model.html
+            and https://huggingface.co/transformers/model_doc/bert.html.
+        tokenizer_kwargs (dict): Named arguments for tokenizer.
+            See https://huggingface.co/transformers/main_classes/tokenizer.html.
+    '''
 
-        return ExtractorResult(data, stims, self,
-                               features=features,
-                               onsets=t_ons, durations=t_dur)
+    _log_attributes = ('pretrained_model', 'framework', 'top_n', 'target', 
+        'mask', 'tokenizer_type', 'return_softmax', 'return_masked_word')
+    _model_attributes = ('pretrained_model', 'framework', 'top_n', 'mask',
+         'target', 'threshold', 'tokenizer_type')
 
-    def _to_df(self, result, model_attributes=True):
-        df_dict = dict(zip(result.features, result._data))
+    def __init__(self,
+                 pretrained_model='bert-base-uncased',
+                 tokenizer='bert-base-uncased',
+                 framework='pt',
+                 mask='MASK',
+                 top_n=None,
+                 threshold=None,
+                 target=None,
+                 return_softmax=False,
+                 return_masked_word=False,
+                 return_input=False,
+                 model_kwargs=None,
+                 tokenizer_kwargs=None):
+        if any([top_n and target, 
+                top_n and threshold, 
+                threshold and target]):
+            raise ValueError('top_n, threshold and target arguments '
+                             'are mutually exclusive')
+        if type(mask) not in [int, str]:
+            raise ValueError('Mask must be a string or an integer.')
+        super(BertLMExtractor, self).__init__(pretrained_model=pretrained_model,
+            tokenizer=tokenizer, framework=framework, return_input=return_input, 
+            model_class='AutoModelWithLMHead', model_kwargs=model_kwargs, 
+            tokenizer_kwargs=tokenizer_kwargs)
+        self.target = listify(target)
+        if self.target:
+            missing = set(self.target) - set(self.tokenizer.vocab.keys())
+            if missing:
+                logging.warning(f'{missing} not in vocabulary. Dropping.')
+            present = set(self.target) & set(self.tokenizer.vocab.keys())
+            self.target = list(present)
+            if self.target == []:
+                raise ValueError('No valid target token. Import transformers'
+                    ' and run transformers.BertTokenizer.from_pretrained'
+                    f'(\'{tokenizer}\').vocab.keys() to see available tokens')
+        self.mask = mask
+        self.top_n = top_n
+        self.threshold = threshold
+        self.return_softmax = return_softmax
+        self.return_masked_word = return_masked_word
+        
+    def update_mask(self, new_mask):
+        ''' Updates mask attribute with value of new_mask. 
+        Args:
+            new_mask (str or int): word to mask (str) or index/position of the
+                word to mask in input sequence (int). Indexing starts at 0.
+        '''
+        if type(new_mask) not in [str, int]:
+            raise ValueError('Mask must be a string or an integer.')
+        self.mask = new_mask
 
-        if model_attributes:
-            log_dict = {attr: getattr(result.extractor, attr) for
-                        attr in ['pretrained_model', 'encoding_level',
-                        'pooling', 'framework', 'tokenizer_type']}
-            df_dict.update(log_dict)
+    def _mask_words(self, wds):
+        mwds = wds.copy()
+        self.mask_token = self.mask if type(self.mask) == str else mwds[self.mask]
+        self.mask_pos = np.where(np.array(mwds)==self.mask_token)[0][0]
+        mwds[self.mask_pos] = '[MASK]'
+        return mwds
 
-        result_df = pd.DataFrame(df_dict)
-        result_df['object_id'] = range(result_df.shape[0])
+    def _postprocess(self, stims, preds, tok, wds, ons, dur):
+        preds = preds[0].numpy()[:,1:-1,:]
+        if self.return_softmax:
+            preds = scipy.special.softmax(preds, axis=-1)
+        out_idx = preds[0,self.mask_pos,:].argsort()[::-1]
+        if self.top_n:
+            sub_idx = out_idx[:self.top_n]
+        elif self.target:
+            sub_idx = self.tokenizer.convert_tokens_to_ids(self.target)
+        elif self.threshold:
+            sub_idx = np.where(preds[0,self.mask_pos,:] >= self.threshold)[0]
+        else:
+            sub_idx = out_idx
+        out_idx = [idx for idx in out_idx if idx in sub_idx]
+        feat = self.tokenizer.convert_ids_to_tokens(out_idx)
+        feat = [f.capitalize() for f in feat]
+        data = [listify(p) for p in preds[0,self.mask_pos,out_idx]]
+        if self.return_masked_word:
+            feat, data = self._return_masked_word(preds, feat, data)
+        if self.return_input:
+            data += [stims.name]
+            feat += ['sequence']
+        ons, dur = map(lambda x: listify(x[self.mask_pos]), [ons, dur])
+        return data, feat, ons, dur
 
-        return result_df
+    def _return_masked_word(self, preds, feat, data):
+        if self.mask_token in self.tokenizer.vocab:
+            true_vocab_idx = self.tokenizer.vocab[self.mask_token]
+            true_score = preds[0,self.mask_pos,true_vocab_idx]
+        else:
+            true_score = np.nan
+            logging.warning('True token not in vocabulary. Returning NaN')
+        feat += ['true_word', 'true_word_score']
+        data += [self.mask_token, true_score]
+        return feat, data
+    
 
-      
+class BertSentimentExtractor(BertExtractor):
+    ''' Extracts sentiment for sequences using Bert or Bert-derived models
+        fine-tuned for sentiment classification.
+    Args:
+        pretrained_model (str): A string specifying which transformer
+            model to use (must be one fine-tuned for sentiment classification)
+        tokenizer (str): Type of tokenization used in the tokenization step.
+        framework (str): name deep learning framework to use. Must be 'pt'
+            (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
+        return_softmax (bool): If True, the extractor returns softmaxed 
+            sentiment scores instead of raw model predictions.
+        return_input (bool): If True, the extractor returns an additional 
+            feature column with the encoded sequence.
+        model_kwargs (dict): Named arguments for pretrained model.
+        tokenizer_kwargs (dict): Named arguments for tokenizer.
+    '''
+
+    _log_attributes = ('pretrained_model', 'framework', 'tokenizer_type', 
+        'return_softmax', 'return_input', 'model_class', 'model_kwargs', 
+        'tokenizer_kwargs')
+    _model_attributes = ('pretrained_model', 'framework',  'tokenizer_type',
+        'return_input', 'return_softmax',)
+
+    def __init__(self, 
+                 pretrained_model='distilbert-base-uncased-finetuned-sst-2-english',
+                 tokenizer='bert-base-uncased',
+                 framework='pt',
+                 return_softmax=True,
+                 return_input=False,
+                 model_kwargs=None,
+                 tokenizer_kwargs=None):
+        self.return_softmax = return_softmax
+        super(BertSentimentExtractor, self).__init__(
+                pretrained_model=pretrained_model, tokenizer=tokenizer, 
+                framework=framework, return_input=return_input,
+                model_class='AutoModelForSequenceClassification',
+                model_kwargs=model_kwargs, tokenizer_kwargs=tokenizer_kwargs)
+
+    def _postprocess(self, stims, preds, tok, wds, ons, dur):
+        data = preds[0].numpy().squeeze()
+        if self.return_softmax:
+            data = scipy.special.softmax(data) 
+        data = [listify(d) for d in data.tolist()]
+        tok = [' '.join(wds)]
+        try: 
+            dur = ons[-1] + dur[-1] - ons[0]
+        except:
+            dur = None
+        ons = ons[0]
+        feat = ['sent_pos', 'sent_neg']
+        if self.return_input:
+            data += tok
+            feat += ['sequence']   
+        return data, feat, ons, dur
+
+
 class WordCounterExtractor(ComplexTextExtractor):
 
     ''' Extracts number of times each unique word has occurred within text
@@ -557,7 +817,6 @@ class WordCounterExtractor(ComplexTextExtractor):
     _log_attributes = ('case_sensitive', 'log_scale')
 
     def __init__(self, case_sensitive=False, log_scale=False):
-
         self.log_scale = log_scale
         self.case_sensitive = case_sensitive
         self.features = ['log_word_count'] if self.log_scale else ['word_count']
@@ -575,4 +834,3 @@ class WordCounterExtractor(ComplexTextExtractor):
         return ExtractorResult(word_counter, stims, self,
                                features=self.features,
                                onsets=onsets, durations=durations)
-
