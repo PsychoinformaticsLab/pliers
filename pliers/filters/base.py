@@ -1,7 +1,6 @@
 ''' Base Filter class and associated functionality. '''
 
 from abc import ABCMeta, abstractmethod
-from six import with_metaclass
 from pliers.stimuli import AudioStim, VideoStim
 from pliers.transformers import Transformer
 from pliers.utils import listify
@@ -9,7 +8,7 @@ from pliers.utils import listify
 import logging
 
 
-class Filter(with_metaclass(ABCMeta, Transformer)):
+class Filter(Transformer, metaclass=ABCMeta):
     ''' Base class for Filters.'''
 
     def _transform(self, stim, *args, **kwargs):

@@ -4,7 +4,6 @@
 from abc import ABCMeta, abstractmethod
 from os.path import isdir, join, basename, realpath, isfile
 from glob import glob
-from six import with_metaclass, str
 from six.moves.urllib.request import urlopen
 from six.moves.urllib.parse import urlparse
 from collections import namedtuple
@@ -17,7 +16,7 @@ import tempfile
 import base64
 
 
-class Stim(with_metaclass(ABCMeta)):
+class Stim(metaclass=ABCMeta):
 
     ''' Base class for all classes in the Stim hierarchy.
 

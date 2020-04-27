@@ -7,7 +7,6 @@ from pliers.utils import (progress_bar_wrapper, isiterable,
                           isgenerator, listify, batch_iterable,
                           attempt_to_import, set_iterable_type)
 import pliers
-from six import with_metaclass, str
 from abc import ABCMeta, abstractmethod, abstractproperty
 import importlib
 import logging
@@ -19,7 +18,7 @@ multiprocessing = attempt_to_import('pathos.multiprocessing',
 _cache = {}
 
 
-class Transformer(with_metaclass(ABCMeta)):
+class Transformer(metaclass=ABCMeta):
     ''' Base class for all pliers Transformers.
 
     Args:

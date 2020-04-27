@@ -3,7 +3,6 @@
 import collections
 import os
 from abc import ABCMeta, abstractmethod, abstractproperty
-from six with_metaclass
 from tqdm import tqdm
 from pliers import config
 from pliers.support.exceptions import MissingDependencyError
@@ -135,7 +134,7 @@ class EnvironmentKeyMixin(object):
         return all([k in os.environ for k in cls.env_keys])
 
 
-class APIDependent(with_metaclass(ABCMeta, EnvironmentKeyMixin)):
+class APIDependent(EnvironmentKeyMixin, metaclass=ABCMeta):
 
     _rate_limit = 0
 
