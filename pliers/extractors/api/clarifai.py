@@ -4,10 +4,7 @@ Extractors that interact with the Clarifai API.
 
 import logging
 import os
-try:
-    from contextlib import ExitStack
-except Exception as e:
-    from contextlib2 import ExitStack
+from contextlib import ExitStack
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.video import VideoExtractor
 from pliers.extractors.base import ExtractorResult
