@@ -4,8 +4,8 @@
 from abc import ABCMeta, abstractmethod
 from os.path import isdir, join, basename, realpath, isfile
 from glob import glob
-from six.moves.urllib.request import urlopen
-from six.moves.urllib.parse import urlparse
+from urllib.request import urlopen
+from urllib.parse import urlparse
 from collections import namedtuple
 from contextlib import contextmanager
 from pliers import config

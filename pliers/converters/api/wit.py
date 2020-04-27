@@ -7,8 +7,8 @@ from pliers.stimuli.text import ComplexTextStim
 from pliers.utils import attempt_to_import, verify_dependencies
 from pliers.converters.audio import AudioToTextConverter
 from pliers.transformers.api import APITransformer
-from six.moves.urllib.request import Request, urlopen
-from six.moves.urllib.error import HTTPError
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 
 sr = attempt_to_import('speech_recognition', 'sr')
 

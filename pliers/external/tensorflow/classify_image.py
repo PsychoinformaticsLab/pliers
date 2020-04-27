@@ -42,7 +42,7 @@ import sys
 import tarfile
 
 import numpy as np
-from six.moves import urllib
+import urllib
 import tensorflow as tf
 
 FLAGS = None

@@ -2,7 +2,7 @@
 
 import re
 import pandas as pd
-from six.moves.urllib.request import urlopen
+from urllib.request import urlopen
 from pliers.support.decorators import requires_nltk_corpus
 from pliers.utils import attempt_to_import, verify_dependencies
 from .base import Stim
