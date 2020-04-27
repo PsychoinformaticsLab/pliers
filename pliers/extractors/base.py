@@ -49,9 +49,6 @@ class ExtractorResult(object):
             associated with the rows in data.
         orders (list, ndarray): Optional iterable giving the integer orders
             associated with the rows in data.
-        raw: The raw result (net of any containers or overhead) returned by
-            the underlying feature extraction tool. Can be an object of any
-            type.
     '''
 
     def __init__(self, data, stim, extractor, features=None, onsets=None,
