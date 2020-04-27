@@ -92,7 +92,7 @@ def check_updates(transformers, datastore=None, stimuli=None):
             if str(obj.__hash__()) == hash_tr:
                 return attr
 
-    delta_t = set([m.split('.')[0] for m in mismatches])
+    delta_t = {m.split('.')[0] for m in mismatches}
     delta_t = [get_trans(dt) for dt in delta_t]
 
     return {'transformers': delta_t, 'mismatches': mismatches}

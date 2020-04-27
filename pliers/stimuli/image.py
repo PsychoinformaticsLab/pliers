@@ -40,7 +40,7 @@ class ImageStim(Stim):
             filename = url
         self.data = data
         self._bytestring = None
-        super(ImageStim, self).__init__(filename, onset=onset,
+        super().__init__(filename, onset=onset,
                                         duration=duration, url=url)
 
     def save(self, path):

@@ -14,7 +14,7 @@ pgv = attempt_to_import('pygraphviz', 'pgv')
 stim_list.insert(0, 'ExtractorResult')
 
 
-class Node(object):
+class Node:
 
     ''' A graph node/vertex. Represents a single transformer, optionally with
     references to children.
@@ -57,7 +57,7 @@ class Node(object):
         return spec
 
 
-class Graph(object):
+class Graph:
     ''' Graph-like structure that represents an entire pliers workflow.
 
     Args:

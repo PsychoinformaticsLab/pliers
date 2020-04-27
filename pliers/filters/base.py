@@ -50,7 +50,7 @@ class TemporalTrimmingFilter(Filter):
         self.end = end
         self.frames = frames
         self.validation = validation
-        super(TemporalTrimmingFilter, self).__init__()
+        super().__init__()
 
     def _filter(self, stim):
         rate = 'fps' if isinstance(stim, VideoStim) else 'sampling_rate'

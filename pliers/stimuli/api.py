@@ -57,7 +57,7 @@ class TweetStimFactory(APIDependent):
         self.consumer_secret = consumer_secret
         self.access_token_key = access_token_key
         self.access_token_secret = access_token_secret
-        super(TweetStimFactory, self).__init__(rate_limit=rate_limit)
+        super().__init__(rate_limit=rate_limit)
 
     @property
     def api_keys(self):
@@ -104,4 +104,4 @@ class TweetStim(CompoundStim):
         if status.media:
             media_stims = load_stims([m.media_url for m in status.media])
             elements.extend(media_stims)
-        super(TweetStim, self).__init__(elements=elements)
+        super().__init__(elements=elements)

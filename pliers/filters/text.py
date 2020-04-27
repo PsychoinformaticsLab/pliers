@@ -67,7 +67,7 @@ class WordStemmingFilter(TextFilter):
         self.stemmer = stemmer
         self.tokenize = tokenize
         self.case_sensitive = case_sensitive
-        super(WordStemmingFilter, self).__init__()
+        super().__init__()
 
     @requires_nltk_corpus
     def _filter(self, stim):
@@ -118,7 +118,7 @@ class TokenizingFilter(TextFilter):
             self.tokenizer = eval(tokenizer)(*args, **kwargs)
         else:
             self.tokenizer = None
-        super(TokenizingFilter, self).__init__()
+        super().__init__()
 
     def _filter(self, stim):
         if self.tokenizer:
@@ -155,7 +155,7 @@ class TokenRemovalFilter(TextFilter):
                 nltk.download('stopwords')
             from nltk.corpus import stopwords
             self.tokens = set(stopwords.words(self.language))
-        super(TokenRemovalFilter, self).__init__()
+        super().__init__()
 
     def _filter(self, stim):
         tokens = word_tokenize(stim.text)

@@ -12,7 +12,7 @@ import pandas as pd
 def _load_datasets():
     path = os.path.abspath(__file__)
     path = os.path.join(os.path.dirname(path), 'dictionaries.json')
-    dicts = json.load(io.open(path, encoding='utf-8'))
+    dicts = json.load(open(path, encoding='utf-8'))
     return dicts
 
 datasets = _load_datasets()
