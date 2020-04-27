@@ -15,7 +15,7 @@ from .iterators import (VideoFrameIterator, VideoFrameCollectionIterator,
                         ComplexTextIterator)
 from .multistep import VideoToTextConverter, VideoToComplexTextConverter
 from .video import VideoToAudioConverter
-from .misc import ExtractorResultToDFConverter
+from .misc import ExtractorResultToSeriesConverter
 
 
 __all__ = [
@@ -32,7 +32,7 @@ __all__ = [
     'VideoToComplexTextConverter',
     'VideoToAudioConverter',
     'RevAISpeechAPIConverter',
-    'ExtractorResultToDFConverter',
+    'ExtractorResultToSeriesConverter',
     'Converter',
     'get_converter'
 ]
