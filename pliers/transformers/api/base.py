@@ -1,9 +1,9 @@
 ''' Base implementation for all API transformers. '''
+import time
 
 from pliers import config
 from pliers.transformers import Transformer
 from pliers.utils import isiterable, listify, APIDependent
-import time
 
 
 class APITransformer(APIDependent, Transformer):

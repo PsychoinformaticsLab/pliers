@@ -1,3 +1,14 @@
+
+from os.path import join
+from pathlib import Path
+from os import environ
+import shutil
+
+import numpy as np
+import pytest
+import spacy
+from transformers import BertTokenizer
+
 from pliers import config
 from pliers.extractors import (DictionaryExtractor,
                                PartOfSpeechExtractor,
@@ -16,14 +27,7 @@ from pliers.extractors import (DictionaryExtractor,
 from pliers.extractors.base import merge_results
 from pliers.stimuli import TextStim, ComplexTextStim
 from pliers.tests.utils import get_test_data_path
-import numpy as np
-from os.path import join
-from pathlib import Path
-import shutil
-import pytest
-import spacy
-from os import environ
-from transformers import BertTokenizer
+
 
 TEXT_DIR = join(get_test_data_path(), 'text')
 

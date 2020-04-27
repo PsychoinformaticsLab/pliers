@@ -1,3 +1,7 @@
+from os.path import join
+
+import pytest
+
 from pliers import config
 from pliers.extractors import (MicrosoftAPIFaceExtractor,
                                MicrosoftAPIFaceEmotionExtractor,
@@ -9,8 +13,6 @@ from pliers.extractors import (MicrosoftAPIFaceExtractor,
                                MicrosoftVisionAPIAdultExtractor)
 from pliers.extractors import merge_results
 from pliers.stimuli import ImageStim, VideoStim
-import pytest
-from os.path import join
 from ...utils import get_test_data_path
 
 IMAGE_DIR = join(get_test_data_path(), 'image')

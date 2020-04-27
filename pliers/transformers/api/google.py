@@ -1,5 +1,6 @@
 import logging
 import os
+
 from pliers.transformers import BatchTransformerMixin
 from pliers.transformers.api import APITransformer
 from pliers.utils import attempt_to_import, verify_dependencies
@@ -49,7 +50,7 @@ class GoogleAPITransformer(APITransformer):
                 self.api_name, api_version, credentials=self.credentials,
                 discoveryServiceUrl=DISCOVERY_URL)
         except Exception as e:
-            logging.warn(str(e))
+            logging.warning(str(e))
             self.credentials = None
             self.service = None
         self.max_results = max_results

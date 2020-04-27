@@ -1,11 +1,13 @@
 from os.path import join
+
+import pytest
+import numpy as np
+
 from ..utils import get_test_data_path
 from pliers.filters import (AudioTrimmingFilter, 
                             TemporalTrimmingFilter,
                             AudioResamplingFilter)
 from pliers.stimuli import AudioStim
-import pytest
-import numpy as np
 
 AUDIO_DIR = join(get_test_data_path(), 'audio')
 

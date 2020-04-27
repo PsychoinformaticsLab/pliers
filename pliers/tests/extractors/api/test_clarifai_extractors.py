@@ -1,12 +1,14 @@
 from os.path import join
+
+import numpy as np
+import pytest
+
 from ...utils import get_test_data_path
 from pliers import config
 from pliers.extractors import (ClarifaiAPIImageExtractor,
                                ClarifaiAPIVideoExtractor)
 from pliers.extractors.base import merge_results
 from pliers.stimuli import ImageStim, VideoStim
-import numpy as np
-import pytest
 
 IMAGE_DIR = join(get_test_data_path(), 'image')
 VIDEO_DIR = join(get_test_data_path(), 'video')

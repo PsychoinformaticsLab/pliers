@@ -1,15 +1,15 @@
 ''' Base Converter class and utilities. '''
 
 from abc import ABCMeta, abstractmethod, abstractproperty
+import inspect
+
 from pliers.transformers import Transformer
-from six import with_metaclass
 from pliers.utils import listify, EnvironmentKeyMixin
 from pliers import config
 import pliers
-import inspect
 
 
-class Converter(with_metaclass(ABCMeta, Transformer)):
+class Converter(Transformer, metaclass=ABCMeta):
 
     ''' Base class for Converters.'''
 

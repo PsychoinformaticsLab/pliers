@@ -1,8 +1,10 @@
 from os.path import join
+
+import pytest
+
 from ...utils import get_test_data_path
 from pliers.converters import WitTranscriptionConverter
 from pliers.stimuli import AudioStim, TextStim, ComplexTextStim
-import pytest
 
 AUDIO_DIR = join(get_test_data_path(), 'audio')
 

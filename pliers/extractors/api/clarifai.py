@@ -4,17 +4,17 @@ Extractors that interact with the Clarifai API.
 
 import logging
 import os
-try:
-    from contextlib import ExitStack
-except Exception as e:
-    from contextlib2 import ExitStack
+from contextlib import ExitStack
+
+import pandas as pd
+
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.video import VideoExtractor
 from pliers.extractors.base import ExtractorResult
 from pliers.transformers import BatchTransformerMixin
 from pliers.transformers.api import APITransformer
 from pliers.utils import listify, attempt_to_import, verify_dependencies
-import pandas as pd
+
 
 clarifai_client = attempt_to_import('clarifai.rest.client', 'clarifai_client',
                                     ['ClarifaiApp',
@@ -66,7 +66,7 @@ class ClarifaiAPIExtractor(APITransformer):
             self.api = clarifai_client.ClarifaiApp(api_key=api_key)
             self.model = self.api.models.get(model)
         except clarifai_client.ApiError as e:
-            logging.warn(str(e))
+            logging.warning(str(e))
             self.api = None
             self.model = None
         self.model_name = model

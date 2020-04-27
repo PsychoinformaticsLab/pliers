@@ -1,10 +1,11 @@
 ''' Converter classes that operate on ImageStim inputs. '''
 
 from PIL import Image
-from .base import Converter
+
 from pliers.stimuli.image import ImageStim
 from pliers.stimuli.text import TextStim
 from pliers.utils import attempt_to_import, verify_dependencies
+from .base import Converter
 
 pytesseract = attempt_to_import('pytesseract')
 

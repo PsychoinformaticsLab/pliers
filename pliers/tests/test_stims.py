@@ -1,3 +1,12 @@
+import tempfile
+import os
+import base64
+from os.path import join, exists
+
+import numpy as np
+import pandas as pd
+import pytest
+
 from .utils import get_test_data_path
 from pliers.stimuli import (VideoStim, VideoFrameStim, ComplexTextStim,
                             AudioStim, ImageStim, CompoundStim,
@@ -10,13 +19,6 @@ from pliers.extractors import (BrightnessExtractor, LengthExtractor,
                                ComplexTextExtractor)
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.download import download_nltk_data
-import numpy as np
-from os.path import join, exists
-import pandas as pd
-import pytest
-import tempfile
-import os
-import base64
 
 
 class DummyExtractor(Extractor):

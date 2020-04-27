@@ -1,9 +1,11 @@
 from os.path import join
+
+import pytest
+
 from ...utils import get_test_data_path
 from pliers.converters import (GoogleVisionAPITextConverter,
                                GoogleSpeechAPIConverter)
 from pliers.stimuli import ImageStim, AudioStim, ComplexTextStim
-import pytest
 
 IMAGE_DIR = join(get_test_data_path(), 'image')
 AUDIO_DIR = join(get_test_data_path(), 'audio')

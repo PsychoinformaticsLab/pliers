@@ -1,5 +1,6 @@
-from pliers.datasets.text import _load_datasets
 import requests
+
+from pliers.datasets.text import _load_datasets
 
 
 def test_dicts_exist_at_url_and_initialize():

@@ -1,23 +1,23 @@
 ''' Base class for all Stims and associated functionality. '''
 
-
 from abc import ABCMeta, abstractmethod
 from os.path import isdir, join, basename, realpath, isfile
 from glob import glob
-from six import with_metaclass, string_types
-from six.moves.urllib.request import urlopen
-from six.moves.urllib.parse import urlparse
+from urllib.request import urlopen
+from urllib.parse import urlparse
 from collections import namedtuple
 from contextlib import contextmanager
-from pliers import config
-from pliers.utils import isiterable
-import pandas as pd
 import os
 import tempfile
 import base64
 
+import pandas as pd
 
-class Stim(with_metaclass(ABCMeta)):
+from pliers import config
+from pliers.utils import isiterable
+
+
+class Stim(metaclass=ABCMeta):
 
     ''' Base class for all classes in the Stim hierarchy.
 
@@ -114,7 +114,7 @@ def load_stims(source, dtype=None, fail_silently=False):
     from .audio import AudioStim
     from .text import TextStim
 
-    if isinstance(source, string_types):
+    if isinstance(source, str):
         return_list = False
         source = [source]
     else:
@@ -133,7 +133,7 @@ def load_stims(source, dtype=None, fail_silently=False):
         source = realpath(source)
         import magic  # requires libmagic, so import here
         mime = magic.from_file(source, mime=True)
-        if not isinstance(mime, string_types):
+        if not isinstance(mime, str):
             mime = mime.decode('utf-8')
         mime = mime.split('/')[0]
         if mime in stim_map.keys():

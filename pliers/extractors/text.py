@@ -2,6 +2,15 @@
 Extractors that operate primarily or exclusively on Text stimuli.
 '''
 import sys
+import itertools
+import logging
+
+import numpy as np
+import pandas as pd
+import scipy
+import nltk
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.exceptions import PliersError
@@ -10,14 +19,7 @@ from pliers.datasets.text import fetch_dictionary
 from pliers.transformers import BatchTransformerMixin
 from pliers.utils import (attempt_to_import, verify_dependencies, flatten,
     listify)
-import itertools
-import numpy as np
-import pandas as pd
-import scipy
-import nltk
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
-import logging
-from six import string_types
+
 
 keyedvectors = attempt_to_import('gensim.models.keyedvectors', 'keyedvectors',
                                  ['KeyedVectors'])
@@ -68,7 +70,7 @@ class DictionaryExtractor(TextExtractor):
     VERSION = '1.0'
 
     def __init__(self, dictionary, variables=None, missing=np.nan):
-        if isinstance(dictionary, string_types):
+        if isinstance(dictionary, str):
             self.dictionary = dictionary  # for TranformationHistory logging
             dictionary = pd.read_csv(dictionary, sep='\t', index_col=0)
         else:

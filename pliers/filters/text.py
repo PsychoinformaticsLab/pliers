@@ -1,14 +1,14 @@
 ''' Filters that operate on TextStim inputs. '''
 
-import nltk
 import string
 import re
 
-from six import string_types
+import nltk
 from nltk import stem
 from nltk.tokenize import word_tokenize
 from nltk.tokenize import * # noqa
 from nltk.tokenize.api import TokenizerI
+
 from pliers.stimuli.text import TextStim
 from pliers.support.decorators import requires_nltk_corpus
 from .base import Filter
@@ -55,7 +55,7 @@ class WordStemmingFilter(TextFilter):
     @requires_nltk_corpus
     def __init__(self, stemmer='porter', tokenize=True, case_sensitive=False,
                  *args, **kwargs):
-        if isinstance(stemmer, string_types):
+        if isinstance(stemmer, str):
             if stemmer not in self._stemmers:
                 valid = list(self._stemmers.keys())
                 raise ValueError("Invalid stemmer '%s'; please use one of %s."

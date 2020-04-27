@@ -4,13 +4,14 @@ import os
 import base64
 import json
 import logging
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
+
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.utils import attempt_to_import, verify_dependencies
 from pliers.converters.audio import AudioToTextConverter
 from pliers.transformers.api import APITransformer
-from urllib.parse import urlencode
-from urllib.request import Request, urlopen
-from urllib.error import URLError, HTTPError
 
 sr = attempt_to_import('speech_recognition', 'sr')
 
@@ -69,7 +70,7 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
             self._send_request(request)
             return True
         except Exception as e:
-            logging.warn(str(e))
+            logging.warning(str(e))
             return False
 
     def _convert(self, audio):
