@@ -193,7 +193,7 @@ def test_complex_stim_from_text():
     assert len(stim.elements) == 231
     stim = ComplexTextStim(text=text, unit='sent')
     # Custom tokenizer
-    stim = ComplexTextStim(text=text, tokenizer='(\w+)')
+    stim = ComplexTextStim(text=text, tokenizer=r'(\w+)')
     assert len(stim.elements) == 209
 
 

@@ -16,7 +16,7 @@ class Extractor(Transformer, metaclass=ABCMeta):
     ''' Base class for all pliers Extractors.'''
 
     def transform(self, stim, *args, **kwargs):
-        result = super(Extractor, self).transform(stim, *args, **kwargs)
+        result = super().transform(stim, *args, **kwargs)
         return list(result) if isgenerator(result) else result
 
     @abstractmethod
@@ -31,7 +31,7 @@ class Extractor(Transformer, metaclass=ABCMeta):
                                   "%s." % self.__class__.__name__)
 
 
-class ExtractorResult(object):
+class ExtractorResult:
 
     ''' Stores feature data produced by an Extractor.
 

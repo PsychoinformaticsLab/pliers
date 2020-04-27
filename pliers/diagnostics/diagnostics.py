@@ -97,7 +97,7 @@ def variances(df):
     return pd.Series(df.var(axis=0), name='Variances')
 
 
-class Diagnostics(object):
+class Diagnostics:
     defaults = {
         'Eigenvalues': (lambda x: x < 0.05),
         'ConditionIndices': (lambda x: x > 20),

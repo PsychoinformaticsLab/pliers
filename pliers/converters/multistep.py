@@ -23,7 +23,7 @@ class MultiStepConverter(Converter):
 
     def __init__(self, steps=None):
         self.steps = self._steps if steps is None else steps
-        super(MultiStepConverter, self).__init__()
+        super().__init__()
 
     def _convert(self, stim):
         for i, step in enumerate(self.steps):

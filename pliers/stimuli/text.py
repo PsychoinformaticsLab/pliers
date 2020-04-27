@@ -39,7 +39,7 @@ class TextStim(Stim):
             text = urlopen(url).read()
         self.text = text
         name = 'text[%s]' % text[:40]  # Truncate at 40 chars
-        super(TextStim, self).__init__(filename, onset, duration, order,
+        super().__init__(filename, onset, duration, order,
                                        name=name, url=url)
 
     @property
@@ -108,7 +108,7 @@ class ComplexTextStim(Stim):
             raise ValueError("At least one of the 'filename', 'elements', or "
                              "text arguments must be specified.")
 
-        super(ComplexTextStim, self).__init__(filename, onset, duration)
+        super().__init__(filename, onset, duration)
 
         self._elements = []
 
@@ -181,7 +181,7 @@ class ComplexTextStim(Stim):
             end_ = tuple(row.end)
             duration = self._to_sec(end_) - start_time
 
-            line = re.sub('\s+', ' ', row.text)
+            line = re.sub(r'\s+', ' ', row.text)
             list_[i] = [line, start_time, duration]
 
         # Convert to pandas DataFrame

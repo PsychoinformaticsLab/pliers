@@ -42,7 +42,7 @@ class Transformer(metaclass=ABCMeta):
         if name is None:
             name = self.__class__.__name__
         self.name = name
-        super(Transformer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _memoize(transform):
         @wraps(transform)
@@ -229,7 +229,7 @@ class BatchTransformerMixin(Transformer):
     def __init__(self, batch_size=None, *args, **kwargs):
         if batch_size:
             self._batch_size = batch_size
-        super(BatchTransformerMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _iterate(self, stims, validation='strict', *args, **kwargs):
         batches = batch_iterable(stims, self._batch_size)
@@ -272,14 +272,14 @@ class BatchTransformerMixin(Transformer):
     def _transform(self, stim, *args, **kwargs):
         stims = listify(stim)
         if all(self._stim_matches_input_types(s) for s in stims):
-            result = super(BatchTransformerMixin, self) \
+            result = super() \
                 ._transform(stims, *args, **kwargs)
             if isiterable(stim):
                 return result
             else:
                 return result[0]
         else:
-            return list(super(BatchTransformerMixin, self)
+            return list(super()
                         ._iterate(stims, *args, **kwargs))
 
 

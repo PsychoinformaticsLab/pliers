@@ -45,7 +45,7 @@ class RevAISpeechAPIConverter(APITransformer, AudioToTextConverter):
         self.timeout = timeout
         self.request_rate = request_rate
         self.client = rev_ai_client.RevAiAPIClient(access_token)
-        super(RevAISpeechAPIConverter, self).__init__()
+        super().__init__()
 
     @property
     def api_keys(self):

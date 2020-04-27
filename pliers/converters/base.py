@@ -43,7 +43,7 @@ def get_converter(in_type, out_type, *args, **kwargs):
     default_convs = config.get_option('default_converters')
 
     for ot in out_type:
-        conv_str = '%s->%s' % (in_type.__name__, ot.__name__)
+        conv_str = '{}->{}'.format(in_type.__name__, ot.__name__)
         if conv_str in default_convs:
             convs = list(default_convs[conv_str]) + convs
 

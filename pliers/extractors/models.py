@@ -40,7 +40,7 @@ class TensorFlowKerasApplicationExtractor(ImageExtractor):
                  num_predictions=5):
         verify_dependencies(['tensorflow'])
         verify_dependencies(['tensorflow.keras'])
-        super(TensorFlowKerasApplicationExtractor, self).__init__()
+        super().__init__()
 
         # Model name: (model module, model function, required shape).
         apps = tf.keras.applications

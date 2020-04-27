@@ -83,7 +83,7 @@ class DictionaryExtractor(TextExtractor):
         self.variables = variables
         # Set up response when key is missing
         self.missing = missing
-        super(DictionaryExtractor, self).__init__()
+        super().__init__()
 
     def _extract(self, stim):
         if stim.text not in self.data.index:
@@ -146,7 +146,7 @@ class PredefinedDictionaryExtractor(DictionaryExtractor):
                 d.index = d.index.str.lower()
             if v:
                 d = d[v]
-            d.columns = ['%s_%s' % (k, c) for c in d.columns]
+            d.columns = ['{}_{}'.format(k, c) for c in d.columns]
             dicts.append(d)
 
         # Make sure none of the dictionaries have duplicate indices
@@ -155,7 +155,7 @@ class PredefinedDictionaryExtractor(DictionaryExtractor):
 
         dictionary = pd.concat(dicts, axis=1, join='outer', sort=False)
 
-        super(PredefinedDictionaryExtractor, self).__init__(
+        super().__init__(
             dictionary, missing=missing)
 
 
@@ -178,7 +178,7 @@ class NumUniqueWordsExtractor(TextExtractor):
     VERSION = '1.0'
 
     def __init__(self, tokenizer=None):
-        super(NumUniqueWordsExtractor, self).__init__()
+        super().__init__()
         self.tokenizer = tokenizer
 
     @requires_nltk_corpus
@@ -251,7 +251,7 @@ class WordEmbeddingExtractor(TextExtractor):
             embedding_file, binary=binary)
         self.prefix = prefix
         self.unk_vector = unk_vector
-        super(WordEmbeddingExtractor, self).__init__()
+        super().__init__()
 
     def _extract(self, stim):
         num_dims = self.wvModel.vector_size
@@ -298,7 +298,7 @@ class TextVectorizerExtractor(BatchTransformerMixin, TextExtractor):
         else:
             self.vectorizer = sklearn_text.CountVectorizer(*vectorizer_args,
                                                            **vectorizer_kwargs)
-        super(TextVectorizerExtractor, self).__init__()
+        super().__init__()
 
     def _extract(self, stims):
         mat = self.vectorizer.fit_transform([s.text for s in stims]).toarray()
@@ -321,7 +321,7 @@ class VADERSentimentExtractor(TextExtractor):
 
     def __init__(self):
         self.analyzer = SentimentIntensityAnalyzer()
-        super(VADERSentimentExtractor, self).__init__()
+        super().__init__()
 
     @requires_nltk_corpus
     def _extract(self, stim):
@@ -355,7 +355,7 @@ class SpaCyExtractor(TextExtractor):
 
         try:
             self.model = spacy.load(model)
-        except (ImportError, IOError, OSError) as e:
+        except (ImportError, OSError) as e:
             logging.warning("Spacy Models ('{}') not found. Downloading and"
                             "installing".format(model))
 
@@ -367,7 +367,7 @@ class SpaCyExtractor(TextExtractor):
         self.features = features
         self.extractor_type = extractor_type.lower()
 
-        super(SpaCyExtractor, self).__init__()
+        super().__init__()
 
     def _extract(self, stim):
 
@@ -462,7 +462,7 @@ class BertExtractor(ComplexTextExtractor):
             pretrained_model, **self.model_kwargs)
         self.tokenizer = transformers.BertTokenizer.from_pretrained(
             tokenizer, **self.tokenizer_kwargs)
-        super(BertExtractor, self).__init__()
+        super().__init__()
 
     def _mask_words(self, wds):
         ''' Called by _preprocess method. Takes list of words in the Stim as
@@ -583,7 +583,7 @@ class BertSequenceEncodingExtractor(BertExtractor):
                     'one of \'[CLS]\', \'[SEP]\' or \'pooler_output\''))
         self.pooling = pooling
         self.return_special = return_special
-        super(BertSequenceEncodingExtractor, self).__init__(
+        super().__init__(
             pretrained_model=pretrained_model, tokenizer=tokenizer, 
             return_input=return_input, model_class='AutoModel', 
             framework=framework, model_kwargs=model_kwargs, 
@@ -676,7 +676,7 @@ class BertLMExtractor(BertExtractor):
                              'are mutually exclusive')
         if type(mask) not in [int, str]:
             raise ValueError('Mask must be a string or an integer.')
-        super(BertLMExtractor, self).__init__(pretrained_model=pretrained_model,
+        super().__init__(pretrained_model=pretrained_model,
             tokenizer=tokenizer, framework=framework, return_input=return_input, 
             model_class='AutoModelWithLMHead', model_kwargs=model_kwargs, 
             tokenizer_kwargs=tokenizer_kwargs)
@@ -783,7 +783,7 @@ class BertSentimentExtractor(BertExtractor):
                  model_kwargs=None,
                  tokenizer_kwargs=None):
         self.return_softmax = return_softmax
-        super(BertSentimentExtractor, self).__init__(
+        super().__init__(
                 pretrained_model=pretrained_model, tokenizer=tokenizer, 
                 framework=framework, return_input=return_input,
                 model_class='AutoModelForSequenceClassification',
@@ -822,7 +822,7 @@ class WordCounterExtractor(ComplexTextExtractor):
         self.log_scale = log_scale
         self.case_sensitive = case_sensitive
         self.features = ['log_word_count'] if self.log_scale else ['word_count']
-        super(WordCounterExtractor, self).__init__()
+        super().__init__()
 
     def _extract(self, stims):
         onsets = [s.onset for s in stims]

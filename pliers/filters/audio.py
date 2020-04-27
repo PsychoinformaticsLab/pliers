@@ -42,7 +42,7 @@ class AudioResamplingFilter(AudioFilter):
         self.target_sr = target_sr
         self.resample_type = resample_type
         self.librosa_kwargs = librosa_kwargs
-        super(AudioResamplingFilter, self).__init__()
+        super().__init__()
 
     def _filter(self, stim):
         resampled_stim = deepcopy(stim)

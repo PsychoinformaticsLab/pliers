@@ -195,8 +195,7 @@ class GoogleVideoIntelligenceAPIExtractor(GoogleAPITransformer, VideoExtractor):
         self.config = config
         self.timeout = timeout
         self.request_rate = request_rate
-        super(GoogleVideoIntelligenceAPIExtractor,
-              self).__init__(discovery_file=discovery_file,
+        super().__init__(discovery_file=discovery_file,
                              api_version=api_version,
                              max_results=max_results,
                              num_retries=num_retries,
@@ -354,8 +353,7 @@ class GoogleVideoAPILabelDetectionExtractor(GoogleVideoIntelligenceAPIExtractor)
                 config['labelDetectionConfig']['videoConfidenceThreshold'] = \
                     video_confidence_threshold
 
-        super(GoogleVideoAPILabelDetectionExtractor,
-              self).__init__(features=['LABEL_DETECTION'],
+        super().__init__(features=['LABEL_DETECTION'],
                              segments=segments,
                              config=config,
                              timeout=timeout,
@@ -374,8 +372,7 @@ class GoogleVideoAPIShotDetectionExtractor(GoogleVideoIntelligenceAPIExtractor):
     def __init__(self, segments=None, config=None, timeout=90, request_rate=5,
                  discovery_file=None, api_version='v1', max_results=100,
                  num_retries=3, rate_limit=None):
-        super(GoogleVideoAPIShotDetectionExtractor,
-              self).__init__(features=['SHOT_CHANGE_DETECTION'],
+        super().__init__(features=['SHOT_CHANGE_DETECTION'],
                              segments=segments,
                              config=config,
                              timeout=timeout,
@@ -394,8 +391,7 @@ class GoogleVideoAPIExplicitDetectionExtractor(GoogleVideoIntelligenceAPIExtract
     def __init__(self, segments=None, config=None, timeout=90, request_rate=5,
                  discovery_file=None, api_version='v1', max_results=100,
                  num_retries=3, rate_limit=None):
-        super(GoogleVideoAPIExplicitDetectionExtractor,
-              self).__init__(features=['EXPLICIT_CONTENT_DETECTION'],
+        super().__init__(features=['EXPLICIT_CONTENT_DETECTION'],
                              segments=segments,
                              config=config,
                              timeout=timeout,
@@ -445,8 +441,7 @@ class GoogleLanguageAPIExtractor(GoogleAPITransformer, TextExtractor):
         self.features = features
         self.language = language
         self.is_html = is_html
-        super(GoogleLanguageAPIExtractor,
-              self).__init__(discovery_file=discovery_file,
+        super().__init__(discovery_file=discovery_file,
                              api_version=api_version,
                              max_results=max_results,
                              num_retries=num_retries,
@@ -547,8 +542,7 @@ class GoogleLanguageAPIEntityExtractor(GoogleLanguageAPIExtractor):
     def __init__(self, language=None, is_html=False, discovery_file=None,
                  api_version='v1', max_results=100, num_retries=3,
                  rate_limit=None):
-        super(GoogleLanguageAPIEntityExtractor,
-              self).__init__(features=['extractEntities'],
+        super().__init__(features=['extractEntities'],
                              language=language,
                              is_html=is_html,
                              discovery_file=discovery_file,
@@ -565,8 +559,7 @@ class GoogleLanguageAPISentimentExtractor(GoogleLanguageAPIExtractor):
     def __init__(self, language=None, is_html=False, discovery_file=None,
                  api_version='v1', max_results=100, num_retries=3,
                  rate_limit=None):
-        super(GoogleLanguageAPISentimentExtractor,
-              self).__init__(features=['extractDocumentSentiment'],
+        super().__init__(features=['extractDocumentSentiment'],
                              language=language,
                              is_html=is_html,
                              discovery_file=discovery_file,
@@ -583,8 +576,7 @@ class GoogleLanguageAPISyntaxExtractor(GoogleLanguageAPIExtractor):
     def __init__(self, language=None, is_html=False, discovery_file=None,
                  api_version='v1', max_results=100, num_retries=3,
                  rate_limit=None):
-        super(GoogleLanguageAPISyntaxExtractor,
-              self).__init__(features=['extractSyntax'],
+        super().__init__(features=['extractSyntax'],
                              language=language,
                              is_html=is_html,
                              discovery_file=discovery_file,
@@ -603,8 +595,7 @@ class GoogleLanguageAPITextCategoryExtractor(GoogleLanguageAPIExtractor):
     def __init__(self, language=None, is_html=False, discovery_file=None,
                  api_version='v1', max_results=100, num_retries=3,
                  rate_limit=None):
-        super(GoogleLanguageAPITextCategoryExtractor,
-              self).__init__(features=['classifyText'],
+        super().__init__(features=['classifyText'],
                              language=language,
                              is_html=is_html,
                              discovery_file=discovery_file,
@@ -623,8 +614,7 @@ class GoogleLanguageAPIEntitySentimentExtractor(GoogleLanguageAPIExtractor):
     def __init__(self, language=None, is_html=False, discovery_file=None,
                  api_version='v1', max_results=100, num_retries=3,
                  rate_limit=None):
-        super(GoogleLanguageAPIEntitySentimentExtractor,
-              self).__init__(features=['extractEntitySentiment'],
+        super().__init__(features=['extractEntitySentiment'],
                              language=language,
                              is_html=is_html,
                              discovery_file=discovery_file,

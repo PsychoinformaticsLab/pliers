@@ -160,7 +160,7 @@ def load_stims(source, dtype=None, fail_silently=False):
             load_file(s)
         else:
             if not (return_list and fail_silently):
-                raise IOError("File not found")
+                raise OSError("File not found")
 
     if return_list:
         return stims
@@ -201,7 +201,7 @@ def _log_transformation(source, result, trans=None, implicit=False):
         values.append(['', ''])
     parent = source.history
     string = str(parent) if parent else values[2]
-    string += '->%s/%s' % (values[6], values[5])
+    string += '->{}/{}'.format(values[6], values[5])
     values.extend([string, parent])
     values.append(implicit)
     result.history = TransformationLog(*values)

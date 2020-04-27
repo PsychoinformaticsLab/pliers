@@ -38,4 +38,5 @@ setup(
                 'python-twitter', 'pathos', 'scikit-learn', 'matplotlib',
                 'seaborn', 'pygraphviz', 'xlrd', 'duecredit']
     },
+    python_requires='>=3.5',
 )

@@ -61,7 +61,7 @@ class FarnebackOpticalFlowExtractor(VideoExtractor):
         self.poly_sigma = poly_sigma
         self.flags = flags
         self.show = show
-        super(FarnebackOpticalFlowExtractor, self).__init__()
+        super().__init__()
 
     def _extract(self, stim):
         verify_dependencies(['cv2'])

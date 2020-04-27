@@ -31,9 +31,6 @@ to use this script to perform image recognition.
 https://tensorflow.org/tutorials/image_recognition/
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import argparse
 import os.path
@@ -52,7 +49,7 @@ DATA_URL = 'http://download.tensorflow.org/models/image/imagenet/inception-2015-
 # pylint: enable=line-too-long
 
 
-class NodeLookup(object):
+class NodeLookup:
   """Converts integer node ID's to human readable labels."""
 
   def __init__(self,
@@ -164,7 +161,7 @@ def run_inference_on_image(image):
     for node_id in top_k:
       human_string = node_lookup.id_to_string(node_id)
       score = predictions[node_id]
-      print('%s (score = %.5f)' % (human_string, score))
+      print('{} (score = {:.5f})'.format(human_string, score))
 
 
 def maybe_download_and_extract():
@@ -176,7 +173,7 @@ def maybe_download_and_extract():
   filepath = os.path.join(dest_directory, filename)
   if not os.path.exists(filepath):
     def _progress(count, block_size, total_size):
-      sys.stdout.write('\r>> Downloading %s %.1f%%' % (
+      sys.stdout.write('\r>> Downloading {} {:.1f}%'.format(
           filename, float(count * block_size) / float(total_size) * 100.0))
       sys.stdout.flush()
     filepath, _ = urllib.request.urlretrieve(DATA_URL, filepath, _progress)
