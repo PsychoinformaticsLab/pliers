@@ -1,6 +1,7 @@
 '''
-Extractors that operate on Series stimuli.
+Extractors that operate on Miscellaneous Stims.
 '''
+
 from pliers.stimuli.misc import SeriesStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.utils import listify
@@ -61,8 +62,10 @@ class MetricExtractor(Extractor):
         if self.subset_idx is not None:
             idx_diff = set(self.subset_idx) - set(stim.data.index)
             if idx_diff:
-                logging.warning(f'{idx_diff} not in index, Dropping')
+                logging.warning(f'{idx_diff} not in index, dropping.')
             series = stim.data[set(self.subset_idx) & set(stim.data.index)]
+            if series == set():
+                raise ValueError('No valid index')
         else:
             series = stim.data
         for f in self.functions:
