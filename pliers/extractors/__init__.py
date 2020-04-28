@@ -58,6 +58,7 @@ from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
                     VibranceExtractor, FaceRecognitionFaceEncodingsExtractor,
                     FaceRecognitionFaceLandmarksExtractor,
                     FaceRecognitionFaceLocationsExtractor)
+from .misc import MetricExtractor
 from .models import TensorFlowKerasApplicationExtractor
 from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
@@ -65,7 +66,6 @@ from .text import (ComplexTextExtractor, DictionaryExtractor,
                    WordEmbeddingExtractor, TextVectorizerExtractor,
                    VADERSentimentExtractor, SpaCyExtractor,
                    WordCounterExtractor, PretrainedBertEncodingExtractor)
-from .vector import VectorMetricExtractor
 from .video import (FarnebackOpticalFlowExtractor)
 
 __all__ = [
@@ -143,5 +143,5 @@ __all__ = [
     'AudiosetLabelExtractor',
     'PretrainedBertEncodingExtractor',
     'WordCounterExtractor',
-    'VectorMetricExtractor'
+    'MetricExtractor'
 ]

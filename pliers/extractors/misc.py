@@ -64,7 +64,7 @@ class MetricExtractor(Extractor):
             if idx_diff:
                 logging.warning(f'{idx_diff} not in index, dropping.')
             series = stim.data[set(self.subset_idx) & set(stim.data.index)]
-            if series == set():
+            if not series:
                 raise ValueError('No valid index')
         else:
             series = stim.data
