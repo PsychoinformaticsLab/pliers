@@ -1,7 +1,7 @@
 '''
-Extractors that operate on Vector stimuli.
+Extractors that operate on Series stimuli.
 '''
-from pliers.stimuli.vector import VectorStim
+from pliers.stimuli.misc import SeriesStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.utils import listify
 import scipy
@@ -9,25 +9,29 @@ import numpy as np
 import pandas as pd
 from collections.abc import Iterable
 from importlib import import_module
+import logging
 
-class VectorMetricExtractor(Extractor):
+class MetricExtractor(Extractor):
     ''' Extracts summary metrics from 1D-array using numpy, scipy or custom 
         functions
     Args:
         functions (str, functions or list): function or list of numpy, scipy, 
-        or custom functions to be applied to 1-dimensional numpy arrays.
+            or custom functions to be applied to 1-dimensional numpy arrays.
             Functions can be passed directly (e.g. passing scipy.stats.entropy) if 
             the package/module they belong to has been imported, or as strings 
             (e.g. 'numpy.mean'). Custom functions returning integers or iterables 
             can also be passed by passing the function itself.
         var_names (list): optional list of custom alias names for each metric
+        subset_idx (list): list of indices (position or index values) to 
+            compute metric on. 
         kwargs: named arguments for function call
     ''' 
 
-    _input_type = VectorStim
-    _log_attributes = ('functions',)
+    _input_type = SeriesStim
+    _log_attributes = ('functions', 'subset_idx')
 
-    def __init__(self, functions=None, var_names=None, **kwargs):
+    def __init__(self, functions=None, var_names=None, 
+                 subset_idx=None, **kwargs):
         functions = listify(functions)
         if var_names is not None:
             var_names = listify(var_names)
@@ -49,12 +53,20 @@ class VectorMetricExtractor(Extractor):
 
         self.functions = functions
         self.kwargs = kwargs
-        super(VectorMetricExtractor, self).__init__()
+        self.subset_idx = subset_idx
+        super(MetricExtractor, self).__init__()
         
     def _extract(self, stim):
         outputs = []
+        if self.subset_idx is not None:
+            idx_diff = set(self.subset_idx) - set(stim.data.index)
+            if idx_diff:
+                logging.warning(f'{idx_diff} not in index, Dropping')
+            series = stim.data[set(self.subset_idx) & set(stim.data.index)]
+        else:
+            series = stim.data
         for f in self.functions:
-            metrics = f(stim.array, **self.kwargs)
+            metrics = f(series, **self.kwargs)
             if isinstance(metrics, Iterable):
                 metrics = np.array(metrics)
             outputs.append(metrics)
