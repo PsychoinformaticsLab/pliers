@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-from pliers.tests.utils import get_test_data_path
-=======
 import tempfile
 import os
 import base64
@@ -12,19 +9,13 @@ import pandas as pd
 import pytest
 
 from .utils import get_test_data_path
->>>>>>> ER-to-DFStim
 from pliers.stimuli import (VideoStim, VideoFrameStim, ComplexTextStim,
                             AudioStim, ImageStim, CompoundStim,
                             TranscribedAudioCompoundStim,
                             TextStim,
                             TweetStimFactory,
-<<<<<<< HEAD
-                            TweetStim, 
-                            VectorStim)
-=======
                             TweetStim,
                             SeriesStim)
->>>>>>> ER-to-DFStim
 from pliers.stimuli.base import Stim, _get_stim_class
 from pliers.extractors import (BrightnessExtractor, LengthExtractor,
                                ComplexTextExtractor)
@@ -290,11 +281,6 @@ def test_remote_stims():
     text = TextStim(url=url)
     assert len(text.text) > 1
 
-    url = 'https://raw.githubusercontent.com/rbroc/pliers/prob_extractor/pliers/tests/data/vector/vector_df.txt'
-    vec = VectorStim(url=url)
-    assert vec.array.shape[0] == 20
-    assert len(vec.labels) == 20
-
 
 def test_get_filename():
     url = 'http://www.bobainsworth.com/wav/simpsons/themodyn.wav'
@@ -317,11 +303,9 @@ def test_save():
     text_stim = TextStim(text='hello')
     audio_stim = AudioStim(join(get_test_data_path(), 'audio', 'crowd.mp3'))
     image_stim = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
-    vector_stim = VectorStim(filename=join(get_test_data_path(), 'vector',
-                                           'vector_df.txt'))
 
     # Video gives travis problems
-    stims = [complextext_stim, text_stim, audio_stim, image_stim, vector_stim]
+    stims = [complextext_stim, text_stim, audio_stim, image_stim]
     for s in stims:
         path = tempfile.mktemp() + s._default_file_extension
         s.save(path)
@@ -356,51 +340,6 @@ def test_twitter():
     assert np.isclose(brightness, 0.54057, 1e-5)
 
 
-<<<<<<< HEAD
-def test_vector_from_values():
-    keys = [f'label{str(n)}' for n in range(10)]
-    v_array = np.random.randn(10)
-    v_series = pd.Series(v_array)
-    v_list = list(v_array)
-
-    stim_array = VectorStim(array=v_array, labels=keys, 
-                      onset=2.0, duration=.5)
-    assert type(stim_array.data == np.ndarray)
-    assert len(stim_array.labels) == 10
-    assert stim_array.array.shape[0] == 10
-    assert stim_array.onset == 2.0
-    assert stim_array.duration == .5
-
-    stim_series = VectorStim(array=v_series, labels=keys)
-    assert type(stim_series.data == np.ndarray)
-    assert len(stim_series.labels) == 10
-    assert stim_series.array.shape[0] == 10 
-
-    stim_list = VectorStim(array=v_list, labels=keys)
-    assert type(stim_list.data == np.ndarray)
-    assert len(stim_list.labels) == 10
-    assert stim_list.array.shape[0] == 10
-
-    stim_no_lab = VectorStim(array=v_array)
-    assert all([stim_no_lab.labels[n] == str(n) for n in range(10)])
-
-    with pytest.raises(ValueError) as err:
-        VectorStim(array=v_array, labels=keys[:-1])
-    assert 'same length' in str(err.value)
-
-    with pytest.raises(ValueError) as err:
-        VectorStim(array=np.random.randn(5,4))
-    assert 'one-dimensional' in str(err.value)
-
-def test_vector_from_file():
-    fname_df = join(get_test_data_path(), 'vector', 'vector_df.txt')
-    stim_df = VectorStim(filename=fname_df)
-    assert type(stim_df.array == np.ndarray)
-    assert stim_df.array.shape[0] == 20
-    assert len(stim_df.labels) == 20
-    assert stim_df.labels[5] == 'label5'
-    assert np.isclose(stim_df.array[6], 0.8169, rtol=0.0001)
-=======
 def test_series():
     my_dict = {'a': 4, 'b': 2, 'c': 8}
     stim = SeriesStim(my_dict, onset=4, duration=2)
@@ -422,4 +361,3 @@ def test_series():
     # 2-d array should fail
     with pytest.raises(Exception):
         ser = SeriesStim(np.random.normal(size=(10, 2)))
->>>>>>> ER-to-DFStim
