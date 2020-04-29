@@ -42,7 +42,7 @@ class MetricExtractor(Extractor):
             if isinstance(f, str):
                 try:
                     f_mod, f_func = f.rsplit('.', 1)
-                    functions[idx] = getattr(import_module('.'.join(f_mod)),
+                    functions[idx] = getattr(import_module(f_mod),
                                              f_func)
                 except:
                     raise ValueError(f"{f} is not a valid function")
