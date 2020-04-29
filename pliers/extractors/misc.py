@@ -41,7 +41,7 @@ class MetricExtractor(Extractor):
         for idx, f in enumerate(functions):
             if isinstance(f, str):
                 try:
-                    f_mod = f.split('.')[:-1]
+                    f_mod, f_func = f.rsplit('.', 1) 
                     f_func = f.split('.')[-1]
                     functions[idx] = getattr(import_module('.'.join(f_mod)),
                                              f_func)
