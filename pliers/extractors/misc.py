@@ -23,8 +23,7 @@ class MetricExtractor(Extractor):
             (e.g. 'numpy.mean'). Custom functions returning integers or iterables 
             can also be passed by passing the function itself.
         var_names (list): optional list of custom alias names for each metric
-        subset_idx (list): list of indices (position or index values) to 
-            compute metric on. 
+        subset_idx (list): subset of Series indices to compute metric on.
         kwargs: named arguments for function call
     ''' 
 
@@ -61,11 +60,12 @@ class MetricExtractor(Extractor):
         outputs = []
         if self.subset_idx is not None:
             idx_diff = set(self.subset_idx) - set(stim.data.index)
+            idx_int = set(self.subset_idx) & set(stim.data.index)
             if idx_diff:
-                logging.warning(f'{idx_diff} not in index, dropping.')
-            series = stim.data[set(self.subset_idx) & set(stim.data.index)]
-            if not series:
+                logging.warning(f'{idx_diff} not in index.')
+            if not idx_int:
                 raise ValueError('No valid index')
+            series = stim.data[idx_int]
         else:
             series = stim.data
         for f in self.functions:
