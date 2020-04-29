@@ -21,7 +21,7 @@ class MetricExtractor(Extractor):
            on 1-dimensional numpy arrays and return a scalar. A list of 
            functions or import strings may also be passed.
         var_names (list): optional list of custom alias names for each metric
-        subset_idx (list): subset of Series indices to compute metric on.
+        subset_idx (list): subset of Series index labels to compute metric on.
         kwargs: named arguments for function call
     ''' 
 
