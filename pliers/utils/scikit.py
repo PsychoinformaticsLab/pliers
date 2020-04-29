@@ -3,7 +3,7 @@
 from pliers.extractors import Extractor, merge_results
 from pliers.transformers import get_transformer
 from pliers.utils import attempt_to_import
-from six import string_types
+
 
 sklearn = attempt_to_import('sklearn')
 if sklearn:
@@ -26,7 +26,7 @@ class PliersTransformer(SklearnBase):
     '''
 
     def __init__(self, transformer):
-        if isinstance(transformer, string_types):
+        if isinstance(transformer, str):
             self.transformer = get_transformer(transformer)
         else:
             self.transformer = transformer

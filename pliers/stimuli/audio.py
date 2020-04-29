@@ -1,8 +1,9 @@
 ''' Classes that represent audio clips. '''
 
-from .base import Stim
 from moviepy.audio.io.AudioFileClip import AudioFileClip
 from moviepy.video.io.ffmpeg_reader import ffmpeg_parse_infos
+
+from .base import Stim
 
 
 class AudioStim(Stim):

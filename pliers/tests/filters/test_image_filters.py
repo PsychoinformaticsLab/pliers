@@ -1,11 +1,13 @@
 from os.path import join
+
+import numpy as np
+import pytest
+
 from ..utils import get_test_data_path
 from pliers.filters import (ImageCroppingFilter,
                             ImageResizingFilter,
                             PillowImageFilter)
 from pliers.stimuli import ImageStim
-import numpy as np
-import pytest
 
 IMAGE_DIR = join(get_test_data_path(), 'image')
 

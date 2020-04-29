@@ -1,11 +1,14 @@
+from types import GeneratorType
+from os.path import join
+
+import pytest
+
 from pliers.stimuli import VideoStim
 from pliers.filters import FrameSamplingFilter
 from pliers.utils import batch_iterable, flatten_dict
 from pliers import config
-from types import GeneratorType
+
 from .utils import get_test_data_path
-from os.path import join
-import pytest
 
 
 @pytest.mark.skip(reason="tqdm prevents normal stdout/stderr capture; need to"

@@ -1,8 +1,10 @@
 from os.path import join
+
+import pytest
+
 from ..utils import get_test_data_path
 from pliers.converters import TesseractConverter
 from pliers.stimuli import ImageStim
-import pytest
 
 IMAGE_DIR = join(get_test_data_path(), 'image')
 

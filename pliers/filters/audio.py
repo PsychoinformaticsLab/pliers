@@ -1,9 +1,10 @@
 ''' Filters that operate on TextStim inputs. '''
 
+from copy import deepcopy
+
 from pliers.stimuli import AudioStim
 from pliers.utils import attempt_to_import, verify_dependencies
 from .base import Filter, TemporalTrimmingFilter
-from copy import deepcopy
 
 librosa = attempt_to_import('librosa')
 

@@ -1,4 +1,9 @@
 from os.path import join
+import json
+
+import numpy as np
+import pytest
+
 from pliers.tests.utils import (get_test_data_path, DummyExtractor, 
                                 ClashingFeatureExtractor)
 from pliers.extractors import (LengthExtractor,
@@ -10,9 +15,6 @@ from pliers.stimuli import (ComplexTextStim, ImageStim, VideoStim,
 from pliers.support.download import download_nltk_data
 from pliers.extractors.base import ExtractorResult, merge_results
 from pliers import config
-import numpy as np
-import pytest
-import json
 
 TEXT_DIR = join(get_test_data_path(), 'text')
 

@@ -1,16 +1,14 @@
 ''' The `graph` module contains tools for constructing and executing graphs
 of pliers Transformers. '''
+from itertools import chain
+from collections import OrderedDict
+import json
 
 from pliers.extractors.base import merge_results
 from pliers.stimuli import __all__ as stim_list
 from pliers.transformers import get_transformer
 from pliers.utils import (listify, flatten, isgenerator, attempt_to_import,
                           verify_dependencies)
-from itertools import chain
-from six import string_types
-from collections import OrderedDict
-
-import json
 
 pgv = attempt_to_import('pygraphviz', 'pgv')
 stim_list.insert(0, 'ExtractorResult')
@@ -30,7 +28,7 @@ class Node(object):
     def __init__(self, transformer, name=None, **parameters):
         self.name = name
         self.children = []
-        if isinstance(transformer, string_types):
+        if isinstance(transformer, str):
             transformer = get_transformer(transformer, **parameters)
         self.transformer = transformer
         self.parameters = parameters
@@ -220,7 +218,7 @@ class Graph(object):
             stim (str, stim, list): Any valid input to the Transformer stored
                 at the target node.
         '''
-        if isinstance(node, string_types):
+        if isinstance(node, str):
             node = self.nodes[node]
 
         result = node.transformer.transform(stim)

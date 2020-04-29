@@ -1,5 +1,9 @@
 from os.path import join
 from os import environ
+
+import numpy as np
+import pytest
+
 from ..utils import get_test_data_path
 from pliers.extractors import (LibrosaFeatureExtractor,
                                STFTAudioExtractor,
@@ -30,8 +34,7 @@ from pliers.stimuli import (ComplexTextStim, AudioStim,
                             TranscribedAudioCompoundStim)
 from pliers.filters import AudioResamplingFilter
 from pliers.utils import attempt_to_import, verify_dependencies
-import numpy as np
-import pytest
+
 
 AUDIO_DIR = join(get_test_data_path(), 'audio')
 tf = attempt_to_import('tensorflow')

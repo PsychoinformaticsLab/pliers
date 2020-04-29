@@ -9,6 +9,7 @@ from .image import ImageStim
 from .text import TextStim, ComplexTextStim
 from .vector import VectorStim
 from .video import VideoStim, VideoFrameCollectionStim, VideoFrameStim
+from .misc import SeriesStim
 
 
 __all__ = [
@@ -24,5 +25,6 @@ __all__ = [
     'VideoFrameStim',
     'TweetStimFactory',
     'TweetStim',
+    'SeriesStim',
     'load_stims'
 ]

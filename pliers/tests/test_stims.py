@@ -1,23 +1,35 @@
+<<<<<<< HEAD
 from pliers.tests.utils import get_test_data_path
+=======
+import tempfile
+import os
+import base64
+from os.path import join, exists
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import pytest
+
+from .utils import get_test_data_path
+>>>>>>> ER-to-DFStim
 from pliers.stimuli import (VideoStim, VideoFrameStim, ComplexTextStim,
                             AudioStim, ImageStim, CompoundStim,
                             TranscribedAudioCompoundStim,
                             TextStim,
                             TweetStimFactory,
+<<<<<<< HEAD
                             TweetStim, 
                             VectorStim)
+=======
+                            TweetStim,
+                            SeriesStim)
+>>>>>>> ER-to-DFStim
 from pliers.stimuli.base import Stim, _get_stim_class
 from pliers.extractors import (BrightnessExtractor, LengthExtractor,
                                ComplexTextExtractor)
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.support.download import download_nltk_data
-import numpy as np
-from os.path import join, exists
-import pandas as pd
-import pytest
-import tempfile
-import os
-import base64
 
 
 class DummyExtractor(Extractor):
@@ -344,6 +356,7 @@ def test_twitter():
     assert np.isclose(brightness, 0.54057, 1e-5)
 
 
+<<<<<<< HEAD
 def test_vector_from_values():
     keys = [f'label{str(n)}' for n in range(10)]
     v_array = np.random.randn(10)
@@ -387,3 +400,26 @@ def test_vector_from_file():
     assert len(stim_df.labels) == 20
     assert stim_df.labels[5] == 'label5'
     assert np.isclose(stim_df.array[6], 0.8169, rtol=0.0001)
+=======
+def test_series():
+    my_dict = {'a': 4, 'b': 2, 'c': 8}
+    stim = SeriesStim(my_dict, onset=4, duration=2)
+    ser = pd.Series([4, 2, 8], index=['a', 'b', 'c'])
+    pd.testing.assert_series_equal(stim.data, ser)
+    assert stim.onset == 4
+    assert stim.duration == 2
+    assert stim.order is None
+
+    f = Path(get_test_data_path(), 'text', 'test_lexical_dictionary.txt')
+    # multiple columns found and no column arg provided
+    with pytest.raises(ValueError):
+        stim = SeriesStim(filename=f, sep='\t')
+
+    stim = SeriesStim(filename=f, column='frequency', sep='\t')
+    assert stim.data.shape == (7,)
+    assert stim.data[3] == 15.417
+
+    # 2-d array should fail
+    with pytest.raises(Exception):
+        ser = SeriesStim(np.random.normal(size=(10, 2)))
+>>>>>>> ER-to-DFStim

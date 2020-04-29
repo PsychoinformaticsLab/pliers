@@ -1,16 +1,17 @@
 ''' Base Extractor class and associated functionality. '''
 
 from abc import ABCMeta, abstractmethod
-from six import with_metaclass
-import pandas as pd
-import numpy as np
-from pliers.transformers import Transformer
-from pliers.utils import isgenerator, flatten, listify
-from pandas.api.types import is_numeric_dtype
 import json
 
+import pandas as pd
+import numpy as np
+from pandas.api.types import is_numeric_dtype
 
-class Extractor(with_metaclass(ABCMeta, Transformer)):
+from pliers.transformers import Transformer
+from pliers.utils import isgenerator, flatten, listify
+
+
+class Extractor(Transformer, metaclass=ABCMeta):
 
     ''' Base class for all pliers Extractors.'''
 
@@ -48,9 +49,6 @@ class ExtractorResult(object):
             associated with the rows in data.
         orders (list, ndarray): Optional iterable giving the integer orders
             associated with the rows in data.
-        raw: The raw result (net of any containers or overhead) returned by
-            the underlying feature extraction tool. Can be an object of any
-            type.
     '''
 
     def __init__(self, data, stim, extractor, features=None, onsets=None,

@@ -1,9 +1,10 @@
 ''' Classes that represent text or sequences of text. '''
 
 import re
+from urllib.request import urlopen
+
 import pandas as pd
-from six import string_types
-from six.moves.urllib.request import urlopen
+
 from pliers.support.decorators import requires_nltk_corpus
 from pliers.utils import attempt_to_import, verify_dependencies
 from .base import Stim
@@ -219,7 +220,7 @@ class ComplexTextStim(Stim):
     def _from_text(self, text, unit, tokenizer, language):
 
         if tokenizer is not None:
-            if isinstance(tokenizer, string_types):
+            if isinstance(tokenizer, str):
                 tokens = re.findall(tokenizer, text)
             else:
                 tokens = tokenizer.tokenize(text)

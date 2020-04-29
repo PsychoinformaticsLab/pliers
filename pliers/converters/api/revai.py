@@ -57,11 +57,11 @@ class RevAISpeechAPIConverter(APITransformer, AudioToTextConverter):
             if account.balance_seconds > 0:
                 return True
             else:
-                logging.warn("Insufficient balance for Rev.ai speech "
+                logging.warning("Insufficient balance for Rev.ai speech "
                              "converter: {}".format(account.balance_seconds))
                 return False
         except Exception as e:
-            logging.warn(str(e))
+            logging.warning(str(e))
             return False
 
     def _convert(self, audio):

@@ -1,11 +1,11 @@
 ''' Extractor classes based on pre-trained models. '''
 
 import numpy as np
+
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.base import ExtractorResult
 from pliers.filters.image import ImageResizingFilter
 from pliers.utils import attempt_to_import, verify_dependencies
-
 
 tf = attempt_to_import('tensorflow')
 attempt_to_import('tensorflow.keras')

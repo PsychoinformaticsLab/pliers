@@ -1,4 +1,11 @@
 from os.path import join
+import string
+
+from nltk import stem as nls
+from nltk.tokenize import PunktSentenceTokenizer
+import nltk
+import pytest
+
 from ..utils import get_test_data_path
 from pliers.filters import (WordStemmingFilter,
                             TokenizingFilter,
@@ -7,11 +14,6 @@ from pliers.filters import (WordStemmingFilter,
                             PunctuationRemovalFilter)
 from pliers.graph import Graph
 from pliers.stimuli import ComplexTextStim, TextStim
-from nltk import stem as nls
-from nltk.tokenize import PunktSentenceTokenizer
-import nltk
-import pytest
-import string
 
 
 TEXT_DIR = join(get_test_data_path(), 'text')

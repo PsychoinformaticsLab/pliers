@@ -2,7 +2,9 @@
 
 from __future__ import division
 from math import ceil
+
 from moviepy.video.io.VideoFileClip import VideoFileClip
+
 from .base import Stim, _get_bytestring
 from .audio import AudioStim
 from .image import ImageStim

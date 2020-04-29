@@ -1,18 +1,21 @@
 ''' Extractors that operate on AudioStim inputs. '''
+
+from abc import ABCMeta
+from os import path
+import sys
+import logging
+
+import numpy as np
+from scipy import fft
+import pandas as pd
+import soundfile as sf
+
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.text import ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.utils import attempt_to_import, verify_dependencies, listify
 from pliers.support.exceptions import MissingDependencyError
 from pliers.support.setup_yamnet import YAMNET_PATH
-import numpy as np
-from scipy import fft
-import pandas as pd
-import soundfile as sf
-from abc import ABCMeta
-from os import path
-import sys
-import logging
 
 librosa = attempt_to_import('librosa')
 tf = attempt_to_import('tensorflow')

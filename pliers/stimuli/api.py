@@ -72,7 +72,7 @@ class TweetStimFactory(APIDependent):
             self.api.VerifyCredentials()
             return True
         except twitter.error.TwitterError as e:
-            logging.warn(str(e))
+            logging.warning(str(e))
             return False
 
     def get_status(self, status_id):

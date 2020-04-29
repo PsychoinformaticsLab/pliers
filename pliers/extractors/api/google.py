@@ -1,5 +1,14 @@
 ''' Google API-based feature extraction classes. '''
 
+import logging
+import time
+import warnings
+import os
+from collections import defaultdict
+
+import numpy as np
+import pandas as pd
+
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.text import TextExtractor
 from pliers.extractors.video import VideoExtractor
@@ -8,13 +17,6 @@ from pliers.transformers import (GoogleAPITransformer,
                                  GoogleAPITransformer)
 from pliers.extractors.base import ExtractorResult
 from pliers.utils import flatten_dict
-import numpy as np
-import pandas as pd
-import logging
-import time
-import warnings
-import os
-from collections import defaultdict
 
 
 class GoogleVisionAPIExtractor(GoogleVisionAPITransformer, ImageExtractor):

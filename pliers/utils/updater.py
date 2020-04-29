@@ -2,13 +2,16 @@
 
 import glob
 import datetime
-import pandas as pd
-import numpy as np
 from os.path import realpath, join, dirname, exists, expanduser
-from pliers.stimuli import load_stims
-from pliers.transformers import get_transformer
 import hashlib
 import pickle
+
+import pandas as pd
+import numpy as np
+
+from pliers.stimuli import load_stims
+from pliers.transformers import get_transformer
+
 
 def hash_data(data, blocksize=65536):
     """" Hashes list of data, strings or data """

@@ -1,13 +1,14 @@
-from .utils import get_test_data_path
+from os.path import join
 
 import pytest
 import numpy as np
 
-from os.path import join
 from pliers.extractors import BrightnessExtractor, SharpnessExtractor
 from pliers.graph import Graph
 from pliers.utils.scikit import PliersTransformer
 from pliers.stimuli import ImageStim
+
+from .utils import get_test_data_path
 
 
 def test_graph_scikit():

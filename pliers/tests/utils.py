@@ -1,10 +1,13 @@
 from os.path import dirname, join
+from copy import deepcopy
+
+import numpy as np
+import pandas as pd
+
 from pliers.stimuli import ImageStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.transformers import BatchTransformerMixin
-import numpy as np
-from copy import deepcopy
-import pandas as pd
+
 
 def get_test_data_path():
     """Returns the path to test datasets """
