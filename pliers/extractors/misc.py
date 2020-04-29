@@ -16,12 +16,10 @@ class MetricExtractor(Extractor):
     ''' Extracts summary metrics from 1D-array using numpy, scipy or custom 
         functions
     Args:
-        functions (str, functions or list): function or list of numpy, scipy, 
-            or custom functions to be applied to 1-dimensional numpy arrays.
-            Functions can be passed directly (e.g. passing scipy.stats.entropy) if 
-            the package/module they belong to has been imported, or as strings 
-            (e.g. 'numpy.mean'). Custom functions returning integers or iterables 
-            can also be passed by passing the function itself.
+        functions (str, functions or list): function or string referring to absolute
+           import path for a function (e.g. 'numpy.mean'). Function must operate 
+           on 1-dimensional numpy arrays and return a scalar. A list of 
+           functions or import strings may also be passed.
         var_names (list): optional list of custom alias names for each metric
         subset_idx (list): subset of Series indices to compute metric on.
         kwargs: named arguments for function call
