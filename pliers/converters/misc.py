@@ -13,10 +13,8 @@ class ExtractorResultToSeriesConverter(Converter):
 
     def _convert(self, result):
         df = result.to_df(timing=False, metadata=False, object_id=False)
-        n_rows = df.shape[0]
         stims = []
-        for i in range(n_rows):
-            data = df.iloc[i, :]
+        for i, data in df.iterrows():
             onset = result.onset[i] if result.onset is not None else None
             dur = result.duration[i] if result.duration is not None else None
             order = result.order[i] if result.order is not None else i
