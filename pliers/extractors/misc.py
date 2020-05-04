@@ -4,11 +4,10 @@ Extractors that operate on Miscellaneous Stims.
 
 from pliers.stimuli.misc import SeriesStim
 from pliers.extractors.base import Extractor, ExtractorResult
-from pliers.utils import listify
+from pliers.utils import listify, isiterable
 import scipy
 import numpy as np
 import pandas as pd
-from collections.abc import Iterable
 from importlib import import_module
 import logging
 
@@ -67,7 +66,7 @@ class MetricExtractor(Extractor):
             series = stim.data
         for f in self.functions:
             metrics = f(series, **self.kwargs)
-            if isinstance(metrics, Iterable):
+            if isiterable(metrics):
                 metrics = np.array(metrics)
             outputs.append(metrics)
         return ExtractorResult([outputs], stim, self, self.var_names)
