@@ -95,7 +95,7 @@ def test_tokenizing_filter():
     assert len(sentences) == 11
     assert sentences[0].text == 'To Sherlock Holmes she is always the woman.'
 
-    filt = TokenizingFilter('RegexpTokenizer', '\w+|\$[\d\.]+|\S+')
+    filt = TokenizingFilter('RegexpTokenizer', r'\w+|\$[\d\.]+|\S+')
     tokens = filt.transform(stim)
     assert len(tokens) == 231
     assert tokens[0].text == 'To'

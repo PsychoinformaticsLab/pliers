@@ -51,5 +51,11 @@ class SeriesStim(Stim):
         self.data = data
         super().__init__(filename, onset, duration, order, name)
 
-    def save(self, path):
-        self.data.to_csv(path)
+    def save(self, path, **kwargs):
+        """Save stored series to disk.
+
+        Args:
+            path (str): The path of the file to save to.
+            kwargs: Optional keyword arguments passed to pandas' to_csv()
+        """
+        self.data.to_csv(path, **kwargs)

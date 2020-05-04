@@ -43,7 +43,7 @@ class SpeechRecognitionAPIConverter(APITransformer, AudioToTextConverter):
                                  " SpeechRecognitionAPIConverter is initialized.")
         self.recognizer = sr.Recognizer()
         self.api_key = api_key
-        super(SpeechRecognitionAPIConverter, self).__init__(rate_limit=rate_limit)
+        super().__init__(rate_limit=rate_limit)
 
     def _convert(self, audio):
         verify_dependencies(['sr'])

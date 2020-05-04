@@ -114,7 +114,7 @@ class FaceRecognitionFeatureExtractor(ImageExtractor):
         func = getattr(face_recognition.api, self._feature)
         self.func = partial(func, **face_recognition_kwargs)
 
-        super(FaceRecognitionFeatureExtractor, self).__init__()
+        super().__init__()
 
     def get_feature_names(self):
         return self._feature
@@ -146,7 +146,7 @@ class FaceRecognitionFaceLandmarksExtractor(FaceRecognitionFeatureExtractor):
 
     def _to_df(self, result):
         data = pd.DataFrame.from_records(result._data)
-        data.columns = ['%s_%s' % (self._feature, c) for c in data.columns]
+        data.columns = ['{}_{}'.format(self._feature, c) for c in data.columns]
         return data
 
 

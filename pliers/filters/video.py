@@ -39,7 +39,7 @@ class FrameSamplingFilter(Filter):
         self.every = every
         self.hertz = hertz
         self.top_n = top_n
-        super(FrameSamplingFilter, self).__init__()
+        super().__init__()
 
     def _filter(self, video):
         if not isinstance(video, VideoStim):

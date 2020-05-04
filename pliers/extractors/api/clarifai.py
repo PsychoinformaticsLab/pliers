@@ -77,7 +77,7 @@ class ClarifaiAPIExtractor(APITransformer):
             select_concepts = listify(select_concepts)
             self.select_concepts = [clarifai_client.Concept(concept_name=n)
                                     for n in select_concepts]
-        super(ClarifaiAPIExtractor, self).__init__(rate_limit=rate_limit)
+        super().__init__(rate_limit=rate_limit)
 
     @property
     def api_keys(self):
@@ -155,8 +155,7 @@ class ClarifaiAPIImageExtractor(ClarifaiAPIExtractor, BatchTransformerMixin,
     def __init__(self, api_key=None, model='general-v1.3', min_value=None,
                  max_concepts=None, select_concepts=None, rate_limit=None,
                  batch_size=None):
-        super(ClarifaiAPIImageExtractor,
-              self).__init__(api_key=api_key,
+        super().__init__(api_key=api_key,
                              model=model,
                              min_value=min_value,
                              max_concepts=max_concepts,

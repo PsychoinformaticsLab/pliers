@@ -56,7 +56,7 @@ def test_google_vision_api_face_extractor_inits():
     # Test parsing of individual response
     filename = join(
         get_test_data_path(), 'payloads', 'google_vision_api_face_payload.json')
-    response = json.load(open(filename, 'r'))
+    response = json.load(open(filename))
     stim = ImageStim(join(get_test_data_path(), 'image', 'obama.jpg'))
     res = ExtractorResult(response['faceAnnotations'], stim, ext)
     df = res.to_df()

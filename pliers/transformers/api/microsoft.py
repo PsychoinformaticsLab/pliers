@@ -53,7 +53,7 @@ class MicrosoftAPITransformer(APITransformer):
         self.subscription_key = subscription_key
         self.location = location
         self.api_version = api_version
-        super(MicrosoftAPITransformer, self).__init__(rate_limit=rate_limit)
+        super().__init__(rate_limit=rate_limit)
 
     @property
     def api_keys(self):

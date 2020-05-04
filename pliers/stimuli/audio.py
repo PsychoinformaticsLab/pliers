@@ -51,7 +51,7 @@ class AudioStim(Stim):
             # Average channels to make data mono
             self.data = self.data.mean(axis=1)
 
-        super(AudioStim, self).__init__(
+        super().__init__(
             filename, onset=onset, duration=duration, order=order, url=url)
 
     def _load_clip(self):

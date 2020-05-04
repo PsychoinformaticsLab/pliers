@@ -7,7 +7,7 @@ from .audio import AudioStim
 from .text import ComplexTextStim
 
 
-class CompoundStim(object):
+class CompoundStim:
 
     ''' A container for an arbitrary set of Stim elements.
 
@@ -36,7 +36,7 @@ class CompoundStim(object):
                 self.elements.append(s)
             else:
                 msg = "Multiple components of same type not allowed, and " + \
-                      "a stim of type %s already exists in this %s." % (stim_cl, self_cl)
+                      "a stim of type {} already exists in this {}.".format(stim_cl, self_cl)
                 raise ValueError(msg)
 
         if self._primary is not None:
@@ -50,8 +50,7 @@ class CompoundStim(object):
 
     def __iter__(self):
         """ Element iteration. """
-        for e in self.elements:
-            yield e
+        yield from self.elements
 
     def get_stim(self, type_, return_all=False):
         ''' Returns component elements of the specified type.
@@ -81,7 +80,7 @@ class CompoundStim(object):
 
     def get_types(self):
         ''' Return tuple of types of all available Stims. '''
-        return tuple(set([e.__class__ for e in self.elements]))
+        return tuple({e.__class__ for e in self.elements})
 
     def has_types(self, types, all_=True):
         ''' Check whether the current component list matches all Stim types
@@ -126,5 +125,5 @@ class TranscribedAudioCompoundStim(CompoundStim):
     _primary = AudioStim
 
     def __init__(self, audio, text):
-        super(TranscribedAudioCompoundStim, self).__init__(
+        super().__init__(
             elements=[audio, text])

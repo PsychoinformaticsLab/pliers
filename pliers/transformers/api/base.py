@@ -41,4 +41,4 @@ class APITransformer(APIDependent, Transformer):
                              "you have authorized credentials for accessing "
                              "the target API." % self.__class__.__name__)
 
-        return super(APITransformer, self)._transform(stim, *args, **kwargs)
+        return super()._transform(stim, *args, **kwargs)
