@@ -2,12 +2,10 @@ from os.path import join
 from pathlib import Path
 from os import environ
 import shutil
-
 import numpy as np
 import pytest
 import spacy
 from transformers import BertTokenizer
-
 from pliers import config
 from pliers.extractors import (DictionaryExtractor,
                                PartOfSpeechExtractor,
@@ -446,7 +444,7 @@ def test_bert_LM_extractor():
     assert res_topn.shape[1] == 104
     assert all([res_topn.iloc[:,3][0] > res_topn.iloc[:,i][0] for i in range(4,103)])
 
-    # Check threshold and return_softmax
+    # Check threshold and range
     tknz = BertTokenizer.from_pretrained('bert-base-uncased')
     vocab = tknz.vocab.keys()
     for v in vocab:
@@ -472,6 +470,9 @@ def test_bert_LM_extractor():
     assert res_return_mask['true_word'][0] == 'is'
     assert 'true_word_score' in res_return_mask.columns
     assert res_return_mask['sequence'][0] == 'This is not a tokenized sentence .'
+
+    # Make sure no non-ascii tokens are dropped
+    assert res.shape[1] == len(vocab) + 4
 
     # remove variables
     del ext_target, res, res_file, res_target, res_topn, \

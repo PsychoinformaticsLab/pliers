@@ -58,6 +58,7 @@ from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
                     VibranceExtractor, FaceRecognitionFaceEncodingsExtractor,
                     FaceRecognitionFaceLandmarksExtractor,
                     FaceRecognitionFaceLocationsExtractor)
+from .misc import MetricExtractor
 from .models import TensorFlowKerasApplicationExtractor
 from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
@@ -146,5 +147,6 @@ __all__ = [
     'BertLMExtractor',
     'BertSentimentExtractor',
     'AudiosetLabelExtractor',
-    'WordCounterExtractor'
+    'WordCounterExtractor',
+    'MetricExtractor'
 ]

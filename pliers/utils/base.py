@@ -7,6 +7,7 @@ from types import GeneratorType
 from itertools import islice
 
 from tqdm import tqdm
+import pandas as pd
 
 from pliers import config
 from pliers.support.exceptions import MissingDependencyError
@@ -79,7 +80,7 @@ class classproperty:
 
 def isiterable(obj):
     ''' Returns True if the object is one of allowable iterable types. '''
-    return isinstance(obj, (list, tuple, GeneratorType, tqdm))
+    return isinstance(obj, (list, tuple, pd.Series, GeneratorType, tqdm))
 
 
 def isgenerator(obj):

@@ -303,6 +303,7 @@ def test_save():
     text_stim = TextStim(text='hello')
     audio_stim = AudioStim(join(get_test_data_path(), 'audio', 'crowd.mp3'))
     image_stim = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
+
     # Video gives travis problems
     stims = [complextext_stim, text_stim, audio_stim, image_stim]
     for s in stims:
