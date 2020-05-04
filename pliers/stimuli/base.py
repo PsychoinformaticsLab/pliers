@@ -187,7 +187,12 @@ def _log_transformation(source, result, trans=None, implicit=False):
     if isiterable(result):
         return (_log_transformation(source, r, trans) for r in result)
 
-    values = [source.name, source.filename, source.__class__.__name__]
+    # Converters are no longer restricted to Stim inputs, so ensure name and
+    # filename are set.
+    name = getattr(source, 'name', None)
+    filename = getattr(source, 'filename', None)
+
+    values = [name, filename, source.__class__.__name__]
     if isinstance(result, Stim):
         values.extend([result.name, result.filename])
     else:

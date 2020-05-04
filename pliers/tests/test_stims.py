@@ -2,6 +2,7 @@ import tempfile
 import os
 import base64
 from os.path import join, exists
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -13,7 +14,8 @@ from pliers.stimuli import (VideoStim, VideoFrameStim, ComplexTextStim,
                             TranscribedAudioCompoundStim,
                             TextStim,
                             TweetStimFactory,
-                            TweetStim)
+                            TweetStim,
+                            SeriesStim)
 from pliers.stimuli.base import Stim, _get_stim_class
 from pliers.extractors import (BrightnessExtractor, LengthExtractor,
                                ComplexTextExtractor)
@@ -335,3 +337,26 @@ def test_twitter():
     res = ext.transform(ut_tweet)[0].to_df()
     brightness = res['brightness'][0]
     assert np.isclose(brightness, 0.54057, 1e-5)
+
+
+def test_series():
+    my_dict = {'a': 4, 'b': 2, 'c': 8}
+    stim = SeriesStim(my_dict, onset=4, duration=2)
+    ser = pd.Series([4, 2, 8], index=['a', 'b', 'c'])
+    pd.testing.assert_series_equal(stim.data, ser)
+    assert stim.onset == 4
+    assert stim.duration == 2
+    assert stim.order is None
+
+    f = Path(get_test_data_path(), 'text', 'test_lexical_dictionary.txt')
+    # multiple columns found and no column arg provided
+    with pytest.raises(ValueError):
+        stim = SeriesStim(filename=f, sep='\t')
+
+    stim = SeriesStim(filename=f, column='frequency', sep='\t')
+    assert stim.data.shape == (7,)
+    assert stim.data[3] == 15.417
+
+    # 2-d array should fail
+    with pytest.raises(Exception):
+        ser = SeriesStim(np.random.normal(size=(10, 2)))
