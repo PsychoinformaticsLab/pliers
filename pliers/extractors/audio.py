@@ -602,7 +602,7 @@ class AudiosetLabelExtractor(AudioExtractor):
         model = self.yamnet.yamnet_frames_model(self.params)
         model.load_weights(self.weights_path)
         preds, _ = model.predict_on_batch(np.reshape(stim.data, [1,-1]))
-        preds = preds.numpy()[:,self.label_idx]
+        preds = preds[:,self.label_idx]
         
         nr_lab = self.top_n or len(self.labels)
         idx = np.mean(preds,axis=0).argsort()
