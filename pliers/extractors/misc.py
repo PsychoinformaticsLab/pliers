@@ -33,7 +33,7 @@ class MetricExtractor(Extractor):
         if var_names is not None:
             var_names = listify(var_names)
             if len(var_names) != len(functions):
-                raise ValueError('Length or var_names must match number of '
+                raise ValueError('Length of var_names must match number of '
                                  'functions')
         for idx, f in enumerate(functions):
             if isinstance(f, str):
