@@ -709,8 +709,12 @@ class BertLMExtractor(BertExtractor):
 
     def _mask_words(self, wds):
         mwds = wds.copy()
-        self.mask_token = self.mask if type(self.mask) == str else mwds[self.mask]
-        self.mask_pos = np.where(np.array(mwds)==self.mask_token)[0][0]
+        if isinstance(self.mask, str):
+            self.mask_token = self.mask
+            self.mask_pos = np.where(np.array(mwds)==self.mask)[0][0]
+        else:
+            self.mask_pos = self.mask
+            self.mask_token = mwds[self.mask]
         mwds[self.mask_pos] = '[MASK]'
         return mwds
 
