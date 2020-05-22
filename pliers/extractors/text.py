@@ -642,7 +642,6 @@ class BertLMExtractor(BertExtractor):
             be returned. Mutually exclusive with top_n and target.
         return_softmax (bool): if True, returns probability scores instead of 
             raw predictions.
-        loss (bool): if True, returns cross-entropy loss.
         return_masked_word (bool): if True, returns masked word (if defined 
             in the tokenizer vocabulary) and its probability.
         model_kwargs (dict): Named arguments for pretrained model.
@@ -666,7 +665,6 @@ class BertLMExtractor(BertExtractor):
                  threshold=None,
                  target=None,
                  return_softmax=False,
-                 loss=True,
                  return_masked_word=False,
                  return_input=False,
                  model_kwargs=None,
@@ -697,7 +695,6 @@ class BertLMExtractor(BertExtractor):
         self.top_n = top_n
         self.threshold = threshold
         self.return_softmax = return_softmax
-        self.loss = loss
         self.return_masked_word = return_masked_word
         
     def update_mask(self, new_mask):
