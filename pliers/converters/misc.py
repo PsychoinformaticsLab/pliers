@@ -13,6 +13,8 @@ class ExtractorResultToSeriesConverter(Converter):
 
     def _convert(self, result):
         df = result.to_df(timing=False, metadata=False, object_id=False)
+        if 'object_id' in df.columns:
+            df = df.drop(['object_id'], axis=1)
         stims = []
         for i, data in df.iterrows():
             onset = result.onset[i] if result.onset is not None else None
