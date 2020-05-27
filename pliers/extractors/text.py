@@ -709,8 +709,12 @@ class BertLMExtractor(BertExtractor):
 
     def _mask_words(self, wds):
         mwds = wds.copy()
-        self.mask_token = self.mask if type(self.mask) == str else mwds[self.mask]
-        self.mask_pos = np.where(np.array(mwds)==self.mask_token)[0][0]
+        if isinstance(self.mask, str):
+            self.mask_token = self.mask
+            self.mask_pos = np.where(np.array(mwds)==self.mask)[0][0]
+        else:
+            self.mask_pos = self.mask
+            self.mask_token = mwds[self.mask]
         mwds[self.mask_pos] = '[MASK]'
         return mwds
 
@@ -736,8 +740,10 @@ class BertLMExtractor(BertExtractor):
         if self.return_input:
             data += [stims.name]
             feat += ['sequence']
-        ons, dur = map(lambda x: listify(x[self.mask_pos]), [ons, dur])
-        return data, feat, ons, dur
+        mask_ons = listify(stims.elements[self.mask_pos].onset)
+        mask_dur = listify(stims.elements[self.mask_pos].duration)
+        return data, feat, mask_ons, mask_dur
+    
 
     def _return_masked_word(self, preds, feat, data):
         if self.mask_token in self.tokenizer.vocab:
@@ -749,8 +755,8 @@ class BertLMExtractor(BertExtractor):
         feat += ['true_word', 'true_word_score']
         data += [self.mask_token, true_score]
         return feat, data
-    
 
+    
 class BertSentimentExtractor(BertExtractor):
     ''' Extracts sentiment for sequences using Bert or Bert-derived models
         fine-tuned for sentiment classification.
