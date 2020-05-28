@@ -12,13 +12,13 @@ from importlib import import_module
 import logging
 
 class MetricExtractor(Extractor):
-    ''' Extracts summary metrics from 1D-array using numpy, scipy or custom 
+    ''' Extracts summary metrics from SeriesStim using numpy, scipy or custom 
         functions
     Args:
-        functions (str, functions or list): function or string referring to absolute
-           import path for a function (e.g. 'numpy.mean'). Function must operate 
-           on 1-dimensional numpy arrays and return a scalar. A list of 
-           functions or import strings may also be passed.
+        functions (str, functions or list): function, string referring to 
+            absolute import path for a function (e.g. 'numpy.mean') or lambda.
+            Function must operate on 1-dimensional numpy arrays and return a 
+            scalar. A list of functions or import strings may also be passed.
         var_names (list): optional list of custom alias names for each metric
         subset_idx (list): subset of Series index labels to compute metric on.
         kwargs: named arguments for function call
@@ -40,9 +40,12 @@ class MetricExtractor(Extractor):
                 try:
                     f_mod, f_func = f.rsplit('.', 1)
                     functions[idx] = getattr(import_module(f_mod),
-                                             f_func)
+                                            f_func)
                 except:
-                    raise ValueError(f"{f} is not a valid function")
+                    try:
+                        functions[idx] = eval(f)
+                    except:
+                        raise ValueError(f"{f} is not a valid function")
         if var_names is None:
             var_names = [f.__name__ for f in functions]
         self.var_names = var_names
