@@ -10,8 +10,6 @@ from scipy import fft
 import pandas as pd
 import soundfile as sf
 
-import logging
-
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.text import ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
