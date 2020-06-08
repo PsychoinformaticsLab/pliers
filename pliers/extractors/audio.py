@@ -10,6 +10,8 @@ from scipy import fft
 import pandas as pd
 import soundfile as sf
 
+import logging
+
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.text import ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
@@ -566,9 +568,9 @@ class AudiosetLabelExtractor(AudioExtractor):
             labels = list(set(labels) & set(all_labels))
             if missing:
                 logging.warning(f'Labels {missing} do not exist. Dropping.')
-            self.labels = labels
-            self.label_idx = [i for i, l in enumerate(all_labels) 
-                              if l in labels]
+            self.label_idx, self.labels = zip(*[(i,l) 
+                                               for i,l in enumerate(all_labels)
+                                               if l in labels])
         else:
             self.labels = all_labels
             self.label_idx = list(range(len(all_labels)))
@@ -602,6 +604,7 @@ class AudiosetLabelExtractor(AudioExtractor):
         model = self.yamnet.yamnet_frames_model(self.params)
         model.load_weights(self.weights_path)
         preds, _ = model.predict_on_batch(np.reshape(stim.data, [1,-1]))
+        preds = preds.numpy()
         preds = preds[:,self.label_idx]
         
         nr_lab = self.top_n or len(self.labels)
