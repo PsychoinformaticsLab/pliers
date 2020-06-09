@@ -566,9 +566,9 @@ class AudiosetLabelExtractor(AudioExtractor):
             labels = list(set(labels) & set(all_labels))
             if missing:
                 logging.warning(f'Labels {missing} do not exist. Dropping.')
-            self.labels = labels
-            self.label_idx = [i for i, l in enumerate(all_labels) 
-                              if l in labels]
+            self.label_idx, self.labels = zip(*[(i,l) 
+                                               for i,l in enumerate(all_labels)
+                                               if l in labels])
         else:
             self.labels = all_labels
             self.label_idx = list(range(len(all_labels)))
