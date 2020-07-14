@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.4.0 (July 14, 2020)
+This is a major release that adds support for several new feature extraction services/models, as well as a large number of minor bugfixes and improvements.
+
+New features and major improvements/bugfixes:
+* Add WordCounterExtractor (#364)
+* Add PretrainedBertEncodingExtractor from transformers #365
+* Add lemmatization to stemming filter (WordStemmingFilter) #366
+* Add Lancaster Sensorimotor Norms to PredefinedDictionaryExtractor #367
+* Remove deprecated Indico API extractors #369
+* Add AudioResamplingFilter #374
+* Add AudiosetLabelExtractor from Yamnet architecture #379 #399
+* Add BertLMExtractor, BertSentimentExtractor, BertSequenceEncodingExtractor #383 #397
+* Add log attributes to to_df #389
+* Add MetricExtractor #390 #398
+* Add ExtractorResult --> SeriesStim converter #394
+
+Minor improvements and bug fixes:
+* Fixes to Clarifai face extractor (#335, #357)
+* Added optional dependencies as 'extras' for pip install #358
+* Patch operations request for Google Video Intelligence #360
+* Miscellaneous fixes to tests and Travis CI #372 #375 #378 #380 #381
+* Fix index_cols behavior in to_df function  #376 #388
+* Drop vestigial Python 2 code #392
+* Upgrade Python syntax and add python_requires for 3.5+ #393
+
 ## 0.3.0 (June 8, 2019)
 This is a major release that adds support for several new feature extraction services/models, as well as a large number of minor bugfixes and improvements.
 
@@ -62,7 +87,7 @@ This is a major release that adds many new features and transformers. Changes in
     * Static versioning for transformers (0.1 indicates initial working transformer, 1.0+ indicates fully-tested and often used transformer)
     * Added `TweetStim`, that can be initialized using Twitter's API, to the stimuli hierarchy
     * A update checker utility (in `pliers.utils`) that allows users to track changes to the output of different transformers for user-provided stimuli or a hand-selected battery of stimuli from the pliers test module
-    * A revamped and improved `config` module with exposed accessor methods 
+    * A revamped and improved `config` module with exposed accessor methods
 * New Transformers:
     * NLP Transformers:
         * TextVectorizerExtractor uses sklearn Vectorizers to extract bag-of-X features from a batch of text documents
