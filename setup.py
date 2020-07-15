@@ -31,12 +31,13 @@ setup(
     __version__,
     **extra_setuptools_args,
     extras_require={
-        'all': ['google-api-python-client', 'google-compute-engine',
-                'tensorflow', 'clarifai', 'opencv-python', 'face_recognition',
-                'gensim', 'pytesseract', 'librosa>=0.6.3',
-                'rev_ai', 'spacy', 'SpeechRecognition>=3.6.0', 'pysrt',
-                'python-twitter', 'pathos', 'scikit-learn', 'matplotlib',
-                'seaborn', 'pygraphviz', 'xlrd', 'duecredit']
+        'all':  ['clarifai', 'duecredit', 'face_recognition', 'python-twitter',
+                 'gensim', 'google-api-python-client', 'google-compute-engine',
+                 'librosa>=0.6.3' 'numba<=0.48', 'matplotlib', 'opencv-python',
+                 'pathos', 'pygraphviz', 'pysrt', 'pytesseract',
+                 'python-twitter', 'scikit-learn', 'seaborn', 'soundfile',
+                 'spacy', 'SpeechRecognition>=3.6.0', 'tensorflow>=1.0.0',
+                 'torch', 'transformers', 'xlrd', 'rev_ai']
     },
     python_requires='>=3.5',
 )
