@@ -79,10 +79,11 @@ class GoogleVisionAPIFaceExtractor(GoogleVisionAPIExtractor):
                             data_dict[name] = val
                 elif field == 'landmarks':
                     for lm in val:
-                        name = 'landmark_' + lm['type'] + '_%s'
-                        lm_pos = {name %
-                                  k: v for (k, v) in lm['position'].items()}
-                        data_dict.update(lm_pos)
+                        if 'type' in lm:
+                            name = 'landmark_' + lm['type'] + '_%s'
+                            lm_pos = {name %
+                                      k: v for (k, v) in lm['position'].items()}
+                            data_dict.update(lm_pos)
                 else:
                     data_dict[field] = val
 
