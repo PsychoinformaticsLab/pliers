@@ -28,4 +28,4 @@ RUN apt-get update -qq \
 RUN mkdir -p /data /backup
 USER pliers
 RUN python -m pliers.support.download
-WORKDIR /work
+WORKDIR /work 

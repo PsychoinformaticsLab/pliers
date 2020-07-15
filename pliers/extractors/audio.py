@@ -222,7 +222,7 @@ class SpectralCentroidExtractor(LibrosaFeatureExtractor):
     ''' Extracts the spectral centroids from audio using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.spectral_centroid.html#librosa.feature.spectral_centroid.'''
 
     _feature = 'spectral_centroid'
 
@@ -233,7 +233,7 @@ class SpectralBandwidthExtractor(LibrosaFeatureExtractor):
     Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.spectral_bandwidth.html#librosa.feature.spectral_bandwidth.'''
 
     _feature = 'spectral_bandwidth'
 
@@ -244,7 +244,7 @@ class SpectralFlatnessExtractor(LibrosaFeatureExtractor):
     Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.spectral_flatness.html#librosa.feature.spectral_flatness.'''
 
     _feature = 'spectral_flatness'
 
@@ -254,7 +254,7 @@ class SpectralContrastExtractor(LibrosaFeatureExtractor):
     ''' Extracts the spectral contrast from audio using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.spectral_contrast.html#librosa.feature.spectral_contrast.'''
 
     _feature = 'spectral_contrast'
 
@@ -274,7 +274,7 @@ class SpectralRolloffExtractor(LibrosaFeatureExtractor):
     ''' Extracts the roll-off frequency from audio using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.spectral_rolloff.html#librosa.feature.spectral_rolloff.'''
 
     _feature = 'spectral_rolloff'
 
@@ -284,7 +284,7 @@ class PolyFeaturesExtractor(LibrosaFeatureExtractor):
     ''' Extracts the coefficients of fitting an nth-order polynomial to the columns of an audio's spectrogram (via Librosa).
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.poly_features.html#librosa.feature.poly_features.'''
 
     _feature = 'poly_features'
 
@@ -302,7 +302,7 @@ class RMSExtractor(LibrosaFeatureExtractor):
     library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.rms.html?highlight=rms#librosa.feature.rms.'''
 
     _feature = 'rms'
 
@@ -313,7 +313,7 @@ class OnsetDetectExtractor(LibrosaFeatureExtractor):
     library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.onset.onset_detect.html#librosa.onset.onset_detect.'''
 
     _feature = 'onset_detect'
 
@@ -324,7 +324,7 @@ class TempoExtractor(LibrosaFeatureExtractor):
     library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.beat.tempo.html#librosa.beat.tempo.'''
 
     _feature = 'tempo'
 
@@ -335,7 +335,7 @@ class BeatTrackExtractor(LibrosaFeatureExtractor):
     library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.beat.beat_track.html#librosa.beat.beat_track.'''
 
     _feature = 'beat_track'
 
@@ -346,7 +346,7 @@ class OnsetStrengthMultiExtractor(LibrosaFeatureExtractor):
     library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.onset.onset_strength_multi.html#librosa.onset.onset_strength_multi.'''
 
     _feature = 'onset_strength_multi'
 
@@ -356,7 +356,7 @@ class ZeroCrossingRateExtractor(LibrosaFeatureExtractor):
     ''' Extracts the zero-crossing rate of audio using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.zero_crossing_rate.html#librosa.feature.zero_crossing_rate.'''
 
     _feature = 'zero_crossing_rate'
 
@@ -367,7 +367,7 @@ class ChromaSTFTExtractor(LibrosaFeatureExtractor):
     library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.chroma_stft.html#librosa.feature.chroma_stft.'''
 
     _feature = 'chroma_stft'
 
@@ -384,7 +384,7 @@ class ChromaCQTExtractor(LibrosaFeatureExtractor):
     ''' Extracts a constant-q chromogram from audio using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.chroma_cqt.html#librosa.feature.chroma_cqt.'''
 
     _feature = 'chroma_cqt'
 
@@ -402,7 +402,7 @@ class ChromaCENSExtractor(LibrosaFeatureExtractor):
     chromogram from audio (via Librosa).
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.chroma_cens.html#librosa.feature.chroma_cens.'''
 
     _feature = 'chroma_cens'
 
@@ -419,7 +419,7 @@ class MelspectrogramExtractor(LibrosaFeatureExtractor):
     ''' Extracts mel-scaled spectrogram from audio using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.melspectrogram.html#librosa.feature.melspectrogram.'''
 
     _feature = 'melspectrogram'
 
@@ -437,7 +437,7 @@ class MFCCExtractor(LibrosaFeatureExtractor):
     Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.mfcc.html#librosa.feature.mfcc.'''
 
     _feature = 'mfcc'
 
@@ -455,7 +455,7 @@ class TonnetzExtractor(LibrosaFeatureExtractor):
     library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.tonnetz.html#librosa.feature.tonnetz.'''
 
     _feature = 'tonnetz'
 
@@ -468,7 +468,7 @@ class TempogramExtractor(LibrosaFeatureExtractor):
     ''' Extracts a tempogram from audio using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.tempogram.html#librosa.feature.tempogram.'''
 
     _feature = 'tempogram'
 
@@ -486,7 +486,7 @@ class HarmonicExtractor(LibrosaFeatureExtractor):
     ''' Extracts the harmonic elements from an audio time-series using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/effect.html.'''
+    https://librosa.org/librosa/generated/librosa.effects.harmonic.html#librosa.effects.harmonic.'''
 
     _feature = 'harmonic'
 
@@ -496,7 +496,7 @@ class PercussiveExtractor(LibrosaFeatureExtractor):
     ''' Extracts the percussive elements from an audio time-series using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/effect.html.'''
+    https://librosa.org/librosa/generated/librosa.effects.percussive.html#librosa.effects.percussive.'''
 
 
     _feature = 'percussive'
