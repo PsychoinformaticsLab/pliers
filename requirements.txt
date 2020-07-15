@@ -4,8 +4,8 @@ nltk>=3.0
 moviepy>=0.2
 pandas~=0.25
 pillow
-scipy>=0.13.3
-imageio>=2.3.0
-six
+requests
+scipy>=0.13
+imageio>=2.3
 tqdm
 psutil
