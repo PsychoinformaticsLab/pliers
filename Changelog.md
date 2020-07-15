@@ -17,6 +17,9 @@ New features and major improvements/bugfixes:
 * Add ExtractorResult --> SeriesStim converter #394
 
 Minor improvements and bug fixes:
+* Fixes case of missing landmark type in GoogleVisionAPIFaceExtractor (#406)
+* Removed soundfile as dependency (#408)
+* Fix librosa import erroor (#405)
 * Fixes to Clarifai face extractor (#335, #357)
 * Added optional dependencies as 'extras' for pip install #358
 * Patch operations request for Google Video Intelligence #360
