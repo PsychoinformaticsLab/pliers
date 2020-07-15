@@ -1,6 +1,8 @@
 import logging
 import os
+
 import requests
+
 from pliers.transformers.api import APITransformer
 
 
@@ -51,7 +53,7 @@ class MicrosoftAPITransformer(APITransformer):
         self.subscription_key = subscription_key
         self.location = location
         self.api_version = api_version
-        super(MicrosoftAPITransformer, self).__init__(rate_limit=rate_limit)
+        super().__init__(rate_limit=rate_limit)
 
     @property
     def api_keys(self):
@@ -69,10 +71,10 @@ class MicrosoftAPITransformer(APITransformer):
             if 'too small' in str(e):
                 return True
             elif 'invalid subscription' in str(e):
-                logging.warn(str(e))
+                logging.warning(str(e))
                 return False
             elif '[Errno 8]' in str(e):
-                logging.warn(str(e))
+                logging.warning(str(e))
                 return False
             else:
                 raise e

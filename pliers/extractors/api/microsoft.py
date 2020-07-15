@@ -2,12 +2,12 @@
 Extractors that interact with Microsoft Azure Cognitive Services API.
 '''
 
+import pandas as pd
+
 from pliers.extractors.base import ExtractorResult
 from pliers.extractors.image import ImageExtractor
 from pliers.transformers import (MicrosoftAPITransformer,
                                  MicrosoftVisionAPITransformer)
-
-import pandas as pd
 
 
 class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
@@ -49,8 +49,7 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
         self.rectangle = rectangle
         self.landmarks = landmarks
         self.attributes = attributes
-        super(MicrosoftAPIFaceExtractor,
-              self).__init__(subscription_key=subscription_key,
+        super().__init__(subscription_key=subscription_key,
                              location=location,
                              api_version=api_version,
                              rate_limit=rate_limit)
@@ -79,14 +78,14 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
             if isinstance(v, dict):
                 subdata = self._parse_response_json(v)
                 for sk, sv in subdata.items():
-                    data_dict['%s_%s' % (k, sk)] = sv
+                    data_dict['{}_{}'.format(k, sk)] = sv
             elif isinstance(v, list):
                 # Hard coded to this extractor
                 for attr in v:
                     if k == 'hairColor':
                         key = attr['color']
                     elif k == 'accessories':
-                        key = '%s_%s' % (k, attr['type'])
+                        key = '{}_{}'.format(k, attr['type'])
                     else:
                         continue
                     data_dict[key] = attr['confidence']
@@ -110,8 +109,7 @@ class MicrosoftAPIFaceEmotionExtractor(MicrosoftAPIFaceExtractor):
     def __init__(self, face_id=False, rectangle=False, landmarks=False,
                  subscription_key=None, location=None, api_version='v1.0',
                  rate_limit=None):
-        super(MicrosoftAPIFaceEmotionExtractor,
-              self).__init__(face_id,
+        super().__init__(face_id,
                              rectangle,
                              landmarks,
                              ['emotion'],
@@ -152,8 +150,7 @@ class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
         self.features = features if features else ['Tags', 'Categories',
                                                    'ImageType', 'Color',
                                                    'Adult']
-        super(MicrosoftVisionAPIExtractor,
-              self).__init__(subscription_key=subscription_key,
+        super().__init__(subscription_key=subscription_key,
                              location=location,
                              api_version=api_version,
                              rate_limit=rate_limit)
@@ -187,8 +184,7 @@ class MicrosoftVisionAPITagExtractor(MicrosoftVisionAPIExtractor):
 
     def __init__(self, subscription_key=None, location=None, api_version='v1.0',
                  rate_limit=None):
-        super(MicrosoftVisionAPITagExtractor,
-              self).__init__(features=['Tags'],
+        super().__init__(features=['Tags'],
                              subscription_key=subscription_key,
                              location=location,
                              api_version=api_version,
@@ -201,8 +197,7 @@ class MicrosoftVisionAPICategoryExtractor(MicrosoftVisionAPIExtractor):
 
     def __init__(self, subscription_key=None, location=None, api_version='v1.0',
                  rate_limit=None):
-        super(MicrosoftVisionAPICategoryExtractor,
-              self).__init__(features=['Categories'],
+        super().__init__(features=['Categories'],
                              subscription_key=subscription_key,
                              location=location,
                              api_version=api_version,
@@ -215,8 +210,7 @@ class MicrosoftVisionAPIImageTypeExtractor(MicrosoftVisionAPIExtractor):
 
     def __init__(self, subscription_key=None, location=None, api_version='v1.0',
                  rate_limit=None):
-        super(MicrosoftVisionAPIImageTypeExtractor,
-              self).__init__(features=['ImageType'],
+        super().__init__(features=['ImageType'],
                              subscription_key=subscription_key,
                              location=location,
                              api_version=api_version,
@@ -229,8 +223,7 @@ class MicrosoftVisionAPIColorExtractor(MicrosoftVisionAPIExtractor):
 
     def __init__(self, subscription_key=None, location=None, api_version='v1.0',
                  rate_limit=None):
-        super(MicrosoftVisionAPIColorExtractor,
-              self).__init__(features=['Color'],
+        super().__init__(features=['Color'],
                              subscription_key=subscription_key,
                              location=location,
                              api_version=api_version,
@@ -243,8 +236,7 @@ class MicrosoftVisionAPIAdultExtractor(MicrosoftVisionAPIExtractor):
 
     def __init__(self, subscription_key=None, location=None, api_version='v1.0',
                  rate_limit=None):
-        super(MicrosoftVisionAPIAdultExtractor,
-              self).__init__(features=['Adult'],
+        super().__init__(features=['Adult'],
                              subscription_key=subscription_key,
                              location=location,
                              api_version=api_version,

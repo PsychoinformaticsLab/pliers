@@ -1,4 +1,8 @@
 ''' Core transformer logic. '''
+from abc import ABCMeta, abstractmethod, abstractproperty
+import importlib
+import logging
+from functools import wraps
 
 from pliers import config
 from pliers.stimuli.base import Stim, _log_transformation, load_stims
@@ -7,11 +11,7 @@ from pliers.utils import (progress_bar_wrapper, isiterable,
                           isgenerator, listify, batch_iterable,
                           attempt_to_import, set_iterable_type)
 import pliers
-from six import with_metaclass, string_types
-from abc import ABCMeta, abstractmethod, abstractproperty
-import importlib
-import logging
-from functools import wraps
+
 
 multiprocessing = attempt_to_import('pathos.multiprocessing',
                                     'multiprocessing', ['ProcessingPool'])
@@ -19,7 +19,7 @@ multiprocessing = attempt_to_import('pathos.multiprocessing',
 _cache = {}
 
 
-class Transformer(with_metaclass(ABCMeta)):
+class Transformer(metaclass=ABCMeta):
     ''' Base class for all pliers Transformers.
 
     Args:
@@ -42,13 +42,13 @@ class Transformer(with_metaclass(ABCMeta)):
         if name is None:
             name = self.__class__.__name__
         self.name = name
-        super(Transformer, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _memoize(transform):
         @wraps(transform)
         def wrapper(self, stim, *args, **kwargs):
             use_cache = config.get_option('cache_transformers') \
-                and isinstance(stim, (Stim, string_types))
+                and isinstance(stim, (Stim, str))
             if use_cache:
                 key = hash((hash(self), hash(stim)))
                 if key in _cache:
@@ -88,7 +88,7 @@ class Transformer(with_metaclass(ABCMeta)):
                 _transform call.
         '''
 
-        if isinstance(stims, string_types):
+        if isinstance(stims, str):
             stims = load_stims(stims)
 
         # If stims is a CompoundStim and the Transformer is expecting a single
@@ -118,7 +118,7 @@ class Transformer(with_metaclass(ABCMeta)):
                 if validation == 'strict':
                     raise err
                 elif validation == 'warn':
-                    logging.warn(str(err))
+                    logging.warning(str(err))
                     return
                 elif validation == 'loose':
                     return
@@ -229,7 +229,7 @@ class BatchTransformerMixin(Transformer):
     def __init__(self, batch_size=None, *args, **kwargs):
         if batch_size:
             self._batch_size = batch_size
-        super(BatchTransformerMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _iterate(self, stims, validation='strict', *args, **kwargs):
         batches = batch_iterable(stims, self._batch_size)
@@ -272,14 +272,14 @@ class BatchTransformerMixin(Transformer):
     def _transform(self, stim, *args, **kwargs):
         stims = listify(stim)
         if all(self._stim_matches_input_types(s) for s in stims):
-            result = super(BatchTransformerMixin, self) \
+            result = super() \
                 ._transform(stims, *args, **kwargs)
             if isiterable(stim):
                 return result
             else:
                 return result[0]
         else:
-            return list(super(BatchTransformerMixin, self)
+            return list(super()
                         ._iterate(stims, *args, **kwargs))
 
 
@@ -315,3 +315,4 @@ def get_transformer(name, base=None, *args, **kwargs):
                 return cls(*args, **kwargs)
 
     raise KeyError("No transformer named '%s' found." % name)
+

@@ -1,20 +1,22 @@
 ''' Base Extractor class and associated functionality. '''
 
 from abc import ABCMeta, abstractmethod
-from six import with_metaclass
+import json
+
 import pandas as pd
 import numpy as np
-from pliers.transformers import Transformer
-from pliers.utils import isgenerator, flatten
 from pandas.api.types import is_numeric_dtype
 
+from pliers.transformers import Transformer
+from pliers.utils import isgenerator, flatten, listify
 
-class Extractor(with_metaclass(ABCMeta, Transformer)):
+
+class Extractor(Transformer, metaclass=ABCMeta):
 
     ''' Base class for all pliers Extractors.'''
 
     def transform(self, stim, *args, **kwargs):
-        result = super(Extractor, self).transform(stim, *args, **kwargs)
+        result = super().transform(stim, *args, **kwargs)
         return list(result) if isgenerator(result) else result
 
     @abstractmethod
@@ -29,7 +31,7 @@ class Extractor(with_metaclass(ABCMeta, Transformer)):
                                   "%s." % self.__class__.__name__)
 
 
-class ExtractorResult(object):
+class ExtractorResult:
 
     ''' Stores feature data produced by an Extractor.
 
@@ -47,9 +49,6 @@ class ExtractorResult(object):
             associated with the rows in data.
         orders (list, ndarray): Optional iterable giving the integer orders
             associated with the rows in data.
-        raw: The raw result (net of any containers or overhead) returned by
-            the underlying feature extraction tool. Can be an object of any
-            type.
     '''
 
     def __init__(self, data, stim, extractor, features=None, onsets=None,
@@ -75,7 +74,8 @@ class ExtractorResult(object):
         return self.to_df()
 
     def to_df(self, timing=True, metadata=False, format='wide',
-              extractor_name=False, object_id=True, **to_df_kwargs):
+              extractor_name=False, object_id=True, extractor_params=False,
+              **to_df_kwargs):
         ''' Convert current instance to a pandas DatasFrame.
 
         Args:
@@ -102,6 +102,10 @@ class ExtractorResult(object):
                 values, the special value 'auto' can be passed, in which case
                 the object_id column will only be inserted if the resulting
                 constant would be non-constant.
+            extractor_params (bool): if True, returns log_attributes of 
+                at extraction time, as stored in transformer_params attribute
+                in ExtractorResult.history. These are returned as serialized 
+                dictionary in extractor_params column.
 
         Returns:
             A pandas DataFrame.
@@ -110,8 +114,10 @@ class ExtractorResult(object):
         # Ideally, Extractors should implement their own _to_df() class method
         # that produces a DataFrame in standardized format. Failing that, we
         # assume self._data is already array-like and can be wrapped in a DF.
+
         if hasattr(self.extractor, '_to_df'):
             df = self.extractor._to_df(self, **to_df_kwargs)
+            features = self.features
         else:
             features = self.features
             data = np.array(self._data)
@@ -119,6 +125,11 @@ class ExtractorResult(object):
                 features = ['feature_%d' % (i + 1)
                             for i in range(data.shape[1])]
             df = pd.DataFrame(data, columns=features)
+
+        if features is not None:
+            index_cols = list(set(df.columns) - set(features))
+        else:
+            index_cols = []
 
         if hasattr(self, '_onsets'):
             onsets = np.array(self._onsets)
@@ -131,11 +142,9 @@ class ExtractorResult(object):
         orders = np.nan if orders is None else orders
 
         # If any features clash with protected keys, append underscore
-        protected = ['onset', 'order', 'duration', 'extractor', 'stim_name', \
+        protected = ['onset', 'order', 'duration', 'extractor', 'stim_name',
                      'class', 'filename', 'history', 'source_file']
         df = df.rename(columns={k: k + '_' for k in protected})
-
-        index_cols = []
 
         # Generally we leave it to Extractors to properly track the number of
         # objects returned in the result DF, using the 'object_id' column.
@@ -143,15 +152,16 @@ class ExtractorResult(object):
         # take our best guess. The logic is that we increment the object
         # counter for any row in the DF that cannot be uniquely distinguished
         # from other rows by onset and duration.
-        if object_id and 'object_id' not in df.columns:
-            index = pd.Series(onsets).astype(str) + '_' + \
-                pd.Series(durations).astype(str)
-            if object_id is True or (object_id == 'auto' and
-                                     len(set(index)) < len(df)):
-                ids = np.arange(len(df)) if len(index) == 1 \
-                    else df.groupby(index).cumcount()
-                df.insert(0, 'object_id', ids)
-                index_cols = ['object_id']
+        if object_id:
+            if 'object_id' not in df.columns:
+                index_cols.append('object_id')
+                index = pd.Series(onsets).astype(str) + '_' + \
+                    pd.Series(durations).astype(str)
+                if object_id is True or (object_id == 'auto' and
+                                         len(set(index)) < len(df)):
+                    ids = np.arange(len(df)) if len(index) == 1 \
+                        else df.groupby(index).cumcount()
+                    df.insert(0, 'object_id', ids)
 
         if timing is True or (timing == 'auto' and
                               (np.isfinite(durations).any() or
@@ -180,6 +190,10 @@ class ExtractorResult(object):
             hist = '' if self.stim.history is None else str(self.stim.history)
             df['history'] = hist
             df['source_file'] = self.history.to_df().iloc[0].source_file
+
+        if extractor_params:
+            dict_params = eval(self.history.transformer_params)
+            df['extractor_params'] = json.dumps(dict_params)
         return df
 
     @property
@@ -193,8 +207,8 @@ class ExtractorResult(object):
 
 
 def merge_results(results, format='wide', timing=True, metadata=True,
-                  extractor_names=True, object_id=True, aggfunc=None,
-                  invalid_results='ignore', **to_df_kwargs):
+                  extractor_names=True, object_id=True, extractor_params=False,
+                  aggfunc=None, invalid_results='ignore', **to_df_kwargs):
     ''' Merges a list of ExtractorResults instances and returns a pandas DF.
 
     Args:
@@ -229,7 +243,6 @@ def merge_results(results, format='wide', timing=True, metadata=True,
                   Extractor name and the second level containing the feature
                   name. This value is invalid if format='long' (and will raise
                   and error).
-
         object_id (bool): If True, attempts to intelligently add an
             'object_id' column that differentiates between multiple objects in
             the results that may share onsets/orders/durations (and would
@@ -237,6 +250,11 @@ def merge_results(results, format='wide', timing=True, metadata=True,
             ImageExtractors that identify multiple target objects (e.g., faces)
             within a single ImageStim. Default is 'auto', which includes the
             'object_id' column if and only if it has a non-constant value.
+        extractor_params (bool): If True, returns serialized extractor_params 
+            of the extractor, i.e. log_attributes at time of extraction. 
+            If format='wide', merge_results returns one column per extractor, 
+            each named ExtractorName#FeatureName#extractor_params.
+            If format='long', returns only one column named extractor_params.
         aggfunc (str, Callable): If format='wide' and extractor_names='drop',
             it's possible for name clashes between features to occur. In such
             cases, the aggfunc argument is passed onto pandas' pivot_table
@@ -270,7 +288,9 @@ def merge_results(results, format='wide', timing=True, metadata=True,
         if isinstance(r, ExtractorResult):
             dfs.append(r.to_df(timing=_timing, metadata=metadata,
                                format='long', extractor_name=True,
-                               object_id=_object_id, **to_df_kwargs))
+                               object_id=_object_id, 
+                               extractor_params=extractor_params,
+                               **to_df_kwargs))
         elif invalid_results == 'fail':
             raise ValueError("At least one of the provided results was not an"
                              "ExtractorResult. Set the invalid_results"
@@ -285,16 +305,15 @@ def merge_results(results, format='wide', timing=True, metadata=True,
     if object_id == 'auto' and data['object_id'].nunique() == 1:
         data = data.drop('object_id', axis=1)
 
+    unique_ext =  data['extractor'] + '#' + data['feature'].astype(str)
     if extractor_names in ['prepend', 'multi']:
-        data['feature'] = data['extractor'] + '#' + data['feature'].astype(str)
-
-    if extractor_names != 'column':
-        data = data.drop('extractor', axis=1)
+        data['feature'] = unique_ext
 
     if format == 'wide':
         ind_cols = {'stim_name', 'onset', 'order', 'duration', 'object_id',
                     'class', 'filename', 'history', 'source_file'}
         ind_cols = list(ind_cols & set(data.columns))
+
         # pandas groupby/index operations can't handle NaNs in index, (see
         # issue at https://github.com/pandas-dev/pandas/issues/3729), so we
         # replace NaNs with a placeholder and then re-substitute after
@@ -304,13 +323,24 @@ def merge_results(results, format='wide', timing=True, metadata=True,
 
         # Set default aggfunc based on column type, otherwise bad things happen
         if aggfunc is None:
-            aggfunc = 'mean' if is_numeric_dtype(data['value']) else 'first'
+            aggfunc = 'mean' if is_numeric_dtype(data['value']) else 'first' 
 
+        # add conditional on value of extractor_names
+        if extractor_params:
+            data['unique_extractor'] = unique_ext.astype(str) + '#extractor_params'
+            attrs = data.pivot_table(index=ind_cols, columns='unique_extractor',
+                                    values='extractor_params', aggfunc='first')
         data = data.pivot_table(index=ind_cols, columns='feature',
-                                values='value', aggfunc=aggfunc).reset_index()
+                                values='value', aggfunc=aggfunc)
+        if extractor_params:
+            data = pd.concat([data,attrs], axis=1)
+        data = data.reset_index()
         data.columns.name = None  # vestigial--is set to 'feature'
         data[ind_cols] = data[ind_cols].replace('PlAcEholdER', np.nan)
         data[ind_cols] = data[ind_cols].astype(dict(zip(ind_cols, dtypes)))
+
+    if extractor_names != 'column' and 'extractor' in data.columns:
+        data = data.drop('extractor', axis=1)
 
     if timing == 'auto' and 'onset' in data.columns:
         if data['onset'].isnull().all():

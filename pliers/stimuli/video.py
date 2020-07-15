@@ -1,8 +1,9 @@
 ''' Classes that represent video clips. '''
 
-from __future__ import division
 from math import ceil
+
 from moviepy.video.io.VideoFileClip import VideoFileClip
+
 from .base import Stim, _get_bytestring
 from .audio import AudioStim
 from .image import ImageStim
@@ -30,7 +31,7 @@ class VideoFrameStim(ImageStim):
             data = self.video.clip.get_frame(onset)
         if video.onset:
             onset += video.onset
-        super(VideoFrameStim, self).__init__(onset=onset,
+        super().__init__(onset=onset,
                                              duration=duration,
                                              data=data)
         self.name += 'frame[%s]' % frame_num
@@ -73,7 +74,7 @@ class VideoFrameCollectionStim(Stim):
             self.frame_index = range(int(ceil(self.fps * self.clip.duration)))
         duration = self.clip.duration
         self.n_frames = len(self.frame_index)
-        super(VideoFrameCollectionStim, self).__init__(filename,
+        super().__init__(filename,
                                                        onset=onset,
                                                        duration=duration,
                                                        url=url)
@@ -151,7 +152,7 @@ class VideoStim(VideoFrameCollectionStim):
 
     def __init__(self, filename=None, onset=None, url=None, clip=None):
         self._bytestring = None
-        super(VideoStim, self).__init__(filename=filename,
+        super().__init__(filename=filename,
                                         onset=onset,
                                         url=url,
                                         clip=clip)
@@ -167,7 +168,7 @@ class VideoStim(VideoFrameCollectionStim):
         if onset:
             index = int(onset * self.fps)
 
-        return super(VideoStim, self).get_frame(index)
+        return super().get_frame(index)
 
     def get_bytestring(self, encoding='utf-8'):
         ''' Return the video data as a bytestring.

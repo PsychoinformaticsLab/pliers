@@ -1,5 +1,6 @@
 import logging
 import os
+
 from pliers.transformers import BatchTransformerMixin
 from pliers.transformers.api import APITransformer
 from pliers.utils import attempt_to_import, verify_dependencies
@@ -49,13 +50,13 @@ class GoogleAPITransformer(APITransformer):
                 self.api_name, api_version, credentials=self.credentials,
                 discoveryServiceUrl=DISCOVERY_URL)
         except Exception as e:
-            logging.warn(str(e))
+            logging.warning(str(e))
             self.credentials = None
             self.service = None
         self.max_results = max_results
         self.num_retries = num_retries
         self.api_version = api_version
-        super(GoogleAPITransformer, self).__init__(rate_limit=rate_limit,
+        super().__init__(rate_limit=rate_limit,
                                                    **kwargs)
 
     @property
@@ -86,7 +87,7 @@ class GoogleVisionAPITransformer(GoogleAPITransformer, BatchTransformerMixin):
 
     def __init__(self, discovery_file=None, api_version='v1', max_results=100,
                  num_retries=3, rate_limit=None, batch_size=None):
-        super(GoogleVisionAPITransformer, self).__init__(discovery_file=discovery_file,
+        super().__init__(discovery_file=discovery_file,
                                                          api_version=api_version,
                                                          max_results=max_results,
                                                          num_retries=num_retries,

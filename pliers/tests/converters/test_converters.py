@@ -1,14 +1,18 @@
 from os.path import join
+
+import pytest
+
 from ..utils import get_test_data_path
 from pliers.converters import (get_converter,
                                VideoToAudioConverter,
                                VideoToTextConverter,
                                WitTranscriptionConverter,
-                               ComplexTextIterator)
+                               ComplexTextIterator,
+                               ExtractorResultToSeriesConverter)
 from pliers.converters.image import ImageToTextConverter
-from pliers.stimuli import (VideoStim, TextStim,
+from pliers.stimuli import (VideoStim, TextStim, SeriesStim,
                             ComplexTextStim, ImageStim)
-import pytest
+from pliers.extractors import ExtractorResult
 
 
 def test_get_converter():
@@ -51,3 +55,18 @@ def test_stim_iteration_converter():
     assert words[1].text == 'Sherlock'
     assert str(
         words[1].history) == 'ComplexTextStim->ComplexTextIterator/TextStim'
+
+
+def test_extractor_result_to_series_converter():
+    data = [[2, 4], [1, 7], [6, 6], [8, 2]]
+    result = ExtractorResult(data, None, None, features=['a', 'b'],
+                             onsets=[2, 4, 6, 8])
+    stims = ExtractorResultToSeriesConverter().transform(result)
+    assert len(stims) == 4
+    stim = stims[2]
+    assert isinstance(stim, SeriesStim)
+    assert stim.data.shape == (2,)
+    assert list(stim.data) == [6, 6]
+    assert stim.onset == 6
+    assert stim.duration is None
+    assert stim.order == 2

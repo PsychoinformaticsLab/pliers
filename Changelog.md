@@ -1,5 +1,56 @@
 # Changelog
 
+## 0.4.0 (July 14, 2020)
+This is a major release that adds support for several new feature extraction services/models, as well as a large number of minor bugfixes and improvements.
+
+New features and major improvements/bugfixes:
+* Add WordCounterExtractor (#364)
+* Add PretrainedBertEncodingExtractor from transformers #365
+* Add lemmatization to stemming filter (WordStemmingFilter) #366
+* Add Lancaster Sensorimotor Norms to PredefinedDictionaryExtractor #367
+* Remove deprecated Indico API extractors #369
+* Add AudioResamplingFilter #374
+* Add AudiosetLabelExtractor from Yamnet architecture #379 #399
+* Add BertLMExtractor, BertSentimentExtractor, BertSequenceEncodingExtractor #383 #397
+* Add log attributes to to_df #389
+* Add MetricExtractor #390 #398
+* Add ExtractorResult --> SeriesStim converter #394
+
+Minor improvements and bug fixes:
+* Fixes case of missing landmark type in GoogleVisionAPIFaceExtractor (#406)
+* Removed soundfile as dependency (#408)
+* Fix librosa import erroor (#405)
+* Fixes to Clarifai face extractor (#335, #357)
+* Added optional dependencies as 'extras' for pip install #358
+* Patch operations request for Google Video Intelligence #360
+* Miscellaneous fixes to tests and Travis CI #372 #375 #378 #380 #381
+* Fix index_cols behavior in to_df function  #376 #388
+* Drop vestigial Python 2 code #392
+* Upgrade Python syntax and add python_requires for 3.5+ #393
+
+## 0.3.0 (June 8, 2019)
+This is a major release that adds support for several new feature extraction services/models, as well as a large number of minor bugfixes and improvements.
+
+New features and major improvements/bugfixes:
+* Basic support for Google Natural Language API (#306)
+* Basic support for Google Video Intelligence API (#288)
+* Support for Rev.ai speech-to-text converter (#334)
+* Added several librosa features (#320)
+* Support for pre-trained Keras-based image classifiers (#341, #344)
+* Added .srt output functionality to `ComplexTextStim` (#301)
+* Added a `get_bytestring()` method to `ImageStim` and `VideoStim` classes (#324)
+* Expanded/improved `PredefinedDictionaryExtractor` list (#339, #351)
+* Adds `ImageResizeFilter` (#342)
+* Improved/fixed Dockerfile (#343)
+
+Minor improvements and bug fixes:
+* Fixed bug in `GoogleSpeechAPIConverter` that overwrote all but last speech block (#316)
+* Improved sampling accuracy in FrameSamplingFilter (#301)
+* Fixed bug in RGB information returned by GoogleVisionAPI (#296)
+* Fixed caching of transformations on file paths (#286)
+* Adds support for a few config options in Google Video Intelligence extractors (#337)
+* Various other minor improvements and fixes (#301, #308, #312, #324, #332)
+
 ## 0.2.3 (April 7, 2018)
 This is a minor release that adds several new features and bug fixes:
 * A number improvements to API transformers (custom marker for unit tests; key validation; large job limits; etc.; see #270)
@@ -39,7 +90,7 @@ This is a major release that adds many new features and transformers. Changes in
     * Static versioning for transformers (0.1 indicates initial working transformer, 1.0+ indicates fully-tested and often used transformer)
     * Added `TweetStim`, that can be initialized using Twitter's API, to the stimuli hierarchy
     * A update checker utility (in `pliers.utils`) that allows users to track changes to the output of different transformers for user-provided stimuli or a hand-selected battery of stimuli from the pliers test module
-    * A revamped and improved `config` module with exposed accessor methods 
+    * A revamped and improved `config` module with exposed accessor methods
 * New Transformers:
     * NLP Transformers:
         * TextVectorizerExtractor uses sklearn Vectorizers to extract bag-of-X features from a batch of text documents

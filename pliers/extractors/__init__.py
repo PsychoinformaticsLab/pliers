@@ -4,9 +4,7 @@ another `Stim` instance).
 '''
 
 from .base import Extractor, ExtractorResult, merge_results
-from .api import (IndicoAPITextExtractor,
-                  IndicoAPIImageExtractor,
-                  ClarifaiAPIImageExtractor,
+from .api import (ClarifaiAPIImageExtractor,
                   ClarifaiAPIVideoExtractor,
                   GoogleVisionAPIFaceExtractor,
                   GoogleVisionAPILabelExtractor,
@@ -54,24 +52,27 @@ from .audio import (LibrosaFeatureExtractor,
                     TempoExtractor,
                     BeatTrackExtractor,
                     HarmonicExtractor,
-                    PercussiveExtractor)
+                    PercussiveExtractor,
+                    AudiosetLabelExtractor)
 from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
                     VibranceExtractor, FaceRecognitionFaceEncodingsExtractor,
                     FaceRecognitionFaceLandmarksExtractor,
                     FaceRecognitionFaceLocationsExtractor)
-from .models import TensorFlowKerasInceptionV3Extractor
+from .misc import MetricExtractor
+from .models import TensorFlowKerasApplicationExtractor
 from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
                    NumUniqueWordsExtractor, PartOfSpeechExtractor,
                    WordEmbeddingExtractor, TextVectorizerExtractor,
-                   VADERSentimentExtractor, SpaCyExtractor)
+                   VADERSentimentExtractor, SpaCyExtractor,
+                   WordCounterExtractor, BertExtractor,
+                   BertSequenceEncodingExtractor, BertLMExtractor,
+                   BertSentimentExtractor)
 from .video import (FarnebackOpticalFlowExtractor)
 
 __all__ = [
     'Extractor',
     'ExtractorResult',
-    'IndicoAPITextExtractor',
-    'IndicoAPIImageExtractor',
     'ClarifaiAPIImageExtractor',
     'ClarifaiAPIVideoExtractor',
     'STFTAudioExtractor',
@@ -120,7 +121,7 @@ __all__ = [
     'MicrosoftVisionAPIImageTypeExtractor',
     'MicrosoftVisionAPIColorExtractor',
     'MicrosoftVisionAPIAdultExtractor',
-    'TensorFlowKerasInceptionV3Extractor',
+    'TensorFlowKerasApplicationExtractor',
     'ComplexTextExtractor',
     'DictionaryExtractor',
     'PredefinedDictionaryExtractor',
@@ -140,5 +141,12 @@ __all__ = [
     'TempoExtractor',
     'BeatTrackExtractor',
     'HarmonicExtractor',
-    'PercussiveExtractor'
+    'PercussiveExtractor',
+    'BertExtractor',
+    'BertSequenceEncodingExtractor',
+    'BertLMExtractor',
+    'BertSentimentExtractor',
+    'AudiosetLabelExtractor',
+    'WordCounterExtractor',
+    'MetricExtractor'
 ]

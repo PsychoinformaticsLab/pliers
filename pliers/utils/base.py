@@ -3,12 +3,14 @@
 import collections
 import os
 from abc import ABCMeta, abstractmethod, abstractproperty
-from six import string_types, with_metaclass
-from tqdm import tqdm
-from pliers import config
-from pliers.support.exceptions import MissingDependencyError
 from types import GeneratorType
 from itertools import islice
+
+from tqdm import tqdm
+import pandas as pd
+
+from pliers import config
+from pliers.support.exceptions import MissingDependencyError
 
 
 def listify(obj):
@@ -20,9 +22,8 @@ def listify(obj):
 def flatten(l):
     ''' Flatten an iterable. '''
     for el in l:
-        if isinstance(el, collections.Iterable) and not isinstance(el, string_types):
-            for sub in flatten(el):
-                yield sub
+        if isinstance(el, collections.Iterable) and not isinstance(el, str):
+            yield from flatten(el)
         else:
             yield el
 
@@ -66,7 +67,7 @@ def set_iterable_type(obj):
         return [set_iterable_type(i) for i in obj]
 
 
-class classproperty(object):
+class classproperty:
     ''' Implements a @classproperty decorator analogous to @classmethod.
     Solution from: http://stackoverflow.com/questions/128573/using-property-on-classmethodss
     '''
@@ -79,7 +80,7 @@ class classproperty(object):
 
 def isiterable(obj):
     ''' Returns True if the object is one of allowable iterable types. '''
-    return isinstance(obj, (list, tuple, GeneratorType, tqdm))
+    return isinstance(obj, (list, tuple, pd.Series, GeneratorType, tqdm))
 
 
 def isgenerator(obj):
@@ -118,9 +119,9 @@ def verify_dependencies(dependencies):
             missing.append(module_names[dep].package)
     if missing:
         raise MissingDependencyError(missing)
+        
 
-
-class EnvironmentKeyMixin(object):
+class EnvironmentKeyMixin:
 
     @classproperty
     def _env_keys(cls):
@@ -135,7 +136,7 @@ class EnvironmentKeyMixin(object):
         return all([k in os.environ for k in cls.env_keys])
 
 
-class APIDependent(with_metaclass(ABCMeta, EnvironmentKeyMixin)):
+class APIDependent(EnvironmentKeyMixin, metaclass=ABCMeta):
 
     _rate_limit = 0
 
@@ -144,7 +145,7 @@ class APIDependent(with_metaclass(ABCMeta, EnvironmentKeyMixin)):
         self.validated_keys = set()
         self.rate_limit = rate_limit if rate_limit else self._rate_limit
         self._last_request_time = 0
-        super(APIDependent, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @abstractproperty
     def api_keys(self):

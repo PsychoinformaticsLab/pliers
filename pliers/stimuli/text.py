@@ -1,9 +1,10 @@
 ''' Classes that represent text or sequences of text. '''
 
 import re
+from urllib.request import urlopen
+
 import pandas as pd
-from six import string_types
-from six.moves.urllib.request import urlopen
+
 from pliers.support.decorators import requires_nltk_corpus
 from pliers.utils import attempt_to_import, verify_dependencies
 from .base import Stim
@@ -38,7 +39,7 @@ class TextStim(Stim):
             text = urlopen(url).read()
         self.text = text
         name = 'text[%s]' % text[:40]  # Truncate at 40 chars
-        super(TextStim, self).__init__(filename, onset, duration, order,
+        super().__init__(filename, onset, duration, order,
                                        name=name, url=url)
 
     @property
@@ -107,7 +108,7 @@ class ComplexTextStim(Stim):
             raise ValueError("At least one of the 'filename', 'elements', or "
                              "text arguments must be specified.")
 
-        super(ComplexTextStim, self).__init__(filename, onset, duration)
+        super().__init__(filename, onset, duration)
 
         self._elements = []
 
@@ -180,7 +181,7 @@ class ComplexTextStim(Stim):
             end_ = tuple(row.end)
             duration = self._to_sec(end_) - start_time
 
-            line = re.sub('\s+', ' ', row.text)
+            line = re.sub(r'\s+', ' ', row.text)
             list_[i] = [line, start_time, duration]
 
         # Convert to pandas DataFrame
@@ -219,7 +220,7 @@ class ComplexTextStim(Stim):
     def _from_text(self, text, unit, tokenizer, language):
 
         if tokenizer is not None:
-            if isinstance(tokenizer, string_types):
+            if isinstance(tokenizer, str):
                 tokens = re.findall(tokenizer, text)
             else:
                 tokens = tokenizer.tokenize(text)

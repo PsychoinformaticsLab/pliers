@@ -1,9 +1,9 @@
 ''' Base implementation for all API transformers. '''
+import time
 
 from pliers import config
 from pliers.transformers import Transformer
 from pliers.utils import isiterable, listify, APIDependent
-import time
 
 
 class APITransformer(APIDependent, Transformer):
@@ -41,4 +41,4 @@ class APITransformer(APIDependent, Transformer):
                              "you have authorized credentials for accessing "
                              "the target API." % self.__class__.__name__)
 
-        return super(APITransformer, self)._transform(stim, *args, **kwargs)
+        return super()._transform(stim, *args, **kwargs)

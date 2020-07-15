@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+
 from pliers.diagnostics import Diagnostics
 from pliers.diagnostics import correlation_matrix
 from pliers.diagnostics import eigenvalues

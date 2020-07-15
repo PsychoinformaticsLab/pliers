@@ -4,13 +4,14 @@ import os
 import base64
 import json
 import logging
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
+
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.utils import attempt_to_import, verify_dependencies
 from pliers.converters.audio import AudioToTextConverter
 from pliers.transformers.api import APITransformer
-from urllib.parse import urlencode
-from urllib.request import Request, urlopen
-from urllib.error import URLError, HTTPError
 
 sr = attempt_to_import('speech_recognition', 'sr')
 
@@ -56,7 +57,7 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
         self.password = password
         self.resolution = resolution
         self.model = model
-        super(IBMSpeechAPIConverter, self).__init__(rate_limit=rate_limit)
+        super().__init__(rate_limit=rate_limit)
 
     @property
     def api_keys(self):
@@ -69,7 +70,7 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
             self._send_request(request)
             return True
         except Exception as e:
-            logging.warn(str(e))
+            logging.warning(str(e))
             return False
 
     def _convert(self, audio):
@@ -84,13 +85,13 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
             results = _json['results']
         else:
             raise Exception(
-                'received invalid results from API: {0}'.format(str(_json)))
+                'received invalid results from API: {}'.format(str(_json)))
         elements = []
         order = 0
         for result in results:
             if result['final'] is True:
                 timestamps = result['alternatives'][0]['timestamps']
-                if self.resolution is 'words':
+                if self.resolution == 'words':
                     for entry in timestamps:
                         text = entry[0]
                         start = entry[1]
@@ -100,7 +101,7 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
                                                  duration=end-start,
                                                  order=order))
                         order += 1
-                elif self.resolution is 'phrases':
+                elif self.resolution == 'phrases':
                     text = result['alternatives'][0]['transcript']
                     start = timestamps[0][1]
                     end = timestamps[-1][2]
@@ -118,8 +119,8 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
             convert_rate=None if clip.sample_rate >= 16000 else 16000,
             convert_width=None if clip.sample_width >= 2 else 2
         )
-        model = "{0}_BroadbandModel".format(self.model)
-        url = "https://stream.watsonplatform.net/speech-to-text/api/v1/recognize?{0}".format(urlencode({
+        model = "{}_BroadbandModel".format(self.model)
+        url = "https://stream.watsonplatform.net/speech-to-text/api/v1/recognize?{}".format(urlencode({
             "profanity_filter": "false",
             "continuous": "true",
             "model": model,
@@ -135,21 +136,21 @@ class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
     def _send_request(self, request):
         if hasattr("", "encode"):  # Python 2.6 compatibility
             authorization_value = base64.standard_b64encode(
-                "{0}:{1}".format(self.username, self.password).encode("utf-8")).decode("utf-8")
+                "{}:{}".format(self.username, self.password).encode("utf-8")).decode("utf-8")
         else:
             authorization_value = base64.standard_b64encode(
-                "{0}:{1}".format(self.username, self.password))
+                "{}:{}".format(self.username, self.password))
         request.add_header(
-            "Authorization", "Basic {0}".format(authorization_value))
+            "Authorization", "Basic {}".format(authorization_value))
 
         try:
             response = urlopen(request, timeout=None)
         except HTTPError as e:
-            raise Exception("recognition request failed: {0}".format(
-                getattr(e, "reason", "status {0}".format(e.code))))
+            raise Exception("recognition request failed: {}".format(
+                getattr(e, "reason", "status {}".format(e.code))))
         except URLError as e:
             raise Exception(
-                "recognition connection failed: {0}".format(e.reason))
+                "recognition connection failed: {}".format(e.reason))
 
         response_text = response.read().decode("utf-8")
         result = json.loads(response_text)

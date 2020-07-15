@@ -3,12 +3,13 @@
 import logging
 import os
 from abc import abstractproperty
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError
+
 from pliers.stimuli.text import ComplexTextStim
 from pliers.utils import attempt_to_import, verify_dependencies
 from pliers.converters.audio import AudioToTextConverter
 from pliers.transformers.api import APITransformer
-from six.moves.urllib.request import Request, urlopen
-from six.moves.urllib.error import HTTPError
 
 sr = attempt_to_import('speech_recognition', 'sr')
 
@@ -42,7 +43,7 @@ class SpeechRecognitionAPIConverter(APITransformer, AudioToTextConverter):
                                  " SpeechRecognitionAPIConverter is initialized.")
         self.recognizer = sr.Recognizer()
         self.api_key = api_key
-        super(SpeechRecognitionAPIConverter, self).__init__(rate_limit=rate_limit)
+        super().__init__(rate_limit=rate_limit)
 
     def _convert(self, audio):
         verify_dependencies(['sr'])
@@ -75,5 +76,5 @@ class WitTranscriptionConverter(SpeechRecognitionAPIConverter):
             urlopen(request)
             return True
         except HTTPError as e:
-            logging.warn(str(e))
+            logging.warning(str(e))
             return False

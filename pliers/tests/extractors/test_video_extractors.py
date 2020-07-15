@@ -1,9 +1,11 @@
 from os.path import join
+
+import numpy as np
+import pytest
+
 from ..utils import get_test_data_path
 from pliers.extractors import FarnebackOpticalFlowExtractor
 from pliers.stimuli import VideoStim
-import numpy as np
-import pytest
 
 VIDEO_DIR = join(get_test_data_path(), 'video')
 

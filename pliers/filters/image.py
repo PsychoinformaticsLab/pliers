@@ -1,11 +1,11 @@
 ''' Filters that operate on ImageStim inputs. '''
 
-from pliers.stimuli.image import ImageStim
+import numpy as np
 from PIL import Image
 from PIL import ImageFilter as PillowFilter
-from .base import Filter
 
-import numpy as np
+from pliers.stimuli.image import ImageStim
+from .base import Filter
 
 
 class ImageFilter(Filter):
@@ -30,7 +30,7 @@ class ImageCroppingFilter(ImageFilter):
 
     def __init__(self, box=None):
         self.box = box
-        super(ImageCroppingFilter, self).__init__()
+        super().__init__()
 
     def _filter(self, stim):
         if self.box:
@@ -78,7 +78,7 @@ class ImageResizingFilter(ImageFilter):
                 "Unknown resampling method '{}'. Allowed values are '{}'"
                 .format(resample, "', '".join(resampling_mapping.keys())))
         self.resample = resampling_mapping[resample]
-        super(ImageResizingFilter, self).__init__()
+        super().__init__()
 
     def _filter(self, stim):
         pillow_img = Image.fromarray(stim.data)
@@ -142,7 +142,7 @@ class PillowImageFilter(ImageFilter):
             raise ValueError("Must provide an image_filter as a string, type, "
                              "or ImageFilter object. ")
 
-        super(PillowImageFilter, self).__init__()
+        super().__init__()
 
     def _filter(self, stim):
         pillow_img = Image.fromarray(stim.data)

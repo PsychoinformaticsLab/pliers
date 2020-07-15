@@ -1,13 +1,15 @@
 ''' Classes that represent images. '''
 
-from .base import Stim
-from imageio import imread, imsave
-from PIL import Image
+from functools import lru_cache
 from urllib.request import urlopen
 import io
+
+from imageio import imread, imsave
+from PIL import Image
 import numpy as np
-from functools import lru_cache
+
 from .base import _get_bytestring
+from .base import Stim
 
 
 class ImageStim(Stim):
@@ -38,7 +40,7 @@ class ImageStim(Stim):
             filename = url
         self.data = data
         self._bytestring = None
-        super(ImageStim, self).__init__(filename, onset=onset,
+        super().__init__(filename, onset=onset,
                                         duration=duration, url=url)
 
     def save(self, path):

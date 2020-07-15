@@ -3,7 +3,7 @@
 from pliers.extractors import Extractor, merge_results
 from pliers.transformers import get_transformer
 from pliers.utils import attempt_to_import
-from six import string_types
+
 
 sklearn = attempt_to_import('sklearn')
 if sklearn:
@@ -26,7 +26,7 @@ class PliersTransformer(SklearnBase):
     '''
 
     def __init__(self, transformer):
-        if isinstance(transformer, string_types):
+        if isinstance(transformer, str):
             self.transformer = get_transformer(transformer)
         else:
             self.transformer = transformer
@@ -45,9 +45,9 @@ class PliersTransformer(SklearnBase):
             result = merge_results(result, format='wide',
                                    extractor_names=False)
 
-        extra_columns = list(set(['onset', 'duration', 'order', 'history',
+        extra_columns = list({'onset', 'duration', 'order', 'history',
                                   'class', 'filename', 'stim_name',
-                                  'source_file', 'object_id', 'extractor']) &
+                                  'source_file', 'object_id', 'extractor'} &
                              set(result.columns))
         self.metadata_ = result[extra_columns]
         result.drop(extra_columns, axis=1, inplace=True, errors='ignore')

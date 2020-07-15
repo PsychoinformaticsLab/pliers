@@ -1,8 +1,10 @@
 from os.path import join
+
+import numpy as np
+
 from ..utils import get_test_data_path
 from pliers.converters import VideoToAudioConverter
 from pliers.stimuli import VideoStim
-import numpy as np
 
 VIDEO_DIR = join(get_test_data_path(), 'video')
 

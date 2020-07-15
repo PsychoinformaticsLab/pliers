@@ -2,11 +2,11 @@
 Extractors that operate primarily or exclusively on Video stimuli.
 '''
 
+import numpy as np
+
 from pliers.stimuli.video import VideoStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.utils import attempt_to_import, verify_dependencies
-
-import numpy as np
 
 cv2 = attempt_to_import('cv2')
 
@@ -61,7 +61,7 @@ class FarnebackOpticalFlowExtractor(VideoExtractor):
         self.poly_sigma = poly_sigma
         self.flags = flags
         self.show = show
-        super(FarnebackOpticalFlowExtractor, self).__init__()
+        super().__init__()
 
     def _extract(self, stim):
         verify_dependencies(['cv2'])

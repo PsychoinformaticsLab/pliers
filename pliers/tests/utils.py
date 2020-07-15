@@ -1,10 +1,13 @@
 from os.path import dirname, join
+from copy import deepcopy
+
+import numpy as np
+import pandas as pd
+
 from pliers.stimuli import ImageStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.transformers import BatchTransformerMixin
-import numpy as np
-from copy import deepcopy
-import pandas as pd
+
 
 def get_test_data_path():
     """Returns the path to test datasets """
@@ -21,7 +24,7 @@ class DummyExtractor(Extractor):
 
     def __init__(self, param_A=None, param_B='pie', name=None, n_rows=100,
                  n_cols=3, max_time=1000):
-        super(DummyExtractor, self).__init__()
+        super().__init__()
         self.param_A = param_A
         self.param_B = param_B
         if name is not None:
@@ -44,7 +47,7 @@ class DummyBatchExtractor(BatchTransformerMixin, Extractor):
 
     def __init__(self, *args, **kwargs):
         self.num_calls = 0
-        super(DummyBatchExtractor, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _extract(self, stims):
         self.num_calls += 1

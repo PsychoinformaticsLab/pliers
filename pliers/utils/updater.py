@@ -2,13 +2,16 @@
 
 import glob
 import datetime
-import pandas as pd
-import numpy as np
 from os.path import realpath, join, dirname, exists, expanduser
-from pliers.stimuli import load_stims
-from pliers.transformers import get_transformer
 import hashlib
 import pickle
+
+import pandas as pd
+import numpy as np
+
+from pliers.stimuli import load_stims
+from pliers.transformers import get_transformer
+
 
 def hash_data(data, blocksize=65536):
     """" Hashes list of data, strings or data """
@@ -89,7 +92,7 @@ def check_updates(transformers, datastore=None, stimuli=None):
             if str(obj.__hash__()) == hash_tr:
                 return attr
 
-    delta_t = set([m.split('.')[0] for m in mismatches])
+    delta_t = {m.split('.')[0] for m in mismatches}
     delta_t = [get_trans(dt) for dt in delta_t]
 
     return {'transformers': delta_t, 'mismatches': mismatches}

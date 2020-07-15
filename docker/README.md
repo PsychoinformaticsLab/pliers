@@ -21,7 +21,6 @@ To use it:
 WIT_AI_API_KEY=abc123
 IBM_USERNAME=joe@schmo.edu
 IBM_PASSWORD=xyzabc
-INDICO_APP_KEY=abcyyz
 GOOGLE_APPLICATION_CREDENTIALS=/root/share/googleapi.json
 CLARIFAI_API_KEY=hhhvvv
 ```

@@ -1,11 +1,10 @@
 ''' Filters that operate on TextStim inputs. '''
 
+import numpy as np
+
 from pliers.stimuli.video import VideoStim, VideoFrameCollectionStim
 from pliers.utils import attempt_to_import, verify_dependencies
 from .base import Filter, TemporalTrimmingFilter
-
-import numpy as np
-
 
 cv2 = attempt_to_import('cv2')
 
@@ -40,7 +39,7 @@ class FrameSamplingFilter(Filter):
         self.every = every
         self.hertz = hertz
         self.top_n = top_n
-        super(FrameSamplingFilter, self).__init__()
+        super().__init__()
 
     def _filter(self, video):
         if not isinstance(video, VideoStim):

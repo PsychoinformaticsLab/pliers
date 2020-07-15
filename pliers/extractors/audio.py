@@ -1,13 +1,23 @@
 ''' Extractors that operate on AudioStim inputs. '''
+
+from abc import ABCMeta
+from os import path
+import sys
+import logging
+
+import numpy as np
+from scipy import fft
+import pandas as pd
+
 from pliers.stimuli.audio import AudioStim
 from pliers.stimuli.text import ComplexTextStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.utils import attempt_to_import, verify_dependencies, listify
-import numpy as np
-from scipy import fft
-from abc import ABCMeta
+from pliers.support.exceptions import MissingDependencyError
+from pliers.support.setup_yamnet import YAMNET_PATH
 
 librosa = attempt_to_import('librosa')
+tf = attempt_to_import('tensorflow')
 
 
 class AudioExtractor(Extractor):
@@ -49,7 +59,7 @@ class STFTAudioExtractor(AudioExtractor):
         self.hop_size = hop_size
         self.spectrogram = spectrogram
         self.freq_bins = freq_bins
-        super(STFTAudioExtractor, self).__init__()
+        super().__init__()
 
     def _stft(self, stim):
         x = stim.data
@@ -149,7 +159,7 @@ class LibrosaFeatureExtractor(AudioExtractor, metaclass=ABCMeta):
             self._feature = feature
         self.hop_length = hop_length
         self.librosa_kwargs = librosa_kwargs
-        super(LibrosaFeatureExtractor, self).__init__()
+        super().__init__()
 
     def get_feature_names(self):
         return self._feature
@@ -161,12 +171,12 @@ class LibrosaFeatureExtractor(AudioExtractor, metaclass=ABCMeta):
         elif self._feature == 'tonnetz':
             return getattr(librosa.feature, self._feature)(
                 y=stim.data, sr=stim.sampling_rate, **self.librosa_kwargs)
-            
+
         elif self._feature in[ 'onset_detect', 'onset_strength_multi']:
             return getattr(librosa.onset, self._feature)(
                 y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
                 **self.librosa_kwargs)
-            
+
         elif self._feature in[ 'tempo', 'beat_track']:
             return getattr(librosa.beat, self._feature)(
                 y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
@@ -182,7 +192,7 @@ class LibrosaFeatureExtractor(AudioExtractor, metaclass=ABCMeta):
                 **self.librosa_kwargs)
 
     def _extract(self, stim):
-        
+
         values = self._get_values(stim)
 
         if self._feature=='beat_track':
@@ -197,11 +207,11 @@ class LibrosaFeatureExtractor(AudioExtractor, metaclass=ABCMeta):
         onsets = librosa.frames_to_time(range(n_frames),
                                         sr=stim.sampling_rate,
                                         hop_length=self.hop_length)
-        
+
         onsets = onsets + stim.onset if stim.onset else onsets
-        
+
         durations = [self.hop_length / float(stim.sampling_rate)] * n_frames
-           
+
         return ExtractorResult(values, stim, self, features=feature_names,
                                onsets=onsets, durations=durations,
                                orders=list(range(n_frames)))
@@ -212,7 +222,7 @@ class SpectralCentroidExtractor(LibrosaFeatureExtractor):
     ''' Extracts the spectral centroids from audio using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.spectral_centroid.html#librosa.feature.spectral_centroid.'''
 
     _feature = 'spectral_centroid'
 
@@ -223,7 +233,7 @@ class SpectralBandwidthExtractor(LibrosaFeatureExtractor):
     Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.spectral_bandwidth.html#librosa.feature.spectral_bandwidth.'''
 
     _feature = 'spectral_bandwidth'
 
@@ -234,7 +244,7 @@ class SpectralFlatnessExtractor(LibrosaFeatureExtractor):
     Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.spectral_flatness.html#librosa.feature.spectral_flatness.'''
 
     _feature = 'spectral_flatness'
 
@@ -244,13 +254,13 @@ class SpectralContrastExtractor(LibrosaFeatureExtractor):
     ''' Extracts the spectral contrast from audio using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.spectral_contrast.html#librosa.feature.spectral_contrast.'''
 
     _feature = 'spectral_contrast'
 
     def __init__(self, n_bands=6, **kwargs):
         self.n_bands = n_bands
-        super(SpectralContrastExtractor, self).__init__(
+        super().__init__(
             n_bands=n_bands, **kwargs)
 
     def get_feature_names(self):
@@ -264,7 +274,7 @@ class SpectralRolloffExtractor(LibrosaFeatureExtractor):
     ''' Extracts the roll-off frequency from audio using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.spectral_rolloff.html#librosa.feature.spectral_rolloff.'''
 
     _feature = 'spectral_rolloff'
 
@@ -274,13 +284,13 @@ class PolyFeaturesExtractor(LibrosaFeatureExtractor):
     ''' Extracts the coefficients of fitting an nth-order polynomial to the columns of an audio's spectrogram (via Librosa).
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.poly_features.html#librosa.feature.poly_features.'''
 
     _feature = 'poly_features'
 
     def __init__(self, order=1, **kwargs):
         self.order = order
-        super(PolyFeaturesExtractor, self).__init__(order=order, **kwargs)
+        super().__init__(order=order, **kwargs)
 
     def get_feature_names(self):
         return ['coefficient_%d' % i for i in range(self.order + 1)]
@@ -292,7 +302,7 @@ class RMSExtractor(LibrosaFeatureExtractor):
     library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.rms.html?highlight=rms#librosa.feature.rms.'''
 
     _feature = 'rms'
 
@@ -303,7 +313,7 @@ class OnsetDetectExtractor(LibrosaFeatureExtractor):
     library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.onset.onset_detect.html#librosa.onset.onset_detect.'''
 
     _feature = 'onset_detect'
 
@@ -314,7 +324,7 @@ class TempoExtractor(LibrosaFeatureExtractor):
     library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.beat.tempo.html#librosa.beat.tempo.'''
 
     _feature = 'tempo'
 
@@ -325,7 +335,7 @@ class BeatTrackExtractor(LibrosaFeatureExtractor):
     library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.beat.beat_track.html#librosa.beat.beat_track.'''
 
     _feature = 'beat_track'
 
@@ -336,17 +346,17 @@ class OnsetStrengthMultiExtractor(LibrosaFeatureExtractor):
     library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.onset.onset_strength_multi.html#librosa.onset.onset_strength_multi.'''
 
     _feature = 'onset_strength_multi'
-   
+
 
 class ZeroCrossingRateExtractor(LibrosaFeatureExtractor):
 
     ''' Extracts the zero-crossing rate of audio using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.zero_crossing_rate.html#librosa.feature.zero_crossing_rate.'''
 
     _feature = 'zero_crossing_rate'
 
@@ -357,13 +367,13 @@ class ChromaSTFTExtractor(LibrosaFeatureExtractor):
     library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.chroma_stft.html#librosa.feature.chroma_stft.'''
 
     _feature = 'chroma_stft'
 
     def __init__(self, n_chroma=12, **kwargs):
         self.n_chroma = n_chroma
-        super(ChromaSTFTExtractor, self).__init__(n_chroma=n_chroma, **kwargs)
+        super().__init__(n_chroma=n_chroma, **kwargs)
 
     def get_feature_names(self):
         return ['chroma_%d' % i for i in range(self.n_chroma)]
@@ -374,13 +384,13 @@ class ChromaCQTExtractor(LibrosaFeatureExtractor):
     ''' Extracts a constant-q chromogram from audio using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.chroma_cqt.html#librosa.feature.chroma_cqt.'''
 
     _feature = 'chroma_cqt'
 
     def __init__(self, n_chroma=12, **kwargs):
         self.n_chroma = n_chroma
-        super(ChromaCQTExtractor, self).__init__(n_chroma=n_chroma, **kwargs)
+        super().__init__(n_chroma=n_chroma, **kwargs)
 
     def get_feature_names(self):
         return ['chroma_cqt_%d' % i for i in range(self.n_chroma)]
@@ -392,13 +402,13 @@ class ChromaCENSExtractor(LibrosaFeatureExtractor):
     chromogram from audio (via Librosa).
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.chroma_cens.html#librosa.feature.chroma_cens.'''
 
     _feature = 'chroma_cens'
 
     def __init__(self, n_chroma=12, **kwargs):
         self.n_chroma = n_chroma
-        super(ChromaCENSExtractor, self).__init__(n_chroma=n_chroma, **kwargs)
+        super().__init__(n_chroma=n_chroma, **kwargs)
 
     def get_feature_names(self):
         return ['chroma_cens_%d' % i for i in range(self.n_chroma)]
@@ -409,13 +419,13 @@ class MelspectrogramExtractor(LibrosaFeatureExtractor):
     ''' Extracts mel-scaled spectrogram from audio using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.melspectrogram.html#librosa.feature.melspectrogram.'''
 
     _feature = 'melspectrogram'
 
     def __init__(self, n_mels=128, **kwargs):
         self.n_mels = n_mels
-        super(MelspectrogramExtractor, self).__init__(n_mels=n_mels, **kwargs)
+        super().__init__(n_mels=n_mels, **kwargs)
 
     def get_feature_names(self):
         return ['mel_%d' % i for i in range(self.n_mels)]
@@ -427,13 +437,13 @@ class MFCCExtractor(LibrosaFeatureExtractor):
     Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.mfcc.html#librosa.feature.mfcc.'''
 
     _feature = 'mfcc'
 
     def __init__(self, n_mfcc=20, **kwargs):
         self.n_mfcc = n_mfcc
-        super(MFCCExtractor, self).__init__(n_mfcc=n_mfcc, **kwargs)
+        super().__init__(n_mfcc=n_mfcc, **kwargs)
 
     def get_feature_names(self):
         return ['mfcc_%d' % i for i in range(self.n_mfcc)]
@@ -445,7 +455,7 @@ class TonnetzExtractor(LibrosaFeatureExtractor):
     library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.tonnetz.html#librosa.feature.tonnetz.'''
 
     _feature = 'tonnetz'
 
@@ -458,13 +468,13 @@ class TempogramExtractor(LibrosaFeatureExtractor):
     ''' Extracts a tempogram from audio using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/feature.html.'''
+    https://librosa.org/librosa/generated/librosa.feature.tempogram.html#librosa.feature.tempogram.'''
 
     _feature = 'tempogram'
 
     def __init__(self, win_length=384, **kwargs):
         self.win_length = win_length
-        super(TempogramExtractor, self).__init__(win_length=win_length,
+        super().__init__(win_length=win_length,
                                                  **kwargs)
 
     def get_feature_names(self):
@@ -476,7 +486,7 @@ class HarmonicExtractor(LibrosaFeatureExtractor):
     ''' Extracts the harmonic elements from an audio time-series using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/effect.html.'''
+    https://librosa.org/librosa/generated/librosa.effects.harmonic.html#librosa.effects.harmonic.'''
 
     _feature = 'harmonic'
 
@@ -486,6 +496,126 @@ class PercussiveExtractor(LibrosaFeatureExtractor):
     ''' Extracts the percussive elements from an audio time-series using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.github.io/librosa/effect.html.'''
+    https://librosa.org/librosa/generated/librosa.effects.percussive.html#librosa.effects.percussive.'''
+
 
     _feature = 'percussive'
+
+
+class AudiosetLabelExtractor(AudioExtractor):
+
+    ''' Extract probability of 521 audio event classes based on AudioSet
+    corpus using a YAMNet architecture. Code available at:
+    https://github.com/tensorflow/models/tree/master/research/audioset/yamnet
+
+    Args:
+    hop_size (float): size of the audio segment (in seconds) on which label
+        extraction is performed.
+    top_n (int): specifies how many of the highest label probabilities are
+        returned. If None, all labels (or all in labels) are returned.
+        Top_n and labels are mutually exclusive arguments.
+    labels (list): specifies subset of labels for which probabilities
+        are to be returned. If None, all labels (or top_n) are returned.
+        The full list of labels is available in the audioset/yamnet
+        repository (see yamnet_class_map.csv).
+    weights_path (optional): full path to model weights file. If not provided,
+        weights from pretrained YAMNet module are used.
+    yamnet_kwargs (optional): Optional named arguments that modify input
+        parameters for the model (see params.py file in yamnet repository)
+    '''
+
+    _log_attributes = ('hop_size', 'top_n', 'labels', 'weights_path',
+                       'yamnet_kwargs')
+
+    def __init__(self, hop_size=0.1, top_n=None, labels=None,
+                 weights_path=None, **yamnet_kwargs):
+        verify_dependencies(['tensorflow'])
+        try:
+            sys.path.insert(0, str(YAMNET_PATH))
+            self.yamnet = attempt_to_import('yamnet')
+            verify_dependencies(['yamnet'])
+        except MissingDependencyError:
+            msg = ('Yamnet could not be imported. To download and set up '
+                  'yamnet, run:\n\tpython -m pliers.support.setup_yamnet')
+            raise MissingDependencyError(dependencies=None,
+                                         custom_message=msg)
+        if top_n and labels:
+            raise ValueError('Top_n and labels are mutually exclusive '
+                             'arguments. Reinstantiate the extractor setting '
+                             'top_n or labels to None (or leaving it '
+                             'unspecified).')
+
+        MODULE_PATH = path.dirname(self.yamnet.__file__)
+        LABELS_PATH = path.join(MODULE_PATH, 'yamnet_class_map.csv')
+        self.weights_path = weights_path or path.join(MODULE_PATH, 'yamnet.h5')
+        self.hop_size = hop_size
+        self.yamnet_kwargs = yamnet_kwargs or {}
+        self.params = self.yamnet.params
+        self.params.PATCH_HOP_SECONDS = hop_size
+        for par, v in self.yamnet_kwargs.items():
+            setattr(self.params, par, v)
+        if self.params.PATCH_WINDOW_SECONDS != 0.96:
+            logging.warning('Custom values for PATCH_WINDOW_SECONDS were '
+                'passed. YAMNet was trained on windows of 0.96s. Different '
+                'values might yield unreliable results.')
+
+        self.top_n = top_n
+        all_labels = pd.read_csv(LABELS_PATH)['display_name'].tolist()
+        if labels is not None:
+            missing = list(set(labels) - set(all_labels))
+            labels = list(set(labels) & set(all_labels))
+            if missing:
+                logging.warning(f'Labels {missing} do not exist. Dropping.')
+            self.label_idx, self.labels = zip(*[(i,l)
+                                               for i,l in enumerate(all_labels)
+                                               if l in labels])
+        else:
+            self.labels = all_labels
+            self.label_idx = list(range(len(all_labels)))
+        super().__init__()
+
+    def _extract(self, stim):
+        self.params.SAMPLE_RATE = stim.sampling_rate
+
+        if self.params.SAMPLE_RATE >= 2 * self.params.MEL_MAX_HZ:
+            if self.params.SAMPLE_RATE != 16000:
+                logging.warning(
+                    'The sampling rate of the stimulus is '
+                    f'{self.params.SAMPLE_RATE}Hz. YAMNet was trained on '
+                    ' audio sampled at 16000Hz. This should not impact '
+                    'predictions, but you can resample the input using '
+                    'AudioResamplingFilter for full conformity '
+                    'to training.')
+            if self.params.MEL_MIN_HZ != 125 or self.params.MEL_MAX_HZ != 7500:
+                logging.warning(
+                    'Custom values for MEL_MIN_HZ and MEL_MAX_HZ '
+                    'were passed. Changing these defaults might affect '
+                    'model performance.')
+        else:
+            raise ValueError(
+                'The sampling rate of your stimulus '
+                f'({self.params.SAMPLE_RATE}Hz) must be at least twice the '
+                f'value of MEL_MAX_HZ ({self.params.MEL_MAX_HZ}Hz). Upsample'
+                ' your audio stimulus (recommended) or pass a lower value of '
+                'MEL_MAX_HZ when initializing the extractor.')
+
+        model = self.yamnet.yamnet_frames_model(self.params)
+        model.load_weights(self.weights_path)
+        preds, _ = model.predict_on_batch(np.reshape(stim.data, [1,-1]))
+        preds = preds[:,self.label_idx]
+
+        nr_lab = self.top_n or len(self.labels)
+        idx = np.mean(preds,axis=0).argsort()
+        preds = np.fliplr(preds[:,idx][:,-nr_lab:])
+        labels = [self.labels[i] for i in idx][-nr_lab:][::-1]
+
+        hop = self.params.PATCH_HOP_SECONDS
+        window = self.params.PATCH_WINDOW_SECONDS
+        stft_window = self.params.STFT_WINDOW_SECONDS
+        stft_hop = self.params.STFT_HOP_SECONDS
+        dur = window + stft_window - stft_hop
+        onsets = np.arange(start=0, stop=stim.duration - dur, step=hop)
+
+        return ExtractorResult(preds, stim, self, features=labels,
+                               onsets=onsets, durations=[dur]*len(onsets),
+                               orders=list(range(len(onsets))))
