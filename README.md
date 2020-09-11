@@ -33,7 +33,7 @@ If you use pliers in your work, please cite both the pliers GitHub repository (h
 The official pliers documentation is quite thorough, and contains a comprehensive [quickstart](http://tyarkoni.github.io/pliers/quickstart.html) doc (also available below), [user guide](http://tyarkoni.github.io/pliers/) and complete [API Reference](http://tyarkoni.github.io/pliers/reference.html).
 
 
-## Installation
+## Installation 
 
 For the latest release:
 
@@ -1451,7 +1451,7 @@ features.append(speech_features)
 # the package default (IBM Watson)
 text_conv = GoogleSpeechAPIConverter()
 text = text_conv.transform(video)
-                  
+
 # Text-based features
 text_ext = ComplexTextExtractor()
 text_features = text_ext.transform(text)
@@ -1654,7 +1654,7 @@ df.sort_values(['extractor', 'feature', 'onset', 'duration', 'order']).head(10)
 The resulting pandas DataFrame is quite large; even for our 9-second video, we get back over 3,000 rows! Importantly, though, the DataFrame contains all kinds of metadata that makes it easy to filter and sort the results in whatever way we might want to (e.g., we can filter on the extractor, stim class, onset or duration, etc.).
 
 ### Multiple extractors with a Graph
-The above code listing is already pretty terse, and has the advantage of being explicit about every step. But if it's brevity we're after, pliers is happy to oblige us. The package includes a `Graph` abstraction that allows us to load an arbitrary number of `Transformer` into a graph, and execute them all in one shot. The code below is functionally identical to the last example, but only about the third of the length. It also requires fewer imports, since `Transformer` objects that we don't need to initialize with custom arguments can be passed to the `Graph` as strings. 
+The above code listing is already pretty terse, and has the advantage of being explicit about every step. But if it's brevity we're after, pliers is happy to oblige us. The package includes a `Graph` abstraction that allows us to load an arbitrary number of `Transformer` into a graph, and execute them all in one shot. The code below is functionally identical to the last example, but only about the third of the length. It also requires fewer imports, since `Transformer` objects that we don't need to initialize with custom arguments can be passed to the `Graph` as strings.
 
 The upshot of all this is that, in just a few lines of Python code, we're abvle to extract a broad range of multimodal features from video, image, audio or text inputs, using state-of-the-art tools and services!
 
