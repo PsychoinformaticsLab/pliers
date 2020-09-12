@@ -9,13 +9,15 @@ import shutil
 
 PLIERS_DATA_PATH = Path.home() / 'pliers_data' 
 YAMNET_PATH = PLIERS_DATA_PATH / 'yamnet'
+TF_MODELS_VERSION = "2.3.0"
+
 
 def setup_yamnet():
-    repo_url = 'https://github.com/tensorflow/models/archive/master.zip'
+    repo_url = f'https://github.com/tensorflow/models/archive/v{TF_MODELS_VERSION}.zip'
     model_url = 'https://storage.googleapis.com/audioset/yamnet.h5'
 
     tmp_dir = PLIERS_DATA_PATH / 'yamnet_tmp'
-    tmp_yamnet_dir = tmp_dir / 'models-master' / 'research' / 'audioset' / 'yamnet'
+    tmp_yamnet_dir = tmp_dir / f'models-{TF_MODELS_VERSION}' / 'research' / 'audioset' / 'yamnet'
     model_filename =  YAMNET_PATH / model_url.split('/')[-1]
     
     if not model_filename.exists():
