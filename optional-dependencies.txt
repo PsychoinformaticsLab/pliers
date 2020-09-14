@@ -5,14 +5,14 @@ python-twitter
 gensim
 google-api-python-client
 google-compute-engine
-librosa>=0.6.3,<0.8.0
+librosa>=0.6.3
 numba<=0.48
 matplotlib
 opencv-python
 pathos
 pygraphviz
 pysrt
-pytesseract==0.3.4
+pytesseract
 python-twitter
 scikit-learn
 seaborn
