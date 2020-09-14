@@ -3,6 +3,7 @@ from copy import deepcopy
 
 import numpy as np
 import pandas as pd
+from packaging.specifiers import SpecifierSet
 
 from pliers.stimuli import ImageStim
 from pliers.extractors.base import Extractor, ExtractorResult
@@ -63,3 +64,10 @@ class ClashingFeatureExtractor(DummyExtractor):
         names += ['order'] # Clashing feature name
 
         return pd.DataFrame(result._data, columns=names)
+
+class SemVerDict(dict):
+    
+    def __getitem__(self, item):
+        for key in self:
+            if item in SpecifierSet(key):
+                return super().__getitem__(key)
