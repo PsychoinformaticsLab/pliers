@@ -127,7 +127,7 @@ def test_small_pipeline_json_spec():
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
     result = merge_results(result, format='wide', extractor_names='multi')
-    assert 'Exit' in result['stim_name'].values[0]
+    assert 'Exit' in result['stim_name'].values[0][0]
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
 
@@ -143,7 +143,7 @@ def test_small_pipeline_json_spec2():
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
     result = merge_results(result, format='wide', extractor_names='multi')
-    assert 'Exit' in result['stim_name'].values[0]
+    assert 'Exit' in result['stim_name'].values[0][0]
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
 
