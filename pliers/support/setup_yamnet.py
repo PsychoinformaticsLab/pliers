@@ -14,7 +14,6 @@ YAMNET_PATH = PLIERS_DATA_PATH / 'yamnet'
 
 def setup_yamnet():
     # get the most recent released version of tensorflow/models
-    import pdb; pdb.set_trace()
     release_api_url = "https://api.github.com/repos/tensorflow/models/releases/latest"
     with request.urlopen(release_api_url) as release_url:
         tf_models_dict = json.loads(release_url.read())
