@@ -3,6 +3,7 @@ from copy import deepcopy
 
 import numpy as np
 import pandas as pd
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
 
 from pliers.stimuli import ImageStim
 from pliers.extractors.base import Extractor, ExtractorResult
@@ -63,3 +64,21 @@ class ClashingFeatureExtractor(DummyExtractor):
         names += ['order'] # Clashing feature name
 
         return pd.DataFrame(result._data, columns=names)
+
+
+class SemVerDict(dict):
+    """ Semantic Versioning Dictionary
+    A dictionary whose keys are ranges of software versions.
+    The value for a key can either be accessed with the string
+    representing the software range (e.g., '>0.8.0') or
+    a specific software version that is within the
+    software range (e.g., '0.8.4'). """
+
+    def __getitem__(self, item):
+        try:
+            SpecifierSet(item)
+            return super().__getitem__(item)
+        except InvalidSpecifier:
+            for key in self:
+                if item in SpecifierSet(key):
+                    return super().__getitem__(key)

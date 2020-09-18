@@ -4,7 +4,7 @@ from os import environ
 import numpy as np
 import pytest
 
-from ..utils import get_test_data_path
+from ..utils import get_test_data_path, SemVerDict
 from pliers.extractors import (LibrosaFeatureExtractor,
                                STFTAudioExtractor,
                                MeanAmplitudeExtractor,
@@ -35,6 +35,7 @@ from pliers.stimuli import (ComplexTextStim, AudioStim,
 from pliers.filters import AudioResamplingFilter
 from pliers.utils import attempt_to_import, verify_dependencies
 
+from librosa import __version__ as LIBROSA_VERSION
 
 AUDIO_DIR = join(get_test_data_path(), 'audio')
 tf = attempt_to_import('tensorflow')
@@ -145,6 +146,13 @@ def test_zcr_extractor():
 
 
 def test_chroma_extractors():
+    answers = SemVerDict(
+        {
+            '>=0.6.3,<0.8.0': {'cqt': 0.336481, 'cens': 0.136409},
+            '>=0.8.0':        {'cqt': 0.508431, 'cens': 0.102370}
+        }
+    )
+
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
     ext = ChromaSTFTExtractor()
     df = ext.transform(audio).to_df()
@@ -163,12 +171,12 @@ def test_chroma_extractors():
     ext = ChromaCQTExtractor()
     df = ext.transform(audio).to_df()
     assert df.shape == (1221, 16)
-    assert np.isclose(df['chroma_cqt_2'][0], 0.336481)
+    assert np.isclose(df['chroma_cqt_2'][0], answers[LIBROSA_VERSION]['cqt'])
 
     ext = ChromaCENSExtractor()
     df = ext.transform(audio).to_df()
     assert df.shape == (1221, 16)
-    assert np.isclose(df['chroma_cens_2'][0], 0.136409)
+    assert np.isclose(df['chroma_cens_2'][0], answers[LIBROSA_VERSION]['cens'])
 
 
 def test_melspectrogram_extractor():
@@ -208,7 +216,9 @@ def test_tonnetz_extractor():
     assert df.shape == (1221, 10)
     assert np.isclose(df['onset'][1], 0.04644)
     assert np.isclose(df['duration'][0], 0.04644)
-    assert np.isclose(df['tonal_centroid_0'][0], -0.0391266)
+
+    tonal_centroid_answers = SemVerDict({'>=0.6.3,<0.8.0': -0.0391266, '>=0.8.0': -0.0804008})
+    assert np.isclose(df['tonal_centroid_0'][0], tonal_centroid_answers[LIBROSA_VERSION])
 
 
 def test_tempogram_extractor():

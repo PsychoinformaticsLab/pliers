@@ -14,7 +14,7 @@ def test_tesseract_converter():
     stim = ImageStim(join(IMAGE_DIR, 'button.jpg'), onset=4.2)
     conv = TesseractConverter()
     out_stim = conv.transform(stim)
-    assert out_stim.name == 'text[Exit]'
+    assert 'Exit' in out_stim.name
     assert out_stim.history.source_class == 'ImageStim'
     assert out_stim.history.source_name == 'button.jpg'
     assert out_stim.onset == 4.2
