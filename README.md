@@ -30,7 +30,7 @@ If you use pliers in your work, please cite both the pliers GitHub repository (h
 
 ## Documentation
 
-The official pliers documentation is quite thorough, and contains a comprehensive [quickstart](http://tyarkoni.github.io/pliers/quickstart.html) doc (also available below), [user guide](http://tyarkoni.github.io/pliers/) and complete [API Reference](http://tyarkoni.github.io/pliers/reference.html).
+The official pliers documentation is quite thorough, and contains a comprehensive [quickstart](http://psychoinformaticslab.github.io/pliers/quickstart.html) doc (also available below), [user guide](http://psychoinformaticslab.github.io/pliers/) and complete [API Reference](http://psychoinformaticslab.github.io/pliers/reference.html).
 
 
 ## Installation
@@ -54,7 +54,7 @@ Note, however, that some of these Python dependencies have their own (possibly p
 While installing pliers itself is usually straightforward, setting up some of the web-based feature extraction APIs that pliers interfaces with can take a bit more effort. For example, pliers includes support for face and object recognition via Google’s Cloud Vision API, and enables conversion of audio files to text transcripts via several different speech-to-text services. While some of these APIs are free to use (and virtually all provide a limited number of free monthly calls), they all require each user to register for their own API credentials. This means that, in order to get the most out of pliers, you’ll probably need to spend some time registering accounts on a number of different websites. More details on API key setup are available [here](http://tyarkoni.github.io/pliers/installation.html#api-keys).
 
 ## Quickstart
-A detailed user guide can be found in the [pliers documentation](http://tyarkoni.github.io/pliers/); below we provide a few brief examples illustrating the flexibility and utility of the package. An executable Jupyter Notebook containing all of the examples can be found [here](https://github.com/tyarkoni/pliers/blob/master/examples/Quickstart.ipynb).
+A detailed user guide can be found in the [pliers documentation](http://psychoinformaticslab.github.io/pliers/); below we provide a few brief examples illustrating the flexibility and utility of the package. An executable Jupyter Notebook containing all of the examples can be found [here](https://github.com/tyarkoni/pliers/blob/master/examples/Quickstart.ipynb).
 
 ### Face detection
 This first example uses the face_recognition package's location extraction method to detect the location of Barack Obama's face within a single image. The tools used to do this are completely local (i.e., the image isn't sent to an external API).
