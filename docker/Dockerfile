@@ -30,7 +30,7 @@ RUN python -m pip install --no-cache-dir ipython notebook
 RUN python -m spacy download en_core_web_sm
 
 FROM python:3.7-slim
-RUN useradd --no-user-group --create-home --shell /bin/bash pliers \
+RUN useradd --create-home --shell /bin/bash pliers \
     # Empty top level directories to facilitate use of the image in singularity
     # on a box with kernel lacking overlay FS support
     && mkdir -p /data /backup \
