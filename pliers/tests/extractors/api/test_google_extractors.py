@@ -215,7 +215,7 @@ def test_google_video_api_extractor(caplog):
     stim = VideoStim(join(VIDEO_DIR, 'park.mp4'))
     result = ext.transform(stim)
 
-    log_message = caplog.records[-1].message
+    log_message = caplog.records()[-1].message
     assert log_message == ("The extraction reached the timeout limit of %fs, "
                   "which means the API may not have finished analyzing the "
                   "video and the results may be empty or incomplete." % 1.0)
@@ -224,7 +224,7 @@ def test_google_video_api_extractor(caplog):
                                               features=['LABEL_DETECTION',
                                                     'SHOT_CHANGE_DETECTION'])
     result = ext.transform(stim).to_df()
-    log_message = caplog.records[-1].message
+    log_message = caplog.records()[-1].message
     incomplete = (log_message == ("The extraction reached the timeout limit of"
                 " %fs, which means the API may not have finished analyzing the"
                 " video and the results may be empty or incomplete." % 500))
@@ -247,7 +247,7 @@ def test_google_video_api_extractor2(caplog):
                                     features=['EXPLICIT_CONTENT_DETECTION'])
     stim = VideoStim(join(VIDEO_DIR, 'park.mp4'))
     result = ext.transform(stim).to_df()
-    log_message = caplog.records[-1].message
+    log_message = caplog.records()[-1].message
     incomplete = (log_message == ("The extraction reached the timeout limit of"
                 " %fs, which means the API may not have finished analyzing the"
                 " video and the results may be empty or incomplete." % 500))
@@ -266,7 +266,7 @@ def test_google_video_api_label_extractor(caplog):
                                                 stationary_camera=True)
     stim = VideoStim(join(VIDEO_DIR, 'small.mp4'))
     ex_result = ext.transform(stim)
-    log_message = caplog.records[-1].message
+    log_message = caplog.records()[-1].message
     incomplete = (log_message == ("The extraction reached the timeout limit of"
             " %fs, which means the API may not have finished analyzing the"
             " video and the results may be empty or incomplete." % 90))
@@ -283,7 +283,7 @@ def test_google_video_api_label_extractor(caplog):
     ext = GoogleVideoAPILabelDetectionExtractor(mode='SHOT_MODE')
     stim = VideoStim(join(VIDEO_DIR, 'shot_change.mp4'))
     ex_result = ext.transform(stim)
-    log_message = caplog.records[-1].message
+    log_message = caplog.records()[-1].message
     incomplete = (log_message == ("The extraction reached the timeout limit of"
             " %fs, which means the API may not have finished analyzing the"
             " video and the results may be empty or incomplete." % 90))
@@ -307,7 +307,7 @@ def test_google_video_api_shot_extractor(caplog):
     ext = GoogleVideoAPIShotDetectionExtractor(request_rate=3)
     stim = VideoStim(join(VIDEO_DIR, 'small.mp4'))
     result = ext.transform(stim).to_df()
-    log_message = caplog.records[-1].message
+    log_message = caplog.records()[-1].message
     incomplete = (log_message == ("The extraction reached the timeout limit of"
                 " %fs, which means the API may not have finished analyzing the"
                 " video and the results may be empty or incomplete." % 90))
@@ -321,7 +321,7 @@ def test_google_video_api_shot_extractor(caplog):
     ext = GoogleVideoAPIShotDetectionExtractor()
     stim = VideoStim(join(VIDEO_DIR, 'shot_change.mp4'))
     result = ext.transform(stim).to_df()
-    log_message = caplog.records[-1].message
+    log_message = caplog.records()[-1].message
     incomplete = (log_message == ("The extraction reached the timeout limit of"
                 " %fs, which means the API may not have finished analyzing the"
                 " video and the results may be empty or incomplete." % 90))
@@ -339,7 +339,7 @@ def test_google_video_api_explicit_extractor(caplog):
     ext = GoogleVideoAPIExplicitDetectionExtractor(request_rate=3)
     stim = VideoStim(join(VIDEO_DIR, 'small.mp4'), onset=4.2)
     result = ext.transform(stim).to_df()
-    log_message = caplog.records[-1].message
+    log_message = caplog.records()[-1].message
     incomplete = (log_message == ("The extraction reached the timeout limit of"
                 " %fs, which means the API may not have finished analyzing the"
                 " video and the results may be empty or incomplete." % 90))
