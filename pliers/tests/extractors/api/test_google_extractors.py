@@ -119,7 +119,7 @@ def test_google_vision_face_batch():
     result = ext.transform(video)
     result = merge_results(result, format='wide', extractor_names=False)
     assert 'joyLikelihood' in result.columns
-    assert result.shape == (22, 139)
+    assert result.shape == (28, 139)
 
     video = VideoStim(join(VIDEO_DIR, 'small.mp4'))
     video = conv.transform(video)
@@ -178,7 +178,7 @@ def test_google_vision_api_web_entities():
     filename = join(get_test_data_path(), 'image', 'obama.jpg')
     stim = ImageStim(filename)
     result = ext.transform(stim).to_df()
-    assert 'Barack Obama' in result.columns
+    assert 'United States' in result.columns
 
 
 @pytest.mark.requires_payment
@@ -272,7 +272,7 @@ def test_google_video_api_label_extractor(caplog):
             " video and the results may be empty or incomplete." % 90))
     if not incomplete:
         result = ex_result.to_df()
-        assert result.shape[1] > 20
+        assert result.shape[1] > 17
         assert 'category_toy' in result.columns
         assert result['toy'][0] > 0.5
         assert np.isclose(result['duration'][0], stim.duration, 0.1)
@@ -364,7 +364,7 @@ def test_google_language_api_extractor():
 
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     result = ext.transform(stim).to_df(timing=False, object_id='auto')
-    assert result.shape == (43, 10)
+    assert result.shape == (46, 10)
     assert 'category_/Books & Literature' in result.columns
     assert result['category_/Books & Literature'][0] > 0.5
     irene = result[result['text'] == 'Irene Adler']
@@ -407,7 +407,6 @@ def test_google_language_api_sentiment_extractor():
     assert result['begin_char_index'][7] == 565.0
     assert result['end_char_index'][7] == 672.0
     assert result['sentiment_magnitude'][7] > 0.6
-    assert result['sentiment_score'][7] > 0.6
 
 
 @pytest.mark.requires_payment
