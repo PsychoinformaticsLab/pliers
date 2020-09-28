@@ -118,7 +118,7 @@ def test_validation_levels(caplog):
         ext.transform(stim)
     res = ext.transform(stim, validation='warn')
 
-    log_message = caplog.records()[0].message
+    log_message = caplog.records[0].message
     assert log_message == ("Transformers of type BrightnessExtractor can "
                   "only be applied to stimuli of type(s) <class 'pliers"
                   ".stimuli.image.ImageStim'> (not type TextStim), and no "
