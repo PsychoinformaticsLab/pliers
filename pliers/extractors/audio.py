@@ -110,7 +110,7 @@ class STFTAudioExtractor(AudioExtractor):
         values[np.isinf(values)] = 0.
         return ExtractorResult(values, stim, self, features=features,
                                onsets=index, durations=self.hop_size,
-                               orders=list(range(len(time_bins))))
+                               orders=list(range(len(index))))
 
 
 class MeanAmplitudeExtractor(Extractor):
