@@ -222,7 +222,7 @@ class SpectralCentroidExtractor(LibrosaFeatureExtractor):
     ''' Extracts the spectral centroids from audio using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.org/doc/latest/generated/librosa.feature.spectral_centroid.html#librosa.feature.spectral_centroid.'''
+    https://librosa.org/doc/latest/generated/librosa.feature.spectral_centroid.html.'''
 
     _feature = 'spectral_centroid'
 
@@ -233,7 +233,7 @@ class SpectralBandwidthExtractor(LibrosaFeatureExtractor):
     Librosa library.
 
     For details on argument specification visit:
-    https://librosa.org/librosa/generated/librosa.feature.spectral_bandwidth.html#librosa.feature.spectral_bandwidth.'''
+    https://librosa.org/doc/latest/generated/librosa.feature.spectral_bandwidth.html.'''
 
     _feature = 'spectral_bandwidth'
 
@@ -244,7 +244,7 @@ class SpectralFlatnessExtractor(LibrosaFeatureExtractor):
     Librosa library.
 
     For details on argument specification visit:
-    https://librosa.org/doc/latest/generated/librosa.feature.spectral_flatness.html#librosa.feature.spectral_flatness.'''
+    https://librosa.org/doc/latest/generated/librosa.feature.spectral_flatness.html.'''
 
     _feature = 'spectral_flatness'
 
@@ -254,7 +254,7 @@ class SpectralContrastExtractor(LibrosaFeatureExtractor):
     ''' Extracts the spectral contrast from audio using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.org/doc/latest/generated/librosa.feature.spectral_contrast.html#librosa.feature.spectral_contrast.'''
+    https://librosa.org/doc/latest/generated/librosa.feature.spectral_contrast.html.'''
 
     _feature = 'spectral_contrast'
 
@@ -274,7 +274,7 @@ class SpectralRolloffExtractor(LibrosaFeatureExtractor):
     ''' Extracts the roll-off frequency from audio using the Librosa library.
 
     For details on argument specification visit:
-    https://librosa.org/doc/latest/generated/librosa.feature.spectral_rolloff.html#librosa.feature.spectral_rolloff.'''
+    https://librosa.org/doc/latest/generated/librosa.feature.spectral_rolloff.html.'''
 
     _feature = 'spectral_rolloff'
 
@@ -313,7 +313,7 @@ class OnsetDetectExtractor(LibrosaFeatureExtractor):
     library.
 
     For details on argument specification visit:
-    https://librosa.org/doc/latest/generated/librosa.onset.onset_detect.html#librosa.onset.onset_detect.'''
+    https://librosa.org/doc/latest/generated/librosa.onset.onset_detect.html.'''
 
     _feature = 'onset_detect'
 
