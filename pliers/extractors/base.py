@@ -2,13 +2,15 @@
 
 from abc import ABCMeta, abstractmethod
 import json
+import math
+from scipy.interpolate import interp1d
 
 import pandas as pd
 import numpy as np
 from pandas.api.types import is_numeric_dtype
 
 from pliers.transformers import Transformer
-from pliers.utils import isgenerator, flatten, listify
+from pliers.utils import isgenerator, flatten
 
 
 class Extractor(Transformer, metaclass=ABCMeta):
@@ -102,9 +104,9 @@ class ExtractorResult:
                 values, the special value 'auto' can be passed, in which case
                 the object_id column will only be inserted if the resulting
                 constant would be non-constant.
-            extractor_params (bool): if True, returns log_attributes of 
+            extractor_params (bool): if True, returns log_attributes of
                 at extraction time, as stored in transformer_params attribute
-                in ExtractorResult.history. These are returned as serialized 
+                in ExtractorResult.history. These are returned as serialized
                 dictionary in extractor_params column.
 
         Returns:
@@ -205,6 +207,59 @@ class ExtractorResult:
     def history(self, history):
         self._history = history
 
+    def resample(self, sampling_rate, in_place=True, kind='linear'):
+        """Resample the ExtractorResult object to the specified sampling rate.
+
+        Parameters
+        ----------
+        sampling_rate (float)
+            Target sampling rate (in Hz).
+        kind : {'linear', 'nearest', 'zero', 'slinear', 'quadratic', 'cubic'}
+            Argument to pass to `scipy.interpolate.interp1d`; indicates
+            the kind of interpolation approach to use. See interp1d docs for
+            valid values. Default is 'linear'.
+        """
+
+        # Cast onsets and durations to milliseconds
+        onsets = np.round(self.onset * 1000).astype(int)
+        durations = np.round(np.array(self.duration) * 1000).astype(int)
+        gcd = np.gcd.reduce(np.r_[onsets, durations])
+        bin_sr = 1000. / gcd
+
+        onsets = np.round(self.onset * int(bin_sr)).astype(int)
+        durations = np.round(np.array(self.duration) * bin_sr).astype(int)
+
+        max_duration = self.onset[-1] + self.duration[-1]
+
+        n = int(math.ceil(bin_sr * max_duration))
+        x = np.arange(n)
+
+        # Calculate final number of samples after re-sampling
+        num = int(np.round((sampling_rate / bin_sr) * n))
+
+        resampled = {}
+        for f_name in self.features:
+            values = self.data[f_name]
+
+            ts = np.zeros(n, dtype=values.dtype)
+            start = 0
+            for i, val in enumerate(values):
+                _onset = int(start + onsets[i])
+                _offset = int(_onset + durations[i])
+                ts[_onset:_offset] = val
+
+            # What does first sample correspond to? Only one
+            f = interp1d(x, ts, kind=kind)
+            x_new = np.linspace(0, n - 1, num=num)
+            resampled[f_name] = f(x_new)
+
+        new_dur = 1 / sampling_rate
+        new_onsets = np.arange(0, math.ceil(max_duration), new_dur)
+        new_onsets = new_onsets[new_onsets < max_duration]
+
+        return pd.DataFrame(
+            {'onset': new_onsets, 'duration': new_dur, **resampled})
+
 
 def merge_results(results, format='wide', timing=True, metadata=True,
                   extractor_names=True, object_id=True, extractor_params=False,
@@ -250,9 +305,9 @@ def merge_results(results, format='wide', timing=True, metadata=True,
             ImageExtractors that identify multiple target objects (e.g., faces)
             within a single ImageStim. Default is 'auto', which includes the
             'object_id' column if and only if it has a non-constant value.
-        extractor_params (bool): If True, returns serialized extractor_params 
-            of the extractor, i.e. log_attributes at time of extraction. 
-            If format='wide', merge_results returns one column per extractor, 
+        extractor_params (bool): If True, returns serialized extractor_params
+            of the extractor, i.e. log_attributes at time of extraction.
+            If format='wide', merge_results returns one column per extractor,
             each named ExtractorName#FeatureName#extractor_params.
             If format='long', returns only one column named extractor_params.
         aggfunc (str, Callable): If format='wide' and extractor_names='drop',
@@ -288,7 +343,7 @@ def merge_results(results, format='wide', timing=True, metadata=True,
         if isinstance(r, ExtractorResult):
             dfs.append(r.to_df(timing=_timing, metadata=metadata,
                                format='long', extractor_name=True,
-                               object_id=_object_id, 
+                               object_id=_object_id,
                                extractor_params=extractor_params,
                                **to_df_kwargs))
         elif invalid_results == 'fail':
@@ -323,7 +378,7 @@ def merge_results(results, format='wide', timing=True, metadata=True,
 
         # Set default aggfunc based on column type, otherwise bad things happen
         if aggfunc is None:
-            aggfunc = 'mean' if is_numeric_dtype(data['value']) else 'first' 
+            aggfunc = 'mean' if is_numeric_dtype(data['value']) else 'first'
 
         # add conditional on value of extractor_names
         if extractor_params:
