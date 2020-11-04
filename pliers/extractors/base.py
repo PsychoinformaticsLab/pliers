@@ -229,36 +229,35 @@ class ExtractorResult:
         onsets = np.round(self.onset * int(bin_sr)).astype(int)
         durations = np.round(np.array(self.duration) * bin_sr).astype(int)
 
+        interval = 1 / sampling_rate
         max_duration = self.onset[-1] + self.duration[-1]
 
-        n = int(math.ceil(bin_sr * max_duration))
-        x = np.arange(n)
-
         # Calculate final number of samples after re-sampling
-        num = int(np.round((sampling_rate / bin_sr) * n))
+        num = math.ceil(max_duration / interval)
+
+        # Maximum duration in bin_sr upscaling space
+        max_dur_bin_sr = int(num * interval * bin_sr)
+        x = np.arange(max_dur_bin_sr)
 
         resampled = {}
         for f_name in self.features:
             values = self.data[f_name]
 
-            ts = np.zeros(n, dtype=values.dtype)
+            ts = np.zeros(int(max_dur_bin_sr), dtype=values.dtype)
             start = 0
             for i, val in enumerate(values):
                 _onset = int(start + onsets[i])
                 _offset = int(_onset + durations[i])
                 ts[_onset:_offset] = val
 
-            # What does first sample correspond to? Only one
             f = interp1d(x, ts, kind=kind)
-            x_new = np.linspace(0, n - 1, num=num)
+            x_new = np.arange(0, max_dur_bin_sr, step=interval * bin_sr)
             resampled[f_name] = f(x_new)
 
-        new_dur = 1 / sampling_rate
-        new_onsets = np.arange(0, math.ceil(max_duration), new_dur)
-        new_onsets = new_onsets[new_onsets < max_duration]
+        new_onsets = np.arange(0, max_dur_bin_sr / bin_sr, interval)
 
         return pd.DataFrame(
-            {'onset': new_onsets, 'duration': new_dur, **resampled})
+            {'onset': new_onsets, 'duration': interval, **resampled})
 
 
 def merge_results(results, format='wide', timing=True, metadata=True,
