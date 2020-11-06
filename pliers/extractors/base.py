@@ -207,7 +207,7 @@ class ExtractorResult:
     def history(self, history):
         self._history = history
 
-    def resample(self, sampling_rate, in_place=True, kind='linear'):
+    def resample(self, sampling_rate, in_place=True, filter=True, kind='linear'):
         """Resample the ExtractorResult object to the specified sampling rate.
 
         Parameters
@@ -249,6 +249,16 @@ class ExtractorResult:
                 _onset = int(start + onsets[i])
                 _offset = int(_onset + durations[i])
                 ts[_onset:_offset] = val
+
+            if filter:
+                if sampling_rate < bin_sr:
+                    # Downsampling, so filter the signal
+                    from scipy.signal import butter, filtfilt
+                    # cutoff = new Nyqist / old Nyquist
+                    b, a = butter(
+                        5, (sampling_rate / 2.0) / (bin_sr / 2.0),
+                        btype='low', output='ba', analog=False)
+                    ts = filtfilt(b, a, ts)
 
             f = interp1d(x, ts, kind=kind)
             x_new = np.arange(0, max_dur_bin_sr, step=interval * bin_sr)
