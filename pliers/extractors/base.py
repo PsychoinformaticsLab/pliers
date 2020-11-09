@@ -207,17 +207,23 @@ class ExtractorResult:
     def history(self, history):
         self._history = history
 
-    def resample(self, sampling_rate, in_place=True, filter=True, kind='linear'):
-        """Resample the ExtractorResult object to the specified sampling rate.
+    def resample(self, sampling_rate, filter_signal=True,
+                 filter_N=5, kind='linear'):
+        """Resample the ExtractorResult object to the specified sampling rate
 
         Parameters
         ----------
         sampling_rate (float)
             Target sampling rate (in Hz).
+        filter_signal: (bool)
+            Apply Butterworth filter to signal prior to resampling
+        filter_N: (int)
+            The other of the Butterworth filter
         kind : {'linear', 'nearest', 'zero', 'slinear', 'quadratic', 'cubic'}
             Argument to pass to `scipy.interpolate.interp1d`; indicates
             the kind of interpolation approach to use. See interp1d docs for
             valid values. Default is 'linear'.
+
         """
 
         # Cast onsets and durations to milliseconds
@@ -250,13 +256,13 @@ class ExtractorResult:
                 _offset = int(_onset + durations[i])
                 ts[_onset:_offset] = val
 
-            if filter:
+            if filter_signal:
                 if sampling_rate < bin_sr:
                     # Downsampling, so filter the signal
                     from scipy.signal import butter, filtfilt
                     # cutoff = new Nyqist / old Nyquist
                     b, a = butter(
-                        5, (sampling_rate / 2.0) / (bin_sr / 2.0),
+                        filter_N, (sampling_rate / 2.0) / (bin_sr / 2.0),
                         btype='low', output='ba', analog=False)
                     ts = filtfilt(b, a, ts)
 
@@ -266,8 +272,10 @@ class ExtractorResult:
 
         new_onsets = np.arange(0, max_dur_bin_sr / bin_sr, interval)
 
-        return pd.DataFrame(
+        data = pd.DataFrame(
             {'onset': new_onsets, 'duration': interval, **resampled})
+
+        return data
 
 
 def merge_results(results, format='wide', timing=True, metadata=True,
