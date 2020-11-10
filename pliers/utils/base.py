@@ -9,7 +9,7 @@ from itertools import islice
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
-import math
+from math import ceil
 from scipy.interpolate import interp1d
 
 from pliers import config
@@ -169,20 +169,17 @@ class APIDependent(EnvironmentKeyMixin, metaclass=ABCMeta):
         pass
 
 
-def resample(df, sampling_rate, feature_names=None, filter_signal=True,
-             filter_N=5, kind='linear'):
+def resample(df, sampling_rate, filter_signal=True, filter_N=5, kind='linear'):
     """Resample a dataframe (typically from ExtractorResult.to_df)
      to the specified sampling rate.
 
     Parameters
     ----------
     df (DataFrame)
-        Pandas dataframe with onset, duration, and feature columns
+        Pandas dataframe with onset, duration, and feature and value columns,
+        as output by ExtractorResult.to_df(format='long').
     sampling_rate (float)
         Target sampling rate (in Hz).
-    feature_names (list)
-        List of feature names in df. If None, defaults to all columns except
-        "object_id", "onset", "duration", "order"
     filter_signal: (bool)
         Apply Butterworth filter to signal prior to resampling
     filter_N: (int)
@@ -194,39 +191,32 @@ def resample(df, sampling_rate, feature_names=None, filter_signal=True,
 
     """
 
-    if feature_names is None:
-        feature_names = list(set(df.columns) - set(
-            ['onset', 'duration', 'object_id', 'order']))
+    def _densify_resample(feat_df):
+        # Cast onsets and durations to milliseconds
+        onset = feat_df['onset'].values
+        onsets = np.round(onset * 1000).astype(int)
 
-    # Cast onsets and durations to milliseconds
-    onset = df['onset'].values
-    onsets = np.round(onset * 1000).astype(int)
+        duration = feat_df['duration'].values
+        durations = np.round(np.array(duration) * 1000).astype(int)
+        gcd = np.gcd.reduce(np.r_[onsets, durations])
+        bin_sr = 1000. / gcd
 
-    duration = df['duration'].values
-    durations = np.round(np.array(duration) * 1000).astype(int)
-    gcd = np.gcd.reduce(np.r_[onsets, durations])
-    bin_sr = 1000. / gcd
+        onsets = np.round(onset * int(bin_sr)).astype(int)
+        durations = np.round(np.array(duration) * bin_sr).astype(int)
 
-    onsets = np.round(onset * int(bin_sr)).astype(int)
-    durations = np.round(np.array(duration) * bin_sr).astype(int)
+        interval = 1 / sampling_rate
+        max_duration = onset[-1] + duration[-1]
 
-    interval = 1 / sampling_rate
-    max_duration = onset[-1] + duration[-1]
+        # Calculate final number of samples after re-sampling
+        num = ceil(max_duration / interval)
 
-    # Calculate final number of samples after re-sampling
-    num = math.ceil(max_duration / interval)
+        # Maximum duration in bin_sr upscaling space
+        max_dur_bin_sr = int(num * interval * bin_sr)
+        x = np.arange(max_dur_bin_sr)
 
-    # Maximum duration in bin_sr upscaling space
-    max_dur_bin_sr = int(num * interval * bin_sr)
-    x = np.arange(max_dur_bin_sr)
-
-    resampled = {}
-    for f_name in feature_names:
-        values = df[f_name]
-
-        ts = np.zeros(int(max_dur_bin_sr), dtype=values.dtype)
+        ts = np.zeros(int(max_dur_bin_sr), dtype=feat_df['value'].dtype)
         start = 0
-        for i, val in enumerate(values):
+        for i, val in enumerate(feat_df['value']):
             _onset = int(start + onsets[i])
             _offset = int(_onset + durations[i])
             ts[_onset:_offset] = val
@@ -243,11 +233,15 @@ def resample(df, sampling_rate, feature_names=None, filter_signal=True,
 
         f = interp1d(x, ts, kind=kind)
         x_new = np.arange(0, max_dur_bin_sr, step=interval * bin_sr)
-        resampled[f_name] = f(x_new)
+        new_onsets = np.arange(0, max_dur_bin_sr / bin_sr, interval)
 
-    new_onsets = np.arange(0, max_dur_bin_sr / bin_sr, interval)
+        return new_onsets, interval, f(x_new)
 
-    data = pd.DataFrame(
-        {'onset': new_onsets, 'duration': interval, **resampled})
+    resampled = []
+    for feat_name, feat_df in df.groupby('feature'):
+        new_onsets, interval, values = _densify_resample(feat_df)
+        resampled.append(
+            pd.DataFrame({'onset': new_onsets, 'duration': interval,
+                          'value': values, 'feature': feat_name}))
 
-    return data
+    return pd.concat(resampled)

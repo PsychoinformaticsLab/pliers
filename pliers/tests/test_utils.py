@@ -67,15 +67,18 @@ def test_resample():
 
     resampled_df = resample(df, 3)
 
-    assert set(resampled_df.columns) == {'duration', 'onset', 'rms'}
+    assert set(resampled_df.columns) == {
+        'duration', 'onset', 'feature', 'value'}
+
+    assert resampled_df['feature'].unique() == 'rms'
 
     # This checks that the filtering has happened. If it has not, then
     # this value for this frequency bin will be an alias and have a
     # very different amplitude
-    assert resampled_df[resampled_df.onset == 0]['rms'].values[0] != \
-        df[df.onset == 0]['rms'].values[0]
-    assert resampled_df[resampled_df.onset == 0]['rms'].values[0] != \
-        df[df.onset == 0]['rms'].values[0]
+    assert resampled_df[resampled_df.onset == 0]['value'].values[0] != \
+        df[df.onset == 0]['value'].values[0]
+    assert resampled_df[resampled_df.onset == 0]['value'].values[0] != \
+        df[df.onset == 0]['value'].values[0]
 
-    assert np.allclose(resampled_df[resampled_df.onset == 2]['rms'].values[0],
+    assert np.allclose(resampled_df[resampled_df.onset == 2]['value'].values[0],
                        0.2261582761938699)
