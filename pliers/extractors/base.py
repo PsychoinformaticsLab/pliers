@@ -218,7 +218,7 @@ class ExtractorResult:
         filter_signal: (bool)
             Apply Butterworth filter to signal prior to resampling
         filter_N: (int)
-            The other of the Butterworth filter
+            The order of the Butterworth filter
         kind : {'linear', 'nearest', 'zero', 'slinear', 'quadratic', 'cubic'}
             Argument to pass to `scipy.interpolate.interp1d`; indicates
             the kind of interpolation approach to use. See interp1d docs for
