@@ -2,8 +2,6 @@
 
 from abc import ABCMeta, abstractmethod
 import json
-import math
-from scipy.interpolate import interp1d
 
 import pandas as pd
 import numpy as np
@@ -206,76 +204,6 @@ class ExtractorResult:
     @history.setter
     def history(self, history):
         self._history = history
-
-    def resample(self, sampling_rate, filter_signal=True,
-                 filter_N=5, kind='linear'):
-        """Resample the ExtractorResult object to the specified sampling rate
-
-        Parameters
-        ----------
-        sampling_rate (float)
-            Target sampling rate (in Hz).
-        filter_signal: (bool)
-            Apply Butterworth filter to signal prior to resampling
-        filter_N: (int)
-            The other of the Butterworth filter
-        kind : {'linear', 'nearest', 'zero', 'slinear', 'quadratic', 'cubic'}
-            Argument to pass to `scipy.interpolate.interp1d`; indicates
-            the kind of interpolation approach to use. See interp1d docs for
-            valid values. Default is 'linear'.
-
-        """
-
-        # Cast onsets and durations to milliseconds
-        onsets = np.round(self.onset * 1000).astype(int)
-        durations = np.round(np.array(self.duration) * 1000).astype(int)
-        gcd = np.gcd.reduce(np.r_[onsets, durations])
-        bin_sr = 1000. / gcd
-
-        onsets = np.round(self.onset * int(bin_sr)).astype(int)
-        durations = np.round(np.array(self.duration) * bin_sr).astype(int)
-
-        interval = 1 / sampling_rate
-        max_duration = self.onset[-1] + self.duration[-1]
-
-        # Calculate final number of samples after re-sampling
-        num = math.ceil(max_duration / interval)
-
-        # Maximum duration in bin_sr upscaling space
-        max_dur_bin_sr = int(num * interval * bin_sr)
-        x = np.arange(max_dur_bin_sr)
-
-        resampled = {}
-        for f_name in self.features:
-            values = self.data[f_name]
-
-            ts = np.zeros(int(max_dur_bin_sr), dtype=values.dtype)
-            start = 0
-            for i, val in enumerate(values):
-                _onset = int(start + onsets[i])
-                _offset = int(_onset + durations[i])
-                ts[_onset:_offset] = val
-
-            if filter_signal:
-                if sampling_rate < bin_sr:
-                    # Downsampling, so filter the signal
-                    from scipy.signal import butter, filtfilt
-                    # cutoff = new Nyqist / old Nyquist
-                    b, a = butter(
-                        filter_N, (sampling_rate / 2.0) / (bin_sr / 2.0),
-                        btype='low', output='ba', analog=False)
-                    ts = filtfilt(b, a, ts)
-
-            f = interp1d(x, ts, kind=kind)
-            x_new = np.arange(0, max_dur_bin_sr, step=interval * bin_sr)
-            resampled[f_name] = f(x_new)
-
-        new_onsets = np.arange(0, max_dur_bin_sr / bin_sr, interval)
-
-        data = pd.DataFrame(
-            {'onset': new_onsets, 'duration': interval, **resampled})
-
-        return data
 
 
 def merge_results(results, format='wide', timing=True, metadata=True,

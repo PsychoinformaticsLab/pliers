@@ -8,6 +8,9 @@ from itertools import islice
 
 from tqdm import tqdm
 import pandas as pd
+import numpy as np
+import math
+from scipy.interpolate import interp1d
 
 from pliers import config
 from pliers.support.exceptions import MissingDependencyError
@@ -30,7 +33,7 @@ def flatten(l):
 
 def flatten_dict(d, parent_key='', sep='_'):
     ''' Flattens a multi-level dictionary into a single level by concatenating
-    nested keys with the char provided in the sep argument. 
+    nested keys with the char provided in the sep argument.
 
     Solution from https://stackoverflow.com/questions/6027558/flatten-nested-python-dictionaries-compressing-keys'''
     items = []
@@ -119,7 +122,7 @@ def verify_dependencies(dependencies):
             missing.append(module_names[dep].package)
     if missing:
         raise MissingDependencyError(missing)
-        
+
 
 class EnvironmentKeyMixin:
 
@@ -164,3 +167,87 @@ class APIDependent(EnvironmentKeyMixin, metaclass=ABCMeta):
     @abstractmethod
     def check_valid_keys(self):
         pass
+
+
+def resample(df, sampling_rate, feature_names=None, filter_signal=True,
+             filter_N=5, kind='linear'):
+    """Resample a dataframe (typically from ExtractorResult.to_df)
+     to the specified sampling rate.
+
+    Parameters
+    ----------
+    df (DataFrame)
+        Pandas dataframe with onset, duration, and feature columns
+    sampling_rate (float)
+        Target sampling rate (in Hz).
+    feature_names (list)
+        List of feature names in df. If None, defaults to all columns except
+        "object_id", "onset", "duration", "order"
+    filter_signal: (bool)
+        Apply Butterworth filter to signal prior to resampling
+    filter_N: (int)
+        The other of the Butterworth filter
+    kind : {'linear', 'nearest', 'zero', 'slinear', 'quadratic', 'cubic'}
+        Argument to pass to `scipy.interpolate.interp1d`; indicates
+        the kind of interpolation approach to use. See interp1d docs for
+        valid values. Default is 'linear'.
+
+    """
+
+    if feature_names is None:
+        feature_names = list(set(df.columns) - set(
+            ['onset', 'duration', 'object_id', 'order']))
+
+    # Cast onsets and durations to milliseconds
+    onset = df['onset'].values
+    onsets = np.round(onset * 1000).astype(int)
+
+    duration = df['duration'].values
+    durations = np.round(np.array(duration) * 1000).astype(int)
+    gcd = np.gcd.reduce(np.r_[onsets, durations])
+    bin_sr = 1000. / gcd
+
+    onsets = np.round(onset * int(bin_sr)).astype(int)
+    durations = np.round(np.array(duration) * bin_sr).astype(int)
+
+    interval = 1 / sampling_rate
+    max_duration = onset[-1] + duration[-1]
+
+    # Calculate final number of samples after re-sampling
+    num = math.ceil(max_duration / interval)
+
+    # Maximum duration in bin_sr upscaling space
+    max_dur_bin_sr = int(num * interval * bin_sr)
+    x = np.arange(max_dur_bin_sr)
+
+    resampled = {}
+    for f_name in feature_names:
+        values = df[f_name]
+
+        ts = np.zeros(int(max_dur_bin_sr), dtype=values.dtype)
+        start = 0
+        for i, val in enumerate(values):
+            _onset = int(start + onsets[i])
+            _offset = int(_onset + durations[i])
+            ts[_onset:_offset] = val
+
+        if filter_signal:
+            if sampling_rate < bin_sr:
+                # Downsampling, so filter the signal
+                from scipy.signal import butter, filtfilt
+                # cutoff = new Nyqist / old Nyquist
+                b, a = butter(
+                    filter_N, (sampling_rate / 2.0) / (bin_sr / 2.0),
+                    btype='low', output='ba', analog=False)
+                ts = filtfilt(b, a, ts)
+
+        f = interp1d(x, ts, kind=kind)
+        x_new = np.arange(0, max_dur_bin_sr, step=interval * bin_sr)
+        resampled[f_name] = f(x_new)
+
+    new_onsets = np.arange(0, max_dur_bin_sr / bin_sr, interval)
+
+    data = pd.DataFrame(
+        {'onset': new_onsets, 'duration': interval, **resampled})
+
+    return data
