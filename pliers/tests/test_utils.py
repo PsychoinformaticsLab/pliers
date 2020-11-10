@@ -5,7 +5,8 @@ import pytest
 
 from pliers.stimuli import VideoStim
 from pliers.filters import FrameSamplingFilter
-from pliers.utils import batch_iterable, flatten_dict
+from pliers.utils import batch_iterable, flatten_dict. resample
+from pliers.extractors import RMSExtractor
 from pliers import config
 
 from .utils import get_test_data_path
@@ -56,3 +57,25 @@ def test_flatten_dict():
     assert res == { 'a' : 5, 'b_c' : 6, 'b_d' : 1}
     res = flatten_dict(d, 'prefix', '.')
     assert res == { 'prefix.a' : 5, 'prefix.b.c' : 6, 'prefix.b.d' : 1}
+
+
+def test_resample():
+    ext = RMSExtractor()
+    res = ext.transform(join(get_test_data_path(), '/audio/homer.wav'))
+
+    df = res.to_df()
+
+    resampled_df = resample(df, 3)
+
+    assert set(resampled_df.columns) == {'duration', 'onset', 'rms'}
+
+    # This checks that the filtering has happened. If it has not, then
+    # this value for this frequency bin will be an alias and have a
+    # very different amplitude
+    assert resampled_df[resampled_df.onset == 0]['rms'].values[0] != \
+        df[df.onset == 0]['rms'].values[0]
+    assert resampled_df[resampled_df.onset == 0]['rms'].values[0] != \
+        df[df.onset == 0]['rms'].values[0]
+
+    assert np.allclose(resampled_df[resampled_df.onset == 2]['rms'].values[0],
+                       0.2261582761938699)
