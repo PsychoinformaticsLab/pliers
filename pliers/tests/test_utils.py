@@ -5,7 +5,7 @@ import pytest
 
 from pliers.stimuli import VideoStim
 from pliers.filters import FrameSamplingFilter
-from pliers.utils import batch_iterable, flatten_dict. resample
+from pliers.utils import batch_iterable, flatten_dict, resample
 from pliers.extractors import RMSExtractor
 from pliers import config
 
