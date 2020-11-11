@@ -1,5 +1,6 @@
 from types import GeneratorType
 from os.path import join
+import numpy as np
 
 import pytest
 
@@ -61,9 +62,9 @@ def test_flatten_dict():
 
 def test_resample():
     ext = RMSExtractor()
-    res = ext.transform(join(get_test_data_path(), '/audio/homer.wav'))
+    res = ext.transform(join(get_test_data_path(), 'audio/homer.wav'))
 
-    df = res.to_df()
+    df = res.to_df(format='long')
 
     resampled_df = resample(df, 3)
 
