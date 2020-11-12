@@ -90,10 +90,14 @@ def test_resample():
 
 
     # Test upsample
-    upsampled_df = resample(df, 30)
+    ext = RMSExtractor(frame_length=1500, hop_length=1500,)
+    res = ext.transform(join(get_test_data_path(), 'audio/homer.wav'))
+    df = res.to_df(format='long')
+
+    upsampled_df = resample(df, 10)
 
     assert np.allclose(upsampled_df.ix[0].onset, 0)
-    assert np.allclose(upsampled_df.ix[1].onset, 0.033333)
+    assert np.allclose(upsampled_df.ix[1].onset, 0.1)
 
     assert set(upsampled_df.columns) == {
         'duration', 'onset', 'feature', 'value'}
@@ -109,5 +113,5 @@ def test_resample():
         df[df.onset == 0]['value'].values[0]
 
     # Value will be slightly different at 2s with different sampling
-    assert np.allclose(upsampled_df[upsampled_df.onset == 2]['value'].values[0],
-                       0.253839123701585)
+    assert np.allclose(
+        upsampled_df[upsampled_df.onset == 2]['value'].values[0],  0.25309)
