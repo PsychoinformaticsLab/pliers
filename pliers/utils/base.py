@@ -212,9 +212,9 @@ def resample(df, sampling_rate, filter_signal=True, filter_N=5, kind='linear'):
 
         # Maximum duration in bin_sr upscaling space
         max_dur_bin_sr = int(num * interval * bin_sr)
-        x = np.arange(max_dur_bin_sr)
+        x = np.arange(max_dur_bin_sr+1)
 
-        ts = np.zeros(int(max_dur_bin_sr), dtype=feat_df['value'].dtype)
+        ts = np.zeros(max_dur_bin_sr+1, dtype=feat_df['value'].dtype)
         start = 0
         for i, val in enumerate(feat_df['value']):
             _onset = int(start + onsets[i])
