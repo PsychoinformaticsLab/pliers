@@ -201,7 +201,7 @@ def resample(df, sampling_rate, filter_signal=True, filter_N=5, kind='linear'):
         gcd = np.gcd.reduce(np.r_[onsets, durations])
         bin_sr = 1000. / gcd
 
-        onsets = np.round(onset * int(bin_sr)).astype(int)
+        onsets = np.round(onset * bin_sr).astype(int)
         durations = np.round(np.array(duration) * bin_sr).astype(int)
 
         interval = 1 / sampling_rate
