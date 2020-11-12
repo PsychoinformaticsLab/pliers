@@ -232,8 +232,8 @@ def resample(df, sampling_rate, filter_signal=True, filter_N=5, kind='linear'):
                 ts = filtfilt(b, a, ts)
 
         f = interp1d(x, ts, kind=kind)
-        x_new = np.arange(0, max_dur_bin_sr, step=interval * bin_sr)
         new_onsets = np.arange(0, max_dur_bin_sr / bin_sr, interval)
+        x_new = new_onsets * bin_sr
 
         return new_onsets, interval, f(x_new)
 
