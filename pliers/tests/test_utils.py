@@ -66,20 +66,52 @@ def test_resample():
 
     df = res.to_df(format='long')
 
-    resampled_df = resample(df, 3)
+    # Test downsample
+    downsampled_df = resample(df, 3)
 
-    assert set(resampled_df.columns) == {
+    assert np.allclose(downsampled_df.ix[0].onset, 0)
+    assert np.allclose(downsampled_df.ix[1].onset, 0.33333)
+
+    assert set(downsampled_df.columns) == {
         'duration', 'onset', 'feature', 'value'}
 
-    assert resampled_df['feature'].unique() == 'rms'
+    assert downsampled_df['feature'].unique() == 'rms'
 
     # This checks that the filtering has happened. If it has not, then
     # this value for this frequency bin will be an alias and have a
     # very different amplitude
-    assert resampled_df[resampled_df.onset == 0]['value'].values[0] != \
+    assert downsampled_df[downsampled_df.onset == 0]['value'].values[0] != \
         df[df.onset == 0]['value'].values[0]
-    assert resampled_df[resampled_df.onset == 0]['value'].values[0] != \
+    assert downsampled_df[downsampled_df.onset == 0]['value'].values[0] != \
         df[df.onset == 0]['value'].values[0]
 
-    assert np.allclose(resampled_df[resampled_df.onset == 2]['value'].values[0],
+    assert np.allclose(downsampled_df[downsampled_df.onset == 2]['value'].values[0],
                        0.2261582761938699)
+
+
+    # Test upsample
+    ext = RMSExtractor(frame_length=1500, hop_length=1500,)
+    res = ext.transform(join(get_test_data_path(), 'audio/homer.wav'))
+    df = res.to_df(format='long')
+
+    upsampled_df = resample(df, 10)
+
+    assert np.allclose(upsampled_df.ix[0].onset, 0)
+    assert np.allclose(upsampled_df.ix[1].onset, 0.1)
+
+    assert set(upsampled_df.columns) == {
+        'duration', 'onset', 'feature', 'value'}
+
+    assert upsampled_df['feature'].unique() == 'rms'
+
+    # This checks that the filtering has happened. If it has not, then
+    # this value for this frequency bin will be an alias and have a
+    # very different amplitude
+    assert upsampled_df[upsampled_df.onset == 0]['value'].values[0] != \
+        df[df.onset == 0]['value'].values[0]
+    assert upsampled_df[upsampled_df.onset == 0]['value'].values[0] != \
+        df[df.onset == 0]['value'].values[0]
+
+    # Value will be slightly different at 2s with different sampling
+    assert np.allclose(
+        upsampled_df[upsampled_df.onset == 2]['value'].values[0],  0.25309)

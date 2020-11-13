@@ -201,7 +201,7 @@ def resample(df, sampling_rate, filter_signal=True, filter_N=5, kind='linear'):
         gcd = np.gcd.reduce(np.r_[onsets, durations])
         bin_sr = 1000. / gcd
 
-        onsets = np.round(onset * int(bin_sr)).astype(int)
+        onsets = np.round(onset * bin_sr).astype(int)
         durations = np.round(np.array(duration) * bin_sr).astype(int)
 
         interval = 1 / sampling_rate
@@ -212,9 +212,9 @@ def resample(df, sampling_rate, filter_signal=True, filter_N=5, kind='linear'):
 
         # Maximum duration in bin_sr upscaling space
         max_dur_bin_sr = int(num * interval * bin_sr)
-        x = np.arange(max_dur_bin_sr)
+        x = np.arange(max_dur_bin_sr+1)
 
-        ts = np.zeros(int(max_dur_bin_sr), dtype=feat_df['value'].dtype)
+        ts = np.zeros(max_dur_bin_sr+1, dtype=feat_df['value'].dtype)
         start = 0
         for i, val in enumerate(feat_df['value']):
             _onset = int(start + onsets[i])
@@ -232,8 +232,8 @@ def resample(df, sampling_rate, filter_signal=True, filter_N=5, kind='linear'):
                 ts = filtfilt(b, a, ts)
 
         f = interp1d(x, ts, kind=kind)
-        x_new = np.arange(0, max_dur_bin_sr, step=interval * bin_sr)
         new_onsets = np.arange(0, max_dur_bin_sr / bin_sr, interval)
+        x_new = new_onsets * bin_sr
 
         return new_onsets, interval, f(x_new)
 
