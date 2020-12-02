@@ -618,3 +618,42 @@ class AudiosetLabelExtractor(AudioExtractor):
         return ExtractorResult(preds, stim, self, features=labels,
                                onsets=onsets, durations=[dur]*len(onsets),
                                orders=list(range(len(onsets))))
+
+
+class TimbrePitchExtractor(AudioExtractor):
+    ''' Extract Timbre and Pitch from Mel-Frequency Ceptral Coefficients.
+
+    Args:
+    n_mfcc (int): specifies the number of MFCC to extract
+    n_coefs(int): cepstrum coefficients to keep in low quefrency spectrum
+    hop_length (int): hop length in number of samples
+    librosa_kwargs (optional): Optional named arguments to pass to librosa
+    '''
+
+    _log_attributes = ('hop_size', 'n_coefs', 'n_mfcc')
+
+    def __init__(self, n_mfcc=48, n_coefs=13, hop_length=512, **librosa_kwargs):
+        self.n_mfcc = n_mfcc
+        self.n_coefs = n_coefs
+        self.hop_length = hop_length
+        self.librosa_kwargs = librosa_kwargs
+        super().__init__()
+
+    def _extract(self, stim):
+
+        # 1) Use librosas mfcc extractor (see above), to extract MFCCs
+
+        # Might be easier to use the mfcc function from librsa directly
+        # rather than using the MFCCExtractor object. Not sure.
+
+        # 2) Use librosas DCT implementation to apply the following:
+
+        # lq_mfs = np.dot(DCT[:nCoefs].T, mfcc[:nCoefs])
+        # lq_mfs = 10 ** (lq_mfs / 20.)
+
+        # hq_mfs = np.dot(DCT[nCoefs:].T, mfcc[nCoefs:])
+        # hq_mfs = 10 ** (hq_mfs / 20.)
+
+        # 3) Add these to an `ExtractorResult` object and return
+
+        pass
