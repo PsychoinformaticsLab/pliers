@@ -630,9 +630,9 @@ class TimbrePitchExtractor(AudioExtractor):
     librosa_kwargs (optional): Optional named arguments to pass to librosa
     '''
 
-    _log_attributes = ('hop_size', 'n_coefs', 'n_mfcc')
+    _log_attributes = ('hop_length', 'n_coefs', 'n_mfcc')
 
-    def __init__(self, n_mfcc=48, n_coefs=13, hop_length=512, **librosa_kwargs):
+    def __init__(self, n_mfcc=48, n_coefs=13, hop_length=1024, **librosa_kwargs):
         self.n_mfcc = n_mfcc
         self.n_coefs = n_coefs
         self.hop_length = hop_length
@@ -641,19 +641,31 @@ class TimbrePitchExtractor(AudioExtractor):
 
     def _extract(self, stim):
 
-        # 1) Use librosas mfcc extractor (see above), to extract MFCCs
+        #https://librosa.org/doc/main/generated/librosa.feature.mfcc.html
+        mfccs = librosa.feature.mfcc(y=stim.data, 
+            sr=stim.sampling_rate, 
+            n_mfcc=self.n_mfcc,
+            hop_length=self.hop_length,
+            **self.librosa_kwargs)
 
-        # Might be easier to use the mfcc function from librsa directly
-        # rather than using the MFCCExtractor object. Not sure.
+        #https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.dct.html#scipy.fft.dct
+        lq_mfs = fft.dct(np.transpose(mfccs[:self.n_coefs]), 
+            type=2, 
+            n=self.n_mfcc, 
+            axis=- 1, 
+            norm='ortho', 
+            overwrite_x=False)
+        hq_mfs = fft.dct(np.transpose(mfccs[self.n_coefs:]), 
+            type=2, 
+            n=self.n_mfcc, 
+            axis=- 1, 
+            norm='ortho', 
+            overwrite_x=False)
 
-        # 2) Use librosas DCT implementation to apply the following:
+        lq_mfs = 10 ** (lq_mfs / 20.)
+        hq_mfs = 10 ** (hq_mfs / 20.)
 
-        # lq_mfs = np.dot(DCT[:nCoefs].T, mfcc[:nCoefs])
-        # lq_mfs = 10 ** (lq_mfs / 20.)
+        out_val = {'pitch':lq_mfs,'timbre':hq_mfs}
 
-        # hq_mfs = np.dot(DCT[nCoefs:].T, mfcc[nCoefs:])
-        # hq_mfs = 10 ** (hq_mfs / 20.)
-
-        # 3) Add these to an `ExtractorResult` object and return
-
-        pass
+        return ExtractorResult(out_val, stim, self,
+                               features=['pitch','timbre'])
