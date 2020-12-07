@@ -1,14 +1,72 @@
 ''' Extractor classes based on pre-trained models. '''
 
 import numpy as np
+from abc import ABCMeta
 
 from pliers.extractors.image import ImageExtractor
-from pliers.extractors.base import ExtractorResult
+from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.filters.image import ImageResizingFilter
-from pliers.utils import attempt_to_import, verify_dependencies
+from pliers.utils import (attempt_to_import, verify_dependencies,
+                         listify)
 
 tf = attempt_to_import('tensorflow')
 attempt_to_import('tensorflow.keras')
+hub = attempt_to_import('tensorflow_hub')
+
+
+class TFHubExtractor(Extractor, metaclass=ABCMeta):
+
+    ''' A generic class for Tensorflow Hub extractors 
+    Args:
+        url (str): url of the tensorflow-hub model to download
+        task (str): model task/domain identifier
+        labels (optional): list of labels (if relevant, e.g. for 
+            classification models). If specified, labels are used as
+            feature names and override task argument.
+        transform_fn (optional): function applied to the input before 
+            feeding it to the model (e.g. to change TF signature).
+        kwargs (dict): arguments to TensorFlow Hub load method (see 
+            https://www.tensorflow.org/hub/api_docs/python/hub/load)'''
+
+    _log_attributes = ('url',)
+    
+    def __init__(self, url, task=None, labels=None, 
+                transform_fn=None, **kwargs):
+        verify_dependencies(['tensorflow'])
+        self.model = hub.load(url, **kwargs)
+        self._labels = labels
+        self._task = task
+        self.transform_fn = transform_fn
+        super().__init__()
+
+    def get_feature_names(self):
+        if self._labels:
+            return self._labels
+        else:
+            listify(self._task)
+        
+    def _extract(self, stim):
+        features = listify(self.get_feature_names())
+        input = listify(stim.data)
+        if self.transform_fn:
+            input = self.transform_fn(input)
+        output = self.model.signatures['serving_default'](input).numpy()
+        return ExtractorResult(output, stim, self, 
+                               features=features)
+
+
+class TFHubEmbeddingExtractor(TFHubExtractor):
+
+    ''' Extracts embedding from TF Hub embedding models '''
+
+    _task = 'embedding'
+        
+
+class TFHubClassificationExtractor(TFHubExtractor):
+
+    ''' Extracts logits for TF Hub classification models '''
+
+    _task = 'class_presdictions'
 
 
 class TensorFlowKerasApplicationExtractor(ImageExtractor):
