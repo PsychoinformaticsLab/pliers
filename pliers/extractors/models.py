@@ -50,7 +50,7 @@ class TFHubExtractor(Extractor, metaclass=ABCMeta):
         input = listify(stim.data)
         if self.transform_fn:
             input = self.transform_fn(input)
-        output = self.model.signatures['serving_default'](input).numpy()
+        output = self.model.signatures['serving_default'](input).numpy() # or self.model(input).numpy()
         return ExtractorResult(output, stim, self, 
                                features=features)
 
