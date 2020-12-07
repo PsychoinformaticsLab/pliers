@@ -43,7 +43,7 @@ class TFHubExtractor(Extractor, metaclass=ABCMeta):
         if self._labels:
             return self._labels
         else:
-            listify(self._task)
+            return listify(self._task)
         
     def _extract(self, stim):
         features = listify(self.get_feature_names())
@@ -66,7 +66,7 @@ class TFHubClassificationExtractor(TFHubExtractor):
 
     ''' Extracts logits for TF Hub classification models '''
 
-    _task = 'class_presdictions'
+    _task = 'logits'
 
 
 class TensorFlowKerasApplicationExtractor(ImageExtractor):
