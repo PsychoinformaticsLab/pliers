@@ -53,7 +53,8 @@ from .audio import (LibrosaFeatureExtractor,
                     BeatTrackExtractor,
                     HarmonicExtractor,
                     PercussiveExtractor,
-                    AudiosetLabelExtractor)
+                    AudiosetLabelExtractor,
+                    MFCCEnergyExtractor)
 from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
                     VibranceExtractor, FaceRecognitionFaceEncodingsExtractor,
                     FaceRecognitionFaceLandmarksExtractor,
