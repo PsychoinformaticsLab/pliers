@@ -128,6 +128,8 @@ class TFHubTextEmbeddingExtractor(TFHubTextExtractor):
     def _postprocess(self, out):
         return out[self.output_key]
 
+# NB: test main audio models
+
 
 class TensorFlowKerasApplicationExtractor(ImageExtractor):
 
