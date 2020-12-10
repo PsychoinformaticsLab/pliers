@@ -6,7 +6,6 @@ from pliers.stimuli.misc import SeriesStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.utils import listify, isiterable
 import numpy as np
-import scipy
 from importlib import import_module
 import logging
 
