@@ -6,6 +6,7 @@ from abc import ABCMeta
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.filters.image import ImageResizingFilter
+from pliers.stimuli import ImageStim, TextStim
 from pliers.utils import (attempt_to_import, verify_dependencies,
                          listify)
 
@@ -18,55 +19,114 @@ class TFHubExtractor(Extractor, metaclass=ABCMeta):
 
     ''' A generic class for Tensorflow Hub extractors 
     Args:
-        url (str): url of the tensorflow-hub model to download
+        url_or_path (str): url or path to TFHub model
         task (str): model task/domain identifier
         labels (optional): list of labels (if relevant, e.g. for 
-            classification models). If specified, labels are used as
-            feature names and override task argument.
-        transform_fn (optional): function applied to the input before 
-            feeding it to the model (e.g. to change TF signature).
-        kwargs (dict): arguments to TensorFlow Hub load method (see 
-            https://www.tensorflow.org/hub/api_docs/python/hub/load)'''
+            classification models).
+        kwargs (dict): arguments to hub.KerasLayer'''
 
-    _log_attributes = ('url',)
+    _log_attributes = ('url_or_path',)
     
-    def __init__(self, url, task=None, labels=None, 
-                transform_fn=None, **kwargs):
-        verify_dependencies(['tensorflow'])
-        self.model = hub.load(url, **kwargs)
+    def __init__(self, url_or_path, task=None, labels=None, **kwargs):
+        verify_dependencies(['tensorflow', 'tensorflow_hub'])
+        self.model = hub.KerasLayer(url_or_path, **kwargs)
         self._labels = labels
         self._task = task
-        self.transform_fn = transform_fn
         super().__init__()
 
-    def get_feature_names(self):
+    def _get_feature_names(self): # to be edited
         if self._labels:
             return self._labels
         else:
             return listify(self._task)
+    
+    def _preprocess(self, stim):
+        return stim.data
+
+    def _postprocess(self, out):
+        return out
         
     def _extract(self, stim):
-        features = listify(self.get_feature_names())
-        input = listify(stim.data)
-        if self.transform_fn:
-            input = self.transform_fn(input)
-        output = self.model.signatures['serving_default'](input).numpy() # or self.model(input).numpy()
-        return ExtractorResult(output, stim, self, 
+        features = listify(self._get_feature_names())
+        inp = self._preprocess(stim)
+        out = self.model(inp).numpy()
+        out = self._postprocess(out)
+        return ExtractorResult(out, stim, self, 
                                features=features)
 
 
-class TFHubEmbeddingExtractor(TFHubExtractor):
+class TFHubImageExtractor(TFHubExtractor):
 
-    ''' Extracts embedding from TF Hub embedding models '''
+    ''' Extractor class for image models
+    Args:
+        rescale_rgb (bool): whether to rescale values to 0-1 range
+        reshape_input (tuple): if input needs to be reshaped, 
+            specifies target shape (height, width, n_channels).
+            Details on whether the model only accept a fixed size are
+            usually provided on the TFHub model page. 
+    '''
+
+    _input_type = ImageStim
+
+    def __init__(self, rescale_rgb=True, reshape_input=None): # add other args?
+        super().__init__()
+        self.rescale_rgb = rescale_rgb
+        self.reshape_input = reshape_input
+
+    def _preprocess(self, stim):
+        if self.reshape_input:
+            resizer = ImageResizingFilter(size=self.reshape_input[:-1]) # check dims
+            x = resizer.transform(stim).data
+        else:
+            x = stim.data
+        if self.rescale_rgb:
+            x = x / 255.0 # check
+        x = tf.convert_to_tensor(x, 
+                                 type=tf.float32)
+        x = tf.expand_dims(x, axis=0)
+        return x
+
+
+class TFHubImageEmbeddingExtractor(TFHubImageExtractor):
 
     _task = 'embedding'
-        
+    # Add task-specific postprocessing
 
-class TFHubClassificationExtractor(TFHubExtractor):
 
-    ''' Extracts logits for TF Hub classification models '''
+class TFHubImageClassificationExtractor(TFHubImageExtractor):
 
-    _task = 'logits'
+    _task = 'classification'
+    # Add task-specific postprocessing
+
+
+class TFHubTextExtractor(TFHubExtractor):
+
+    ''' Extractor class for text input '''
+
+    _input_type = TextStim
+
+    def __init__(self, preprocessor_url_or_path=None):
+        super().__init__()
+        self.preprocessor_url_or_path=preprocessor_url_or_path
+
+    def _preprocess(self, stim):
+        x = listify(stim.data)
+        if self.preprocessor_url_or_path:
+            preprocessor = hub.KerasLayer(self.preprocessor_url_or_path)
+            x = preprocessor(x)
+        return x
+
+
+class TFHubTextEmbeddingExtractor(TFHubTextExtractor):
+
+    _task = 'embedding'
+
+    def __init__(self, output_key='default'):
+        super().__init__()
+        self.output_key = output_key
+
+    def _postprocess(self, out):
+        return out[self.output_key]
 
 
 class TensorFlowKerasApplicationExtractor(ImageExtractor):
