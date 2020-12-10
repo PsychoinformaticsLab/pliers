@@ -620,8 +620,9 @@ class AudiosetLabelExtractor(AudioExtractor):
                                orders=list(range(len(onsets))))
 
 
-class TimbrePitchExtractor(AudioExtractor):
-    ''' Extract Timbre and Pitch from Mel-Frequency Ceptral Coefficients.
+class MFCCEnergyExtractor(AudioExtractor):
+    ''' Given a Middle Bound, Extract the Energy from the Low and 
+    High Registers of Mel-Frequency Ceptral Coefficients.
 
     Args:
     n_mfcc (int): specifies the number of MFCC to extract
@@ -649,23 +650,23 @@ class TimbrePitchExtractor(AudioExtractor):
             **self.librosa_kwargs)
 
         #https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.dct.html#scipy.fft.dct
-        lq_mfs = fft.dct(np.transpose(mfccs[:self.n_coefs]), 
+        low_mfs = fft.dct(np.transpose(mfccs[:self.n_coefs]), 
             type=2, 
             n=self.n_mfcc, 
             axis=- 1, 
             norm='ortho', 
             overwrite_x=False)
-        hq_mfs = fft.dct(np.transpose(mfccs[self.n_coefs:]), 
+        high_mfs = fft.dct(np.transpose(mfccs[self.n_coefs:]), 
             type=2, 
             n=self.n_mfcc, 
             axis=- 1, 
             norm='ortho', 
             overwrite_x=False)
 
-        lq_mfs = 10 ** (lq_mfs / 20.)
-        hq_mfs = 10 ** (hq_mfs / 20.)
+        low_mfs = 10 ** (low_mfs / 20.)
+        high_mfs = 10 ** (high_mfs / 20.)
 
-        out_val = {'pitch':lq_mfs,'timbre':hq_mfs}
+        out_val = {'low':low_mfs,'high':high_mfs}
 
         return ExtractorResult(out_val, stim, self,
-                               features=['pitch','timbre'])
+                               features=['low','high'])
