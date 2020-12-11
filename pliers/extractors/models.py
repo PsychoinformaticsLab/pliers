@@ -10,7 +10,6 @@ from pliers.stimuli import ImageStim, TextStim, AudioStim
 from pliers.utils import (attempt_to_import, verify_dependencies,
                          listify)
 
-from abc import ABCMeta
 import logging
 
 tf = attempt_to_import('tensorflow')
@@ -19,7 +18,7 @@ attempt_to_import('tensorflow.keras')
 attempt_to_import('tensorflow_text')
 
 
-class TFHubExtractor(Extractor, metaclass=ABCMeta):
+class TFHubExtractor(Extractor):
 
     ''' A generic class for Tensorflow Hub extractors 
     Args:
@@ -33,9 +32,9 @@ class TFHubExtractor(Extractor, metaclass=ABCMeta):
             (feature_0, feature_1, ... ,feature_n).
         kwargs (dict): arguments to hub.KerasLayer call
     '''
-    _input_type = (AudioStim)
+
     _log_attributes = ('url_or_path', 'features', 'transform_out')
-    
+
     def __init__(self, url_or_path, features=None, task=None, 
                  transform_out=None, **kwargs):
         verify_dependencies(['tensorflow', 'tensorflow_hub', 
@@ -84,7 +83,7 @@ class TFHubExtractor(Extractor, metaclass=ABCMeta):
 
 class TFHubImageExtractor(TFHubExtractor):
 
-    ''' Extractor class for image models
+    ''' TFHub Extractor class for image models
     Args:
         url_or_path (str): url or path to TFHub model
         task (str): model task/domain identifier
@@ -136,7 +135,7 @@ class TFHubImageExtractor(TFHubExtractor):
 
 class TFHubTextExtractor(TFHubExtractor):
 
-    ''' Extractor class for text input 
+    ''' TFHub extractor class for text models
     Args:
         output_key (str): key to desired embedding in output 
             dictionary (see documentation at 
