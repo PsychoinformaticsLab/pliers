@@ -24,3 +24,4 @@ transformers
 xlrd
 rev_ai
 tensorflow-hub
+tensorflow_text

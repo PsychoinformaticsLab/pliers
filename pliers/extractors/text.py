@@ -454,7 +454,7 @@ class BertExtractor(ComplexTextExtractor):
         self.tokenizer_type = tokenizer
         self.model_class = model_class
         self.framework = framework
-        self.return_input=return_input
+        self.return_input = return_input
         self.model_kwargs = model_kwargs if model_kwargs else {}
         self.tokenizer_kwargs = tokenizer_kwargs if tokenizer_kwargs else {}
         model = model_class if self.framework == 'pt' else 'TF' + model_class
@@ -514,7 +514,7 @@ class BertExtractor(ComplexTextExtractor):
             feat += ['token', 'word']
         return data, feat, ons, dur
     
-    def _to_df(self, result, include_attributes=True):
+    def _to_df(self, result):
         res_df = pd.DataFrame(dict(zip(result.features, result._data)))
         res_df['object_id'] = range(res_df.shape[0])
         return res_df

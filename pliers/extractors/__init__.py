@@ -59,7 +59,9 @@ from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
                     FaceRecognitionFaceLandmarksExtractor,
                     FaceRecognitionFaceLocationsExtractor)
 from .misc import MetricExtractor
-from .models import TensorFlowKerasApplicationExtractor
+from .models import (TensorFlowKerasApplicationExtractor, 
+                     TFHubImageExtractor, TFHubTextExtractor, 
+                     TFHubExtractor)
 from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
                    NumUniqueWordsExtractor, PartOfSpeechExtractor,
@@ -122,6 +124,9 @@ __all__ = [
     'MicrosoftVisionAPIColorExtractor',
     'MicrosoftVisionAPIAdultExtractor',
     'TensorFlowKerasApplicationExtractor',
+    'TFHubExtractor',
+    'TFHubImageExtractor',
+    'TFHubTextExtractor',
     'ComplexTextExtractor',
     'DictionaryExtractor',
     'PredefinedDictionaryExtractor',

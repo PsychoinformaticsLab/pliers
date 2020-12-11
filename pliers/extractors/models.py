@@ -1,134 +1,194 @@
 ''' Extractor classes based on pre-trained models. '''
 
 import numpy as np
-from abc import ABCMeta
+import pandas as pd
 
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.filters.image import ImageResizingFilter
-from pliers.stimuli import ImageStim, TextStim
+from pliers.stimuli import ImageStim, TextStim, AudioStim
 from pliers.utils import (attempt_to_import, verify_dependencies,
                          listify)
 
+from abc import ABCMeta
+import logging
+
 tf = attempt_to_import('tensorflow')
-attempt_to_import('tensorflow.keras')
 hub = attempt_to_import('tensorflow_hub')
+attempt_to_import('tensorflow.keras')
+attempt_to_import('tensorflow_text')
 
 
 class TFHubExtractor(Extractor, metaclass=ABCMeta):
 
     ''' A generic class for Tensorflow Hub extractors 
     Args:
-        url_or_path (str): url or path to TFHub model
+        url_or_path (str): url or path to TFHub model. You can
+            browse models at https://tfhub.dev/.
         task (str): model task/domain identifier
-        labels (optional): list of labels (if relevant, e.g. for 
-            classification models).
-        kwargs (dict): arguments to hub.KerasLayer'''
-
-    _log_attributes = ('url_or_path',)
+        features (optional): list of labels (for classification) 
+            or other feature names. If a one-element list or 
+            a string is passed, packs output vectors into one column.
+            If not specified, returns numbered features 
+            (feature_0, feature_1, ... ,feature_n).
+        kwargs (dict): arguments to hub.KerasLayer call
+    '''
+    _input_type = (AudioStim)
+    _log_attributes = ('url_or_path', 'features', 'transform_out')
     
-    def __init__(self, url_or_path, task=None, labels=None, **kwargs):
-        verify_dependencies(['tensorflow', 'tensorflow_hub'])
+    def __init__(self, url_or_path, features=None, task=None, 
+                 transform_out=None, **kwargs):
+        verify_dependencies(['tensorflow', 'tensorflow_hub', 
+                             'tensorflow_text'])
         self.model = hub.KerasLayer(url_or_path, **kwargs)
-        self._labels = labels
+        self.url_or_path = url_or_path
+        self.features = listify(features)
         self._task = task
+        self.transform_out = transform_out
         super().__init__()
 
-    def _get_feature_names(self): # to be edited
-        if self._labels:
-            return self._labels
-        else:
-            return listify(self._task)
+    def get_feature_names(self, out):
+        features = ['feature_' + str(i) 
+                    for i in range(out.shape[-1])]
+        return features
     
     def _preprocess(self, stim):
-        return stim.data
+        if type(stim) == TextStim:
+            return listify(stim.data)
+        else:
+            return stim.data
 
     def _postprocess(self, out):
-        return out
+        if self.transform_out:
+            out = self.transform_out(out)
+        return out.numpy().squeeze()
         
     def _extract(self, stim):
-        features = listify(self._get_feature_names())
         inp = self._preprocess(stim)
-        out = self.model(inp).numpy()
+        out = self.model(inp)
         out = self._postprocess(out)
-        return ExtractorResult(out, stim, self, 
+        features = self.features or self.get_feature_names(out)
+        return ExtractorResult(listify(out), stim, self, 
                                features=features)
+    
+    def _to_df(self, result):
+        if len(result.features) == 1:
+            data = [result._data]
+        else:
+            data = np.array(result._data)
+            if len(data.shape) > 2:
+                data = data.squeeze()
+        res_df = pd.DataFrame(data, columns=result.features)
+        return res_df
 
 
 class TFHubImageExtractor(TFHubExtractor):
 
     ''' Extractor class for image models
     Args:
+        url_or_path (str): url or path to TFHub model
+        task (str): model task/domain identifier
+        features (optional): list of labels (for classification) 
+            or other feature names. If not specified, returns 
+            numbered features (feature_0, feature_1, ... ,feature_n)
         rescale_rgb (bool): whether to rescale values to 0-1 range
         reshape_input (tuple): if input needs to be reshaped, 
             specifies target shape (height, width, n_channels).
             Details on whether the model only accept a fixed size are
-            usually provided on the TFHub model page. 
+            usually provided on the TFHub model page
+        kwargs (dict): arguments to hub.KerasLayer call
     '''
 
     _input_type = ImageStim
+    _log_attributes = ('url_or_path', 'features', 'rescale_rgb', 
+                       'reshape_input')
 
-    def __init__(self, rescale_rgb=True, reshape_input=None): # add other args?
-        super().__init__()
+    def __init__(self, 
+                 url_or_path, 
+                 features=None, 
+                 task=None, 
+                 rescale_rgb=True, 
+                 reshape_input=None, 
+                 **kwargs):
+        if not reshape_input:
+            logging.warning('Note that some models may require (or perform best with) '
+                            'specific input shapes. Incompatible shapes may raise errors'
+                            'at extraction. Make sure you check the docs for '
+                            'your model on TFHub. If needed, you can reshape '
+                            'your input image by passing the desired target shape '
+                            '(height, width, n_channels) to reshape_input')
         self.rescale_rgb = rescale_rgb
         self.reshape_input = reshape_input
+        super().__init__(url_or_path, features, task, None, **kwargs)
 
     def _preprocess(self, stim):
         if self.reshape_input:
-            resizer = ImageResizingFilter(size=self.reshape_input[:-1]) # check dims
+            resizer = ImageResizingFilter(size=self.reshape_input[:-1])
             x = resizer.transform(stim).data
         else:
             x = stim.data
         if self.rescale_rgb:
-            x = x / 255.0 # check
-        x = tf.convert_to_tensor(x, 
-                                 type=tf.float32)
+            x = x / 255.0
+        x = tf.convert_to_tensor(x, dtype=tf.float32)
         x = tf.expand_dims(x, axis=0)
         return x
 
 
-class TFHubImageEmbeddingExtractor(TFHubImageExtractor):
-
-    _task = 'embedding'
-    # Add task-specific postprocessing
-
-
-class TFHubImageClassificationExtractor(TFHubImageExtractor):
-
-    _task = 'classification'
-    # Add task-specific postprocessing
-
-
 class TFHubTextExtractor(TFHubExtractor):
 
-    ''' Extractor class for text input '''
+    ''' Extractor class for text input 
+    Args:
+        output_key (str): key to desired embedding in output 
+            dictionary (see documentation at 
+            https://www.tensorflow.org/hub/common_saved_model_apis/text).
+            Set to None is the output is not a dictionary.
+        preprocessor_url_or_path (str): if the model requires 
+            preprocessing through another TFHub model, specifies the 
+            url or path to the preprocessing module. Information on 
+            required preprocessing and appropriate models is generally
+            available on the TFHub model webpage
+        preprocessor_kwargs (dict): dictionary or named arguments
+            for preprocessor model hub.KerasLayer call
+    '''
 
-    _input_type = TextStim
+    _input_type = TextStim 
 
-    def __init__(self, preprocessor_url_or_path=None):
-        super().__init__()
+    def __init__(self,
+                 url_or_path, 
+                 features=None,
+                 task=None,
+                 output_key='default', 
+                 preprocessor_url_or_path=None, 
+                 preprocessor_kwargs=None, 
+                 **kwargs):
+        super().__init__(url_or_path, features, task, None, **kwargs)
+        self.output_key = output_key
         self.preprocessor_url_or_path=preprocessor_url_or_path
+        self.preprocessor_kwargs = preprocessor_kwargs
 
     def _preprocess(self, stim):
         x = listify(stim.data)
         if self.preprocessor_url_or_path:
-            preprocessor = hub.KerasLayer(self.preprocessor_url_or_path)
+            preprocessor = hub.KerasLayer(self.preprocessor_url_or_path,
+                                          self.preprocessor_kwargs)
             x = preprocessor(x)
         return x
-
-
-class TFHubTextEmbeddingExtractor(TFHubTextExtractor):
-
-    _task = 'embedding'
-
-    def __init__(self, output_key='default'):
-        super().__init__()
-        self.output_key = output_key
-
+    
     def _postprocess(self, out):
-        return out[self.output_key]
-
-# NB: test main audio models
+        if not self.output_key:
+            return out.numpy().squeeze()
+        else:
+            try:
+                return out[self.output_key].numpy().squeeze()
+            except KeyError:
+                raise ValueError(f'{self.output_key} is not a valid key.'
+                                'Check which keys are available in the output '
+                                'embedding dictionary in TFHub docs '
+                                '(https://www.tensorflow.org/hub/common_saved_model_apis/text)'
+                                f' or at the model URL ({self.url_or_path})')
+            except IndexError:
+                raise ValueError(f'Model output is not a dictionary. '
+                                  'Try initialize the extractor with output_key=None')
 
 
 class TensorFlowKerasApplicationExtractor(ImageExtractor):
