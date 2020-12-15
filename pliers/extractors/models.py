@@ -6,7 +6,8 @@ import pandas as pd
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.filters.image import ImageResizingFilter
-from pliers.stimuli import ImageStim, TextStim, AudioStim
+from pliers.stimuli import ImageStim, TextStim
+from pliers.stimuli.base import Stim
 from pliers.utils import (attempt_to_import, verify_dependencies,
                          listify)
 
@@ -30,20 +31,26 @@ class TFHubExtractor(Extractor):
             a string is passed, packs output vectors into one column.
             If not specified, returns numbered features 
             (feature_0, feature_1, ... ,feature_n).
+        transform_out (optional): function to transform model 
+            output for compatibility with extractor result
+        transform_inp (optional): function to transform Stim.data 
+            for compatibility with model input format
         kwargs (dict): arguments to hub.KerasLayer call
     '''
 
     _log_attributes = ('url_or_path', 'features', 'transform_out')
+    _input_type = Stim
 
-    def __init__(self, url_or_path, features=None, task=None, 
-                 transform_out=None, **kwargs):
+    def __init__(self, url_or_path, features=None,
+                 transform_out=None, transform_inp=None,
+                  **kwargs):
         verify_dependencies(['tensorflow', 'tensorflow_hub', 
                              'tensorflow_text'])
         self.model = hub.KerasLayer(url_or_path, **kwargs)
         self.url_or_path = url_or_path
         self.features = listify(features)
-        self._task = task
         self.transform_out = transform_out
+        self.transform_inp = transform_inp
         super().__init__()
 
     def get_feature_names(self, out):
@@ -52,10 +59,13 @@ class TFHubExtractor(Extractor):
         return features
     
     def _preprocess(self, stim):
-        if type(stim) == TextStim:
-            return listify(stim.data)
+        if self.transform_inp:
+            return self.transform_inp(stim.data)
         else:
-            return stim.data
+            if type(stim) == TextStim:
+                return listify(stim.data)
+            else:
+                return stim.data
 
     def _postprocess(self, out):
         if self.transform_out:
