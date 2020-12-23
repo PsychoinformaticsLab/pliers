@@ -19,6 +19,9 @@ from pliers.support.setup_yamnet import YAMNET_PATH
 librosa = attempt_to_import('librosa')
 tf = attempt_to_import('tensorflow')
 
+def override(method):
+    method.is_overridden = True
+    return method
 
 class AudioExtractor(Extractor):
 
@@ -164,6 +167,9 @@ class LibrosaFeatureExtractor(AudioExtractor, metaclass=ABCMeta):
     def get_feature_names(self):
         return self._feature
 
+    def _proc_func(self,stim):
+        raise NotImplementedError()
+
     def _get_values(self, stim):
         if self._feature in ['zero_crossing_rate', 'rms', 'spectral_flatness']:
             return getattr(librosa.feature, self._feature)(
@@ -191,9 +197,19 @@ class LibrosaFeatureExtractor(AudioExtractor, metaclass=ABCMeta):
                 y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
                 **self.librosa_kwargs)
 
+    def _get_proc_values(self, stim):
+        if hasattr(self._proc_func, 'is_overridden'):
+            return self._proc_func(stim)
+        else:
+            return self._get_values(stim)
+
+
     def _extract(self, stim):
 
-        values = self._get_values(stim)
+        if hasattr(self._proc_func, 'is_overridden'):
+            values = self._get_proc_values(stim)
+        else:
+            values = self._get_values(stim)
 
         if self._feature=='beat_track':
             beats=np.array(values[1])
@@ -619,14 +635,13 @@ class AudiosetLabelExtractor(AudioExtractor):
                                onsets=onsets, durations=[dur]*len(onsets),
                                orders=list(range(len(onsets))))
 
-
-class MFCCEnergyExtractor(AudioExtractor):
-    ''' Given a Middle Bound, Extract the Energy from the Low and 
-    High Registers of Mel-Frequency Ceptral Coefficients.
+class MFCCLowEnergyExtractor(MFCCExtractor):
+    ''' Given a Middle Bound, Extract the Energy from the Low Register
+    of Mel-Frequency Ceptral Coefficients.
 
     Args:
     n_mfcc (int): specifies the number of MFCC to extract
-    n_coefs(int): cepstrum coefficients to keep in low quefrency spectrum
+    n_coefs(int): cepstrum coefficients to keep in the low quefrency spectrum
     hop_length (int): hop length in number of samples
     librosa_kwargs (optional): Optional named arguments to pass to librosa
     '''
@@ -638,35 +653,48 @@ class MFCCEnergyExtractor(AudioExtractor):
         self.n_coefs = n_coefs
         self.hop_length = hop_length
         self.librosa_kwargs = librosa_kwargs
-        super().__init__()
+        super().__init__(n_mfcc=n_mfcc)
 
-    def _extract(self, stim):
-
-        #https://librosa.org/doc/main/generated/librosa.feature.mfcc.html
-        mfccs = librosa.feature.mfcc(y=stim.data, 
-            sr=stim.sampling_rate, 
-            n_mfcc=self.n_mfcc,
-            hop_length=self.hop_length,
-            **self.librosa_kwargs)
-
-        #https://docs.scipy.org/doc/scipy/reference/generated/scipy.fft.dct.html#scipy.fft.dct
-        low_mfs = fft.dct(np.transpose(mfccs[:self.n_coefs]), 
+    @override
+    def _proc_func(self,stim):
+        vals = self._get_values(stim)
+        low_mfs = fft.dct(np.transpose(vals[:self.n_coefs]), 
             type=2, 
             n=self.n_mfcc, 
             axis=- 1, 
             norm='ortho', 
             overwrite_x=False)
-        high_mfs = fft.dct(np.transpose(mfccs[self.n_coefs:]), 
-            type=2, 
-            n=self.n_mfcc, 
-            axis=- 1, 
-            norm='ortho', 
-            overwrite_x=False)
-
         low_mfs = 10 ** (low_mfs / 20.)
+        return low_mfs.T
+
+class MFCCHighEnergyExtractor(MFCCExtractor):
+    ''' Given a Middle Bound, Extract the Energy from the High Register
+    of Mel-Frequency Ceptral Coefficients.
+
+    Args:
+    n_mfcc (int): specifies the number of MFCC to extract
+    n_coefs(int): cepstrum coefficients to keep in the high quefrency spectrum
+    hop_length (int): hop length in number of samples
+    librosa_kwargs (optional): Optional named arguments to pass to librosa
+    '''
+
+    _log_attributes = ('hop_length', 'n_coefs', 'n_mfcc')
+
+    def __init__(self, n_mfcc=48, n_coefs=35, hop_length=1024, **librosa_kwargs):
+        self.n_mfcc = n_mfcc
+        self.n_coefs = n_coefs
+        self.hop_length = hop_length
+        self.librosa_kwargs = librosa_kwargs
+        super().__init__(n_mfcc=n_mfcc)
+
+    @override
+    def _proc_func(self,stim):
+        vals = self._get_values(stim)
+        high_mfs = fft.dct(np.transpose(vals[(self.n_mfcc-self.n_coefs):]), 
+            type=2, 
+            n=self.n_mfcc, 
+            axis=- 1, 
+            norm='ortho', 
+            overwrite_x=False)
         high_mfs = 10 ** (high_mfs / 20.)
-
-        out_val = {'low':low_mfs,'high':high_mfs}
-
-        return ExtractorResult(out_val, stim, self,
-                               features=['low','high'])
+        return high_mfs.T
