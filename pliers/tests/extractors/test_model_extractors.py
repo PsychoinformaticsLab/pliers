@@ -41,9 +41,8 @@ def test_tensorflow_keras_application_extractor():
         TensorFlowKerasApplicationExtractor(architecture='foo')
 
 def test_tfhub_image():
-    # test a classification and 
-    # test reshape warning and reshape
-    # test postprocessing 
+    # test a classification and a feature vector model
+    # test reshape warning and reshape functionality
     pass
 
 
@@ -98,7 +97,7 @@ def test_tfhub_text():
 
 def test_tfhub_generic():
     # Test an audio model
-    # Test transformations
+    # Test transformations (input and output)
     pass
 
 # NB:
