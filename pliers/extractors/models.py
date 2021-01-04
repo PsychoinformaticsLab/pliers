@@ -8,6 +8,7 @@ from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.filters.image import ImageResizingFilter
 from pliers.stimuli import ImageStim, TextStim
 from pliers.stimuli.base import Stim
+from pliers.support.exceptions import MissingDependencyError
 from pliers.utils import (attempt_to_import, verify_dependencies,
                          listify)
 
@@ -27,10 +28,29 @@ class TFHubExtractor(Extractor):
             browse models at https://tfhub.dev/.
         task (str): model task/domain identifier
         features (optional): list of labels (for classification) 
-            or other feature names. If a one-element list or 
-            a string is passed, packs output vectors into one column.
-            If not specified, returns numbered features 
-            (feature_0, feature_1, ... ,feature_n).
+            or other feature names. The number of items must 
+            match the number of features in the output. For example,
+            if a classification model with 1000 output classes is passed 
+            (e.g. EfficientNet B6, 
+            see https://tfhub.dev/tensorflow/efficientnet/b6/classification/1), 
+            this must be a list containing 1000 items. If a text encoder 
+            outputting 768-dimensional encoding is passed (e.g. base BERT),
+            this must be a list containing 768 items. Each dimension in the 
+            model output will be returned as a separate feature in the 
+            ExtractorResult.
+            Alternatively, the model output can be packed into a single 
+            feature (i.e. a vector) by passing a single-element list 
+            (e.g. ['encoding']) or a string. Along the lines of 
+            the previous examples, if a single feature name is 
+            passed here (e.g. if features=['encoding']) for a TFHub model 
+            that outputs a 768-dimensional encoding, the extractor will 
+            return only one feature named 'encoding', which contains the 
+            encoding vector as a 1-d array wrapped in a list.
+            If no value is passed, the extractor will automatically 
+            compute the number of features in the model output 
+            and return an equal number of features in pliers, labeling
+            each feature with a generic prefix + its positional index 
+            in the model output (feature_0, feature_1, ... ,feature_n).
         transform_out (optional): function to transform model 
             output for compatibility with extractor result
         transform_inp (optional): function to transform Stim.data 
@@ -44,8 +64,7 @@ class TFHubExtractor(Extractor):
     def __init__(self, url_or_path, features=None,
                  transform_out=None, transform_inp=None,
                   **kwargs):
-        verify_dependencies(['tensorflow', 'tensorflow_hub', 
-                             'tensorflow_text'])
+        verify_dependencies(['tensorflow_hub'])
         self.model = hub.KerasLayer(url_or_path, **kwargs)
         self.url_or_path = url_or_path
         self.features = listify(features)
@@ -174,6 +193,13 @@ class TFHubTextExtractor(TFHubExtractor):
         self.output_key = output_key
         self.preprocessor_url_or_path=preprocessor_url_or_path
         self.preprocessor_kwargs = preprocessor_kwargs
+        try:
+            verify_dependencies(['tensorflow_text'])
+        except MissingDependencyError:
+            logging.warning('Some TFHub text models require TensorFlow Text '
+                            '(see https://www.tensorflow.org/tutorials/tensorflow_text/intro),'
+                            ' which is not installed.'
+                            ' Missing dependency errors may arise.')
 
     def _preprocess(self, stim):
         x = listify(stim.data)
