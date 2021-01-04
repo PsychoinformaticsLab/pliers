@@ -73,7 +73,8 @@ def test_tfhub_text():
     assert np.isclose(gnews_df['embedding'][3][2],
                       hub.KerasLayer(GOOGLE_NEWS_URL)([ctxt.elements[3].text])[0,2].numpy())
     
-    electra_df = merge_results(electra_ext.transform(ctxt), extractor_names=False)
+    electra_df = merge_results(electra_ext.transform(ctxt.elements[:6]), 
+                               extractor_names=False)
     pmod = hub.KerasLayer(ELECTRA_PREPROCESSOR_URL)
     mmod = hub.KerasLayer(ELECTRA_MODEL_URL)
     assert np.isclose(electra_df['sent_encoding'][5][20], 
