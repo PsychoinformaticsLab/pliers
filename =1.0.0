@@ -1,0 +1,55 @@
+Collecting tensorflow
+  Using cached tensorflow-2.2.0-cp37-cp37m-macosx_10_11_x86_64.whl (175.3 MB)
+Requirement already satisfied: opt-einsum>=2.3.2 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorflow) (3.1.0)
+Requirement already satisfied: termcolor>=1.1.0 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorflow) (1.1.0)
+Requirement already satisfied: grpcio>=1.8.6 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorflow) (1.27.1)
+Requirement already satisfied: six>=1.12.0 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorflow) (1.12.0)
+Requirement already satisfied: google-pasta>=0.1.8 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorflow) (0.1.8)
+Requirement already satisfied: h5py<2.11.0,>=2.10.0 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorflow) (2.10.0)
+Collecting tensorflow-estimator<2.3.0,>=2.2.0
+  Using cached tensorflow_estimator-2.2.0-py2.py3-none-any.whl (454 kB)
+Collecting tensorboard<2.3.0,>=2.2.0
+  Using cached tensorboard-2.2.2-py3-none-any.whl (3.0 MB)
+Requirement already satisfied: scipy==1.4.1; python_version >= "3" in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorflow) (1.4.1)
+Requirement already satisfied: wrapt>=1.11.1 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorflow) (1.11.2)
+Requirement already satisfied: protobuf>=3.8.0 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorflow) (3.11.3)
+Requirement already satisfied: wheel>=0.26; python_version >= "3" in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorflow) (0.33.6)
+Requirement already satisfied: numpy<2.0,>=1.16.0 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorflow) (1.18.1)
+Requirement already satisfied: keras-preprocessing>=1.1.0 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorflow) (1.1.0)
+Collecting gast==0.3.3
+  Using cached gast-0.3.3-py2.py3-none-any.whl (9.7 kB)
+Collecting astunparse==1.6.3
+  Using cached astunparse-1.6.3-py2.py3-none-any.whl (12 kB)
+Requirement already satisfied: absl-py>=0.7.0 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorflow) (0.9.0)
+Requirement already satisfied: requests<3,>=2.21.0 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorboard<2.3.0,>=2.2.0->tensorflow) (2.22.0)
+Requirement already satisfied: google-auth-oauthlib<0.5,>=0.4.1 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorboard<2.3.0,>=2.2.0->tensorflow) (0.4.1)
+Requirement already satisfied: markdown>=2.6.8 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorboard<2.3.0,>=2.2.0->tensorflow) (2.6.11)
+Requirement already satisfied: werkzeug>=0.11.15 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorboard<2.3.0,>=2.2.0->tensorflow) (0.16.0)
+Collecting tensorboard-plugin-wit>=1.6.0
+  Using cached tensorboard_plugin_wit-1.6.0.post3-py3-none-any.whl (777 kB)
+Requirement already satisfied: setuptools>=41.0.0 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorboard<2.3.0,>=2.2.0->tensorflow) (41.4.0)
+Requirement already satisfied: google-auth<2,>=1.6.3 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from tensorboard<2.3.0,>=2.2.0->tensorflow) (1.11.0)
+Requirement already satisfied: urllib3!=1.25.0,!=1.25.1,<1.26,>=1.21.1 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from requests<3,>=2.21.0->tensorboard<2.3.0,>=2.2.0->tensorflow) (1.24.2)
+Requirement already satisfied: chardet<3.1.0,>=3.0.2 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from requests<3,>=2.21.0->tensorboard<2.3.0,>=2.2.0->tensorflow) (3.0.4)
+Requirement already satisfied: idna<2.9,>=2.5 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from requests<3,>=2.21.0->tensorboard<2.3.0,>=2.2.0->tensorflow) (2.8)
+Requirement already satisfied: certifi>=2017.4.17 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from requests<3,>=2.21.0->tensorboard<2.3.0,>=2.2.0->tensorflow) (2019.9.11)
+Requirement already satisfied: requests-oauthlib>=0.7.0 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from google-auth-oauthlib<0.5,>=0.4.1->tensorboard<2.3.0,>=2.2.0->tensorflow) (1.3.0)
+Requirement already satisfied: pyasn1-modules>=0.2.1 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from google-auth<2,>=1.6.3->tensorboard<2.3.0,>=2.2.0->tensorflow) (0.2.8)
+Requirement already satisfied: rsa<4.1,>=3.1.4 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from google-auth<2,>=1.6.3->tensorboard<2.3.0,>=2.2.0->tensorflow) (4.0)
+Requirement already satisfied: cachetools<5.0,>=2.0.0 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from google-auth<2,>=1.6.3->tensorboard<2.3.0,>=2.2.0->tensorflow) (4.0.0)
+Requirement already satisfied: oauthlib>=3.0.0 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from requests-oauthlib>=0.7.0->google-auth-oauthlib<0.5,>=0.4.1->tensorboard<2.3.0,>=2.2.0->tensorflow) (3.1.0)
+Requirement already satisfied: pyasn1<0.5.0,>=0.4.6 in /Users/rr48396/opt/anaconda3/lib/python3.7/site-packages (from pyasn1-modules>=0.2.1->google-auth<2,>=1.6.3->tensorboard<2.3.0,>=2.2.0->tensorflow) (0.4.8)
+Installing collected packages: tensorflow-estimator, tensorboard-plugin-wit, tensorboard, gast, astunparse, tensorflow
+  Attempting uninstall: tensorflow-estimator
+    Found existing installation: tensorflow-estimator 2.1.0
+    Uninstalling tensorflow-estimator-2.1.0:
+      Successfully uninstalled tensorflow-estimator-2.1.0
+  Attempting uninstall: tensorboard
+    Found existing installation: tensorboard 2.1.0
+    Uninstalling tensorboard-2.1.0:
+      Successfully uninstalled tensorboard-2.1.0
+  Attempting uninstall: gast
+    Found existing installation: gast 0.2.2
+    Uninstalling gast-0.2.2:
+      Successfully uninstalled gast-0.2.2
+Successfully installed astunparse-1.6.3 gast-0.3.3 tensorboard-2.2.2 tensorboard-plugin-wit-1.6.0.post3 tensorflow-2.2.0 tensorflow-estimator-2.2.0
