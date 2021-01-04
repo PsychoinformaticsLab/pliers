@@ -100,3 +100,7 @@ def test_tfhub_generic():
     # Test an audio model
     # Test transformations
     pass
+
+# NB:
+# The Electra model triggers loads of warnings.
+# Consider suppressing or changing models
