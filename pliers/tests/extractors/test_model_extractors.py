@@ -41,20 +41,28 @@ def test_tensorflow_keras_application_extractor():
         TensorFlowKerasApplicationExtractor(architecture='foo')
 
 def test_tfhub_image():
-    # test two models
+    # test a classification and 
     # test reshape warning and reshape
     # test postprocessing 
+    pass
+
 
 def test_tfhub_text():
     txt = TextStim(join(TEXT_DIR, 'scandal.txt'))
     ctxt = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
+
     sent_ext = TFHubTextExtractor(SENTENCE_ENCODER_URL, 
-                                  output_key=None,)
+                                  output_key=None)
     gnews_ext = TFHubTextExtractor(GOOGLE_NEWS_URL,
                                    output_key=None, features='embedding')
     electra_ext = TFHubTextExtractor(ELECTRA_MODEL_URL, 
+                                     features='sent_encoding',
                                      preprocessor_url_or_path=ELECTRA_PREPROCESSOR_URL)
-    
+    electra_token_ext = TFHubTextExtractor(ELECTRA_MODEL_URL, 
+                                           features='token_encodings',
+                                           output_key='sequence_output',
+                                           preprocessor_url_or_path=ELECTRA_PREPROCESSOR_URL)
+
     sent_df = sent_ext.transform(txt).to_df()
     assert all([f'feature_{i}' in sent_df.columns for i in range(512)])
     assert np.isclose(sent_df['feature_10'][0], 
@@ -65,9 +73,29 @@ def test_tfhub_text():
     assert np.isclose(gnews_df['embedding'][3][2],
                       hub.KerasLayer(GOOGLE_NEWS_URL)([ctxt.elements[3].text])[0,2].numpy())
     
-    electra_ext = electra_ext.transform(ctxt)
-    # test preprocessing step
-    # test transformations
+    electra_df = merge_results(electra_ext.transform(ctxt), extractor_names=False)
+    pmod = hub.KerasLayer(ELECTRA_PREPROCESSOR_URL)
+    mmod = hub.KerasLayer(ELECTRA_MODEL_URL)
+    assert np.isclose(electra_df['sent_encoding'][5][20], 
+                      mmod(pmod([ctxt.elements[5].text]))['pooled_output'][0,20].numpy())
+
+    electra_token_df = merge_results(electra_token_ext.transform(ctxt.elements[:3]), 
+                                     extractor_names=False)
+    assert all([electra_token_df['token_encodings'][i].shape == (128, 256) \
+                for i in range(electra_token_df.shape[0])])
+
+    with pytest.raises(ValueError) as err:
+        TFHubTextExtractor(ELECTRA_MODEL_URL, 
+                           preprocessor_url_or_path=ELECTRA_PREPROCESSOR_URL,
+                           output_key='key').transform(txt)
+    assert 'Check which keys' in str(err.value)
+
+    with pytest.raises(ValueError) as err:
+        TFHubTextExtractor(GOOGLE_NEWS_URL, output_key='key').transform(txt)
+    assert 'not a dictionary' in str(err.value)
+
 
 def test_tfhub_generic():
+    # Test an audio model
+    # Test transformations
     pass

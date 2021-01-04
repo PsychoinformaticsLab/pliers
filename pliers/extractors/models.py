@@ -163,6 +163,23 @@ class TFHubTextExtractor(TFHubExtractor):
 
     ''' TFHub extractor class for text models
     Args:
+        url_or_path (str): url or path to TFHub model. You can
+            browse models at https://tfhub.dev/.
+        features (optional): list of labels or other feature names. 
+            The number of items must  match the number of features 
+            in the model output. For example, if a text encoder 
+            outputting 768-dimensional encoding is passed 
+            (e.g. base BERT), this must be a list containing 768 items. 
+            Each dimension in the model output will be returned as a 
+            separate feature in the ExtractorResult.
+            Alternatively, the model output can be packed into a single 
+            feature (i.e. a vector) by passing a single-element list 
+            (e.g. ['encoding']) or a string. If no value is passed, 
+            the extractor will automatically compute the number of 
+            features in the model output and return an equal number 
+            of features in pliers, labeling each feature with a 
+            generic prefix + its positional index in the model 
+            output (feature_0, feature_1, ... ,feature_n).
         output_key (str): key to desired embedding in output 
             dictionary (see documentation at 
             https://www.tensorflow.org/hub/common_saved_model_apis/text).
@@ -181,11 +198,11 @@ class TFHubTextExtractor(TFHubExtractor):
     def __init__(self,
                  url_or_path, 
                  features=None,
-                 output_key='default', 
+                 output_key='default',
                  preprocessor_url_or_path=None, 
-                 preprocessor_kwargs=None, 
+                 preprocessor_kwargs=None,
                  **kwargs):
-        super().__init__(url_or_path, features, None, **kwargs)
+        super().__init__(url_or_path, features, **kwargs)
         self.output_key = output_key
         self.preprocessor_url_or_path=preprocessor_url_or_path
         self.preprocessor_kwargs = preprocessor_kwargs
@@ -217,7 +234,7 @@ class TFHubTextExtractor(TFHubExtractor):
                                 'embedding dictionary in TFHub docs '
                                 '(https://www.tensorflow.org/hub/common_saved_model_apis/text)'
                                 f' or at the model URL ({self.url_or_path})')
-            except (IndexError, ValueError) as e:
+            except (IndexError, TypeError):
                 raise ValueError(f'Model output is not a dictionary. '
                                   'Try initialize the extractor with output_key=None.')
 
