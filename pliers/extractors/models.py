@@ -26,7 +26,6 @@ class TFHubExtractor(Extractor):
     Args:
         url_or_path (str): url or path to TFHub model. You can
             browse models at https://tfhub.dev/.
-        task (str): model task/domain identifier
         features (optional): list of labels (for classification) 
             or other feature names. The number of items must 
             match the number of features in the output. For example,
@@ -63,7 +62,7 @@ class TFHubExtractor(Extractor):
 
     def __init__(self, url_or_path, features=None,
                  transform_out=None, transform_inp=None,
-                  **kwargs):
+                 **kwargs):
         verify_dependencies(['tensorflow_hub'])
         self.model = hub.KerasLayer(url_or_path, **kwargs)
         self.url_or_path = url_or_path
@@ -115,7 +114,6 @@ class TFHubImageExtractor(TFHubExtractor):
     ''' TFHub Extractor class for image models
     Args:
         url_or_path (str): url or path to TFHub model
-        task (str): model task/domain identifier
         features (optional): list of labels (for classification) 
             or other feature names. If not specified, returns 
             numbered features (feature_0, feature_1, ... ,feature_n)
@@ -133,8 +131,7 @@ class TFHubImageExtractor(TFHubExtractor):
 
     def __init__(self, 
                  url_or_path, 
-                 features=None, 
-                 task=None, 
+                 features=None,
                  rescale_rgb=True, 
                  reshape_input=None, 
                  **kwargs):
@@ -147,7 +144,7 @@ class TFHubImageExtractor(TFHubExtractor):
                             '(height, width, n_channels) to reshape_input')
         self.rescale_rgb = rescale_rgb
         self.reshape_input = reshape_input
-        super().__init__(url_or_path, features, task, None, **kwargs)
+        super().__init__(url_or_path, features, None, **kwargs)
 
     def _preprocess(self, stim):
         if self.reshape_input:
@@ -184,12 +181,11 @@ class TFHubTextExtractor(TFHubExtractor):
     def __init__(self,
                  url_or_path, 
                  features=None,
-                 task=None,
                  output_key='default', 
                  preprocessor_url_or_path=None, 
                  preprocessor_kwargs=None, 
                  **kwargs):
-        super().__init__(url_or_path, features, task, None, **kwargs)
+        super().__init__(url_or_path, features, None, **kwargs)
         self.output_key = output_key
         self.preprocessor_url_or_path=preprocessor_url_or_path
         self.preprocessor_kwargs = preprocessor_kwargs
@@ -221,9 +217,9 @@ class TFHubTextExtractor(TFHubExtractor):
                                 'embedding dictionary in TFHub docs '
                                 '(https://www.tensorflow.org/hub/common_saved_model_apis/text)'
                                 f' or at the model URL ({self.url_or_path})')
-            except IndexError:
+            except (IndexError, ValueError) as e:
                 raise ValueError(f'Model output is not a dictionary. '
-                                  'Try initialize the extractor with output_key=None')
+                                  'Try initialize the extractor with output_key=None.')
 
 
 class TensorFlowKerasApplicationExtractor(ImageExtractor):
