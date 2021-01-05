@@ -138,13 +138,13 @@ class TFHubImageExtractor(TFHubExtractor):
         if not reshape_input:
             logging.warning('Note that some models may require (or perform best with) '
                             'specific input shapes. Incompatible shapes may raise errors'
-                            'at extraction. Make sure you check the docs for '
+                            ' at extraction. Make sure you check the docs for '
                             'your model on TFHub. If needed, you can reshape '
                             'your input image by passing the desired target shape '
                             '(height, width, n_channels) to reshape_input')
         self.rescale_rgb = rescale_rgb
         self.reshape_input = reshape_input
-        super().__init__(url_or_path, features, None, **kwargs)
+        super().__init__(url_or_path, features, **kwargs)
 
     def _preprocess(self, stim):
         if self.reshape_input:
