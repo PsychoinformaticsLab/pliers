@@ -6,22 +6,28 @@ import pytest
 
 from ..utils import get_test_data_path
 from pliers.extractors import (TensorFlowKerasApplicationExtractor,
-                               TFHubExtractor, TFHubImageExtractor, 
+                               TFHubExtractor, 
+                               TFHubImageExtractor, 
                                TFHubTextExtractor)
-from pliers.stimuli import ImageStim, TextStim, ComplexTextStim
+from pliers.filters import AudioResamplingFilter
+from pliers.stimuli import (ImageStim, 
+                            TextStim, ComplexTextStim, 
+                            AudioStim)
 from pliers.extractors.base import merge_results
 
 
 IMAGE_DIR = join(get_test_data_path(), 'image')
 TEXT_DIR = join(get_test_data_path(), 'text')
+AUDIO_DIR = join(get_test_data_path(), 'audio')
 
 EFFNET_URL = 'https://tfhub.dev/tensorflow/efficientnet/b7/classification/1'
 MNET_URL = 'https://tfhub.dev/google/imagenet/mobilenet_v2_100_224/feature_vector/4'
-
 SENTENC_URL = 'https://tfhub.dev/google/universal-sentence-encoder/4'
 GNEWS_URL = 'https://tfhub.dev/google/nnlm-en-dim128-with-normalization/2'
 TOKENIZER_URL = 'https://tfhub.dev/tensorflow/bert_en_uncased_preprocess/2'
 ELECTRA_URL = 'https://tfhub.dev/google/electra_small/2'
+SPEECH_URL = 'https://tfhub.dev/google/speech_embedding/1'
+
 
 def test_tensorflow_keras_application_extractor():
     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'obama.jpg']]
@@ -40,6 +46,7 @@ def test_tensorflow_keras_application_extractor():
     assert 1 in df[('duration', np.nan)].values
     with pytest.raises(ValueError):
         TensorFlowKerasApplicationExtractor(architecture='foo')
+
 
 def test_tfhub_image():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
@@ -108,11 +115,15 @@ def test_tfhub_text():
 
 
 def test_tfhub_generic():
-    
-    # Test an audio model
-    # Test transformations (input and output)
-    pass
-
-# NB:
-# The Electra model triggers loads of warnings.
-# Consider suppressing or changing models
+    # Test generic extractor with speech embedding model
+    astim = AudioStim(join(AUDIO_DIR, 'obama_speech.wav'))
+    astim = AudioResamplingFilter(target_sr=16000).transform(astim)
+    transform_fn = lambda x: tf.expand_dims(x, axis=0)
+    aext = TFHubExtractor(SPEECH_URL, 
+                          transform_inp=transform_fn,
+                          features='speech_embedding')
+    df = aext.transform(astim).to_df()
+    # Check expected dimensionality (see model URL)
+    emb_dim = 96
+    n_chunks = 1 + (astim.data.shape[0] - 12400) // 1280
+    assert df['speech_embedding'][0].shape == (n_chunks, emb_dim)
