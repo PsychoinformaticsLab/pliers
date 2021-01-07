@@ -2,26 +2,23 @@
 
 import glob
 import datetime
+from os.path import realpath, join, dirname, exists, expanduser
+import hashlib
+import pickle
+
 import pandas as pd
 import numpy as np
-from os.path import realpath, join, dirname, exists, expanduser
+
 from pliers.stimuli import load_stims
-from pliers.converters import Converter
-from pliers.filters.base import Filter
 from pliers.transformers import get_transformer
-import hashlib
 
 
 def hash_data(data, blocksize=65536):
     """" Hashes list of data, strings or data """
-    if isinstance(data, str):
-        data = [data.encode('utf-8')]
-    elif not isinstance(data, list):
-        data = [data]
+    data = pickle.dumps(data)
 
     hasher = hashlib.sha1()
-    for i in data:
-        hasher.update(i)
+    hasher.update(data)
 
     return hasher.hexdigest()
 
@@ -59,12 +56,11 @@ def check_updates(transformers, datastore=None, stimuli=None):
                 res = trans.transform(stim)
 
                 try: # Add iterable
-                    res = [res._data for r in res]
+                    res = [getattr(res, '_data', res.data) for r in res]
                 except TypeError:
-                    res = res._data
+                    res = getattr(res, '_data', res.data)
 
-                res = hash_data(res) if isinstance(
-                    trans, (Converter, Filter)) else res[0][0]
+                res = hash_data(res)
 
                 results["{}.{}".format(trans.__hash__(), stim.name)] = [res]
 
@@ -96,7 +92,7 @@ def check_updates(transformers, datastore=None, stimuli=None):
             if str(obj.__hash__()) == hash_tr:
                 return attr
 
-    delta_t = set([m.split('.')[0] for m in mismatches])
+    delta_t = {m.split('.')[0] for m in mismatches}
     delta_t = [get_trans(dt) for dt in delta_t]
 
     return {'transformers': delta_t, 'mismatches': mismatches}

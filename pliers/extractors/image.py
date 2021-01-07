@@ -2,14 +2,15 @@
 Extractors that operate primarily or exclusively on Image stimuli.
 '''
 
+from functools import partial
+
+import numpy as np
+import pandas as pd
+
 from pliers.stimuli.image import ImageStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.utils import attempt_to_import, verify_dependencies, listify
 from pliers.support.due import due, Url, Doi
-import numpy as np
-import pandas as pd
-from functools import partial
-
 
 cv2 = attempt_to_import('cv2')
 face_recognition = attempt_to_import('face_recognition')
@@ -113,7 +114,7 @@ class FaceRecognitionFeatureExtractor(ImageExtractor):
         func = getattr(face_recognition.api, self._feature)
         self.func = partial(func, **face_recognition_kwargs)
 
-        super(FaceRecognitionFeatureExtractor, self).__init__()
+        super().__init__()
 
     def get_feature_names(self):
         return self._feature
@@ -145,7 +146,7 @@ class FaceRecognitionFaceLandmarksExtractor(FaceRecognitionFeatureExtractor):
 
     def _to_df(self, result):
         data = pd.DataFrame.from_records(result._data)
-        data.columns = ['%s_%s' % (self._feature, c) for c in data.columns]
+        data.columns = ['{}_{}'.format(self._feature, c) for c in data.columns]
         return data
 
 

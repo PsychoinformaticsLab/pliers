@@ -17,6 +17,8 @@ We output the result as a pandas DataFrame; the 'face_locations' column contains
 ::
 
 	from pliers.extractors import FaceRecognitionFaceLocationsExtractor
+	from os.path import join
+	from pliers.tests.utils import get_test_data_path
 
 	# A picture of Barack Obama
 	image = join(get_test_data_path(), 'image', 'obama.jpg')
@@ -1343,17 +1345,17 @@ also demonstrates the concept of *chaining* multiple Transformer
 objects. We first convert a video to a series of images, and then apply
 an object-detection ``Extractor`` to each image.
 
-Note, as with other examples above, that the ``ClarifaiAPIExtractor``
+Note, as with other examples above, that the ``ClarifaiAPIImageExtractor``
 wraps the Clarifai object recognition API, so you’ll need to have an API
 key set up appropriately (if you don’t have an API key, and don’t want
-to set one up, you can replace ``ClarifaiAPIExtractor`` with
+to set one up, you can replace ``ClarifaiAPIImageExtractor`` with
 ``TensorFlowInceptionV3Extractor`` to get similar, though not quite as
 accurate, results).
 
 ::
 
     from pliers.filters import FrameSamplingFilter
-    from pliers.extractors import ClarifaiAPIExtractor, merge_results
+    from pliers.extractors import ClarifaiAPIImageExtractor, merge_results
     
     video = join(get_test_data_path(), 'video', 'small.mp4')
     
@@ -1361,7 +1363,7 @@ accurate, results).
     sampler = FrameSamplingFilter(hertz=2)
     frames = sampler.transform(video)
     
-    ext = ClarifaiAPIExtractor()
+    ext = ClarifaiAPIImageExtractor()
     results = ext.transform(frames)
     df = merge_results(results, )
     df
@@ -1395,18 +1397,18 @@ accurate, results).
           <th>duration</th>
           <th>order</th>
           <th>object_id</th>
-          <th>ClarifaiAPIExtractor#Lego</th>
+          <th>ClarifaiAPIImageExtractor#Lego</th>
           <th>...</th>
-          <th>ClarifaiAPIExtractor#power</th>
-          <th>ClarifaiAPIExtractor#precision</th>
-          <th>ClarifaiAPIExtractor#production</th>
-          <th>ClarifaiAPIExtractor#research</th>
-          <th>ClarifaiAPIExtractor#robot</th>
-          <th>ClarifaiAPIExtractor#science</th>
-          <th>ClarifaiAPIExtractor#still life</th>
-          <th>ClarifaiAPIExtractor#studio</th>
-          <th>ClarifaiAPIExtractor#technology</th>
-          <th>ClarifaiAPIExtractor#toy</th>
+          <th>ClarifaiAPIImageExtractor#power</th>
+          <th>ClarifaiAPIImageExtractor#precision</th>
+          <th>ClarifaiAPIImageExtractor#production</th>
+          <th>ClarifaiAPIImageExtractor#research</th>
+          <th>ClarifaiAPIImageExtractor#robot</th>
+          <th>ClarifaiAPIImageExtractor#science</th>
+          <th>ClarifaiAPIImageExtractor#still life</th>
+          <th>ClarifaiAPIImageExtractor#studio</th>
+          <th>ClarifaiAPIImageExtractor#technology</th>
+          <th>ClarifaiAPIImageExtractor#toy</th>
         </tr>
       </thead>
       <tbody>
@@ -1739,7 +1741,7 @@ examples above.
     from os.path import join
     from pliers.filters import FrameSamplingFilter
     from pliers.converters import GoogleSpeechAPIConverter
-    from pliers.extractors import (ClarifaiAPIExtractor, GoogleVisionAPIFaceExtractor,
+    from pliers.extractors import (ClarifaiAPIImageExtractor, GoogleVisionAPIFaceExtractor,
                                    ComplexTextExtractor, PredefinedDictionaryExtractor,
                                    STFTAudioExtractor, VADERSentimentExtractor,
                                    merge_results)
@@ -1754,7 +1756,7 @@ examples above.
     sampler = FrameSamplingFilter(every=10)
     frames = sampler.transform(video)
     
-    obj_ext = ClarifaiAPIExtractor()
+    obj_ext = ClarifaiAPIImageExtractor()
     obj_features = obj_ext.transform(frames)
     features.append(obj_features)
     
@@ -1839,7 +1841,7 @@ examples above.
           <td>0.833333</td>
           <td>administration</td>
           <td>0.970786</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[0]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -1854,7 +1856,7 @@ examples above.
           <td>0.833333</td>
           <td>administration</td>
           <td>0.976996</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[10]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -1869,7 +1871,7 @@ examples above.
           <td>0.833333</td>
           <td>administration</td>
           <td>0.972223</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[20]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -1884,7 +1886,7 @@ examples above.
           <td>0.833333</td>
           <td>administration</td>
           <td>0.98288</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[30]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -1899,7 +1901,7 @@ examples above.
           <td>0.833333</td>
           <td>administration</td>
           <td>0.94764</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[40]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -1914,7 +1916,7 @@ examples above.
           <td>0.833333</td>
           <td>administration</td>
           <td>0.952409</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[50]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -1929,7 +1931,7 @@ examples above.
           <td>0.833333</td>
           <td>administration</td>
           <td>0.951445</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[60]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -1944,7 +1946,7 @@ examples above.
           <td>0.833333</td>
           <td>administration</td>
           <td>0.954552</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[70]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -1959,7 +1961,7 @@ examples above.
           <td>0.833333</td>
           <td>administration</td>
           <td>0.953084</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[80]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -1974,7 +1976,7 @@ examples above.
           <td>0.833333</td>
           <td>administration</td>
           <td>0.947371</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[90]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -2025,7 +2027,7 @@ image, audio or text inputs, using state-of-the-art tools and services!
     # Define nodes
     nodes = [
         (FrameSamplingFilter(every=10),
-             ['ClarifaiAPIExtractor', 'GoogleVisionAPIFaceExtractor']),
+             ['ClarifaiAPIImageExtractor', 'GoogleVisionAPIFaceExtractor']),
         (STFTAudioExtractor(freq_bins=[(100, 300)])),
         ('GoogleSpeechAPIConverter',
              ['ComplexTextExtractor',
@@ -2087,7 +2089,7 @@ image, audio or text inputs, using state-of-the-art tools and services!
           <td>0.833333</td>
           <td>administration</td>
           <td>0.970786</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[0]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -2102,7 +2104,7 @@ image, audio or text inputs, using state-of-the-art tools and services!
           <td>0.833333</td>
           <td>administration</td>
           <td>0.976996</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[10]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -2117,7 +2119,7 @@ image, audio or text inputs, using state-of-the-art tools and services!
           <td>0.833333</td>
           <td>administration</td>
           <td>0.972223</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[20]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -2132,7 +2134,7 @@ image, audio or text inputs, using state-of-the-art tools and services!
           <td>0.833333</td>
           <td>administration</td>
           <td>0.98288</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[30]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -2147,7 +2149,7 @@ image, audio or text inputs, using state-of-the-art tools and services!
           <td>0.833333</td>
           <td>administration</td>
           <td>0.94764</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[40]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -2162,7 +2164,7 @@ image, audio or text inputs, using state-of-the-art tools and services!
           <td>0.833333</td>
           <td>administration</td>
           <td>0.952409</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[50]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -2177,7 +2179,7 @@ image, audio or text inputs, using state-of-the-art tools and services!
           <td>0.833333</td>
           <td>administration</td>
           <td>0.951445</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[60]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -2192,7 +2194,7 @@ image, audio or text inputs, using state-of-the-art tools and services!
           <td>0.833333</td>
           <td>administration</td>
           <td>0.954552</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[70]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -2207,7 +2209,7 @@ image, audio or text inputs, using state-of-the-art tools and services!
           <td>0.833333</td>
           <td>administration</td>
           <td>0.953084</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[80]</td>
           <td>VideoFrameStim</td>
           <td>None</td>
@@ -2222,7 +2224,7 @@ image, audio or text inputs, using state-of-the-art tools and services!
           <td>0.833333</td>
           <td>administration</td>
           <td>0.947371</td>
-          <td>ClarifaiAPIExtractor</td>
+          <td>ClarifaiAPIImageExtractor</td>
           <td>frame[90]</td>
           <td>VideoFrameStim</td>
           <td>None</td>

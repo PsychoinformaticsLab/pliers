@@ -3,18 +3,20 @@
 import os
 import base64
 import json
+import logging
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
+
 from pliers.stimuli.text import TextStim, ComplexTextStim
-from pliers.utils import (EnvironmentKeyMixin, attempt_to_import,
-                          verify_dependencies)
+from pliers.utils import attempt_to_import, verify_dependencies
 from pliers.converters.audio import AudioToTextConverter
-from six.moves.urllib.parse import urlencode
-from six.moves.urllib.request import Request, urlopen
-from six.moves.urllib.error import URLError, HTTPError
+from pliers.transformers.api import APITransformer
 
 sr = attempt_to_import('speech_recognition', 'sr')
 
 
-class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
+class IBMSpeechAPIConverter(APITransformer, AudioToTextConverter):
 
     ''' Uses the IBM Watson Text to Speech API to run speech-to-text
     transcription on an audio file.
@@ -30,13 +32,18 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
             be separated by (i.e. the unit each TextStim in the ComplexTextStim
             elements should be). Currently, only 'words' or 'phrases' are
             supported.
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
+        model (str): The model to use for speech recognition (e.g., 'en-US',
+            'zh-CN', etc.). Don't include the "_BroadbandModel" suffix.
     '''
 
     _env_keys = ('IBM_USERNAME', 'IBM_PASSWORD')
-    _log_attributes = ('resolution',)
+    _log_attributes = ('username', 'password', 'resolution', 'model')
     VERSION = '1.0'
 
-    def __init__(self, username=None, password=None, resolution='words'):
+    def __init__(self, username=None, password=None, resolution='words',
+                 rate_limit=None, model='en-US'):
         verify_dependencies(['sr'])
         if username is None or password is None:
             try:
@@ -49,11 +56,25 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
         self.username = username
         self.password = password
         self.resolution = resolution
-        super(IBMSpeechAPIConverter, self).__init__()
+        self.model = model
+        super().__init__(rate_limit=rate_limit)
+
+    @property
+    def api_keys(self):
+        return [self.username, self.password]
+
+    def check_valid_keys(self):
+        url = "https://stream.watsonplatform.net/speech-to-text/api/v1/recognize"
+        request = Request(url)
+        try:
+            self._send_request(request)
+            return True
+        except Exception as e:
+            logging.warning(str(e))
+            return False
 
     def _convert(self, audio):
         verify_dependencies(['sr'])
-        offset = 0.0 if audio.onset is None else audio.onset
 
         with audio.get_filename() as filename:
             with sr.AudioFile(filename) as source:
@@ -64,28 +85,28 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
             results = _json['results']
         else:
             raise Exception(
-                'received invalid results from API: {0}'.format(str(_json)))
+                'received invalid results from API: {}'.format(str(_json)))
         elements = []
         order = 0
         for result in results:
             if result['final'] is True:
                 timestamps = result['alternatives'][0]['timestamps']
-                if self.resolution is 'words':
+                if self.resolution == 'words':
                     for entry in timestamps:
                         text = entry[0]
                         start = entry[1]
                         end = entry[2]
                         elements.append(TextStim(text=text,
-                                                 onset=offset+start,
+                                                 onset=start,
                                                  duration=end-start,
                                                  order=order))
                         order += 1
-                elif self.resolution is 'phrases':
+                elif self.resolution == 'phrases':
                     text = result['alternatives'][0]['transcript']
                     start = timestamps[0][1]
                     end = timestamps[-1][2]
                     elements.append(TextStim(text=text,
-                                             onset=offset+start,
+                                             onset=start,
                                              duration=end-start,
                                              order=order))
                     order += 1
@@ -98,8 +119,8 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
             convert_rate=None if clip.sample_rate >= 16000 else 16000,
             convert_width=None if clip.sample_width >= 2 else 2
         )
-        model = "{0}_BroadbandModel".format("en-US")
-        url = "https://stream.watsonplatform.net/speech-to-text/api/v1/recognize?{0}".format(urlencode({
+        model = "{}_BroadbandModel".format(self.model)
+        url = "https://stream.watsonplatform.net/speech-to-text/api/v1/recognize?{}".format(urlencode({
             "profanity_filter": "false",
             "continuous": "true",
             "model": model,
@@ -110,24 +131,26 @@ class IBMSpeechAPIConverter(AudioToTextConverter, EnvironmentKeyMixin):
             "Content-Type": "audio/x-flac",
             "X-Watson-Learning-Opt-Out": "true",
         })
+        return self._send_request(request)
 
+    def _send_request(self, request):
         if hasattr("", "encode"):  # Python 2.6 compatibility
             authorization_value = base64.standard_b64encode(
-                "{0}:{1}".format(self.username, self.password).encode("utf-8")).decode("utf-8")
+                "{}:{}".format(self.username, self.password).encode("utf-8")).decode("utf-8")
         else:
             authorization_value = base64.standard_b64encode(
-                "{0}:{1}".format(self.username, self.password))
+                "{}:{}".format(self.username, self.password))
         request.add_header(
-            "Authorization", "Basic {0}".format(authorization_value))
+            "Authorization", "Basic {}".format(authorization_value))
 
         try:
             response = urlopen(request, timeout=None)
         except HTTPError as e:
-            raise Exception("recognition request failed: {0}".format(
-                getattr(e, "reason", "status {0}".format(e.code))))
+            raise Exception("recognition request failed: {}".format(
+                getattr(e, "reason", "status {}".format(e.code))))
         except URLError as e:
             raise Exception(
-                "recognition connection failed: {0}".format(e.reason))
+                "recognition connection failed: {}".format(e.reason))
 
         response_text = response.read().decode("utf-8")
         result = json.loads(response_text)

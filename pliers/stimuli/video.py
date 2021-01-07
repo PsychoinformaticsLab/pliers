@@ -1,9 +1,10 @@
 ''' Classes that represent video clips. '''
 
-from __future__ import division
 from math import ceil
+
 from moviepy.video.io.VideoFileClip import VideoFileClip
-from .base import Stim
+
+from .base import Stim, _get_bytestring
 from .audio import AudioStim
 from .image import ImageStim
 
@@ -20,18 +21,19 @@ class VideoFrameStim(ImageStim):
         data (ndarray): Optional numpy array to initialize the image from.
     '''
 
-    def __init__(self, video, frame_num, duration=None, filename=None,
-                 data=None):
+    def __init__(self, video, frame_num, duration=None, data=None):
         self.video = video
         self.frame_num = frame_num
         spf = 1. / video.fps
         duration = spf if duration is None else duration
         onset = frame_num * spf
+        if data is None:
+            data = self.video.clip.get_frame(onset)
         if video.onset:
             onset += video.onset
-        super(VideoFrameStim, self).__init__(filename, onset, duration, data)
-        if data is None:
-            self.data = self.video.get_frame(index=frame_num).data
+        super().__init__(onset=onset,
+                                             duration=duration,
+                                             data=data)
         self.name += 'frame[%s]' % frame_num
 
 
@@ -70,11 +72,12 @@ class VideoFrameCollectionStim(Stim):
             self.frame_index = frame_index
         else:
             self.frame_index = range(int(ceil(self.fps * self.clip.duration)))
-        self.n_frames = len(self.frame_index)
         duration = self.clip.duration
-        super(VideoFrameCollectionStim, self).__init__(filename,
+        self.n_frames = len(self.frame_index)
+        super().__init__(filename,
                                                        onset=onset,
-                                                       duration=duration)
+                                                       duration=duration,
+                                                       url=url)
 
     def _load_clip(self):
         audio_fps = AudioStim.get_sampling_rate(self.filename)
@@ -89,15 +92,12 @@ class VideoFrameCollectionStim(Stim):
     def frames(self):
         return (f for f in self)
 
-    def get_frame(self, index=None, onset=None):
+    def get_frame(self, index):
         ''' Get video frame at the specified index.
 
         Args:
             index (int): Positional index of the desired frame.
-            onset (float): Onset (in seconds) of the desired frame.
         '''
-        if onset:
-            index = int(onset * self.fps)
 
         frame_num = self.frame_index[index]
         onset = float(frame_num) / self.fps
@@ -133,7 +133,7 @@ class VideoFrameCollectionStim(Stim):
             frames.
         '''
         # IMPORTANT WARNING: saves entire source video
-        self.clip.write_videofile(path)
+        self.clip.write_videofile(path, audio_fps=self.clip.audio.fps)
 
 
 class VideoStim(VideoFrameCollectionStim):
@@ -151,7 +151,31 @@ class VideoStim(VideoFrameCollectionStim):
     '''
 
     def __init__(self, filename=None, onset=None, url=None, clip=None):
-        super(VideoStim, self).__init__(filename=filename,
+        self._bytestring = None
+        super().__init__(filename=filename,
                                         onset=onset,
                                         url=url,
                                         clip=clip)
+
+    def get_frame(self, index=None, onset=None):
+        ''' Overrides the default behavior by giving access to the onset
+        argument.
+
+        Args:
+            index (int): Positional index of the desired frame.
+            onset (float): Onset (in seconds) of the desired frame.
+        '''
+        if onset:
+            index = int(onset * self.fps)
+
+        return super().get_frame(index)
+
+    def get_bytestring(self, encoding='utf-8'):
+        ''' Return the video data as a bytestring.
+
+        Args:
+            encoding (str): Encoding to use. Defaults to utf-8.
+
+        Returns: A string.
+        '''
+        return _get_bytestring(self, encoding)

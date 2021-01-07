@@ -23,6 +23,7 @@ Converters (:mod:`pliers.converters`)
 	IBMSpeechAPIConverter
 	GoogleSpeechAPIConverter
 	GoogleVisionAPITextConverter
+  MicrosoftAPITextConverter
 	TesseractConverter
 	VideoFrameCollectionIterator
 	VideoFrameIterator
@@ -134,7 +135,7 @@ Extractors (:mod:`pliers.extractors`)
   SpectralRolloffExtractor
   STFTAudioExtractor
   TempogramExtractor
-	TonnetzExtractor
+  TonnetzExtractor
   ZeroCrossingRateExtractor
 
 
@@ -145,7 +146,8 @@ Extractors (:mod:`pliers.extractors`)
  	:template: _class.rst
 
   BrightnessExtractor
-  ClarifaiAPIExtractor
+  ClarifaiAPIImageExtractor
+  ClarifaiAPIVideoExtractor
   FaceRecognitionFaceEncodingsExtractor
   FaceRecognitionFaceLandmarksExtractor
   FaceRecognitionFaceLocationsExtractor
@@ -155,6 +157,14 @@ Extractors (:mod:`pliers.extractors`)
   GoogleVisionAPISafeSearchExtractor
   GoogleVisionAPIWebEntitiesExtractor
   IndicoAPIImageExtractor
+  MicrosoftAPIFaceExtractor
+  MicrosoftAPIFaceEmotionExtractor
+  MicrosoftVisionAPIExtractor
+  MicrosoftVisionAPITagExtractor
+  MicrosoftVisionAPICategoryExtractor
+  MicrosoftVisionAPIImageTypeExtractor
+  MicrosoftVisionAPIColorExtractor
+  MicrosoftVisionAPIAdultExtractor
   SaliencyExtractor
   SharpnessExtractor
   TensorFlowInceptionV3Extractor

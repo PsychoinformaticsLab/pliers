@@ -1,13 +1,16 @@
+from os.path import join
+
+import numpy as np
+import pytest
+
 from pliers.transformers import get_transformer
 from pliers.extractors import (STFTAudioExtractor, BrightnessExtractor,
                                merge_results)
 from pliers.stimuli.base import TransformationLog
 from pliers.stimuli import ImageStim, VideoStim, TextStim
 from pliers import config
-from os.path import join
+
 from .utils import get_test_data_path, DummyExtractor, DummyBatchExtractor
-import numpy as np
-import pytest
 
 
 def test_get_transformer_by_name():
@@ -65,6 +68,9 @@ def test_parallelization():
 
 
 def test_batch_transformer():
+    cache_default = config.get_option('cache_transformers')
+    config.set_option('cache_transformers', False)
+
     img1 = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
     img2 = ImageStim(join(get_test_data_path(), 'image', 'button.jpg'))
     img3 = ImageStim(join(get_test_data_path(), 'image', 'obama.jpg'))
@@ -76,6 +82,30 @@ def test_batch_transformer():
     res2 = merge_results(ext.transform([img1, img2, img3]))
     assert ext.num_calls == 3
     assert res.equals(res2)
+
+    config.set_option('cache_transformers', cache_default)
+
+
+def test_batch_transformer_caching():
+    cache_default = config.get_option('cache_transformers')
+    config.set_option('cache_transformers', True)
+
+    img1 = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
+    ext = DummyBatchExtractor(name='penguin')
+    res = ext.transform(img1).to_df(timing=False, object_id=False)
+    assert ext.num_calls == 1
+    assert res.shape == (1, 1)
+
+    img2 = ImageStim(join(get_test_data_path(), 'image', 'button.jpg'))
+    img3 = ImageStim(join(get_test_data_path(), 'image', 'obama.jpg'))
+    res2 = ext.transform([img1, img2, img2, img3, img3, img1, img2])
+    assert ext.num_calls == 3
+    assert len(res2) == 7
+    assert res2[0] == res2[5] and res2[1] == res2[2] and res2[3] == res2[4]
+    res2 = merge_results(res2)
+    assert res2.shape == (3, 10)
+
+    config.set_option('cache_transformers', cache_default)
 
 
 def test_validation_levels(caplog):
@@ -104,6 +134,32 @@ def test_validation_levels(caplog):
 
     config.set_option('cache_transformers', cache_default)
 
+
+def test_caching():
+    cache_default = config.get_option('cache_transformers')
+    config.set_option('cache_transformers', True)
+
+    img1 = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
+    ext = DummyExtractor()
+    res = ext.transform(img1)
+    assert ext.num_calls == 1
+    res2 = ext.transform(img1)
+    assert ext.num_calls == 1
+    assert res == res2
+    config.set_option('cache_transformers', False)
+    res3 = ext.transform(img1)
+    assert ext.num_calls == 2
+    assert res != res3
+
+    config.set_option('cache_transformers', True)
+    ext.num_calls = 0
+    res = ext.transform(join(get_test_data_path(), 'image', 'apple.jpg'))
+    assert ext.num_calls == 1
+    res2 = ext.transform(join(get_test_data_path(), 'image', 'apple.jpg'))
+    assert ext.num_calls == 1
+    assert res == res2
+
+    config.set_option('cache_transformers', cache_default)
 
 def test_versioning():
     ext = DummyBatchExtractor()

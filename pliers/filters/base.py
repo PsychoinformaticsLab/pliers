@@ -1,19 +1,15 @@
 ''' Base Filter class and associated functionality. '''
 
 from abc import ABCMeta, abstractmethod
-from six import with_metaclass
+import logging
+
 from pliers.stimuli import AudioStim, VideoStim
 from pliers.transformers import Transformer
 from pliers.utils import listify
 
-import logging
 
-
-class Filter(with_metaclass(ABCMeta, Transformer)):
+class Filter(Transformer, metaclass=ABCMeta):
     ''' Base class for Filters.'''
-
-    def __init__(self):
-        super(Filter, self).__init__()
 
     def _transform(self, stim, *args, **kwargs):
         new_stim = self._filter(stim, *args, **kwargs)
@@ -54,7 +50,7 @@ class TemporalTrimmingFilter(Filter):
         self.end = end
         self.frames = frames
         self.validation = validation
-        super(TemporalTrimmingFilter, self).__init__()
+        super().__init__()
 
     def _filter(self, stim):
         rate = 'fps' if isinstance(stim, VideoStim) else 'sampling_rate'
@@ -62,7 +58,7 @@ class TemporalTrimmingFilter(Filter):
         end = self.end / getattr(stim, rate) if self.frames else self.end
         if end and end > stim.duration:
             if self.validation == 'warn':
-                logging.warn("Attempted to trim beyond the duration of the"
+                logging.warning("Attempted to trim beyond the duration of the"
                              "clip, instead trimming to the end of the clip")
                 end = stim.duration
             else:

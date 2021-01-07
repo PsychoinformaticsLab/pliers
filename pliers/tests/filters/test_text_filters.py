@@ -1,4 +1,11 @@
 from os.path import join
+import string
+
+from nltk import stem as nls
+from nltk.tokenize import PunktSentenceTokenizer
+import nltk
+import pytest
+
 from ..utils import get_test_data_path
 from pliers.filters import (WordStemmingFilter,
                             TokenizingFilter,
@@ -7,11 +14,6 @@ from pliers.filters import (WordStemmingFilter,
                             PunctuationRemovalFilter)
 from pliers.graph import Graph
 from pliers.stimuli import ComplexTextStim, TextStim
-from nltk import stem as nls
-from nltk.tokenize import PunktSentenceTokenizer
-import nltk
-import pytest
-import string
 
 
 TEXT_DIR = join(get_test_data_path(), 'text')
@@ -43,6 +45,29 @@ def test_word_stemming_filter():
     stems = [s.text for s in stemmed]
     assert stems == target
 
+    # Try lemmatization filter
+    try:
+        nltk.find('taggers/universal_tagset')
+    except LookupError:
+        nltk.download('universal_tagset')
+    try:
+        nltk.find('corpora/wordnet')
+    except LookupError:
+        nltk.download('wordnet')
+    stim = ComplexTextStim(text='These are tests for Stemming filters')
+    filt = WordStemmingFilter(stemmer='wordnet')
+    lemmatized = filt.transform(stim)
+    lemmas = [l.text for l in lemmatized]
+    target = ['these', 'be', 'test', 'for', 'stem', 'filter']
+    assert lemmas == target
+
+    # Try case sensitive
+    filt = WordStemmingFilter(stemmer='wordnet', case_sensitive=True)
+    lemmatized = filt.transform(stim)
+    lemmas = [l.text for l in lemmatized]
+    target = ['These', 'be', 'test', 'for', 'Stemming', 'filter']
+    assert lemmas == target
+
     # Fails on invalid values
     with pytest.raises(ValueError):
         filt = WordStemmingFilter(stemmer='nonexistent_stemmer')
@@ -70,7 +95,7 @@ def test_tokenizing_filter():
     assert len(sentences) == 11
     assert sentences[0].text == 'To Sherlock Holmes she is always the woman.'
 
-    filt = TokenizingFilter('RegexpTokenizer', '\w+|\$[\d\.]+|\S+')
+    filt = TokenizingFilter('RegexpTokenizer', r'\w+|\$[\d\.]+|\S+')
     tokens = filt.transform(stim)
     assert len(tokens) == 231
     assert tokens[0].text == 'To'

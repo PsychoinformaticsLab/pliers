@@ -1,86 +1,111 @@
 ''' Extractor classes based on pre-trained models. '''
 
-import os
-import tempfile
-import tarfile
-import subprocess
-import re
-import requests
+import numpy as np
+
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.base import ExtractorResult
+from pliers.filters.image import ImageResizingFilter
+from pliers.utils import attempt_to_import, verify_dependencies
+
+tf = attempt_to_import('tensorflow')
+attempt_to_import('tensorflow.keras')
 
 
-class TensorFlowInceptionV3Extractor(ImageExtractor):
+class TensorFlowKerasApplicationExtractor(ImageExtractor):
 
     ''' Labels objects in images using a pretrained Inception V3 architecture
-     implemented in TensorFlow.
+    implemented in TensorFlow / Keras.
+
+    Images must be RGB and be a certain shape. Different model architectures
+    may require different shapes, and images will be resized (with some
+    distortion) if the shape of the image is different.
 
     Args:
-        model_dir (str): path to save model file to. If None (default), creates
-            and uses a temporary folder.
-        data_url (str): URL to download model from. If None (default), uses
-            the preset inception model (dated 2015-12-05) used in the
-            TensoryFlow tutorials.
+        architecture (str): model architecture to use. One of 'vgg16', 'vgg19',
+            'resnet50', 'inception_resnetv2', 'inceptionv3', 'xception',
+            'densenet121', 'densenet169', 'nasnetlarge', or 'nasnetmobile'.
+        weights (str): URL to download pre-trained weights. If None (default),
+            uses the pre-trained weights trained on ImageNet used in Keras
+            Applications.
         num_predictions (int): Number of top predicted labels to retain for
             each image.
      '''
 
-    _log_attributes = ('model_dir', 'data_url', 'num_predictions')
+    _log_attributes = ('architecture', 'weights', 'num_predictions')
     VERSION = '1.0'
 
-    def __init__(self, model_dir=None, data_url=None, num_predictions=5):
+    def __init__(self,
+                 architecture='inceptionv3',
+                 weights=None,
+                 num_predictions=5):
+        verify_dependencies(['tensorflow'])
+        verify_dependencies(['tensorflow.keras'])
+        super().__init__()
 
-        super(TensorFlowInceptionV3Extractor, self).__init__()
+        # Model name: (model module, model function, required shape).
+        apps = tf.keras.applications
+        model_mapping = {
+            'vgg16': (apps.vgg16, apps.vgg16.VGG16, (224, 224, 3)),
+            'vgg19': (apps.vgg19, apps.VGG19, (224, 224, 3)),
+            'resnet50': (apps.resnet50, apps.resnet50.ResNet50, (224, 224, 3)),
+            'inception_resnetv2': (
+                apps.inception_resnet_v2,
+                apps.inception_resnet_v2.InceptionResNetV2, (299, 299, 3)),
+            'inceptionv3': (
+                apps.inception_v3, apps.inception_v3.InceptionV3,
+                (299, 299, 3)),
+            'xception': (apps.xception, apps.xception.Xception, (299, 299, 3)),
+            'densenet121': (
+                apps.densenet, apps.densenet.DenseNet121, (224, 224, 3)),
+            'densenet169': (
+                apps.densenet, apps.densenet.DenseNet169, (224, 224, 3)),
+            'densenet201': (
+                apps.densenet, apps.densenet.DenseNet201, (224, 224, 3)),
+            'nasnetlarge': (
+                apps.nasnet, apps.nasnet.NASNetLarge, (331, 331, 3)),
+            'nasnetmobile': (
+                apps.nasnet, apps.nasnet.NASNetMobile, (224, 224, 3)),
+        }
+        if weights is None:
+            weights = 'imagenet'
+        if architecture.lower() not in model_mapping.keys():
+            raise ValueError(
+                "Unknown architecture '{}'. Available arhitectures are '{}'."
+                .format(architecture, "', '".join(model_mapping.keys())))
 
-        if model_dir is None:
-            model_dir = os.path.join(tempfile.gettempdir(), 'TFInceptionV3')
-        self.model_dir = model_dir
-
-        if data_url is None:
-            data_url = 'http://download.tensorflow.org/models/image/imagenet/inception-2015-12-05.tgz'
-        self.data_url = data_url
-
-        filename = self.data_url.split('/')[-1]
-        self.model_file = os.path.join(self.model_dir, filename)
+        self.architecture = architecture.lower()
+        self.weights = weights
         self.num_predictions = num_predictions
 
-        # Download the inception-v3 model if needed
-        if not os.path.exists(self.model_file):
-            self._download_pretrained_model()
-
-    def _download_pretrained_model(self):
-        # Adapted from def_maybe_download_and_extract() in TF's
-        # classify_image.py
-        print("Downloading Inception-V3 model from TensorFlow website...")
-        if not os.path.exists(self.model_dir):
-            os.makedirs(self.model_dir)
-        filename = os.path.basename(self.model_file)
-        if not os.path.exists(self.model_file):
-            r = requests.get(self.data_url)
-            with open(self.model_file, 'wb') as f:
-                f.write(r.content)
-            size = os.stat(self.model_file).st_size
-            print('\tSuccesfully downloaded', filename, size, 'bytes.')
-            tarfile.open(self.model_file, 'r:gz').extractall(self.model_dir)
+        # The preprocessing and decoding functions are in the module.
+        self._model_module = model_mapping[self.architecture][0]
+        # Instantiating the model also downloads the weights to a cache.
+        self.model = model_mapping[self.architecture][1](weights=self.weights)
+        self._required_shape = model_mapping[self.architecture][2]
 
     def _extract(self, stim):
-        from pliers.external import tensorflow as tf
-        tf_dir = os.path.dirname(tf.__file__)
-        script = os.path.join(tf_dir, 'classify_image.py')
+        x = stim.data
+        if x.ndim != 3:
+            raise ValueError(
+                "Stim data must have rank 3 but got rank {}".format(x.ndim))
+        if x.shape != self._required_shape:
+            resizer = ImageResizingFilter(size=self._required_shape[:-1])
+            x = resizer.transform(stim).data
+        # Add batch dimension.
+        x = x[None]
+        # Normalize the features.
+        x = self._model_module.preprocess_input(x)
+        preds = self.model.predict(x, batch_size=1)
 
-        with stim.get_filename() as filename:
-            args = ' --image_file %s --model_dir %s --num_top_prediction %d' % \
-                (filename, self.model_dir, self.num_predictions)
-            cmd = ('python ' + script + args).split()
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-            output, errors = process.communicate()
-            hits = output.decode('utf-8').splitlines()[-self.num_predictions:]
+        # This produces a nested list. There is one sub-list per sample in the
+        # batch, and each sub-list contains `self.num_predictions` tuples with
+        # `(ID, human-readable-label, probability)`.
+        decoded = self._model_module.decode_predictions(
+            preds, top=self.num_predictions)
 
-        values, features = [], []
-        for i, h in enumerate(hits):
-            m = re.search('(.*?)\s\(score\s\=\s([0-9\.]+)\)', h.strip())
-            extraction = m.groups()
-            features.append(extraction[0])
-            values.append(float(extraction[1]))
+        # We assume there is only one sample in the batch.
+        decoded = decoded[0]
+        values = [t[2] for t in decoded]
+        features = [t[1] for t in decoded]
 
         return ExtractorResult([values], stim, self, features=features)

@@ -1,11 +1,14 @@
 from os.path import join
+import math
+
+import pytest
+
 from ..utils import get_test_data_path
 from pliers.filters import (FrameSamplingFilter,
                             VideoTrimmingFilter,
                             TemporalTrimmingFilter)
 from pliers.stimuli import VideoStim, VideoFrameStim
-import pytest
-import math
+
 
 VIDEO_DIR = join(get_test_data_path(), 'video')
 
@@ -21,6 +24,7 @@ def test_frame_sampling_video_filter():
     conv = FrameSamplingFilter(every=3)
     derived = conv.transform(video)
     assert derived.n_frames == math.ceil(video.n_frames / 3.0)
+    assert derived.duration == video.duration
     first = next(f for f in derived)
     assert type(first) == VideoFrameStim
     assert first.name == 'frame[0]'
@@ -28,16 +32,48 @@ def test_frame_sampling_video_filter():
     assert first.duration == 3 * (1 / 30.0)
     second = [f for f in derived][1]
     assert second.onset == 4.3
+    with pytest.raises(TypeError):
+        derived.get_frame(onset=1.0)
 
-    # Should refilter from original frames
-    conv = FrameSamplingFilter(hertz=15)
-    derived = conv.transform(derived)
-    assert derived.n_frames == math.ceil(video.n_frames / 6.0)
-    first = next(f for f in derived)
-    assert type(first) == VideoFrameStim
-    assert first.duration == 3 * (1 / 15.0)
-    second = [f for f in derived][1]
-    assert second.onset == 4.4
+    # Commented out because no longer allowing sampling filter chaining
+    # conv = FrameSamplingFilter(hertz=15)
+    # derived = conv.transform(derived)
+    # assert derived.n_frames == math.ceil(video.n_frames / 6.0)
+    # first = next(f for f in derived)
+    # assert type(first) == VideoFrameStim
+    # assert first.duration == 3 * (1 / 15.0)
+    # second = [f for f in derived][1]
+    # assert second.onset == 4.4
+
+    with pytest.raises(TypeError):
+        conv.transform(derived)
+
+
+def test_frame_sampling_video_filter2():
+    filename = join(VIDEO_DIR, 'obama_speech.mp4')
+    video = VideoStim(filename, onset=4.2)
+    assert video.fps == 12
+    assert video.n_frames == 105
+
+    # Test frame indices
+    conv = FrameSamplingFilter(every=3)
+    derived = conv.transform(video)
+    assert derived.n_frames == 35
+    assert derived.frame_index[4] == 12
+    conv = FrameSamplingFilter(hertz=3)
+    derived = conv.transform(video)
+    assert derived.n_frames == 27
+    assert derived.frame_index[3] == 12
+    conv = FrameSamplingFilter(hertz=24)
+    derived = conv.transform(video)
+    assert derived.n_frames == 210
+    assert derived.frame_index[4] == 2
+    video.fps = 11.8
+    conv = FrameSamplingFilter(hertz=1)
+    derived = conv.transform(video)
+    assert derived.n_frames == 9
+    assert derived.frame_index[4] == 47
+    assert derived.frame_index[5] == 59
 
 
 def test_frame_sampling_cv2():

@@ -1,4 +1,11 @@
+from os.path import join, exists
+import tempfile
+import os
+
+from numpy.testing import assert_almost_equal
+import pandas as pd
 import pytest
+
 from pliers.graph import Graph, Node
 from pliers.converters import (TesseractConverter,
                                VideoToAudioConverter,
@@ -8,11 +15,6 @@ from pliers.extractors import (BrightnessExtractor, VibranceExtractor,
                                LengthExtractor, merge_results)
 from pliers.stimuli import (ImageStim, TextStim, VideoStim)
 from .utils import get_test_data_path, DummyExtractor
-from os.path import join, exists
-from numpy.testing import assert_almost_equal
-import pandas as pd
-import tempfile
-import os
 
 
 def test_node_init():
@@ -81,7 +83,7 @@ def test_small_pipeline():
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
     result = merge_results(result, format='wide', extractor_names='prepend')
-    assert (0, 'text[Exit]') in result['stim_name'].values
+    assert 'Exit' in result['stim_name'].values[0]
     assert 'LengthExtractor#text_length' in result.columns
     assert result['LengthExtractor#text_length'].values[0] == 4
 
@@ -125,7 +127,7 @@ def test_small_pipeline_json_spec():
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
     result = merge_results(result, format='wide', extractor_names='multi')
-    assert (0, 'text[Exit]') in result['stim_name'].values
+    assert 'Exit' in result['stim_name'].values[0][0]
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
 
@@ -141,7 +143,7 @@ def test_small_pipeline_json_spec2():
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
     result = merge_results(result, format='wide', extractor_names='multi')
-    assert (0, 'text[Exit]') in result['stim_name'].values
+    assert 'Exit' in result['stim_name'].values[0][0]
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
 
@@ -173,7 +175,7 @@ def test_small_pipeline_json_spec3():
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
     result = merge_results(result, format='wide', extractor_names='multi')
-    assert (0, 'text[Exit\n]') in result['stim_name'].values
+    assert 'Exit' in result['stim_name'].values[0][0]
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
 
@@ -381,7 +383,7 @@ def test_adding_nodes():
     txt = TextStim(text='the.best.text.')
     results = graph.run(txt, merge=False)
     assert len(results) == 1
-    assert results[0].to_df()['text_length'][0] == 13
+    assert results[0].to_df()['text_length'][0] == 11
 
     with pytest.raises(ValueError):
         graph.add_nodes(['LengthExtractor'], mode='invalid')

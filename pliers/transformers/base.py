@@ -1,4 +1,8 @@
 ''' Core transformer logic. '''
+from abc import ABCMeta, abstractmethod, abstractproperty
+import importlib
+import logging
+from functools import wraps
 
 from pliers import config
 from pliers.stimuli.base import Stim, _log_transformation, load_stims
@@ -7,11 +11,7 @@ from pliers.utils import (progress_bar_wrapper, isiterable,
                           isgenerator, listify, batch_iterable,
                           attempt_to_import, set_iterable_type)
 import pliers
-from six import with_metaclass, string_types
-from abc import ABCMeta, abstractmethod, abstractproperty
-import importlib
-import logging
-from functools import wraps
+
 
 multiprocessing = attempt_to_import('pathos.multiprocessing',
                                     'multiprocessing', ['ProcessingPool'])
@@ -19,7 +19,7 @@ multiprocessing = attempt_to_import('pathos.multiprocessing',
 _cache = {}
 
 
-class Transformer(with_metaclass(ABCMeta)):
+class Transformer(metaclass=ABCMeta):
     ''' Base class for all pliers Transformers.
 
     Args:
@@ -38,16 +38,17 @@ class Transformer(with_metaclass(ABCMeta)):
     # the input would have to be a CompoundStim with both audio and text slots.
     _optional_input_type = ()
 
-    def __init__(self, name=None):
+    def __init__(self, name=None, **kwargs):
         if name is None:
             name = self.__class__.__name__
         self.name = name
+        super().__init__(**kwargs)
 
     def _memoize(transform):
         @wraps(transform)
         def wrapper(self, stim, *args, **kwargs):
             use_cache = config.get_option('cache_transformers') \
-                and isinstance(stim, Stim)
+                and isinstance(stim, (Stim, str))
             if use_cache:
                 key = hash((hash(self), hash(stim)))
                 if key in _cache:
@@ -87,7 +88,7 @@ class Transformer(with_metaclass(ABCMeta)):
                 _transform call.
         '''
 
-        if isinstance(stims, string_types):
+        if isinstance(stims, str):
             stims = load_stims(stims)
 
         # If stims is a CompoundStim and the Transformer is expecting a single
@@ -117,7 +118,7 @@ class Transformer(with_metaclass(ABCMeta)):
                 if validation == 'strict':
                     raise err
                 elif validation == 'warn':
-                    logging.warn(str(err))
+                    logging.warning(str(err))
                     return
                 elif validation == 'loose':
                     return
@@ -168,7 +169,8 @@ class Transformer(with_metaclass(ABCMeta)):
             msg = ("Transformer of class %s requires multiple mandatory "
                    "inputs, so the passed input Stim must be a CompoundStim"
                    "--which it isn't." % self.__class__.__name__)
-            raise ValueError(msg)
+            logging.warning(msg)
+            return False
 
         return isinstance(stim, mandatory) or (not mandatory and
                                                isinstance(stim, optional))
@@ -227,30 +229,57 @@ class BatchTransformerMixin(Transformer):
     def __init__(self, batch_size=None, *args, **kwargs):
         if batch_size:
             self._batch_size = batch_size
-        super(BatchTransformerMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _iterate(self, stims, validation='strict', *args, **kwargs):
         batches = batch_iterable(stims, self._batch_size)
         results = []
         for batch in progress_bar_wrapper(batches):
-            res = self._transform(batch, *args, **kwargs)
+            use_cache = config.get_option('cache_transformers')
+            target_inds = {}
+            non_cached = []
+            for stim in batch:
+                key = hash((hash(self), hash(stim)))
+                # If using the cache, only transform stims that aren't in the
+                # cache and haven't already appeared in the batch
+                if not (use_cache and (key in _cache or key in target_inds)):
+                    target_inds[key] = len(non_cached)
+                    non_cached.append(stim)
+
+            # _transform will likely fail if given an empty list
+            if len(non_cached) > 0:
+                batch_results = self._transform(non_cached, *args, **kwargs)
+            else:
+                batch_results = []
+
             for i, stim in enumerate(batch):
-                res[i] = _log_transformation(stim, res[i], self)
-                self._propagate_context(stim, res[i])
-            results.extend(res)
+                key = hash((hash(self), hash(stim)))
+                # Use the target index to get the result from batch_results
+                if key in target_inds:
+                    result = batch_results[target_inds[key]]
+                    result = _log_transformation(stim, result, self)
+                    self._propagate_context(stim, result)
+                    if use_cache:
+                        if isgenerator(result):
+                            result = list(result)
+                        _cache[key] = result
+                    results.append(result)
+                # Otherwise, the result should be in the cache
+                else:
+                    results.append(_cache[key])
         return results
 
     def _transform(self, stim, *args, **kwargs):
         stims = listify(stim)
         if all(self._stim_matches_input_types(s) for s in stims):
-            result = super(BatchTransformerMixin, self) \
+            result = super() \
                 ._transform(stims, *args, **kwargs)
             if isiterable(stim):
                 return result
             else:
                 return result[0]
         else:
-            return list(super(BatchTransformerMixin, self)
+            return list(super()
                         ._iterate(stims, *args, **kwargs))
 
 
@@ -286,3 +315,4 @@ def get_transformer(name, base=None, *args, **kwargs):
                 return cls(*args, **kwargs)
 
     raise KeyError("No transformer named '%s' found." % name)
+

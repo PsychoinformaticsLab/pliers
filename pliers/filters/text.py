@@ -1,14 +1,16 @@
 ''' Filters that operate on TextStim inputs. '''
 
-import nltk
 import string
+import re
 
-from six import string_types
+import nltk
 from nltk import stem
 from nltk.tokenize import word_tokenize
 from nltk.tokenize import * # noqa
 from nltk.tokenize.api import TokenizerI
+
 from pliers.stimuli.text import TextStim
+from pliers.support.decorators import requires_nltk_corpus
 from .base import Filter
 
 
@@ -21,53 +23,80 @@ class TextFilter(Filter):
 
 class WordStemmingFilter(TextFilter):
 
-    ''' Nltk-based word stemming Filter.
+    ''' Nltk-based word stemming and lemmatization Filter.
 
     Args:
         stemmer (str, Stemmer): If a string, must be the name of one of the
-            stemming modules available in nltk.stem. Valid values are
-            'porter', 'snowball', 'isri', 'lancaster', 'regexp', 'wordet',
-            or 'rslp'. Alternatively, an initialized nltk StemmerI instance
-            can be passed.
-        tokenize (bool): if True, apply the stemmer to each token in the
-            TextStim, otherwise treat the whole TextStim as one token to stem.
+            stemming and lemmatization modules available in nltk.stem.
+            Valid values are 'porter', 'snowball', 'isri', 'lancaster',
+            'regexp', 'wordnet', or 'rslp'. Alternatively, an initialized
+            nltk StemmerI instance can be passed.
+        tokenize (bool): if True, tokenize using nltk.word_tokenize and apply
+            stemmer/lemmatizer to each token. If False, do not tokenize before
+            stemming/lemmatizing.
+        case_sensitive (bool): if False (default), input is lower-cased before
+            stemming or lemmatizing.
         args, kwargs: Optional positional and keyword args passed onto the
-            nltk stemmer.
+            nltk stemmer/lemmatizer.
     '''
 
-    stemmers = {
+    _stemmers = {
         'porter': 'PorterStemmer',
         'snowball': 'SnowballStemmer',
         'lancaster': 'LancasterStemmer',
         'isri': 'ISRIStemmer',
         'regexp': 'RegexpStemmer',
-        'rslp': 'RSLPStemmer'
+        'rslp': 'RSLPStemmer',
+        'wordnet': 'WordNetLemmatizer'
     }
 
-    _log_attributes = ('stemmer', 'tokenize')
+    _log_attributes = ('stemmer', 'tokenize', 'case_sensitive')
 
-    def __init__(self, stemmer='porter', tokenize=True, *args, **kwargs):
-
-        if isinstance(stemmer, string_types):
-            if stemmer not in self.stemmers:
-                valid = list(self.stemmers.keys())
+    @requires_nltk_corpus
+    def __init__(self, stemmer='porter', tokenize=True, case_sensitive=False,
+                 *args, **kwargs):
+        if isinstance(stemmer, str):
+            if stemmer not in self._stemmers:
+                valid = list(self._stemmers.keys())
                 raise ValueError("Invalid stemmer '%s'; please use one of %s."
                                  % (stemmer, valid))
-            stemmer = getattr(stem, self.stemmers[stemmer])(*args, **kwargs)
+            stemmer = getattr(stem, self._stemmers[stemmer])(*args, **kwargs)
         elif not isinstance(stemmer, (stem.StemmerI, stem.WordNetLemmatizer)):
             raise ValueError("stemmer must be either a valid string, or an "
                              "instance of class StemmerI.")
         self.stemmer = stemmer
         self.tokenize = tokenize
-        super(WordStemmingFilter, self).__init__()
+        self.case_sensitive = case_sensitive
+        super().__init__()
 
+    @requires_nltk_corpus
     def _filter(self, stim):
+        pos_map = {
+            'ADJ': 'a',
+            'ADJ_SAT': 's',
+            'ADV': 'r',
+            'NOUN': 'n',
+            'VERB': 'v'
+        }
+
+        def pos_wordnet(txt):
+            pos_tagged = dict(nltk.pos_tag(txt, tagset='universal'))
+            pos_tagged = {t: pos_map[tag] if tag in pos_map else 'n'
+                          for t, tag in pos_tagged.items()}
+            return pos_tagged
+
+        tokens = [stim.text]
         if self.tokenize:
-            tokens = stim.text.split()
-            stemmed = ' '.join([self.stemmer.stem(tok) for tok in tokens])
+            tokens = nltk.word_tokenize(tokens[0])
+        tokens = [t if self.case_sensitive else t.lower() for t in tokens]
+        if not isinstance(self.stemmer, stem.WordNetLemmatizer):
+            stemmed = ' '.join([self.stemmer.stem(t) for t in tokens])
         else:
-            stemmed = self.stemmer.stem(stim.text)
-        return TextStim(stim.filename, stemmed)
+            pos_tagged = pos_wordnet(tokens)
+            stemmed = ' '.join([self.stemmer.lemmatize(t, pos=pos_tagged[t])
+                                for t in tokens])
+        return TextStim(stim.filename, stemmed, stim.onset, stim.duration,
+                        stim.order, stim.url)
 
 
 class TokenizingFilter(TextFilter):
@@ -89,7 +118,7 @@ class TokenizingFilter(TextFilter):
             self.tokenizer = eval(tokenizer)(*args, **kwargs)
         else:
             self.tokenizer = None
-        super(TokenizingFilter, self).__init__()
+        super().__init__()
 
     def _filter(self, stim):
         if self.tokenizer:
@@ -126,7 +155,7 @@ class TokenRemovalFilter(TextFilter):
                 nltk.download('stopwords')
             from nltk.corpus import stopwords
             self.tokens = set(stopwords.words(self.language))
-        super(TokenRemovalFilter, self).__init__()
+        super().__init__()
 
     def _filter(self, stim):
         tokens = word_tokenize(stim.text)
@@ -135,12 +164,14 @@ class TokenRemovalFilter(TextFilter):
         return TextStim(stim.filename, text)
 
 
-class PunctuationRemovalFilter(TokenRemovalFilter):
+class PunctuationRemovalFilter(TextFilter):
 
     ''' Removes punctuation from a TextStim. '''
 
-    def __init__(self, tokens=string.punctuation):
-        super(PunctuationRemovalFilter, self).__init__(tokens)
+    def _filter(self, stim):
+        pattern = '[%s]' % re.escape(string.punctuation)
+        text = re.sub(pattern, '', stim.text)
+        return TextStim(stim.filename, text)
 
 
 class LowerCasingFilter(TextFilter):

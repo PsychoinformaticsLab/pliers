@@ -9,9 +9,11 @@ but it works well enough.
 
 To use it:
 
-1. Build the docker container:
+1. Build the docker container. Run the following in the pliers root directory.
 
-    docker build -t pliers .
+    ```
+    docker build --tag pliers --file docker/Dockerfile .
+    ```
 
 2. Create a file that contains all of the relevant API keys, called env.list:
 
@@ -19,7 +21,6 @@ To use it:
 WIT_AI_API_KEY=abc123
 IBM_USERNAME=joe@schmo.edu
 IBM_PASSWORD=xyzabc
-INDICO_APP_KEY=abcyyz
 GOOGLE_APPLICATION_CREDENTIALS=/root/share/googleapi.json
 CLARIFAI_API_KEY=hhhvvv
 ```
