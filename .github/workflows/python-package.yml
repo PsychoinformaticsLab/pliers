@@ -1,0 +1,45 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python tests
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: pytest (${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.6, 3.7]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        python-version: ${{ matrix.python-version }}
+    - name: Configure Environment
+      run: |
+        sudo apt-get install libavformat-dev libavfilter-dev libavdevice-dev ffmpeg libmp3lame-dev tesseract-ocr graphviz cmake
+        conda config --add channels conda-forge
+    - name: Install dependencies
+      run: |
+        openssl aes-256-cbc -K $encrypted_a0a62c26415d_key -iv $encrypted_a0a62c26415d_iv
+          -in pliers/tests/credentials/google.json.enc -out pliers/tests/credentials/google.json -d || true
+        python -m pip install --upgrade pip wheel
+        sudo apt-get install libboost-python-dev
+        pip install --upgrade --ignore-installed setuptools
+        pip install -r requirements.txt --upgrade
+        pip install -r optional-dependencies.txt --upgrade
+        pip install --upgrade coveralls pytest-cov
+        python -m pliers.support.setup_yamnet
+        python -m pliers.support.download
+        python -m spacy download en_core_web_sm
+    - name: Test with pytest
+      run: |
+        py.test --cov=pliers --cov-report= -m "not requires_payment" -W ignore::UserWarning
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
