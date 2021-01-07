@@ -26,7 +26,7 @@ from pliers.stimuli import TextStim, ComplexTextStim
 from pliers.tests.utils import get_test_data_path
 
 cache_default = config.get_option('cache_transformers')
-config.set_option('cache_transformers', True)
+config.set_option('cache_transformers', False)
 
 TEXT_DIR = join(get_test_data_path(), 'text')
 
