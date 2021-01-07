@@ -25,6 +25,8 @@ from pliers.extractors.base import merge_results
 from pliers.stimuli import TextStim, ComplexTextStim
 from pliers.tests.utils import get_test_data_path
 
+cache_default = config.get_option('cache_transformers')
+config.set_option('cache_transformers', True)
 
 TEXT_DIR = join(get_test_data_path(), 'text')
 
@@ -274,19 +276,19 @@ def test_spacy_doc_extractor():
 def test_bert_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
-    
+
     ext_base = BertExtractor(pretrained_model='bert-base-uncased')
     ext_base_token = BertExtractor(pretrained_model='bert-base-uncased',
                                    return_input=True)
     ext_tf = BertExtractor(pretrained_model='bert-base-uncased', framework='tf')
-    
+
     base_result = ext_base.transform(stim)
     res = base_result.to_df()
     res_model_attr = base_result.to_df()
     res_token = ext_base_token.transform(stim).to_df()
     res_file = ext_base.transform(stim_file).to_df()
     res_tf = ext_tf.transform(stim).to_df()
-    
+
     # Test encoding shape
     assert len(res['encoding'][0]) == 768
     assert len(res_file['encoding'][0]) == 768
@@ -297,7 +299,7 @@ def test_bert_extractor():
     assert res_token['token'][5] == '##ized'
     assert res_token['word'][5] == 'tokenized'
     assert res_token['object_id'][5] == 5
-    
+
     # test base extractor on file
     assert res_file.shape[0] == 8
     assert res_file['onset'][3] == 1.3
@@ -305,7 +307,7 @@ def test_bert_extractor():
     assert res_file['object_id'][5] == 5
 
     # test tf vs torch
-    cors = [np.corrcoef(res['encoding'][i], res_tf['encoding'][i])[0,1] 
+    cors = [np.corrcoef(res['encoding'][i], res_tf['encoding'][i])[0,1]
             for i in range(res.shape[0])]
     assert all(np.isclose(cors, 1))
 
@@ -462,7 +464,7 @@ def test_bert_LM_extractor():
     with pytest.raises(ValueError) as err:
         ext_target.update_mask(new_mask=['some', 'mask'])
     assert 'must be a string' in str(err.value)
-    
+
     # Test default mask
     assert res_default.shape[0] == 1
 
@@ -531,4 +533,3 @@ def test_word_counter_extractor():
     assert all(result_stim_txt['log_word_count'] >= 0)
     assert result_stim_txt['log_word_count'][15] == np.log(2)
     assert result_stim_txt['log_word_count'][44] == np.log(3)
-
