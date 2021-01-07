@@ -29,8 +29,8 @@ jobs:
         sudo apt-get install libavformat-dev libavfilter-dev libavdevice-dev ffmpeg libmp3lame-dev tesseract-ocr graphviz cmake libboost-python-dev libgraphviz-dev
     - uses: actions/cache@v2
       with:
-        path: ${{ env.pythonLocation }}
-        key: ${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('optional_requirements.txt') }}
+        path: ~/.cache/pip
+        key: ${{ hashFiles('setup.py') }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('optional_requirements.txt') }}
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip wheel
