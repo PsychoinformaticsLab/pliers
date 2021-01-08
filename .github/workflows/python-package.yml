@@ -43,5 +43,5 @@ jobs:
         python -m pliers.support.setup_yamnet
     - name: Test with pytest
       run: |
-        py.test pliers/tests --cov=pliers --cov-report= -m "not requires_payment" -W ignore::UserWarning
+        py.test pliers/tests --cov=pliers -m "not requires_payment" -W ignore::UserWarning
     - uses: codecov/codecov-action@v1
