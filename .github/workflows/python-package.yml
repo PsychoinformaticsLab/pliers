@@ -44,7 +44,4 @@ jobs:
     - name: Test with pytest
       run: |
         py.test pliers/tests --cov=pliers --cov-report= -m "not requires_payment" -W ignore::UserWarning
-    - name: Coveralls
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: codecov/codecov-action@v1
