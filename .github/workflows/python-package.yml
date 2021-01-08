@@ -22,7 +22,6 @@ jobs:
       with:
         auto-update-conda: true
         python-version: ${{ matrix.python-version }}
-        channels: conda-forge
     - name: Set up system dependencies
       run: |
         sudo apt-get update
