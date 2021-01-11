@@ -1,0 +1,47 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python tests
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: pytest (${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        python-version: ${{ matrix.python-version }}
+    - name: Set up system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install libavformat-dev libavfilter-dev libavdevice-dev ffmpeg libmp3lame-dev tesseract-ocr graphviz cmake libboost-python-dev libgraphviz-dev
+    - uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ hashFiles('setup.py') }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('optional_requirements.txt') }}
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip wheel
+        python -m pip install --upgrade --ignore-installed setuptools coveralls pytest-cov
+        python -m pip install -r requirements.txt -r optional-dependencies.txt --upgrade --upgrade-strategy eager
+    - name: Download support files
+      run: |
+        openssl aes-256-cbc -K $encrypted_a0a62c26415d_key -iv $encrypted_a0a62c26415d_iv -in pliers/tests/credentials/google.json.enc -out pliers/tests/credentials/google.json -d || true
+        python -m pliers.support.download
+        python -m spacy download en_core_web_sm
+        python -m pliers.support.setup_yamnet
+    - name: Test with pytest
+      run: |
+        py.test pliers/tests --cov=pliers --cov-report xml -m "not requires_payment" -W ignore::UserWarning
+    - uses: codecov/codecov-action@v1

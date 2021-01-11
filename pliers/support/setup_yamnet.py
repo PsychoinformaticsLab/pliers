@@ -1,6 +1,5 @@
 import os
 from io import BytesIO
-import json
 from zipfile import ZipFile
 from urllib import request
 from pathlib import Path
@@ -8,24 +7,21 @@ import sys
 import runpy
 import shutil
 
-PLIERS_DATA_PATH = Path.home() / 'pliers_data' 
+PLIERS_DATA_PATH = Path.home() / 'pliers_data'
 YAMNET_PATH = PLIERS_DATA_PATH / 'yamnet'
 
 
 def setup_yamnet():
-    # get the most recent released version of tensorflow/models
-    release_api_url = "https://api.github.com/repos/tensorflow/models/releases/latest"
-    with request.urlopen(release_api_url) as release_url:
-        tf_models_dict = json.loads(release_url.read())
-        tf_models_version = tf_models_dict['tag_name'].lstrip('v')
+    # get 2.3.0 of models (2.4 and up don't include research in bundle)
+    tf_models_version = "2.3.0"
 
     repo_url = f'https://github.com/tensorflow/models/archive/v{tf_models_version}.zip'
     model_url = 'https://storage.googleapis.com/audioset/yamnet.h5'
 
     tmp_dir = PLIERS_DATA_PATH / 'yamnet_tmp'
     tmp_yamnet_dir = tmp_dir / f'models-{tf_models_version}' / 'research' / 'audioset' / 'yamnet'
-    model_filename =  YAMNET_PATH / model_url.split('/')[-1]
-    
+    model_filename = YAMNET_PATH / model_url.split('/')[-1]
+
     if not model_filename.exists():
         PLIERS_DATA_PATH.mkdir(exist_ok=True)
         with request.urlopen(repo_url) as z:
