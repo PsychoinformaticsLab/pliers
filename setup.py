@@ -39,5 +39,5 @@ setup(
                  'spacy', 'SpeechRecognition>=3.6.0', 'tensorflow>=1.0.0',
                  'torch', 'transformers', 'xlrd', 'rev_ai']
     },
-    python_requires='>=3.5',
+    python_requires='>=3.6',
 )
