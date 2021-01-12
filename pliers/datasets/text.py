@@ -47,7 +47,7 @@ def _download_dictionary(url, format, rename):
     elif format == 'tsv' or url.endswith('tsv'):
         data = pd.read_csv(_file, sep='\t')
     elif format.startswith('xls') or os.path.splitext(url)[1].startswith('xls'):
-        data = pd.read_excel(_file)
+        data = pd.read_excel(_file, engine='openpyxl')
 
     if rename is not None:
         data = data.rename(columns=rename)

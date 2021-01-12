@@ -494,7 +494,6 @@ class BertExtractor(ComplexTextExtractor):
             then postprocesses the output '''
         wds, ons, dur, tok, idx = self._preprocess(stims)
         preds = self.model(idx)
-        preds = [p.detach() if self.framework == 'pt' else p for p in preds]
         data, feat, ons, dur = self._postprocess(stims, preds, tok, wds, ons, dur)
         return ExtractorResult(data, stims, self, features=feat, onsets=ons, 
                                durations=dur)
@@ -506,7 +505,10 @@ class BertExtractor(ComplexTextExtractor):
             and durations and input. Here, returns token-level encodings 
             (excluding special tokens).
         '''
-        out = preds[0][:, 1:-1, :].numpy().squeeze()
+        out = preds.last_hidden_state[:, 1:-1, :]
+        if self.framework == 'pt':
+            out = out.detach() 
+        out = out.numpy().squeeze()
         data = [out.tolist()]
         feat = ['encoding']
         if self.return_input:
@@ -590,8 +592,6 @@ class BertSequenceEncodingExtractor(BertExtractor):
             tokenizer_kwargs=tokenizer_kwargs)
 
     def _postprocess(self, stims, preds, tok, wds, ons, dur):
-        preds = [p.numpy().squeeze() for p in preds]
-        self.preds = preds
         try: 
             dur = ons[-1] + dur[-1] - ons[0]
         except:
@@ -599,14 +599,20 @@ class BertSequenceEncodingExtractor(BertExtractor):
         ons = ons[0]
         if self.pooling:
             pool_func = getattr(np, self.pooling)
-            out = pool_func(preds[0][1:-1, :], axis=0)
+            p = preds.last_hidden_state[0, 1:-1, :]
+            if self.framework == 'pt':
+                p = p.detach()
+            out = pool_func(p.numpy().squeeze(), axis=0)
         elif self.return_special:
             if self.return_special == '[CLS]':
-                out = preds[0][0,:] 
+                out = preds.last_hidden_state[:,0,:]
             elif self.return_special == '[SEP]':
-                out = preds[0][1,:]
+                out = preds.last_hidden_state[:,-1,:]
             else:
-                out = preds[1]
+                out = preds.pooler_output
+            if self.framework == 'pt':
+                out = out.detach()
+            out = out.numpy().squeeze()
         data = [[out.tolist()]]
         feat = ['encoding']
         if self.return_input:
@@ -719,7 +725,10 @@ class BertLMExtractor(BertExtractor):
         return mwds
 
     def _postprocess(self, stims, preds, tok, wds, ons, dur):
-        preds = preds[0].numpy()[:,1:-1,:]
+        if self.framework == 'pt':
+            preds = preds.logits[:,1:-1,:].detach().numpy()
+        else:
+            preds = preds.logits[:,1:-1,:].numpy()
         if self.return_softmax:
             preds = scipy.special.softmax(preds, axis=-1)
         out_idx = preds[0,self.mask_pos,:].argsort()[::-1]
@@ -796,7 +805,10 @@ class BertSentimentExtractor(BertExtractor):
                 model_kwargs=model_kwargs, tokenizer_kwargs=tokenizer_kwargs)
 
     def _postprocess(self, stims, preds, tok, wds, ons, dur):
-        data = preds[0].numpy().squeeze()
+        data = preds.logits
+        if self.framework == 'pt':
+            data = data.detach()
+        data = data.numpy().squeeze()
         if self.return_softmax:
             data = scipy.special.softmax(data) 
         data = [listify(d) for d in data.tolist()]

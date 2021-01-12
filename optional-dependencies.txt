@@ -9,6 +9,7 @@ librosa>=0.6.3
 numba<=0.48
 matplotlib
 opencv-python
+openpyxl
 pathos
 pygraphviz
 pysrt

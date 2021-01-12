@@ -3,6 +3,9 @@ from psutil import Process
 from collections import namedtuple
 from itertools import groupby
 import gc
+import pliers as pl
+
+pl.set_options(cache_transformers=False)
 
 _proc = Process(os.getpid())
 

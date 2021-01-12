@@ -8,7 +8,7 @@ import numpy as np
 from pandas.api.types import is_numeric_dtype
 
 from pliers.transformers import Transformer
-from pliers.utils import isgenerator, flatten, listify
+from pliers.utils import isgenerator, flatten
 
 
 class Extractor(Transformer, metaclass=ABCMeta):
@@ -102,9 +102,9 @@ class ExtractorResult:
                 values, the special value 'auto' can be passed, in which case
                 the object_id column will only be inserted if the resulting
                 constant would be non-constant.
-            extractor_params (bool): if True, returns log_attributes of 
+            extractor_params (bool): if True, returns log_attributes of
                 at extraction time, as stored in transformer_params attribute
-                in ExtractorResult.history. These are returned as serialized 
+                in ExtractorResult.history. These are returned as serialized
                 dictionary in extractor_params column.
 
         Returns:
@@ -250,9 +250,9 @@ def merge_results(results, format='wide', timing=True, metadata=True,
             ImageExtractors that identify multiple target objects (e.g., faces)
             within a single ImageStim. Default is 'auto', which includes the
             'object_id' column if and only if it has a non-constant value.
-        extractor_params (bool): If True, returns serialized extractor_params 
-            of the extractor, i.e. log_attributes at time of extraction. 
-            If format='wide', merge_results returns one column per extractor, 
+        extractor_params (bool): If True, returns serialized extractor_params
+            of the extractor, i.e. log_attributes at time of extraction.
+            If format='wide', merge_results returns one column per extractor,
             each named ExtractorName#FeatureName#extractor_params.
             If format='long', returns only one column named extractor_params.
         aggfunc (str, Callable): If format='wide' and extractor_names='drop',
@@ -288,7 +288,7 @@ def merge_results(results, format='wide', timing=True, metadata=True,
         if isinstance(r, ExtractorResult):
             dfs.append(r.to_df(timing=_timing, metadata=metadata,
                                format='long', extractor_name=True,
-                               object_id=_object_id, 
+                               object_id=_object_id,
                                extractor_params=extractor_params,
                                **to_df_kwargs))
         elif invalid_results == 'fail':
@@ -323,7 +323,7 @@ def merge_results(results, format='wide', timing=True, metadata=True,
 
         # Set default aggfunc based on column type, otherwise bad things happen
         if aggfunc is None:
-            aggfunc = 'mean' if is_numeric_dtype(data['value']) else 'first' 
+            aggfunc = 'mean' if is_numeric_dtype(data['value']) else 'first'
 
         # add conditional on value of extractor_names
         if extractor_params:
