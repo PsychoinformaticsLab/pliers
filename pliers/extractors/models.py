@@ -66,15 +66,17 @@ class TFHubExtractor(Extractor):
         verify_dependencies(['tensorflow_hub'])
         self.model = hub.KerasLayer(url_or_path, **kwargs)
         self.url_or_path = url_or_path
-        self.features = listify(features)
+        self.features = features
         self.transform_out = transform_out
         self.transform_inp = transform_inp
         super().__init__()
 
     def get_feature_names(self, out):
-        features = ['feature_' + str(i) 
+        if self.features:
+            return listify(self.features)
+        else:
+            return ['feature_' + str(i) 
                     for i in range(out.shape[-1])]
-        return features
     
     def _preprocess(self, stim):
         if self.transform_inp:
@@ -94,7 +96,7 @@ class TFHubExtractor(Extractor):
         inp = self._preprocess(stim)
         out = self.model(inp)
         out = self._postprocess(out)
-        features = self.features or self.get_feature_names(out)
+        features = self.get_feature_names(out)
         return ExtractorResult(listify(out), stim, self, 
                                features=features)
     
