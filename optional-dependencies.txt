@@ -1,6 +1,5 @@
 clarifai
 duecredit
-face_recognition
 python-twitter
 gensim
 google-api-python-client
