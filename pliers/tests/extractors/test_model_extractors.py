@@ -63,6 +63,7 @@ def test_tfhub_image():
                             extractor_names=False)
     assert mnet_df.shape[0] == 2
     assert all([len(v) == 1280 for v in mnet_df['feature_vector']])
+    del mnet_ext, eff_ext
 
 
 def test_tfhub_text():
@@ -112,7 +113,7 @@ def test_tfhub_text():
     with pytest.raises(ValueError) as err:
         TFHubTextExtractor(GNEWS_URL, output_key='key').transform(stim)
     assert 'not a dictionary' in str(err.value)
-
+    del el_ext, sent_ext, gnews_ext
 
 def test_tfhub_generic():
     # Test generic extractor with speech embedding model
@@ -127,3 +128,4 @@ def test_tfhub_generic():
     emb_dim = 96
     n_chunks = 1 + (astim.data.shape[0] - 12400) // 1280
     assert df['speech_embedding'][0].shape == (n_chunks, emb_dim)
+    del aext
