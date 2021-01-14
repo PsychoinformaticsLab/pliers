@@ -41,6 +41,8 @@ jobs:
         python -m pliers.support.download
         python -m spacy download en_core_web_sm
         python -m pliers.support.setup_yamnet
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
     - name: Test with pytest
       run: |
         py.test pliers/tests --cov=pliers --cov-report xml -m "not requires_payment" -W ignore::UserWarning
