@@ -33,7 +33,7 @@ jobs:
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip wheel
-        python -m pip install --upgrade --ignore-installed setuptools coveralls pytest-cov
+        python -m pip install --upgrade --ignore-installed setuptools coveralls pytest-cov pytest-forked
         python -m pip install -r requirements.txt -r optional-dependencies.txt --upgrade --upgrade-strategy eager
     - name: Download support files
       run: |
@@ -41,9 +41,7 @@ jobs:
         python -m pliers.support.download
         python -m spacy download en_core_web_sm
         python -m pliers.support.setup_yamnet
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
     - name: Test with pytest
       run: |
-        py.test pliers/tests --cov=pliers --cov-report xml -m "not requires_payment" -W ignore::UserWarning
+        py.test pliers/tests -n2 --forked --cov=pliers --cov-report xml -m "not requires_payment" -W ignore::UserWarning
     - uses: codecov/codecov-action@v1

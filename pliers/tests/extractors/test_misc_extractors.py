@@ -1,4 +1,4 @@
-from pliers.extractors import (MetricExtractor, BertLMExtractor, 
+from pliers.extractors import (MetricExtractor, BertLMExtractor,
                                merge_results)
 from pliers.stimuli import SeriesStim, ComplexTextStim
 from pliers.tests.utils import get_test_data_path
@@ -21,17 +21,17 @@ def test_metric_extractor():
                            index_col='text')
 
     ext_single = MetricExtractor(functions='numpy.mean')
-    ext_idx = MetricExtractor(functions='numpy.mean', 
+    ext_idx = MetricExtractor(functions='numpy.mean',
                               subset_idx=['for', 'testing', 'text'])
-    ext_multiple = MetricExtractor(functions=['numpy.mean', 'numpy.min', 
+    ext_multiple = MetricExtractor(functions=['numpy.mean', 'numpy.min',
                                               scipy.stats.entropy, dummy,
                                               dummy_list])
-    ext_names = MetricExtractor(functions=['numpy.mean', 'numpy.min', 
+    ext_names = MetricExtractor(functions=['numpy.mean', 'numpy.min',
                                            scipy.stats.entropy, dummy,
                                            dummy_list, 'tensorflow.reduce_mean'],
                                 var_names=['mean', 'min', 'entropy',
                                            'custom1', 'custom2', 'tf_mean'])
-    ext_lambda = MetricExtractor(functions='lambda x: -np.max(x)', 
+    ext_lambda = MetricExtractor(functions='lambda x: -np.max(x)',
                                  var_names='custom_function')
 
     r = ext_single.transform(stim)
@@ -68,6 +68,7 @@ def test_metric_extractor():
     assert r_names_df.columns[-1] == 'tf_mean'
     assert np.isclose(r_names_df['mean'][0], r_names_df['tf_mean'][0])
     assert r_lambda_df['custom_function'][0] == -4
+
 
 def test_metric_er_as_stim():
     stim = ComplexTextStim(text = 'This is [MASK] test')
