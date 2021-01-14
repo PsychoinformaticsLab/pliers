@@ -63,7 +63,6 @@ def test_tfhub_image():
                             extractor_names=False)
     assert mnet_df.shape[0] == 2
     assert all([len(v) == 1280 for v in mnet_df['feature_vector']])
-    del mnet_ext, eff_ext
 
 
 def test_tfhub_text():
@@ -72,13 +71,6 @@ def test_tfhub_text():
     sent_ext = TFHubTextExtractor(SENTENC_URL, output_key=None)
     gnews_ext = TFHubTextExtractor(GNEWS_URL, output_key=None, 
                                    features='embedding')
-    el_ext = TFHubTextExtractor(ELECTRA_URL, 
-                                features='sent_encoding',
-                                preprocessor_url_or_path=TOKENIZER_URL)
-    el_tkn_ext = TFHubTextExtractor(ELECTRA_URL, 
-                                    features='token_encodings',
-                                    output_key='sequence_output',
-                                    preprocessor_url_or_path=TOKENIZER_URL)
 
     sent_df = sent_ext.transform(stim).to_df()
     assert all([f'feature_{i}' in sent_df.columns for i in range(512)])
@@ -90,30 +82,11 @@ def test_tfhub_text():
     assert gnews_df.shape[0] == len(cstim.elements)
     true = hub.KerasLayer(GNEWS_URL)([cstim.elements[3].text])[0,2].numpy()
     assert np.isclose(gnews_df['embedding'][3][2], true)
-    
-    electra_df = merge_results(el_ext.transform(cstim.elements[:6]), 
-                               extractor_names=False)
-    pmod = hub.KerasLayer(TOKENIZER_URL)
-    mmod = hub.KerasLayer(ELECTRA_URL)
-    electra_true = mmod(pmod([cstim.elements[5].text]))\
-                   ['pooled_output'][0,20].numpy()
-    assert np.isclose(electra_df['sent_encoding'][5][20], electra_true)
-
-    el_tkn_df = merge_results(el_tkn_ext.transform(cstim.elements[:3]), 
-                                     extractor_names=False)
-    assert all([el_tkn_df['token_encodings'][i].shape == (128, 256) \
-                for i in range(el_tkn_df.shape[0])])
-
-    with pytest.raises(ValueError) as err:
-        TFHubTextExtractor(ELECTRA_URL, 
-                           preprocessor_url_or_path=TOKENIZER_URL,
-                           output_key='key').transform(stim)
-    assert 'Check which keys' in str(err.value)
 
     with pytest.raises(ValueError) as err:
         TFHubTextExtractor(GNEWS_URL, output_key='key').transform(stim)
     assert 'not a dictionary' in str(err.value)
-    del el_ext, sent_ext, gnews_ext
+
 
 def test_tfhub_generic():
     # Test generic extractor with speech embedding model
@@ -128,4 +101,3 @@ def test_tfhub_generic():
     emb_dim = 96
     n_chunks = 1 + (astim.data.shape[0] - 12400) // 1280
     assert df['speech_embedding'][0].shape == (n_chunks, emb_dim)
-    del aext
