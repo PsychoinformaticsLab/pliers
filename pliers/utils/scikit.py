@@ -52,4 +52,4 @@ class PliersTransformer(SklearnBase):
         self.metadata_ = result[extra_columns]
         result.drop(extra_columns, axis=1, inplace=True, errors='ignore')
 
-        return result.as_matrix()
+        return result.values()
