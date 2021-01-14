@@ -70,6 +70,7 @@ def test_metric_extractor():
     assert r_lambda_df['custom_function'][0] == -4
 
 
+@pytest.mark.forked
 def test_metric_er_as_stim():
     stim = ComplexTextStim(text = 'This is [MASK] test')
     ext_bert = BertLMExtractor(return_softmax=True)
