@@ -76,49 +76,49 @@ def test_tensorflow_keras_application_extractor():
         TensorFlowKerasApplicationExtractor(architecture='foo')
 
 
-# def test_face_recognition_landmarks_extractor():
-#     pytest.importorskip('face_recognition')
-#     ext = FaceRecognitionFaceLandmarksExtractor()
-#     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'thai_people.jpg',
-#                                          'obama.jpg']]
-#     result = ext.transform(imgs)
-#     dfs = [r.to_df(timing=False) for r in result]
-#     assert dfs[0].empty
-#     assert dfs[1].shape == (4, 10)
-#     assert dfs[2].shape == (1, 10)
-#     assert 'face_landmarks_nose_tip' in dfs[1].columns
-#     assert 'face_landmarks_nose_tip' in dfs[2].columns
-#     assert dfs[1].loc[3, 'face_landmarks_left_eyebrow'] == \
-#         result[1].raw[3]['left_eyebrow']
-#
-#
-# def test_face_recognition_encodings_extractor():
-#     pytest.importorskip('face_recognition')
-#     ext = FaceRecognitionFaceEncodingsExtractor()
-#     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'thai_people.jpg',
-#                                          'obama.jpg']]
-#     result = ext.transform(imgs)
-#     dfs = [r.to_df(timing=False) for r in result]
-#     assert dfs[0].empty
-#     assert dfs[1].iloc[0, 1].shape == (128,)
-#     assert dfs[2].iloc[0, 1].shape == (128,)
-#     assert 'object_id' in dfs[1].columns
-#     assert dfs[1]['object_id'][1] == 1
-#     assert 'face_encodings' in dfs[1].columns
-#     assert 'face_encodings' in dfs[2].columns
-#
-#
-# def test_face_recognition_locations_extractor():
-#     pytest.importorskip('face_recognition')
-#     ext = FaceRecognitionFaceLocationsExtractor()
-#     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'thai_people.jpg',
-#                                          'obama.jpg']]
-#     result = ext.transform(imgs)
-#     dfs = [r.to_df(timing=False) for r in result]
-#     assert dfs[0].empty
-#     assert isinstance(dfs[1].iloc[0, 1], tuple)
-#     assert len(dfs[1].iloc[0, 1]) == 4
-#     assert len(dfs[2].iloc[0, 1]) == 4
-#     assert dfs[1]['object_id'][1] == 1
-#     assert 'face_locations' in dfs[1].columns
-#     assert 'face_locations' in dfs[2].columns
+def test_face_recognition_landmarks_extractor():
+    pytest.importorskip('face_recognition')
+    ext = FaceRecognitionFaceLandmarksExtractor()
+    imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'thai_people.jpg',
+                                         'obama.jpg']]
+    result = ext.transform(imgs)
+    dfs = [r.to_df(timing=False) for r in result]
+    assert dfs[0].empty
+    assert dfs[1].shape == (4, 10)
+    assert dfs[2].shape == (1, 10)
+    assert 'face_landmarks_nose_tip' in dfs[1].columns
+    assert 'face_landmarks_nose_tip' in dfs[2].columns
+    assert dfs[1].loc[3, 'face_landmarks_left_eyebrow'] == \
+        result[1].raw[3]['left_eyebrow']
+
+
+def test_face_recognition_encodings_extractor():
+    pytest.importorskip('face_recognition')
+    ext = FaceRecognitionFaceEncodingsExtractor()
+    imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'thai_people.jpg',
+                                         'obama.jpg']]
+    result = ext.transform(imgs)
+    dfs = [r.to_df(timing=False) for r in result]
+    assert dfs[0].empty
+    assert dfs[1].iloc[0, 1].shape == (128,)
+    assert dfs[2].iloc[0, 1].shape == (128,)
+    assert 'object_id' in dfs[1].columns
+    assert dfs[1]['object_id'][1] == 1
+    assert 'face_encodings' in dfs[1].columns
+    assert 'face_encodings' in dfs[2].columns
+
+
+def test_face_recognition_locations_extractor():
+    pytest.importorskip('face_recognition')
+    ext = FaceRecognitionFaceLocationsExtractor()
+    imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'thai_people.jpg',
+                                         'obama.jpg']]
+    result = ext.transform(imgs)
+    dfs = [r.to_df(timing=False) for r in result]
+    assert dfs[0].empty
+    assert isinstance(dfs[1].iloc[0, 1], tuple)
+    assert len(dfs[1].iloc[0, 1]) == 4
+    assert len(dfs[2].iloc[0, 1]) == 4
+    assert dfs[1]['object_id'][1] == 1
+    assert 'face_locations' in dfs[1].columns
+    assert 'face_locations' in dfs[2].columns
