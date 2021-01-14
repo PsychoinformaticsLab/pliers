@@ -69,8 +69,8 @@ def test_resample():
     # Test downsample
     downsampled_df = resample(df, 3)
 
-    assert np.allclose(downsampled_df.ix[0].onset, 0)
-    assert np.allclose(downsampled_df.ix[1].onset, 0.33333)
+    assert np.allclose(downsampled_df.iloc[0].onset, 0)
+    assert np.allclose(downsampled_df.iloc[1].onset, 0.33333)
 
     assert set(downsampled_df.columns) == {
         'duration', 'onset', 'feature', 'value'}
@@ -96,8 +96,8 @@ def test_resample():
 
     upsampled_df = resample(df, 10)
 
-    assert np.allclose(upsampled_df.ix[0].onset, 0)
-    assert np.allclose(upsampled_df.ix[1].onset, 0.1)
+    assert np.allclose(upsampled_df.iloc[0].onset, 0)
+    assert np.allclose(upsampled_df.iloc[1].onset, 0.1)
 
     assert set(upsampled_df.columns) == {
         'duration', 'onset', 'feature', 'value'}
