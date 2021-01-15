@@ -375,6 +375,7 @@ def test_percussion_extractor():
 @pytest.mark.parametrize('hop_size', [0.1, 1])
 @pytest.mark.parametrize('top_n', [5, 10])
 @pytest.mark.parametrize('target_sr', [22000, 14000])
+@pytest.mark.forked
 def test_audioset_extractor(hop_size, top_n, target_sr):
     verify_dependencies(['tensorflow'])
 
@@ -405,7 +406,7 @@ def test_audioset_extractor(hop_size, top_n, target_sr):
     else:
         with pytest.raises(ValueError) as sr_error:
             ext.transform(audio_resampled)
-        assert all([substr in str(sr_error.value) 
+        assert all([substr in str(sr_error.value)
                     for substr in ['Upsample' , str(target_sr)]])
 
     # test top_n option
@@ -415,12 +416,12 @@ def test_audioset_extractor(hop_size, top_n, target_sr):
     assert np.argmax(r_top_n.to_numpy()[:,4:].mean(axis=0)) == 0
 
     # test label subset
-    labels = ['Speech', 'Silence', 'Harmonic', 'Bark', 'Music', 'Bell', 
+    labels = ['Speech', 'Silence', 'Harmonic', 'Bark', 'Music', 'Bell',
               'Steam', 'Rain']
     ext_labels_only = AudiosetLabelExtractor(labels=labels)
     r_labels_only = ext_labels_only.transform(audio_stim).to_df()
     assert r_labels_only.shape[1] == len(labels) + 4
-    
+
     # test top_n/labels error
     with pytest.raises(ValueError) as err:
         AudiosetLabelExtractor(top_n=10, labels=labels)
