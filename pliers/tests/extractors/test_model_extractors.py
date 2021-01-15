@@ -7,12 +7,12 @@ from os import environ
 from pliers.tests.utils import get_test_data_path
 from pliers import config
 from pliers.extractors import (TensorFlowKerasApplicationExtractor,
-                               TFHubExtractor, 
-                               TFHubImageExtractor, 
+                               TFHubExtractor,
+                               TFHubImageExtractor,
                                TFHubTextExtractor)
 from pliers.filters import AudioResamplingFilter
-from pliers.stimuli import (ImageStim, 
-                            TextStim, ComplexTextStim, 
+from pliers.stimuli import (ImageStim,
+                            TextStim, ComplexTextStim,
                             AudioStim)
 from pliers.extractors.base import merge_results
 
@@ -58,29 +58,30 @@ def test_tfhub_image():
     assert all(['feature_' + str(i) in eff_df.columns \
                for i in range(1000) ])
     assert np.argmax(np.array([eff_df['feature_' + str(i)][0] \
-                     for i in range(1000)])) == 948 
+                     for i in range(1000)])) == 948
     stim2 = ImageStim(join(IMAGE_DIR, 'obama.jpg'))
-    mnet_ext = TFHubImageExtractor(MNET_URL, reshape_input=(224,224,3), 
+    mnet_ext = TFHubImageExtractor(MNET_URL, reshape_input=(224,224,3),
                                    features='feature_vector')
-    mnet_df = merge_results(mnet_ext.transform([stim, stim2]), 
+    mnet_df = merge_results(mnet_ext.transform([stim, stim2]),
                             extractor_names=False)
     assert mnet_df.shape[0] == 2
     assert all([len(v) == 1280 for v in mnet_df['feature_vector']])
 
 
+@pytest.mark.forked
 def test_tfhub_text():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
     sent_ext = TFHubTextExtractor(SENTENC_URL, output_key=None)
-    gnews_ext = TFHubTextExtractor(GNEWS_URL, output_key=None, 
+    gnews_ext = TFHubTextExtractor(GNEWS_URL, output_key=None,
                                    features='embedding')
 
     sent_df = sent_ext.transform(stim).to_df()
     assert all([f'feature_{i}' in sent_df.columns for i in range(512)])
     sent_true = hub.KerasLayer(SENTENC_URL)([stim.text])[0,10].numpy()
     assert np.isclose(sent_df['feature_10'][0], sent_true)
-    
-    gnews_df = merge_results(gnews_ext.transform(cstim), 
+
+    gnews_df = merge_results(gnews_ext.transform(cstim),
                              extractor_names=False)
     assert gnews_df.shape[0] == len(cstim.elements)
     true = hub.KerasLayer(GNEWS_URL)([cstim.elements[3].text])[0,2].numpy()
@@ -95,10 +96,10 @@ def test_tfhub_text():
 def test_tfhub_text_transformer():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
-    ext = TFHubTextExtractor(ELECTRA_URL, 
+    ext = TFHubTextExtractor(ELECTRA_URL,
                             features='sent_encoding',
                             preprocessor_url_or_path=TOKENIZER_URL)
-    tkn_ext = TFHubTextExtractor(ELECTRA_URL, 
+    tkn_ext = TFHubTextExtractor(ELECTRA_URL,
                                  features='token_encodings',
                                  output_key='sequence_output',
                                  preprocessor_url_or_path=TOKENIZER_URL)
@@ -109,12 +110,12 @@ def test_tfhub_text_transformer():
     true = mmod(pmod([cstim.elements[5].text]))\
                 ['pooled_output'][0,20].numpy()
     assert np.isclose(df['sent_encoding'][5][20], true)
-    tkn_df = merge_results(tkn_ext.transform(cstim.elements[:3]), 
+    tkn_df = merge_results(tkn_ext.transform(cstim.elements[:3]),
                            extractor_names=False)
     assert all([tkn_df['token_encodings'][i].shape == (128, 256) \
                 for i in range(tkn_df.shape[0])])
     with pytest.raises(ValueError) as err:
-        TFHubTextExtractor(ELECTRA_URL, 
+        TFHubTextExtractor(ELECTRA_URL,
                            preprocessor_url_or_path=TOKENIZER_URL,
                            output_key='key').transform(stim)
     assert 'Check which keys' in str(err.value)
@@ -125,7 +126,7 @@ def test_tfhub_generic():
     astim = AudioStim(join(AUDIO_DIR, 'obama_speech.wav'))
     astim = AudioResamplingFilter(target_sr=16000).transform(astim)
     transform_fn = lambda x: tf.expand_dims(x, axis=0)
-    aext = TFHubExtractor(SPEECH_URL, 
+    aext = TFHubExtractor(SPEECH_URL,
                           transform_inp=transform_fn,
                           features='speech_embedding')
     df = aext.transform(astim).to_df()
