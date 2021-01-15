@@ -273,6 +273,7 @@ def test_spacy_doc_extractor():
     assert result['is_sentenced'][3]
 
 
+@pytest.mark.forked
 def test_bert_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
@@ -320,8 +321,7 @@ def test_bert_extractor():
     del res, res_token, res_file, ext_base, ext_base_token
 
 
-@pytest.mark.skipif(environ.get('CI', False) == 'true',
-                                reason='high memory')
+@pytest.mark.forked
 @pytest.mark.parametrize('model', ['bert-large-uncased',
                                    'distilbert-base-uncased',
                                    'roberta-base','camembert-base'])
@@ -343,8 +343,7 @@ def test_bert_other_models(model):
     del res, stim
 
 
-@pytest.mark.skipif(environ.get('CI', False) == 'true',
-                                reason='high memory')
+@pytest.mark.forked
 def test_bert_sequence_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
@@ -397,8 +396,7 @@ def test_bert_sequence_extractor():
     del ext_pooler, res_cls, res_max, res_pooler, res_sequence, res_file, stim
 
 
-@pytest.mark.skipif(environ.get('CI', False) == 'true',
-                                reason='high memory')
+@pytest.mark.forked
 def test_bert_LM_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_masked = ComplexTextStim(text='This is MASK tokenized sentence.')
@@ -481,8 +479,7 @@ def test_bert_LM_extractor():
         res_threshold, res_default, res_return_mask
 
 
-@pytest.mark.skipif(environ.get('CI', False) == 'true',
-                                reason='high memory')
+@pytest.mark.forked
 def test_bert_sentiment_extractor():
     stim = ComplexTextStim(text='This is the best day of my life.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
