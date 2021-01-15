@@ -4,8 +4,8 @@ import tensorflow as tf
 import numpy as np
 import pytest
 from os import environ
-
-from ..utils import get_test_data_path
+from pliers.tests.utils import get_test_data_path
+from pliers import config
 from pliers.extractors import (TensorFlowKerasApplicationExtractor,
                                TFHubExtractor, 
                                TFHubImageExtractor, 
@@ -16,6 +16,8 @@ from pliers.stimuli import (ImageStim,
                             AudioStim)
 from pliers.extractors.base import merge_results
 
+cache_default = config.get_option('cache_transformers')
+config.set_option('cache_transformers', False)
 
 IMAGE_DIR = join(get_test_data_path(), 'image')
 TEXT_DIR = join(get_test_data_path(), 'text')
@@ -89,8 +91,7 @@ def test_tfhub_text():
     assert 'not a dictionary' in str(err.value)
 
 
-@pytest.mark.skipif(environ.get('CI', False) == 'true', 
-                    reason='high memory')
+@pytest.mark.forked
 def test_tfhub_text_transformer():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
