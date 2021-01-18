@@ -69,8 +69,7 @@ def test_tfhub_image():
     assert mnet_df.shape[0] == 2
     assert all([len(v) == 1280 for v in mnet_df['feature_vector']])
 
-
-@pytest.mark.forked
+@pytest.mark.skip(reason="highmem")
 def test_tfhub_text():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
@@ -94,7 +93,7 @@ def test_tfhub_text():
     assert 'not a dictionary' in str(err.value)
 
 
-@pytest.mark.skip(reason="highmem")
+@pytest.mark.forked
 def test_tfhub_text_transformer():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
