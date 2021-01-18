@@ -102,40 +102,6 @@ def test_tfhub_text_one_feature():
 
 
 @pytest.mark.forked
-def test_tfhub_text_transformer_sentence():
-    stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
-    cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
-    ext = TFHubTextExtractor(ELECTRA_URL,
-                            features='sent_encoding',
-                            preprocessor_url_or_path=TOKENIZER_URL)
-    res = ext.transform(cstim.elements[:6])
-    df = merge_results(res, extractor_names=False)
-    pmod = hub.KerasLayer(TOKENIZER_URL)
-    mmod = hub.KerasLayer(ELECTRA_URL)
-    true = mmod(pmod([cstim.elements[5].text]))\
-                ['pooled_output'][0,20].numpy()
-    assert np.isclose(df['sent_encoding'][5][20], true)
-    with pytest.raises(ValueError) as err:
-        TFHubTextExtractor(ELECTRA_URL,
-                           preprocessor_url_or_path=TOKENIZER_URL,
-                           output_key='key').transform(stim)
-    assert 'Check which keys' in str(err.value)
-
-
-@pytest.mark.forked
-def test_tfhub_text_transformer_tokens():
-    cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
-    tkn_ext = TFHubTextExtractor(ELECTRA_URL,
-                                 features='token_encodings',
-                                 output_key='sequence_output',
-                                 preprocessor_url_or_path=TOKENIZER_URL)
-    tkn_df = merge_results(tkn_ext.transform(cstim.elements[:3]),
-                           extractor_names=False)
-    assert all([tkn_df['token_encodings'][i].shape == (128, 256) \
-                for i in range(tkn_df.shape[0])])
-
-
-@pytest.mark.forked
 def test_tfhub_generic():
     # Test generic extractor with speech embedding model
     astim = AudioStim(join(AUDIO_DIR, 'obama_speech.wav'))
