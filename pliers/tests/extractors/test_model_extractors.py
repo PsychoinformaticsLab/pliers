@@ -32,6 +32,7 @@ ELECTRA_URL = 'https://tfhub.dev/google/electra_small/2'
 SPEECH_URL = 'https://tfhub.dev/google/speech_embedding/1'
 
 
+@pytest.mark.forked
 def test_tensorflow_keras_application_extractor():
     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'obama.jpg']]
     imgs = [ImageStim(im, onset=4.2, duration=1) for im in imgs]
@@ -51,6 +52,7 @@ def test_tensorflow_keras_application_extractor():
         TensorFlowKerasApplicationExtractor(architecture='foo')
 
 
+@pytest.mark.forked
 def test_tfhub_image():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     ext = TFHubImageExtractor(EFFNET_URL)
@@ -61,6 +63,7 @@ def test_tfhub_image():
                      for i in range(1000)])) == 948
 
 
+@pytest.mark.forked
 def test_tfhub_image_reshape():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     stim2 = ImageStim(join(IMAGE_DIR, 'obama.jpg'))
@@ -73,6 +76,32 @@ def test_tfhub_image_reshape():
     assert all([len(v) == 1280 for v in df['feature_vector']])
 
 
+@pytest.mark.forked
+def test_tfhub_text():
+    stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
+    ext = TFHubTextExtractor(SENTENC_URL, output_key=None)
+    df = ext.transform(stim).to_df()
+    assert all([f'feature_{i}' in df.columns for i in range(512)])
+    true = hub.KerasLayer(SENTENC_URL)([stim.text])[0,10].numpy()
+    assert np.isclose(df['feature_10'][0], true)
+
+
+@pytest.mark.forked
+def test_tfhub_text_one_feature():
+    stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
+    cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
+    ext = TFHubTextExtractor(GNEWS_URL, output_key=None,
+                                   features='embedding')
+    df = merge_results(ext.transform(cstim), extractor_names=False)
+    assert df.shape[0] == len(cstim.elements)
+    true = hub.KerasLayer(GNEWS_URL)([cstim.elements[3].text])[0,2].numpy()
+    assert np.isclose(df['embedding'][3][2], true)
+    with pytest.raises(ValueError) as err:
+        TFHubTextExtractor(GNEWS_URL, output_key='key').transform(stim)
+    assert 'not a dictionary' in str(err.value)
+
+
+@pytest.mark.forked
 def test_tfhub_text_transformer_sentence():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
@@ -93,6 +122,7 @@ def test_tfhub_text_transformer_sentence():
     assert 'Check which keys' in str(err.value)
 
 
+@pytest.mark.forked
 def test_tfhub_text_transformer_tokens():
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
     tkn_ext = TFHubTextExtractor(ELECTRA_URL,
@@ -105,6 +135,7 @@ def test_tfhub_text_transformer_tokens():
                 for i in range(tkn_df.shape[0])])
 
 
+@pytest.mark.forked
 def test_tfhub_generic():
     # Test generic extractor with speech embedding model
     astim = AudioStim(join(AUDIO_DIR, 'obama_speech.wav'))
