@@ -32,6 +32,7 @@ ELECTRA_URL = 'https://tfhub.dev/google/electra_small/2'
 SPEECH_URL = 'https://tfhub.dev/google/speech_embedding/1'
 
 
+@pytest.mark.forked
 def test_tensorflow_keras_application_extractor():
     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'obama.jpg']]
     imgs = [ImageStim(im, onset=4.2, duration=1) for im in imgs]
@@ -51,6 +52,7 @@ def test_tensorflow_keras_application_extractor():
         TensorFlowKerasApplicationExtractor(architecture='foo')
 
 
+@pytest.mark.forked
 def test_tfhub_image():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     eff_ext = TFHubImageExtractor(EFFNET_URL)
@@ -92,6 +94,7 @@ def test_tfhub_text():
     assert 'not a dictionary' in str(err.value)
 
 
+@pytest.mark.skip(reason="highmem")
 def test_tfhub_text_transformer():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
@@ -120,6 +123,7 @@ def test_tfhub_text_transformer():
     assert 'Check which keys' in str(err.value)
 
 
+@pytest.mark.forked
 def test_tfhub_generic():
     # Test generic extractor with speech embedding model
     astim = AudioStim(join(AUDIO_DIR, 'obama_speech.wav'))
