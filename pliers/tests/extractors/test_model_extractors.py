@@ -32,7 +32,7 @@ ELECTRA_URL = 'https://tfhub.dev/google/electra_small/2'
 SPEECH_URL = 'https://tfhub.dev/google/speech_embedding/1'
 
 
-@pytest.mark.forked
+@pytest.mark.skipif(environ.get('CI', False) == 'true', reason='high memory')
 def test_tensorflow_keras_application_extractor():
     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'obama.jpg']]
     imgs = [ImageStim(im, onset=4.2, duration=1) for im in imgs]
@@ -52,7 +52,7 @@ def test_tensorflow_keras_application_extractor():
         TensorFlowKerasApplicationExtractor(architecture='foo')
 
 
-@pytest.mark.forked
+@pytest.mark.skipif(environ.get('CI', False) == 'true', reason='high memory')
 def test_tfhub_image():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     ext = TFHubImageExtractor(EFFNET_URL)
@@ -63,11 +63,11 @@ def test_tfhub_image():
                      for i in range(1000)])) == 948
 
 
-@pytest.mark.forked
+@pytest.mark.skipif(environ.get('CI', False) == 'true', reason='high memory')
 def test_tfhub_image_reshape():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     stim2 = ImageStim(join(IMAGE_DIR, 'obama.jpg'))
-    ext = TFHubImageExtractor(MNET_URL, 
+    ext = TFHubImageExtractor(MNET_URL,
                               reshape_input=(224,224,3),
                               features='feature_vector')
     df = merge_results(ext.transform([stim, stim2]),
@@ -76,7 +76,7 @@ def test_tfhub_image_reshape():
     assert all([len(v) == 1280 for v in df['feature_vector']])
 
 
-@pytest.mark.forked
+@pytest.mark.skipif(environ.get('CI', False) == 'true', reason='high memory')
 def test_tfhub_text():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     ext = TFHubTextExtractor(SENTENC_URL, output_key=None)
@@ -86,7 +86,7 @@ def test_tfhub_text():
     assert np.isclose(df['feature_10'][0], true)
 
 
-@pytest.mark.forked
+@pytest.mark.skipif(environ.get('CI', False) == 'true', reason='high memory')
 def test_tfhub_text_one_feature():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
@@ -101,7 +101,7 @@ def test_tfhub_text_one_feature():
     assert 'not a dictionary' in str(err.value)
 
 
-@pytest.mark.forked
+@pytest.mark.skipif(environ.get('CI', False) == 'true', reason='high memory')
 def test_tfhub_text_transformer_sentence():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
@@ -122,7 +122,7 @@ def test_tfhub_text_transformer_sentence():
     assert 'Check which keys' in str(err.value)
 
 
-@pytest.mark.forked
+@pytest.mark.skipif(environ.get('CI', False) == 'true', reason='high memory')
 def test_tfhub_text_transformer_tokens():
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
     tkn_ext = TFHubTextExtractor(ELECTRA_URL,
@@ -135,7 +135,7 @@ def test_tfhub_text_transformer_tokens():
                 for i in range(tkn_df.shape[0])])
 
 
-@pytest.mark.forked
+@pytest.mark.skipif(environ.get('CI', False) == 'true', reason='high memory')
 def test_tfhub_generic():
     # Test generic extractor with speech embedding model
     astim = AudioStim(join(AUDIO_DIR, 'obama_speech.wav'))

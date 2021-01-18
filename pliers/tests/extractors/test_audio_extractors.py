@@ -371,11 +371,10 @@ def test_percussion_extractor():
     assert np.isclose(df['duration'][29], 0.04644)
     assert np.isclose(df['percussive'][29], 0.004497, rtol=1e-4)
 
-
+@pytest.mark.skipif(environ.get('CI', False) == 'true', reason='high memory')
 @pytest.mark.parametrize('hop_size', [0.1, 1])
 @pytest.mark.parametrize('top_n', [5, 10])
 @pytest.mark.parametrize('target_sr', [22000, 14000])
-@pytest.mark.forked
 def test_audioset_extractor(hop_size, top_n, target_sr):
     verify_dependencies(['tensorflow'])
 

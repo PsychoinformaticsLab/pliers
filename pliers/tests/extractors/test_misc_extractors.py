@@ -6,6 +6,8 @@ import numpy as np
 import scipy
 from pathlib import Path
 import pytest
+import environ
+
 
 def test_metric_extractor():
 
@@ -70,7 +72,7 @@ def test_metric_extractor():
     assert r_lambda_df['custom_function'][0] == -4
 
 
-@pytest.mark.forked
+@pytest.mark.skipif(environ.get('CI', False) == 'true', reason='high memory')
 def test_metric_er_as_stim():
     stim = ComplexTextStim(text = 'This is [MASK] test')
     ext_bert = BertLMExtractor(return_softmax=True)
