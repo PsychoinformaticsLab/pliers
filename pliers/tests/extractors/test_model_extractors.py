@@ -55,55 +55,59 @@ def test_tensorflow_keras_application_extractor():
 @pytest.mark.forked
 def test_tfhub_image():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
-    eff_ext = TFHubImageExtractor(EFFNET_URL)
-    eff_df = eff_ext.transform(stim).to_df()
-    assert all(['feature_' + str(i) in eff_df.columns \
+    ext = TFHubImageExtractor(EFFNET_URL)
+    df = ext.transform(stim).to_df()
+    assert all(['feature_' + str(i) in df.columns \
                for i in range(1000) ])
-    assert np.argmax(np.array([eff_df['feature_' + str(i)][0] \
+    assert np.argmax(np.array([df['feature_' + str(i)][0] \
                      for i in range(1000)])) == 948
-    stim2 = ImageStim(join(IMAGE_DIR, 'obama.jpg'))
-    mnet_ext = TFHubImageExtractor(MNET_URL, reshape_input=(224,224,3),
-                                   features='feature_vector')
-    mnet_df = merge_results(mnet_ext.transform([stim, stim2]),
-                            extractor_names=False)
-    assert mnet_df.shape[0] == 2
-    assert all([len(v) == 1280 for v in mnet_df['feature_vector']])
 
-@pytest.mark.skip(reason="highmem")
+
+@pytest.mark.forked
+def test_tfhub_image_reshape():
+    stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
+    stim2 = ImageStim(join(IMAGE_DIR, 'obama.jpg'))
+    ext = TFHubImageExtractor(MNET_URL, 
+                              reshape_input=(224,224,3),
+                              features='feature_vector')
+    df = merge_results(ext.transform([stim, stim2]),
+                       extractor_names=False)
+    assert df.shape[0] == 2
+    assert all([len(v) == 1280 for v in df['feature_vector']])
+
+
+@pytest.mark.forked
 def test_tfhub_text():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
+    ext = TFHubTextExtractor(SENTENC_URL, output_key=None)
+    df = ext.transform(stim).to_df()
+    assert all([f'feature_{i}' in df.columns for i in range(512)])
+    true = hub.KerasLayer(SENTENC_URL)([stim.text])[0,10].numpy()
+    assert np.isclose(df['feature_10'][0], true)
+
+
+@pytest.mark.forked
+def test_tfhub_text_one_feature():
+    stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
-    sent_ext = TFHubTextExtractor(SENTENC_URL, output_key=None)
-    gnews_ext = TFHubTextExtractor(GNEWS_URL, output_key=None,
+    ext = TFHubTextExtractor(GNEWS_URL, output_key=None,
                                    features='embedding')
-
-    sent_df = sent_ext.transform(stim).to_df()
-    assert all([f'feature_{i}' in sent_df.columns for i in range(512)])
-    sent_true = hub.KerasLayer(SENTENC_URL)([stim.text])[0,10].numpy()
-    assert np.isclose(sent_df['feature_10'][0], sent_true)
-
-    gnews_df = merge_results(gnews_ext.transform(cstim),
-                             extractor_names=False)
-    assert gnews_df.shape[0] == len(cstim.elements)
+    df = merge_results(ext.transform(cstim), extractor_names=False)
+    assert df.shape[0] == len(cstim.elements)
     true = hub.KerasLayer(GNEWS_URL)([cstim.elements[3].text])[0,2].numpy()
-    assert np.isclose(gnews_df['embedding'][3][2], true)
-
+    assert np.isclose(df['embedding'][3][2], true)
     with pytest.raises(ValueError) as err:
         TFHubTextExtractor(GNEWS_URL, output_key='key').transform(stim)
     assert 'not a dictionary' in str(err.value)
 
 
-@pytest.mark.skip(reason="highmem")
-def test_tfhub_text_transformer():
+@pytest.mark.forked
+def test_tfhub_text_transformer_sentence():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
     ext = TFHubTextExtractor(ELECTRA_URL,
                             features='sent_encoding',
                             preprocessor_url_or_path=TOKENIZER_URL)
-    tkn_ext = TFHubTextExtractor(ELECTRA_URL,
-                                 features='token_encodings',
-                                 output_key='sequence_output',
-                                 preprocessor_url_or_path=TOKENIZER_URL)
     res = ext.transform(cstim.elements[:6])
     df = merge_results(res, extractor_names=False)
     pmod = hub.KerasLayer(TOKENIZER_URL)
@@ -111,15 +115,24 @@ def test_tfhub_text_transformer():
     true = mmod(pmod([cstim.elements[5].text]))\
                 ['pooled_output'][0,20].numpy()
     assert np.isclose(df['sent_encoding'][5][20], true)
-    tkn_df = merge_results(tkn_ext.transform(cstim.elements[:3]),
-                           extractor_names=False)
-    assert all([tkn_df['token_encodings'][i].shape == (128, 256) \
-                for i in range(tkn_df.shape[0])])
     with pytest.raises(ValueError) as err:
         TFHubTextExtractor(ELECTRA_URL,
                            preprocessor_url_or_path=TOKENIZER_URL,
                            output_key='key').transform(stim)
     assert 'Check which keys' in str(err.value)
+
+
+@pytest.mark.forked
+def test_tfhub_text_transformer_tokens():
+    cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
+    tkn_ext = TFHubTextExtractor(ELECTRA_URL,
+                                 features='token_encodings',
+                                 output_key='sequence_output',
+                                 preprocessor_url_or_path=TOKENIZER_URL)
+    tkn_df = merge_results(tkn_ext.transform(cstim.elements[:3]),
+                           extractor_names=False)
+    assert all([tkn_df['token_encodings'][i].shape == (128, 256) \
+                for i in range(tkn_df.shape[0])])
 
 
 @pytest.mark.forked
