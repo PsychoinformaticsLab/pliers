@@ -31,7 +31,7 @@ TOKENIZER_URL = 'https://tfhub.dev/tensorflow/bert_en_uncased_preprocess/2'
 ELECTRA_URL = 'https://tfhub.dev/google/electra_small/2'
 SPEECH_URL = 'https://tfhub.dev/google/speech_embedding/1'
 
-
+@pytest.mark.forked
 def test_tensorflow_keras_application_extractor():
     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'obama.jpg']]
     imgs = [ImageStim(im, onset=4.2, duration=1) for im in imgs]
@@ -50,7 +50,7 @@ def test_tensorflow_keras_application_extractor():
     with pytest.raises(ValueError):
         TensorFlowKerasApplicationExtractor(architecture='foo')
 
-
+@pytest.mark.forked
 def test_tfhub_image():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     eff_ext = TFHubImageExtractor(EFFNET_URL)
@@ -120,7 +120,7 @@ def test_tfhub_text_transformer():
                            output_key='key').transform(stim)
     assert 'Check which keys' in str(err.value)
 
-
+@pytest.mark.forked
 def test_tfhub_generic():
     # Test generic extractor with speech embedding model
     astim = AudioStim(join(AUDIO_DIR, 'obama_speech.wav'))
