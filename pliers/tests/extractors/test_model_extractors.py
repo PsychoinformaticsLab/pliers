@@ -73,18 +73,36 @@ def test_tfhub_image_reshape():
     assert all([len(v) == 1280 for v in df['feature_vector']])
 
 
-def test_tfhub_text_one_feature():
+def test_tfhub_text_transformer_sentence():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
-    ext = TFHubTextExtractor(GNEWS_URL, output_key=None,
-                                   features='embedding')
-    df = merge_results(ext.transform(cstim), extractor_names=False)
-    assert df.shape[0] == len(cstim.elements)
-    true = hub.KerasLayer(GNEWS_URL)([cstim.elements[3].text])[0,2].numpy()
-    assert np.isclose(df['embedding'][3][2], true)
+    ext = TFHubTextExtractor(ELECTRA_URL,
+                            features='sent_encoding',
+                            preprocessor_url_or_path=TOKENIZER_URL)
+    res = ext.transform(cstim.elements[:6])
+    df = merge_results(res, extractor_names=False)
+    pmod = hub.KerasLayer(TOKENIZER_URL)
+    mmod = hub.KerasLayer(ELECTRA_URL)
+    true = mmod(pmod([cstim.elements[5].text]))\
+                ['pooled_output'][0,20].numpy()
+    assert np.isclose(df['sent_encoding'][5][20], true)
     with pytest.raises(ValueError) as err:
-        TFHubTextExtractor(GNEWS_URL, output_key='key').transform(stim)
-    assert 'not a dictionary' in str(err.value)
+        TFHubTextExtractor(ELECTRA_URL,
+                           preprocessor_url_or_path=TOKENIZER_URL,
+                           output_key='key').transform(stim)
+    assert 'Check which keys' in str(err.value)
+
+
+def test_tfhub_text_transformer_tokens():
+    cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
+    tkn_ext = TFHubTextExtractor(ELECTRA_URL,
+                                 features='token_encodings',
+                                 output_key='sequence_output',
+                                 preprocessor_url_or_path=TOKENIZER_URL)
+    tkn_df = merge_results(tkn_ext.transform(cstim.elements[:3]),
+                           extractor_names=False)
+    assert all([tkn_df['token_encodings'][i].shape == (128, 256) \
+                for i in range(tkn_df.shape[0])])
 
 
 def test_tfhub_generic():
