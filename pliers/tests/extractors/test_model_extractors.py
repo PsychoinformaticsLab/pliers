@@ -68,7 +68,6 @@ def test_tfhub_image():
     assert all([len(v) == 1280 for v in mnet_df['feature_vector']])
 
 
-@pytest.mark.forked
 def test_tfhub_text():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
