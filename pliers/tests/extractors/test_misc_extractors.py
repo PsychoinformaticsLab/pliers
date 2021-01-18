@@ -6,7 +6,7 @@ import numpy as np
 import scipy
 from pathlib import Path
 import pytest
-import environ
+from os import environ
 
 
 def test_metric_extractor():
