@@ -13,7 +13,8 @@ from pliers.extractors import (TensorFlowKerasApplicationExtractor,
                                BertExtractor,
                                BertSequenceEncodingExtractor,
                                BertLMExtractor,
-                               BertSentimentExtractor)
+                               BertSentimentExtractor,
+                               AudiosetLabelExtractor)
 from pliers.filters import AudioResamplingFilter
 from pliers.stimuli import (ImageStim,
                             TextStim, ComplexTextStim,
@@ -39,7 +40,10 @@ ELECTRA_URL = 'https://tfhub.dev/google/electra_small/2'
 SPEECH_URL = 'https://tfhub.dev/google/speech_embedding/1'
 
 
-@pytest.mark.skipif(environ.get('skip_high_memory', False) == 'true', reason='high memory')
+pytestmark = pytest.mark.skipif(
+    environ.get('skip_high_memory', False) == 'true', reason='high memory')
+
+
 def test_tensorflow_keras_application_extractor():
     imgs = [join(IMAGE_DIR, f) for f in ['apple.jpg', 'obama.jpg']]
     imgs = [ImageStim(im, onset=4.2, duration=1) for im in imgs]
@@ -59,7 +63,6 @@ def test_tensorflow_keras_application_extractor():
         TensorFlowKerasApplicationExtractor(architecture='foo')
 
 
-@pytest.mark.skipif(environ.get('skip_high_memory', False) == 'true', reason='high memory')
 def test_tfhub_image():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     ext = TFHubImageExtractor(EFFNET_URL)
@@ -70,7 +73,6 @@ def test_tfhub_image():
                      for i in range(1000)])) == 948
 
 
-@pytest.mark.skipif(environ.get('skip_high_memory', False) == 'true', reason='high memory')
 def test_tfhub_image_reshape():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     stim2 = ImageStim(join(IMAGE_DIR, 'obama.jpg'))
@@ -83,7 +85,6 @@ def test_tfhub_image_reshape():
     assert all([len(v) == 1280 for v in df['feature_vector']])
 
 
-@pytest.mark.skipif(environ.get('skip_high_memory', False) == 'true', reason='high memory')
 def test_tfhub_text():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     ext = TFHubTextExtractor(SENTENC_URL, output_key=None)
@@ -93,7 +94,6 @@ def test_tfhub_text():
     assert np.isclose(df['feature_10'][0], true)
 
 
-@pytest.mark.skipif(environ.get('skip_high_memory', False) == 'true', reason='high memory')
 def test_tfhub_text_one_feature():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
@@ -108,7 +108,6 @@ def test_tfhub_text_one_feature():
     assert 'not a dictionary' in str(err.value)
 
 
-@pytest.mark.skipif(environ.get('skip_high_memory', False) == 'true', reason='high memory')
 def test_tfhub_text_transformer_sentence():
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
@@ -129,7 +128,6 @@ def test_tfhub_text_transformer_sentence():
     assert 'Check which keys' in str(err.value)
 
 
-@pytest.mark.skipif(environ.get('skip_high_memory', False) == 'true', reason='high memory')
 def test_tfhub_text_transformer_tokens():
     cstim = ComplexTextStim(join(TEXT_DIR, 'wonderful.txt'))
     tkn_ext = TFHubTextExtractor(ELECTRA_URL,
@@ -142,7 +140,6 @@ def test_tfhub_text_transformer_tokens():
                 for i in range(tkn_df.shape[0])])
 
 
-@pytest.mark.skipif(environ.get('skip_high_memory', False) == 'true', reason='high memory')
 def test_tfhub_generic():
     # Test generic extractor with speech embedding model
     astim = AudioStim(join(AUDIO_DIR, 'obama_speech.wav'))
@@ -158,7 +155,6 @@ def test_tfhub_generic():
     assert df['speech_embedding'][0].shape == (n_chunks, emb_dim)
 
 
-@pytest.mark.skipif(environ.get('skip_high_memory', False) == 'true', reason='high memory')
 def test_bert_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
@@ -205,16 +201,16 @@ def test_bert_extractor():
     del res, res_token, res_file, ext_base, ext_base_token
 
 
-@pytest.mark.skipif(environ.get('skip_high_memory', False) == 'true', reason='high memory')
-@pytest.mark.parametrize('model', ['bert-large-uncased',
-                                   'distilbert-base-uncased',
-                                   'roberta-base','camembert-base'])
+@pytest.mark.parametrize('model',
+                         ['bert-large-uncased', 'distilbert-base-uncased',
+                          'roberta-base', 'camembert-base'])
 def test_bert_other_models(model):
     if model == 'camembert-base':
         stim = ComplexTextStim(text='ceci n\'est pas un pipe')
     else:
         stim = ComplexTextStim(text='This is not a tokenized sentence.')
-    res = BertExtractor(pretrained_model=model, return_input=True).transform(stim).to_df()
+    res = BertExtractor(
+        pretrained_model=model, return_input=True).transform(stim).to_df()
     if model == 'bert-large-uncased':
         shape = 1024
     else:
@@ -227,7 +223,6 @@ def test_bert_other_models(model):
     del res, stim
 
 
-@pytest.mark.skipif(environ.get('skip_high_memory', False) == 'true', reason='high memory')
 def test_bert_sequence_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
@@ -238,11 +233,15 @@ def test_bert_sequence_extractor():
     assert ext_pooler.pooling is None
     assert ext_pooler.return_special == 'pooler_output'
 
-    res_sequence = BertSequenceEncodingExtractor(return_input=True).transform(stim).to_df()
-    res_file = BertSequenceEncodingExtractor(return_input=True).transform(stim_file).to_df()
-    res_cls = BertSequenceEncodingExtractor(return_special='[CLS]').transform(stim).to_df()
+    res_sequence = BertSequenceEncodingExtractor(
+        return_input=True).transform(stim).to_df()
+    res_file = BertSequenceEncodingExtractor(
+        return_input=True).transform(stim_file).to_df()
+    res_cls = BertSequenceEncodingExtractor(
+        return_special='[CLS]').transform(stim).to_df()
     res_pooler = ext_pooler.transform(stim).to_df()
-    res_max = BertSequenceEncodingExtractor(pooling='max').transform(stim).to_df()
+    res_max = BertSequenceEncodingExtractor(
+        pooling='max').transform(stim).to_df()
 
     # Check shape
     assert len(res_sequence['encoding'][0]) == 768
@@ -280,7 +279,6 @@ def test_bert_sequence_extractor():
     del ext_pooler, res_cls, res_max, res_pooler, res_sequence, res_file, stim
 
 
-@pytest.mark.skipif(environ.get('skip_high_memory', False) == 'true', reason='high memory')
 def test_bert_LM_extractor():
     stim = ComplexTextStim(text='This is not a tokenized sentence.')
     stim_masked = ComplexTextStim(text='This is MASK tokenized sentence.')
@@ -303,16 +301,18 @@ def test_bert_LM_extractor():
         BertLMExtractor(target='nonwd')
     assert 'No valid target token' in str(err.value)
 
-    target_wds = ['target','word']
+    target_wds = ['target', 'word']
     ext_target = BertLMExtractor(mask=1, target=target_wds)
 
-    res =  BertLMExtractor(mask=2).transform(stim).to_df()
-    res_file =  BertLMExtractor(mask=2).transform(stim_file).to_df()
+    res = BertLMExtractor(mask=2).transform(stim).to_df()
+    res_file = BertLMExtractor(mask=2).transform(stim_file).to_df()
     res_target = ext_target.transform(stim).to_df()
     res_topn = BertLMExtractor(mask=3, top_n=100).transform(stim).to_df()
-    res_threshold = BertLMExtractor(mask=4, threshold=.1, return_softmax=True).transform(stim).to_df()
+    res_threshold = BertLMExtractor(
+        mask=4, threshold=.1, return_softmax=True).transform(stim).to_df()
     res_default = BertLMExtractor().transform(stim_masked).to_df()
-    res_return_mask = BertLMExtractor(mask=1, top_n=10, return_masked_word=True, return_input=True).transform(stim).to_df()
+    res_return_mask = BertLMExtractor(
+        mask=1, top_n=10, return_masked_word=True, return_input=True).transform(stim).to_df()
 
     assert res.shape[0] == 1
 
@@ -326,7 +326,7 @@ def test_bert_LM_extractor():
 
     # Check top_n
     assert res_topn.shape[1] == 104
-    assert all([res_topn.iloc[:,3][0] > res_topn.iloc[:,i][0] for i in range(4,103)])
+    assert all([res_topn.iloc[:, 3][0] > res_topn.iloc[:, i][0] for i in range(4, 103)])
 
     # Check threshold and range
     tknz = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -363,7 +363,6 @@ def test_bert_LM_extractor():
         res_threshold, res_default, res_return_mask
 
 
-@pytest.mark.skipif(environ.get('skip_high_memory', False) == 'true', reason='high memory')
 def test_bert_sentiment_extractor():
     stim = ComplexTextStim(text='This is the best day of my life.')
     stim_file = ComplexTextStim(join(TEXT_DIR, 'sentence_with_header.txt'))
@@ -371,21 +370,21 @@ def test_bert_sentiment_extractor():
     res = BertSentimentExtractor().transform(stim).to_df()
     res_file = BertSentimentExtractor().transform(stim_file).to_df()
     res_seq = BertSentimentExtractor(return_input=True).transform(stim).to_df()
-    res_softmax = BertSentimentExtractor(return_softmax=True).transform(stim).to_df()
+    res_softmax = BertSentimentExtractor(
+        return_softmax=True).transform(stim).to_df()
 
     assert res.shape[0] == 1
     assert res_file['onset'][0] == 0.2
     assert res_file['duration'][0] == 2.9
     assert all([s in res.columns for s in ['sent_pos', 'sent_neg']])
     assert res_seq['sequence'][0] == 'This is the best day of my life .'
-    assert all([res_softmax[s][0] >= 0 for s in ['sent_pos','sent_neg'] ])
-    assert all([res_softmax[s][0] <= 1 for s in ['sent_pos','sent_neg'] ])
+    assert all([res_softmax[s][0] >= 0 for s in ['sent_pos', 'sent_neg']])
+    assert all([res_softmax[s][0] <= 1 for s in ['sent_pos', 'sent_neg']])
 
     # remove variables
     del res, res_file, res_seq, res_softmax
 
 
-@pytest.mark.skipif(environ.get('skip_high_memory', False) == 'true', reason='high memory')
 @pytest.mark.parametrize('hop_size', [0.1, 1])
 @pytest.mark.parametrize('top_n', [5, 10])
 @pytest.mark.parametrize('target_sr', [22000, 14000])
@@ -395,7 +394,8 @@ def test_audioset_extractor(hop_size, top_n, target_sr):
     def compute_expected_length(stim, ext):
         stft_par = ext.params.STFT_WINDOW_SECONDS - ext.params.STFT_HOP_SECONDS
         tot_window = ext.params.PATCH_WINDOW_SECONDS + stft_par
-        ons = np.arange(start=0, stop=stim.duration - tot_window, step=hop_size)
+        ons = np.arange(
+            start=0, stop=stim.duration - tot_window, step=hop_size)
         return len(ons)
 
     audio_stim = AudioStim(join(AUDIO_DIR, 'crowd.mp3'))
@@ -407,10 +407,10 @@ def test_audioset_extractor(hop_size, top_n, target_sr):
     r_orig = ext.transform(audio_stim).to_df()
     assert r_orig.shape[0] == compute_expected_length(audio_stim, ext)
     assert r_orig.shape[1] == 525
-    assert np.argmax(r_orig.to_numpy()[:,4:].mean(axis=0)) == 0
+    assert np.argmax(r_orig.to_numpy()[:, 4:].mean(axis=0)) == 0
     assert r_orig['duration'][0] == .975
     assert all([np.isclose(r_orig['onset'][i] - r_orig['onset'][i-1], hop_size)
-                for i in range(1,r_orig.shape[0])])
+                for i in range(1, r_orig.shape[0])])
 
     # test resampled audio length and errors
     if target_sr >= 14500:
@@ -420,13 +420,13 @@ def test_audioset_extractor(hop_size, top_n, target_sr):
         with pytest.raises(ValueError) as sr_error:
             ext.transform(audio_resampled)
         assert all([substr in str(sr_error.value)
-                    for substr in ['Upsample' , str(target_sr)]])
+                    for substr in ['Upsample', str(target_sr)]])
 
     # test top_n option
     ext_top_n = AudiosetLabelExtractor(top_n=top_n)
     r_top_n = ext_top_n.transform(audio_stim).to_df()
     assert r_top_n.shape[1] == ext_top_n.top_n + 4
-    assert np.argmax(r_top_n.to_numpy()[:,4:].mean(axis=0)) == 0
+    assert np.argmax(r_top_n.to_numpy()[:, 4:].mean(axis=0)) == 0
 
     # test label subset
     labels = ['Speech', 'Silence', 'Harmonic', 'Bark', 'Music', 'Bell',

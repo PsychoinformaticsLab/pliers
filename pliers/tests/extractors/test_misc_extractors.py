@@ -73,9 +73,10 @@ def test_metric_extractor():
 
 
 # Change test to use simpler extractor
-@pytest.mark.skipif(environ.get('skip_high_memory', False) == 'true', reason='high memory')
+@pytest.mark.skipif(
+    environ.get('skip_high_memory', False) == 'true', reason='high memory')
 def test_metric_er_as_stim():
-    stim = ComplexTextStim(text = 'This is [MASK] test')
+    stim = ComplexTextStim(text='This is [MASK] test')
     ext_bert = BertLMExtractor(return_softmax=True)
     ext_metric = MetricExtractor(functions='numpy.sum')
     r = ext_metric.transform(ext_bert.transform(stim))
