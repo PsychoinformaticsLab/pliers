@@ -45,6 +45,6 @@ jobs:
       env:
         skip_high_memory: true
       run: |
-        py.test pliers/tests --cov=pliers --cov-report xml -m "not requires_payment" -W ignore::UserWarning
+        py.test pliers/tests -n auto --cov=pliers --cov-report xml -m "not requires_payment" -W ignore::UserWarning
         skip_high_memory=false py.test pliers/tests/extractors/test_model_extractors.py --forked --cov-append --cov=pliers --cov-report xml -m "not requires_payment" -W ignore::UserWarning
     - uses: codecov/codecov-action@v1
