@@ -1,6 +1,7 @@
-from pliers.extractors import (MetricExtractor, BertLMExtractor,
+from pliers.extractors import (MetricExtractor, 
+                               VADERSentimentExtractor,
                                merge_results)
-from pliers.stimuli import SeriesStim, ComplexTextStim
+from pliers.stimuli import SeriesStim, TextStim
 from pliers.tests.utils import get_test_data_path
 import numpy as np
 import scipy
@@ -72,13 +73,12 @@ def test_metric_extractor():
     assert r_lambda_df['custom_function'][0] == -4
 
 
-# Change test to use simpler extractor
-@pytest.mark.skipif(
-    environ.get('skip_high_memory', False) == 'true', reason='high memory')
 def test_metric_er_as_stim():
-    stim = ComplexTextStim(text='This is [MASK] test')
-    ext_bert = BertLMExtractor(return_softmax=True)
-    ext_metric = MetricExtractor(functions='numpy.sum')
-    r = ext_metric.transform(ext_bert.transform(stim))
+    stim = TextStim(text='This is a test')
+    ext_sent = VADERSentimentExtractor()
+    ext_metric = MetricExtractor(functions='numpy.sum', 
+                                 subset_idx=[f'sentiment_{d}' 
+                                             for d in ['neg','pos','neu']])
+    r = ext_metric.transform(ext_sent.transform(stim))
     df = merge_results(r, extractor_names=False)
     assert np.isclose(df['sum'][0], 1)
