@@ -2,7 +2,7 @@ from os.path import join
 
 import pytest
 
-from .utils import get_test_data_path
+from pliers.tests.utils import get_test_data_path
 from pliers.stimuli import load_stims
 
 def test_magic_loader():
@@ -21,12 +21,12 @@ def test_magic_loader2():
     text_file = join(get_test_data_path(), 'text', 'sample_text.txt')
     video_url = 'https://archive.org/download/DisneyCastletest/Disney_Castle_512kb.mp4'
     audio_url = 'http://www.bobainsworth.com/wav/simpsons/themodyn.wav'
-    image_url = 'https://www.whitehouse.gov/sites/whitehouse.gov/files/images/twitter_cards_potus.jpg'
+    image_url = 'https://archive.org/download/NIX-C-1987-11903/1987_11903L.jpg'
     text_url = 'https://github.com/tyarkoni/pliers/blob/master/README.md'
     stims = load_stims([text_file, video_url, audio_url, image_url, text_url])
     assert len(stims) == 5
     assert stims[1].fps == 30.0
-    assert stims[3].data.shape == (240, 240, 3)
+    assert stims[3].data.shape == (288, 360, 3)
 
 
 def test_loader_nonexistent():
