@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.4.1 (February 26, 2021)
+This is a minor release that adds one new extractor, and a resampling utility, as well as a large number of minor bugfixes.
+
+New features:
+* Add TensorFlow hub extractor (#433)
+* Add ExtractedFeature resample utility (#430)
+
+Bug fixes and other house keeping
+* Replace BERT with lighter extract in metric extractor tests 
+* Fix pytest memory leak by running forked (#439)
+* Remove depracated pandas methods (#438)
+* Convert CI to Github Actions (#436)
+* Update HuggingFace BERT Extractors (#435)
+* Resample upsampling and add upsampling test case (#431)
+* Librosa links (#429)
+* Google API Regressions (#424)
+* Access string in numpy array (#422)
+* Update REAME to link to correct pliers docs page (#421)
+* Test regressions (#418)
+* Remove --no-user-group (#414)
+* Use multi-stage builds in Dockerfile to reduce final image size (#411)
+* Remove instance of Python2 super (#410)
+* Update librosa feature links (#409)
+* If Google Face Extractor result landmark has no type, skip. (#406)
+* librosa import error (numba) (#405)
+* Remove soundfile as dependency (#408)
+
 ## 0.4.0 (July 14, 2020)
 This is a major release that adds support for several new feature extraction services/models, as well as a large number of minor bugfixes and improvements.
 
