@@ -20,10 +20,12 @@ Converters (:mod:`pliers.converters`)
   :template: _class.rst
 
 	ComplexTextIterator
+  ExtractorResultToSeriesConverter
 	IBMSpeechAPIConverter
 	GoogleSpeechAPIConverter
 	GoogleVisionAPITextConverter
   MicrosoftAPITextConverter
+  RevAISpeechAPIConverter
 	TesseractConverter
 	VideoFrameCollectionIterator
 	VideoFrameIterator
@@ -121,20 +123,28 @@ Extractors (:mod:`pliers.extractors`)
 	:toctree: generated/
  	:template: _class.rst
 
+  AudiosetLabelExtractor
+  BeatTrackExtractor
   ChromaCENSExtractor
   ChromaCQTExtractor
   ChromaSTFTExtractor
+  HarmonicExtractor
   MeanAmplitudeExtractor
   MelspectrogramExtractor
   MFCCExtractor
+  OnsetDetectExtractor
+  OnsetStrengthMultiExtractor
+  PercussiveExtractor
   PolyFeaturesExtractor
-  RMSEExtractor
+  RMSExtractor
   SpectralCentroidExtractor
   SpectralBandwidthExtractor
   SpectralContrastExtractor
+  SpectralFlatnessExtractor
   SpectralRolloffExtractor
   STFTAudioExtractor
   TempogramExtractor
+  TempoExtractor
   TonnetzExtractor
   ZeroCrossingRateExtractor
 
@@ -156,7 +166,6 @@ Extractors (:mod:`pliers.extractors`)
   GoogleVisionAPIPropertyExtractor
   GoogleVisionAPISafeSearchExtractor
   GoogleVisionAPIWebEntitiesExtractor
-  IndicoAPIImageExtractor
   MicrosoftAPIFaceExtractor
   MicrosoftAPIFaceEmotionExtractor
   MicrosoftVisionAPIExtractor
@@ -177,6 +186,10 @@ Extractors (:mod:`pliers.extractors`)
 	:toctree: generated/
  	:template: _class.rst
 
+  BertExtractor
+  BertSequenceEncodingExtractor
+  BertLMExtractor
+  BertSentimentExtractor
   ComplexTextExtractor
   DictionaryExtractor
   IndicoAPITextExtractor
@@ -184,8 +197,10 @@ Extractors (:mod:`pliers.extractors`)
   NumUniqueWordsExtractor
   PartOfSpeechExtractor
   PredefinedDictionaryExtractor
+  SpaCyExtractor
   TextVectorizerExtractor
   VADERSentimentExtractor
+  WordCounterExtractor
   WordEmbeddingExtractor
 
 
@@ -196,6 +211,18 @@ Extractors (:mod:`pliers.extractors`)
  	:template: _class.rst
 
   FarnebackOpticalFlowExtractor
+
+
+** Deep Learning Models ***
+
+.. autosummary::
+	:toctree: generated/
+ 	:template: _class.rst
+
+  TensorFlowKerasApplicationExtractor
+  TFHubImageExtractor
+  TFHubTextExtractor
+  TFHubExtractor
 
 
 **Functions**:

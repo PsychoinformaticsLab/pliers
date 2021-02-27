@@ -23,6 +23,14 @@ parallelize                bool True       Whether or not to use naive paralleli
 progress_bar               bool	True       Whether or not to display progress bars when looping over Stims
 
 use_generators             bool False      Whether Transformers should return generators rather than lists when iterating over Stims
+
+allow_large_jobs           bool True       Whether to allow API jobs with a greater duration than in `long_job`
+
+long_job                   int  60         Maxmimum duration to allow for API jobs if `allow_large_jobs` is `False`
+
+large_job                  int  100        Maximum number of transformations allowed f `allow_large_jobs` is `False`.
+
+api_key_validation         bool False      Explicitly validate API keys prior to attemping extraction
 ========================== ==== ========== ===========
 
 Setting options
@@ -101,3 +109,20 @@ By default, pliers shows a progress bar (using `tqdm <https://github.com/tqdm/tq
 use_generators (bool)
 ~~~~~~~~~~~~~~~~~~~~~
 Internally, pliers uses generators whenever iteration over Stims occurs, in order to (potentially) reduce its memory footprint. However, generators can be confusing to users new to Python. To minimize confusion, pliers therefore converts all generators to lists before returning results to the user (or passing them as inputs to the next |Transformer| in a |Graph|). More experienced users who are comfortable with generator expressions and want to take advantage of their potential memory-saving benefits can enable generators by setting ``use_generators`` to ``True``. (Note that it is not a foregone conclusion that enabling generators will reduce memory consumption; if :ref:`caching <caching>` is enabled and/or the number of intermediate conversions is large, using generators is unlikely to help much.)
+
+
+allow_large_jobs (bool)
+~~~~~~~~~~~~~~~~~~~~~
+By default, this is `False` and pliers will allow you to run arbitarily large jobs. However, this could be unexpectedly costly on paid remote APIs. To prevent unexpectedly large jobs from executing set this vaiable to `True`. 
+
+long_job (int)
+~~~~~~~~~~~~~~~~~~~~~
+This variable allows you to set the maximum stimulus duration that will be sent to API extractors, if `allow_large_jobs` is `False`.
+
+large_job (int)
+~~~~~~~~~~~~~~~~~~~~~
+This variable allows you to set the maximum nmber of transformations (i.e. stimuli) that will be sent to API extractors, if `allow_large_jobs` is `False`.
+
+api_key_validation (bool)
+~~~~~~~~~~~~~~~~~~~~~
+Explicilty validates the API keys prior to attempting remote feature extraction. Setting this to `True` will make it easier to diagnose if any errors with remote APIs is due to an invalid API key. 
