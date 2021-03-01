@@ -112,7 +112,7 @@ Internally, pliers uses generators whenever iteration over Stims occurs, in orde
 
 
 allow_large_jobs (bool)
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
 By default, this is `False` and pliers will allow you to run arbitarily large jobs. However, this could be unexpectedly costly on paid remote APIs. To prevent unexpectedly large jobs from executing set this vaiable to `True`. 
 
 long_job (int)
@@ -124,5 +124,5 @@ large_job (int)
 This variable allows you to set the maximum nmber of transformations (i.e. stimuli) that will be sent to API extractors, if `allow_large_jobs` is `False`.
 
 api_key_validation (bool)
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 Explicilty validates the API keys prior to attempting remote feature extraction. Setting this to `True` will make it easier to diagnose if any errors with remote APIs is due to an invalid API key. 
