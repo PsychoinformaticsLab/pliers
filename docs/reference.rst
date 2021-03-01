@@ -128,7 +128,7 @@ Extractors (:mod:`pliers.extractors`)
   MelspectrogramExtractor
   MFCCExtractor
   PolyFeaturesExtractor
-  RMSEExtractor
+  RMSExtractor
   SpectralCentroidExtractor
   SpectralBandwidthExtractor
   SpectralContrastExtractor
