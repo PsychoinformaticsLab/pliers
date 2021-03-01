@@ -1,0 +1,22 @@
+
+name: Pull Request Docs Check
+
+on: [pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    # Grabbing custom dependencies and building as a pdf.
+    - uses: ammaraskar/sphinx-action@master
+      with:
+        pre-build-command: "pip install sphinx-rtd-theme"
+        docs-folder: "docs/"
+    # Create an artifact of the html output.
+    - uses: actions/upload-artifact@v1
+      with:
+        name: DocumentationHTML
+        path: docs/_build/html/
