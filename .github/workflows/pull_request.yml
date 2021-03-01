@@ -15,3 +15,8 @@ jobs:
       with:
         pre-build-command: "pip install sphinx-rtd-theme"
         docs-folder: "docs/"
+    # Create an artifact of the html output.
+    - uses: actions/upload-artifact@v1
+      with:
+        name: DocumentationHTML
+        path: docs/_build/html/
