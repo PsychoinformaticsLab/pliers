@@ -405,8 +405,8 @@ class SpaCyExtractor(TextExtractor):
 
 
 class BertExtractor(ComplexTextExtractor):
-    ''' Returns encodings from the last hidden layer of a Bert or Bert-derived
-    model (ALBERT, DistilBERT, RoBERTa, CamemBERT). Excludes special tokens.
+    ''' Returns encodings from the last hidden layer of BERT or similar
+    models (ALBERT, DistilBERT, RoBERTa, CamemBERT). Excludes special tokens.
     Base class for other Bert extractors.
     Args:
         pretrained_model (str): A string specifying which transformer
@@ -523,8 +523,8 @@ class BertExtractor(ComplexTextExtractor):
 
 
 class BertSequenceEncodingExtractor(BertExtractor):
-    ''' Extract contextualized encodings for words or sequences using
-        pretrained BertModel.
+    ''' Extract contextualized sequence encodings using pretrained BERT
+        (or similar models, e.g. DistilBERT).
     Args:
         pretrained_model (str): A string specifying which transformer
             model to use. Can be any pretrained BERT or BERT-derived (ALBERT, 
@@ -622,7 +622,8 @@ class BertSequenceEncodingExtractor(BertExtractor):
 
 
 class BertLMExtractor(BertExtractor):
-    ''' Returns masked words predictions for BERT (or BERT-derived) models.
+    ''' Returns masked words predictions from BERT (or similar, e.g. 
+        DistilBERT) models.
     Args:
         pretrained_model (str): A string specifying which transformer
             model to use. Can be any pretrained BERT or BERT-derived (ALBERT, 
@@ -767,8 +768,8 @@ class BertLMExtractor(BertExtractor):
 
     
 class BertSentimentExtractor(BertExtractor):
-    ''' Extracts sentiment for sequences using Bert or Bert-derived models
-        fine-tuned for sentiment classification.
+    ''' Extracts sentiment for sequences using BERT (or similar, e.g. 
+        DistilBERT) models fine-tuned for sentiment classification.
     Args:
         pretrained_model (str): A string specifying which transformer
             model to use (must be one fine-tuned for sentiment classification)

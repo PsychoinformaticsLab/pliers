@@ -135,7 +135,7 @@ At present, pliers implements several dozen |Extractor| classes that span a wide
 
   FarnebackOpticalFlowExtractor
 
-** Deep Learning Models ***
+** Deep Learning Models **
 
 .. autosummary::
 	:toctree: generated/
