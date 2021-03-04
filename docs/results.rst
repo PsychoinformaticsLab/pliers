@@ -9,18 +9,18 @@ The ExtractorResult class
 -------------------------
 Calling ``transform()`` on an instantiated |Extractor| returns an object of class |ExtractorResult|. This is a lightweight container that contains all of the extracted feature information returned by the |Extractor|, references to the |Stim| and |Extractor| objects used to generate the result, and both "raw" and processed forms of the results returned by the |Extractor| (though note that many Extractors don't set a ``.raw`` property). For example:
 
-::
+.. doctest::
 
+    >>> from os.path import join
+    >>> from pliers.tests.utils import get_test_data_path
+    >>> jpg = join(get_test_data_path(), 'image', 'obama.jpg')
     >>> from pliers.extractors import FaceRecognitionFaceLocationsExtractor
     >>> ext = FaceRecognitionFaceLocationsExtractor()
-    >>> result = ext.transform(image)
-
+    >>> result = ext.transform(jpg)
     >>> result.stim.name
     'obama.jpg'
-
     >>> result.extractor.name
     'FaceRecognitionFaceLocationsExtractor'
-
     >>> result.raw
     [(142, 349, 409, 82)]
 
@@ -30,10 +30,22 @@ Exporting results to pandas DataFrames
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Typically, we'll want to work with the data in a more convenient form. Fortunately, every |ExtractorResult| instance provides a .to_df() method that returns a pandas DataFrame:
 
-::
+.. testsetup:: export_results
+
+    from os.path import join
+    from pliers.tests.utils import get_test_data_path
+    jpg = join(get_test_data_path(), 'image', 'obama.jpg')
+    from pliers.extractors import FaceRecognitionFaceLocationsExtractor
+    ext = FaceRecognitionFaceLocationsExtractor()
+    result = ext.transform(jpg)
+
+
+.. doctest:: export_results
+    :options: +NORMALIZE_WHITESPACE
+
     >>> result.to_df()
-    onset   duration   object_id   face_locations
-    NaN     NaN        0           (142, 349, 409, 82)
+        order  duration  onset  object_id       face_locations
+    0    NaN       NaN    NaN          0  (142, 349, 409, 82)
 
 Here, the ``'face_locations'`` column is properly labeled with the name of the feature returned by the |Extractor|. Not surprisingly, you'll still need to know something about the feature extraction tool you're using in order to understand what you're getting back. In this case, consulting the documentation for the face_recognition package's `face_locations <http://pythonhosted.org/face_recognition/face_recognition.html#face_recognition.api.face_locations>`_ function reveals that the values ``(142, 349, 409, 82)`` give us the bounding box coordinates of the detected face in CSS order (i.e., top, right, bottom, left).
 
@@ -42,22 +54,40 @@ Timing columns
 
 You're probably wondering what the other columns are. The ``'onset'`` and ``'duration'`` columns providing timing information for the event in question, if applicable. In this case, because our source |Stim| was a static image, there's no meaningful timing information to be had. But ``to_df()`` still returns these columns by default. This becomes important in cases where we want to preserve some temporal context as we pass |Stim| objects through a feature extraction pipeline:
 
-::
-
+.. doctest::
+    :options: +NORMALIZE_WHITESPACE
+     
+    >>> from os.path import join
+    >>> from pliers.tests.utils import get_test_data_path
+    >>> jpg = join(get_test_data_path(), 'image', 'obama.jpg')
+    >>> from pliers.extractors import FaceRecognitionFaceLocationsExtractor
+    >>> from pliers.stimuli.image import ImageStim
     >>> ext = FaceRecognitionFaceLocationsExtractor()
-    >>> image = Stim('obama.jpg', onset=14, duration=1)
+    >>> image = ImageStim(jpg, onset=14, duration=1)
     >>> result = ext.transform(image)
     >>> result.to_df()
-    onset   duration    object_id   face_locations
-    14      1           0           (142, 349, 409, 82)
+    order  duration  onset  object_id       face_locations
+    0    NaN         1     14          0  (142, 349, 409, 82)
 
 Of course, if we really don't want the timing columns, we can easily suppress them:
 
-::
+.. testsetup:: timing
+
+    from os.path import join
+    from pliers.tests.utils import get_test_data_path
+    jpg = join(get_test_data_path(), 'image', 'obama.jpg')
+    from pliers.extractors import FaceRecognitionFaceLocationsExtractor
+    from pliers.stimuli.image import ImageStim
+    ext = FaceRecognitionFaceLocationsExtractor()
+    image = ImageStim(jpg, onset=14, duration=1)
+    result = ext.transform(image)
+
+.. doctest:: timing
+    :options: +NORMALIZE_WHITESPACE
 
     >>> result.to_df(timing=False)
-    object_id   face_locations
-    0           (142, 349, 409, 82)
+       object_id       face_locations
+    0          0  (142, 349, 409, 82)
 
 We could also pass ``timing='auto'``, which would drop the ``'onset'`` and ``'duration'`` columns if and only if all values are ``NaN``.
 
@@ -68,17 +98,23 @@ What about the ``'object_id'`` column? This one's not so intuitive, but can in s
 
 The solution is to serially assign each distinct result object a different ``object_id``. Let's modify the last example to feed in an image that contains 4 separate faces:
 
-::
+.. doctest::
+    :options: +NORMALIZE_WHITESPACE
 
+    >>> from os.path import join
+    >>> from pliers.tests.utils import get_test_data_path
+    >>> jpg = join(get_test_data_path(), 'image', 'thai_people.jpg')
+    >>> from pliers.extractors import FaceRecognitionFaceLocationsExtractor
+    >>> from pliers.stimuli.image import ImageStim
     >>> ext = FaceRecognitionFaceLocationsExtractor()
-    >>> image = Stim('obama.jpg', onset=14, duration=1)
-
+    >>> image = ImageStim(jpg, onset=14, duration=1)
     >>> result = ext.transform(image)
-    onset   duration    object_id   face_locations
-    14      1           0           (236, 862, 325, 772)
-    14      1           1           (104, 581, 211, 474)
-    14      1           2           (365, 782, 454, 693)
-    14      1           3           (265, 444, 355, 354)
+    >>> result.to_df()
+       order  duration  onset  object_id        face_locations
+    0    NaN         1     14          0  (236, 862, 325, 772)
+    1    NaN         1     14          1  (104, 581, 211, 474)
+    2    NaN         1     14          2  (365, 782, 454, 693)
+    3    NaN         1     14          3  (265, 444, 355, 354)
 
 As with the ``timing`` columns, if we don't want to see the ``object_id`` column, we can suppress it by calling ``.to_df(object_id=False)`` or ``.to_df(object_id='auto')``. In the latter case, the ``object_id`` column will be included if and only if the values are non-constant (i.e., there is some value other than 0 somewhere in the DataFrame).
 
@@ -87,12 +123,14 @@ Displaying metadata
 
 Although not displayed by default, it's also possible to include additional metadata about the |Stim| and |Extractor| in the DataFrame returned by ``to_df``:
 
-::
 
-    >>> result = ext.transform('obama.jpg')
+.. doctest:: timing
+    :options: +NORMALIZE_WHITESPACE
+
+    >>> result = ext.transform(jpg)
     >>> result.to_df(timing=False, object_id=False, metadata=True)
-    face_locations      stim_name   class       filename    history     source_file
-    (142, 349, 409, 82) obama.jpg   ImageStim   obama.jpg               obama.jpg
+        face_locations  stim_name      class                                 filename history                              source_file
+    0  (142, 349, 409, 82)  obama.jpg  ImageStim  ...obama.jpg          ...obama.jpg
 
 Here we get columns for the |Stim| name (typically just the filename, unless we explicitly specified a different name), the current filename, the |Stim| history, and the source filename. In the above example, ``stim_name``, ``filename`` and ``source_file`` are identical, but this won't always be the case. For example, if the images we're running through the |FaceRecognitionFaceLocationsExtractor| had been extracted from frames of video, the ``source_file`` would point to the original video, while the ``filename`` would point to (temporary) image files corresponding to the extracted frames.
 
@@ -102,12 +140,16 @@ Display mode
 ############
 By default, DataFrames are in 'wide' format. That is, each row represents a single event, and all features are contained in columns. To get a better sense of what this means, it's helpful to look at an extractor that returns more than one feature:
 
-::
+.. doctest::
+    :skipif: os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") is None
+    :options: +NORMALIZE_WHITESPACE
 
+    >>> from os.path import join
+    >>> from pliers.tests.utils import get_test_data_path
+    >>> apple = join(get_test_data_path(), 'image', 'apple.jpg')
     >>> from pliers.extractors import GoogleVisionAPILabelExtractor
     >>> ext = GoogleVisionAPILabelExtractor()
-    >>> result = ext.transform('apple.jpg')
-    
+    >>> result = ext.transform(apple)
     >>> result.to_df()
     onset   duration    object_id   fruit   apple   produce food    natural foods   mcintosh    diet food
     NaN     NaN         0           0.968   0.966   0.959   0.824   0.801           0.629   0.607
@@ -116,7 +158,18 @@ Here we fed in an image of an apple, and the |GoogleVisionAPILabelExtractor| aut
 
 While there's nothing at all wrong with this format (indeed, it's the default!), sometimes we prefer to get back our data in 'long' format, where each row represents the intersection of a single event and a single feature:
 
-::
+.. testsetup:: display
+    :skipif: os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") is None
+
+    from os.path import join
+    from pliers.tests.utils import get_test_data_path
+    apple = join(get_test_data_path(), 'image', 'apple.jpg')
+    from pliers.extractors import GoogleVisionAPILabelExtractor
+    ext = GoogleVisionAPILabelExtractor()
+    result = ext.transform(apple)
+
+.. doctest:: display
+    :skipif: os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") is None
 
     >>> result.to_df(format='long', timing=False, object_id=False)
     feature         value
@@ -137,7 +190,8 @@ If we only ever worked with results generated by a single |Extractor| for a sing
 
 We can ensure that the name of the current |Extractor| is explicitly added to our results via the ``extractor_name`` argument. The precise behavior of ``extractor_name=True`` will depend on the ``format`` argument. When ``format='wide'``, the name will be added as the first level in a pandas MultiIndex; when ``format='long'``, a new column will be added. Examples:
 
-::
+.. doctest:: display
+    :skipif: os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") is None
 
     >>> results.to_df(format='long', timing=False, object_id=False, extractor_name=True)
     feature         value   extractor
@@ -148,7 +202,6 @@ We can ensure that the name of the current |Extractor| is explicitly added to ou
     natural foods   0.801   GoogleVisionAPILabelExtractor
     mcintosh        0.629   GoogleVisionAPILabelExtractor
     diet food       0.607   GoogleVisionAPILabelExtractor
-
     >>> results.to_df(timing=False, object_id=False, extractor_name=True)
     GoogleVisionAPILabelExtractor
     fruit   apple   produce food    natural foods   mcintosh    diet food
@@ -194,7 +247,7 @@ In practice, many users will primarily rely on the :ref:`Graph API <graphs>` for
 The main thing to be aware of in this case is that the ``.transform`` call takes any of the keyword arguments supported by ``merge_results``, and simply passes them through. This means you can control the output format and inclusion of various columns exactly as documented above for ``merge_results`` (and ``to_df``). Here's a minimalistic example to illustrate:
 
 
-::
+.. doctest::
 
     from pliers.graph import Graph
     from pliers.filters import FrameSamplingFilter
