@@ -31,10 +31,9 @@ jobs:
         python -m pip install --upgrade --ignore-installed setuptools
         python -m pip install --upgrade sphinx-rtd-theme sphinx-gallery --upgrade-strategy eager
         python -m pip install -r requirements.txt -r optional-dependencies.txt --upgrade --upgrade-strategy eager
-        python -m pip install .
+        python -m pip install .[all]
     - uses: ammaraskar/sphinx-action@master
       with:
-        pre-build-command: "pip install sphinx-rtd-theme sphinx-gallery"
         docs-folder: "docs/"
     # Create an artifact of the html output.
     - uses: actions/upload-artifact@v1
