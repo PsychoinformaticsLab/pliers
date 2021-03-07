@@ -1,0 +1,161 @@
+
+name: Pull Request Docker Check
+
+on: [pull_request, workflow_dispatch,push]
+
+env:
+  EXEC_IMG: localhost:5000/pliers:exec
+  BUILDER_IMG: localhost:5000/pliers:build
+  DOC_IMG: localhost:5000/pliers:docs
+  REGISTRY_PATH: /tmp/registry
+  CACHE_PATH: /tmp/.buildx-cache
+  
+
+jobs:
+  build_image:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    -
+      name: Cache Docker Registry
+      uses: actions/cache@v2
+      with:
+        path: |
+          /tmp/registry
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+    - 
+      name: Start Docker registry
+      run: |
+        docker run -d -p 5000:5000 -v ${REGISTRY_PATH}:/var/lib/registry --name registry registry:2
+    -
+      name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+      with:
+        driver-opts: network=host
+    - 
+      name: Pull Prebuilt Images
+      run: |
+        set +e
+        docker pull localhost:5000/python:3.7-slim
+        success=$?
+        set -e
+        if [[ "$success" = "0" ]]; then
+            echo "Pulling from local registry"
+            docker tag localhost:5000/python:3.7-slim python:3.7-slim
+        else
+            echo "Pulling from Docker Hub"
+            docker pull python:3.7-slim
+            docker tag python:3.7-slim localhost:5000/python:3.7-slim
+            docker push localhost:5000/python:3.7-slim
+        fi
+        set +e
+        docker pull ${BUILDER_IMG} || true
+        docker pull ${EXEC_IMG} || true
+    - 
+      name: Build and Cache Builder
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./docker/Dockerfile
+        target: builder
+        build-args: |
+          BUILDKIT_INLINE_CACHE=1
+        cache-from: |
+          ${{ env.BUILDER_IMG }}
+        push: true
+        tags: ${{ env.BUILDER_IMG }}
+    - 
+      name: Build and Cache Executable
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./docker/Dockerfile
+        target: executable
+        build-args: |
+          BUILDKIT_INLINE_CACHE=1
+        cache-from: |
+          ${{ env.EXEC_IMG }}
+        push: true
+        tags: ${{ env.EXEC_IMG }}
+    - 
+      name: Stop Docker registry
+      run: docker stop registry
+    -
+      name: Upload Docker Registry Data for Downstream Jobs
+      uses: actions/upload-artifact@v2
+      with:
+        name: docker-registry-data
+        path: /tmp/registry
+
+  docs:
+    runs-on: ubuntu-latest
+    needs: build_image
+    steps:
+    -
+      name: Checkout
+      uses: actions/checkout@v2
+    -
+      name: Download Docker Registry Data from Build Job
+      uses: actions/download-artifact@v2
+      with:
+        name: docker-registry-data
+        path: /tmp/registry
+    -
+      name: Cache Docker Layers
+      uses: actions/cache@v2
+      with:
+        path: ${{ env.CACHE_PATH }}
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+    - 
+      name: Start Docker Registry
+      run: |
+        docker run -d -p 5000:5000 -v ${REGISTRY_PATH}:/var/lib/registry --name registry registry:2
+    -
+      name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+      with:
+        driver-opts: network=host
+    - 
+      name: Pull Prebuilt Images
+      run: |
+        docker pull ${BUILDER_IMG}
+        docker pull ${EXEC_IMG}
+    - 
+      name: Display Images
+      run: |
+        docker images
+    - 
+      name: Build and Cache Docs
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./docker/Dockerfile
+        tags: ${{ env.DOC_IMG }}
+        target: docs
+        load: true
+        cache-from: |
+          ${{ env.BUILDER_IMG }}
+          ${{ env.EXEC_IMG }}
+          type=local,src=${{ env.CACHE_PATH }}
+        cache-to: type=local,dest=${{ env.CACHE_PATH }}-new
+    -
+      name: Run Doc Tests
+      run: docker run ${DOC_IMG}
+    - 
+      name: Stop Docker registry
+      run: docker stop registry
+    -
+      # Temp fix
+      # https://github.com/docker/build-push-action/issues/252
+      # https://github.com/moby/buildkit/issues/1896
+      name: Move cache
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+    

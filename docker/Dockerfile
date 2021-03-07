@@ -14,6 +14,7 @@ RUN chmod a+rX -R . \
         libc6-dev \
         libgraphviz-dev \
         libmagic-dev \
+        libsndfile1 \
         make \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -23,29 +24,47 @@ RUN python -m venv /opt/venv
 RUN python -m pip install --no-cache-dir --upgrade pip setuptools wheel
 RUN python -m pip install --no-cache-dir --requirement requirements.txt
 # Install the non-GPU tensorflow package because it is smaller.
-RUN sed -i 's/tensorflow/tensorflow-cpu/g' optional-dependencies.txt \
+RUN sed -i 's/tensorflow>/tensorflow-cpu>/g' optional-dependencies.txt \
     && python -m pip install --no-cache-dir --requirement optional-dependencies.txt
 RUN python -m pip install --no-cache-dir --editable .
 RUN python -m pip install --no-cache-dir ipython notebook
 RUN python -m spacy download en_core_web_sm
+RUN python -m pliers.support.download \
+    && python -m pliers.support.setup_yamnet
 
-FROM python:3.7-slim
-RUN useradd --create-home --shell /bin/bash pliers \
-    # Empty top level directories to facilitate use of the image in singularity
-    # on a box with kernel lacking overlay FS support
-    && mkdir -p /data /backup \
+FROM python:3.7-slim as base
+# Empty top level directories to facilitate use of the image in singularity
+# on a box with kernel lacking overlay FS support
+RUN mkdir -p /data /backup \
     && apt-get update -qq \
     && apt-get install -yq --no-install-recommends \
         ffmpeg \
         graphviz \
         libmagic1 \
         tesseract-ocr \
+        make \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+FROM base as executable
+RUN useradd --create-home --shell /bin/bash pliers
 COPY --from=builder --chown=pliers /opt/venv /opt/venv
 COPY --from=builder --chown=pliers /opt/pliers /opt/pliers
+COPY --from=builder --chown=pliers /root/nltk_data /home/pliers/nltk_data
+COPY --from=builder --chown=pliers /root/pliers_data /home/pliers/pliers_data
 ENV PATH="/opt/venv/bin:$PATH"
 USER pliers
-RUN python -m pliers.support.download \
-    && python -m pliers.support.setup_yamnet
 WORKDIR /work
+
+FROM executable as docs
+WORKDIR /opt/pliers/docs
+RUN python -m pip install /opt/pliers['docs']
+CMD make doctest && make html
+
+FROM executable as tests
+WORKDIR /opt/pliers
+RUN python -m pip install /opt/pliers['tests']
+
+CMD py.test pliers/tests -n auto --cov=pliers --cov-report xml -m "not requires_payment" -W ignore::UserWarning &&\
+    skip_high_memory=false &&\
+    py.test pliers/tests/extractors/test_model_extractors.py -n auto --forked --cov-append --cov=pliers --cov-report xml -m "not requires_payment" -W ignore::UserWarning
