@@ -1,4 +1,5 @@
 docker/Dockerfile
+.github
 *.pyc
 *.DS_Store
 *~
