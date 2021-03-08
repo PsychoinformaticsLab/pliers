@@ -14,7 +14,7 @@ This first example uses the face_recognition package's location extraction metho
 
 We output the result as a pandas DataFrame; the 'face_locations' column contains the coordinates of the bounding box in CSS format (i.e., top, right, bottom, and left edges).
 
-::
+.. testcode::
 
 	from pliers.extractors import FaceRecognitionFaceLocationsExtractor
 	from os.path import join
@@ -29,57 +29,13 @@ We output the result as a pandas DataFrame; the 'face_locations' column contains
 	# Apply Extractor to image
 	result = ext.transform(image)
 
-	result.to_df()
+	print(result.to_df())
 
-.. raw:: html
+.. testoutput::
+  :options: -ELLIPSIS, +NORMALIZE_WHITESPACE
 
-	<style>
-		div {
-		    overflow-x: auto;
-    		max-width: 100%;
-		}
-	</style>
-    <div>
-    <style scoped>
-    	table {
-    		font-size: 12px;
-    		margin-bottom: 30px;
-    	}
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>onset</th>
-          <th>order</th>
-          <th>duration</th>
-          <th>object_id</th>
-          <th>face_locations</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>0</td>
-          <td>(142, 349, 409, 82)</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
+         order  duration  onset  object_id       face_locations
+    0    NaN       NaN    NaN          0  (142, 349, 409, 82)
 
 
 
@@ -95,7 +51,7 @@ result we get back is now also a list (because the features extracted
 from each image are stored separately), we need to explicitly combine
 the results using the ``merge_results`` utility.
 
-::
+.. testcode::
 
     from pliers.extractors import FaceRecognitionFaceLocationsExtractor, merge_results
     
@@ -105,110 +61,18 @@ the results using the ``merge_results`` utility.
     ext = FaceRecognitionFaceLocationsExtractor()
     results = ext.transform(images)
     df = merge_results(results)
-    df
+    df.sort_index(axis=1, inplace=True)
+    print(df)
 
-.. raw:: html
+.. testoutput::
+  :options: +ELLIPSIS, +NORMALIZE_WHITESPACE
 
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-    
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>source_file</th>
-          <th>onset</th>
-          <th>class</th>
-          <th>filename</th>
-          <th>stim_name</th>
-          <th>history</th>
-          <th>duration</th>
-          <th>order</th>
-          <th>object_id</th>
-          <th>FaceRecognitionFaceLocationsExtractor#face_locations</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>/Users/tal/Dropbox/Code/pliers/pliers/tests/da...</td>
-          <td>NaN</td>
-          <td>ImageStim</td>
-          <td>/Users/tal/Dropbox/Code/pliers/pliers/tests/da...</td>
-          <td>obama.jpg</td>
-          <td></td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>0</td>
-          <td>(142, 349, 409, 82)</td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>/Users/tal/Dropbox/Code/pliers/pliers/tests/da...</td>
-          <td>NaN</td>
-          <td>ImageStim</td>
-          <td>/Users/tal/Dropbox/Code/pliers/pliers/tests/da...</td>
-          <td>thai_people.jpg</td>
-          <td></td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>0</td>
-          <td>(236, 862, 325, 772)</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>/Users/tal/Dropbox/Code/pliers/pliers/tests/da...</td>
-          <td>NaN</td>
-          <td>ImageStim</td>
-          <td>/Users/tal/Dropbox/Code/pliers/pliers/tests/da...</td>
-          <td>thai_people.jpg</td>
-          <td></td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>1</td>
-          <td>(104, 581, 211, 474)</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>/Users/tal/Dropbox/Code/pliers/pliers/tests/da...</td>
-          <td>NaN</td>
-          <td>ImageStim</td>
-          <td>/Users/tal/Dropbox/Code/pliers/pliers/tests/da...</td>
-          <td>thai_people.jpg</td>
-          <td></td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>2</td>
-          <td>(365, 782, 454, 693)</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>/Users/tal/Dropbox/Code/pliers/pliers/tests/da...</td>
-          <td>NaN</td>
-          <td>ImageStim</td>
-          <td>/Users/tal/Dropbox/Code/pliers/pliers/tests/da...</td>
-          <td>thai_people.jpg</td>
-          <td></td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>3</td>
-          <td>(265, 444, 355, 354)</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
+      FaceRecognitionFaceLocationsExtractor#face_locations      class  duration                                       filename history  object_id  onset  order                                    source_file        stim_name
+  0                                  (142, 349, 409, 82)  ImageStim       NaN        ...obama.jpg                  0    NaN    NaN        ...obama.jpg        obama.jpg
+  1                                 (236, 862, 325, 772)  ImageStim       NaN  ...thai_people.jpg                  0    NaN    NaN  ...thai_people.jpg  thai_people.jpg
+  2                                 (104, 581, 211, 474)  ImageStim       NaN  ...thai_people.jpg                  1    NaN    NaN  ...thai_people.jpg  thai_people.jpg
+  3                                 (365, 782, 454, 693)  ImageStim       NaN  ...thai_people.jpg                  2    NaN    NaN  ...thai_people.jpg  thai_people.jpg
+  4                                 (265, 444, 355, 354)  ImageStim       NaN  ...thai_people.jpg                  3    NaN    NaN  ...thai_people.jpg  thai_people.jpg
 
 
 Note how the merged pandas DataFrame contains 5 rows, even though there
@@ -230,7 +94,8 @@ successful execution of this code requires you to have a
 ``GOOGLE_APPLICATION_CREDENTIALS`` environment variable pointing to your
 Google credentials JSON file. See the documentation for more details.
 
-::
+.. testcode::
+    :skipif: os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") is None
 
     from pliers.extractors import GoogleVisionAPIFaceExtractor
     
@@ -241,7 +106,10 @@ Google credentials JSON file. See the documentation for more details.
     result.to_df(format='long', timing=False, object_id=False)
 
 
+.. testoutput::
+    :skipif: os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") is None
 
+  TODO
 
 .. raw:: html
 
@@ -600,7 +468,7 @@ previous examples.
 Treat text as a single block
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-::
+.. testcode::
 
     from pliers.stimuli import TextStim, ComplexTextStim
     from pliers.extractors import VADERSentimentExtractor, merge_results
@@ -615,63 +483,30 @@ Treat text as a single block
     
     ext = VADERSentimentExtractor()
     results = ext.transform(text)
-    results.to_df()
-
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
+    print(results.to_df())
+  
+.. testoutput::
+    :options: +NORMALIZE_WHITESPACE
     
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>onset</th>
-          <th>order</th>
-          <th>duration</th>
-          <th>object_id</th>
-          <th>sentiment_neg</th>
-          <th>sentiment_neu</th>
-          <th>sentiment_pos</th>
-          <th>sentiment_compound</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>NaN</td>
-          <td>0</td>
-          <td>0.19</td>
-          <td>0.51</td>
-          <td>0.3</td>
-          <td>0.6787</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
+    order  duration  onset  object_id  sentiment_neg  sentiment_neu  sentiment_pos  sentiment_compound
+    0    NaN       NaN    NaN          0           0.19           0.51            0.3              0.6787
 
 
 Analyze each word individually
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-::
+.. testsetup:: vader
+
+    from pliers.stimuli import TextStim, ComplexTextStim
+    from pliers.extractors import VADERSentimentExtractor, merge_results
+    
+    raw = """We're not claiming that VADER is a very good sentiment analysis tool.
+    Sentiment analysis is a really, really difficult problem. But just to make a
+    point, here are some clearly valenced words: disgusting, wonderful, poop,
+    sunshine, smile."""
+
+
+.. testcode:: vader
 
     # Second example: we construct a ComplexTextStim, which will
     # cause each word to be represented as a separate TextStim.
@@ -683,198 +518,23 @@ Analyze each word individually
     # Because results is a list of ExtractorResult objects
     # (one per word), we need to merge the results explicitly.
     df = merge_results(results, object_id=False)
-    df.head(10)
+    df.sort_index(axis=1, inplace=True)
+    print(df.head(10))
 
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
+.. testoutput:: vader
+    :options: +NORMALIZE_WHITESPACE
     
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-    
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>source_file</th>
-          <th>onset</th>
-          <th>class</th>
-          <th>filename</th>
-          <th>stim_name</th>
-          <th>history</th>
-          <th>duration</th>
-          <th>order</th>
-          <th>VADERSentimentExtractor#sentiment_compound</th>
-          <th>VADERSentimentExtractor#sentiment_neg</th>
-          <th>VADERSentimentExtractor#sentiment_neu</th>
-          <th>VADERSentimentExtractor#sentiment_pos</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>NaN</td>
-          <td>0.0</td>
-          <td>TextStim</td>
-          <td>NaN</td>
-          <td>text[We]</td>
-          <td>ComplexTextStim-&gt;ComplexTextIterator/TextStim</td>
-          <td>NaN</td>
-          <td>0</td>
-          <td>0.0000</td>
-          <td>0.0</td>
-          <td>1.0</td>
-          <td>0.0</td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>NaN</td>
-          <td>0.0</td>
-          <td>TextStim</td>
-          <td>NaN</td>
-          <td>text['re]</td>
-          <td>ComplexTextStim-&gt;ComplexTextIterator/TextStim</td>
-          <td>NaN</td>
-          <td>1</td>
-          <td>0.0000</td>
-          <td>0.0</td>
-          <td>1.0</td>
-          <td>0.0</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>NaN</td>
-          <td>0.0</td>
-          <td>TextStim</td>
-          <td>NaN</td>
-          <td>text[not]</td>
-          <td>ComplexTextStim-&gt;ComplexTextIterator/TextStim</td>
-          <td>NaN</td>
-          <td>2</td>
-          <td>0.0000</td>
-          <td>0.0</td>
-          <td>1.0</td>
-          <td>0.0</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>NaN</td>
-          <td>0.0</td>
-          <td>TextStim</td>
-          <td>NaN</td>
-          <td>text[claiming]</td>
-          <td>ComplexTextStim-&gt;ComplexTextIterator/TextStim</td>
-          <td>NaN</td>
-          <td>3</td>
-          <td>0.0000</td>
-          <td>0.0</td>
-          <td>1.0</td>
-          <td>0.0</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>NaN</td>
-          <td>0.0</td>
-          <td>TextStim</td>
-          <td>NaN</td>
-          <td>text[that]</td>
-          <td>ComplexTextStim-&gt;ComplexTextIterator/TextStim</td>
-          <td>NaN</td>
-          <td>4</td>
-          <td>0.0000</td>
-          <td>0.0</td>
-          <td>1.0</td>
-          <td>0.0</td>
-        </tr>
-        <tr>
-          <th>5</th>
-          <td>NaN</td>
-          <td>0.0</td>
-          <td>TextStim</td>
-          <td>NaN</td>
-          <td>text[VADER]</td>
-          <td>ComplexTextStim-&gt;ComplexTextIterator/TextStim</td>
-          <td>NaN</td>
-          <td>5</td>
-          <td>0.0000</td>
-          <td>0.0</td>
-          <td>1.0</td>
-          <td>0.0</td>
-        </tr>
-        <tr>
-          <th>6</th>
-          <td>NaN</td>
-          <td>0.0</td>
-          <td>TextStim</td>
-          <td>NaN</td>
-          <td>text[is]</td>
-          <td>ComplexTextStim-&gt;ComplexTextIterator/TextStim</td>
-          <td>NaN</td>
-          <td>6</td>
-          <td>0.0000</td>
-          <td>0.0</td>
-          <td>1.0</td>
-          <td>0.0</td>
-        </tr>
-        <tr>
-          <th>7</th>
-          <td>NaN</td>
-          <td>0.0</td>
-          <td>TextStim</td>
-          <td>NaN</td>
-          <td>text[a]</td>
-          <td>ComplexTextStim-&gt;ComplexTextIterator/TextStim</td>
-          <td>NaN</td>
-          <td>7</td>
-          <td>0.0000</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>0.0</td>
-        </tr>
-        <tr>
-          <th>8</th>
-          <td>NaN</td>
-          <td>0.0</td>
-          <td>TextStim</td>
-          <td>NaN</td>
-          <td>text[very]</td>
-          <td>ComplexTextStim-&gt;ComplexTextIterator/TextStim</td>
-          <td>NaN</td>
-          <td>8</td>
-          <td>0.0000</td>
-          <td>0.0</td>
-          <td>1.0</td>
-          <td>0.0</td>
-        </tr>
-        <tr>
-          <th>9</th>
-          <td>NaN</td>
-          <td>0.0</td>
-          <td>TextStim</td>
-          <td>NaN</td>
-          <td>text[good]</td>
-          <td>ComplexTextStim-&gt;ComplexTextIterator/TextStim</td>
-          <td>NaN</td>
-          <td>9</td>
-          <td>0.4404</td>
-          <td>0.0</td>
-          <td>0.0</td>
-          <td>1.0</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
+        VADERSentimentExtractor#sentiment_compound  VADERSentimentExtractor#sentiment_neg  VADERSentimentExtractor#sentiment_neu  VADERSentimentExtractor#sentiment_pos     class  duration filename                                        history  onset  order source_file       stim_name
+    0  0.0000                                      0.0                                    1.0                                    0.0                                    TextStim NaN        NaN      ComplexTextStim->ComplexTextIterator/TextStim  0.0    0      NaN         text[We]      
+    1  0.0000                                      0.0                                    1.0                                    0.0                                    TextStim NaN        NaN      ComplexTextStim->ComplexTextIterator/TextStim  0.0    1      NaN         text['re]     
+    2  0.0000                                      0.0                                    1.0                                    0.0                                    TextStim NaN        NaN      ComplexTextStim->ComplexTextIterator/TextStim  0.0    2      NaN         text[not]     
+    3  0.0000                                      0.0                                    1.0                                    0.0                                    TextStim NaN        NaN      ComplexTextStim->ComplexTextIterator/TextStim  0.0    3      NaN         text[claiming]
+    4  0.0000                                      0.0                                    1.0                                    0.0                                    TextStim NaN        NaN      ComplexTextStim->ComplexTextIterator/TextStim  0.0    4      NaN         text[that]    
+    5  0.0000                                      0.0                                    1.0                                    0.0                                    TextStim NaN        NaN      ComplexTextStim->ComplexTextIterator/TextStim  0.0    5      NaN         text[VADER]   
+    6  0.0000                                      0.0                                    1.0                                    0.0                                    TextStim NaN        NaN      ComplexTextStim->ComplexTextIterator/TextStim  0.0    6      NaN         text[is]      
+    7  0.0000                                      0.0                                    0.0                                    0.0                                    TextStim NaN        NaN      ComplexTextStim->ComplexTextIterator/TextStim  0.0    7      NaN         text[a]       
+    8  0.0000                                      0.0                                    1.0                                    0.0                                    TextStim NaN        NaN      ComplexTextStim->ComplexTextIterator/TextStim  0.0    8      NaN         text[very]    
+    9  0.4404                                      0.0                                    0.0                                    1.0                                    TextStim NaN        NaN      ComplexTextStim->ComplexTextIterator/TextStim  0.0    9      NaN         text[good]  
 
 
 Extract chromagram from an audio clip

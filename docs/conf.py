@@ -20,19 +20,43 @@ import sphinx_rtd_theme
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
-
-
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
 # needs_sphinx = '1.0'
 
+# sphinx-doctest settings
+doctest_global_setup = '''
+import os
+import pandas as pd
+pd.set_option("display.max_columns", None)
+pd.set_option('display.max_colwidth', 0)
+pd.set_option('display.expand_frame_repr', False)
+'''
+
+#sphinx-gallery settings
+sphinx_gallery_conf = {
+     'examples_dirs': '../examples',   # path to your example scripts
+     'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output
+     'expected_failing_examples': [],
+}
+
+if not os.environ.get('WIT_AI_API_KEY'):
+    sphinx_gallery_conf['expected_failing_examples'].append('../examples/plot_simple_graph.py')
+    sphinx_gallery_conf['expected_failing_examples'].append('../examples/plot_speech_sentiment_analysis.py')
+
+if not os.environ.get('CLARIFAI_API_KEY'):
+    sphinx_gallery_conf['expected_failing_examples'].append('../examples/plot_vision_apis.py')
+
+if not os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'):
+    sphinx_gallery_conf['expected_failing_examples'].append('../examples/plot_quickstart.py')
+
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.doctest',
               'sphinx.ext.autosummary',
               'sphinx.ext.autosectionlabel',
               'sphinx.ext.intersphinx',
@@ -40,7 +64,8 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.mathjax',
               'sphinx.ext.viewcode',
               'sphinx.ext.githubpages',
-              'sphinx.ext.napoleon']
+              'sphinx.ext.napoleon',
+              'sphinx_gallery.gen_gallery']
 
 # Generate stubs
 autosummary_generate = True

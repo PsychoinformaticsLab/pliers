@@ -8,6 +8,7 @@ Pliers documentation
 
    installation
    quickstart
+   auto_examples/index
    basic-concepts
    stimuli
    transformers
