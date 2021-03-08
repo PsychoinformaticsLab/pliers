@@ -1,7 +1,7 @@
 
 name: Pull Request Docker Check
 
-on: [pull_request, workflow_dispatch,push]
+on: [pull_request,workflow_dispatch,push]
 
 env:
   EXEC_IMG: localhost:5000/pliers:exec
@@ -36,7 +36,7 @@ jobs:
       with:
         driver-opts: network=host
     - 
-      name: Pull Prebuilt Images
+      name: Rename builder image
       run: |
         set +e
         docker pull localhost:5000/python:3.7-slim
@@ -51,40 +51,40 @@ jobs:
             docker tag python:3.7-slim localhost:5000/python:3.7-slim
             docker push localhost:5000/python:3.7-slim
         fi
-        set +e
-        docker pull ${BUILDER_IMG} || true
-        docker pull ${EXEC_IMG} || true
+        # set +e
+        # docker pull ${BUILDER_IMG} || true
+        # docker pull ${EXEC_IMG} || true
     - 
-      name: Build and Cache Builder
+      name: Build and export builder
       uses: docker/build-push-action@v2
       with:
         context: .
         file: ./docker/Dockerfile
         target: builder
-        build-args: |
-          BUILDKIT_INLINE_CACHE=1
         cache-from: |
-          ${{ env.BUILDER_IMG }}
+          type=registry,ref=${{ env.BUILDER_IMG }}
+        cache-to: |
+          type=registry,ref=${{ env.BUILDER_IMG }},mode=max
         push: true
         tags: ${{ env.BUILDER_IMG }}
     - 
-      name: Build and Cache Executable
+      name: Build and export executable
       uses: docker/build-push-action@v2
       with:
         context: .
         file: ./docker/Dockerfile
         target: executable
-        build-args: |
-          BUILDKIT_INLINE_CACHE=1
         cache-from: |
-          ${{ env.EXEC_IMG }}
+          type=registry,ref=${{ env.EXEC_IMG }}
+        cache-to: |
+          type=registry,ref=${{ env.EXEC_IMG }},mode=max
         push: true
         tags: ${{ env.EXEC_IMG }}
     - 
       name: Stop Docker registry
       run: docker stop registry
     -
-      name: Upload Docker Registry Data for Downstream Jobs
+      name: Upload Docker registry data for next steps
       uses: actions/upload-artifact@v2
       with:
         name: docker-registry-data
@@ -98,13 +98,13 @@ jobs:
       name: Checkout
       uses: actions/checkout@v2
     -
-      name: Download Docker Registry Data from Build Job
+      name: Download Docker registry data from build job
       uses: actions/download-artifact@v2
       with:
         name: docker-registry-data
         path: /tmp/registry
     -
-      name: Cache Docker Layers
+      name: Cache Docker layers
       uses: actions/cache@v2
       with:
         path: ${{ env.CACHE_PATH }}
@@ -112,7 +112,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-buildx-
     - 
-      name: Start Docker Registry
+      name: Start Docker registry
       run: |
         docker run -d -p 5000:5000 -v ${REGISTRY_PATH}:/var/lib/registry --name registry registry:2
     -
@@ -120,17 +120,21 @@ jobs:
       uses: docker/setup-buildx-action@v1
       with:
         driver-opts: network=host
+    # - 
+    #   name: Import Docker images
+    #   run: |
+    #     docker pull ${BUILDER_IMG}
+    #     docker pull ${EXEC_IMG}
     - 
-      name: Pull Prebuilt Images
-      run: |
-        docker pull ${BUILDER_IMG}
-        docker pull ${EXEC_IMG}
-    - 
-      name: Display Images
+      name: display images
       run: |
         docker images
+    # - 
+    #   name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
+    #   timeout-minutes: 30
     - 
-      name: Build and Cache Docs
+      name: Build and export
       uses: docker/build-push-action@v2
       with:
         context: .
@@ -139,12 +143,16 @@ jobs:
         target: docs
         load: true
         cache-from: |
-          ${{ env.BUILDER_IMG }}
-          ${{ env.EXEC_IMG }}
+          type=registry,ref=${{ env.BUILDER_IMG }}
+          type=registry,ref=${{ env.EXEC_IMG }}
           type=local,src=${{ env.CACHE_PATH }}
         cache-to: type=local,dest=${{ env.CACHE_PATH }}-new
+    # - 
+    #   name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
+    #   timeout-minutes: 30
     -
-      name: Run Doc Tests
+      name: run doc tests
       run: docker run ${DOC_IMG}
     - 
       name: Stop Docker registry
@@ -157,5 +165,3 @@ jobs:
       run: |
         rm -rf /tmp/.buildx-cache
         mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
-    
