@@ -1,7 +1,6 @@
 FROM python:3.7-slim as builder
 ARG DEBIAN_FRONTEND="noninteractive"
 WORKDIR /opt/pliers
-COPY . .
 # Install dependencies into a virtual environment so they can be easily copied into
 # the second stage.
 ENV PATH="/opt/venv/bin:$PATH"
@@ -22,12 +21,15 @@ RUN chmod a+rX -R . \
 # do impose a size penalty, because we build the final image in a separate stage.
 RUN python -m venv /opt/venv
 RUN python -m pip install --no-cache-dir --upgrade pip setuptools wheel
+RUN python -m pip install --no-cache-dir ipython notebook
+COPY requirements.txt .
 RUN python -m pip install --no-cache-dir --requirement requirements.txt
 # Install the non-GPU tensorflow package because it is smaller.
+COPY optional-dependencies.txt .
 RUN sed -i 's/tensorflow>/tensorflow-cpu>/g' optional-dependencies.txt \
     && python -m pip install --no-cache-dir --requirement optional-dependencies.txt
+COPY . .
 RUN python -m pip install --no-cache-dir --editable .
-RUN python -m pip install --no-cache-dir ipython notebook
 RUN python -m spacy download en_core_web_sm
 RUN python -m pliers.support.download \
     && python -m pliers.support.setup_yamnet
