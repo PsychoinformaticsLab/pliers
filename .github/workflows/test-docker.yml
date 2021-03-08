@@ -83,7 +83,7 @@ jobs:
     - 
       name: Stop Docker registry
       run: |
-        docker run --rm --link --network=host registry anoxis/registry-cli -r localhost:5000 --delete  --num 2
+        docker run --rm --network=host --link registry anoxis/registry-cli -r localhost:5000 --delete  --num 2
         docker stop registry
         docker run --rm -v ${REGISTRY_PATH}:/var/lib/registry registry:2 bin/registry garbage-collect \
           /etc/docker/registry/config.yml
