@@ -82,7 +82,11 @@ jobs:
         tags: ${{ env.EXEC_IMG }}
     - 
       name: Stop Docker registry
-      run: docker stop registry
+      run: |
+        docker run --rm --link registry anoxis/registry-cli -r http://localhost:5000 --delete --num 2
+        docker stop registry
+        docker run --rm registry:2 bin/registry garbage-collect \
+          /etc/docker/registry/config.yml
     -
       name: Upload Docker registry data for next steps
       uses: actions/upload-artifact@v2
@@ -129,10 +133,10 @@ jobs:
       name: display images
       run: |
         docker images
-    # - 
-    #   name: Setup tmate session
-    #   uses: mxschmitt/action-tmate@v3
-    #   timeout-minutes: 30
+    - 
+      name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      timeout-minutes: 30
     - 
       name: Build and export
       uses: docker/build-push-action@v2
