@@ -5,7 +5,7 @@ on: [pull_request,workflow_dispatch,push]
 
 env:
   EXEC_IMG: localhost:5000/pliers:exec
-  BUILDER_IMG: localhost:5000/pliers:build
+  CACHE_IMG: localhost:5000/pliers:cache
   DOC_IMG: localhost:5000/pliers:docs
   REGISTRY_PATH: /tmp/registry
   CACHE_PATH: /tmp/.buildx-cache
@@ -36,7 +36,7 @@ jobs:
       with:
         driver-opts: network=host
     - 
-      name: Rename builder image
+      name: Pull Base Image
       run: |
         set +e
         docker pull localhost:5000/python:3.7-slim
@@ -55,19 +55,6 @@ jobs:
         # docker pull ${BUILDER_IMG} || true
         # docker pull ${EXEC_IMG} || true
     - 
-      name: Build and export builder
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        file: ./docker/Dockerfile
-        target: builder
-        cache-from: |
-          type=registry,ref=${{ env.BUILDER_IMG }}
-        cache-to: |
-          type=registry,ref=${{ env.BUILDER_IMG }},mode=max
-        push: true
-        tags: ${{ env.BUILDER_IMG }}
-    - 
       name: Build and export executable
       uses: docker/build-push-action@v2
       with:
@@ -75,15 +62,15 @@ jobs:
         file: ./docker/Dockerfile
         target: executable
         cache-from: |
-          type=registry,ref=${{ env.EXEC_IMG }}
+          type=registry,ref=${{ env.CACHE_IMG }}
         cache-to: |
-          type=registry,ref=${{ env.EXEC_IMG }},mode=max
+          type=registry,ref=${{ env.CACHE_IMG }},mode=max
         push: true
         tags: ${{ env.EXEC_IMG }}
     - 
       name: Stop Docker registry
       run: |
-        docker run --rm --network=host --link registry anoxis/registry-cli -r localhost:5000 --delete  --num 2
+        docker run --rm --link registry anoxis/registry-cli -r http://registry:5000 --delete  --num 2
         docker stop registry
         docker run --rm -v ${REGISTRY_PATH}:/var/lib/registry registry:2 bin/registry garbage-collect \
           /etc/docker/registry/config.yml
@@ -147,8 +134,7 @@ jobs:
         target: docs
         load: true
         cache-from: |
-          type=registry,ref=${{ env.BUILDER_IMG }}
-          type=registry,ref=${{ env.EXEC_IMG }}
+          type=registry,ref=${{ env.CACHE_IMG }}
           type=local,src=${{ env.CACHE_PATH }}
         cache-to: type=local,dest=${{ env.CACHE_PATH }}-new
     # - 
