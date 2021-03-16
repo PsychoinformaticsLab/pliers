@@ -224,6 +224,14 @@ Extractors (:mod:`pliers.extractors`)
   TFHubTextExtractor
   TFHubExtractor
 
+** Misc-type Extractors ***
+
+.. autosummary::
+	:toctree: generated/
+ 	:template: _class.rst
+
+  MetricExtractor
+
 
 **Functions**:
 
@@ -258,6 +266,7 @@ Filters (:mod:`pliers.filters`)
   TokenizingFilter
   TokenRemovalFilter
   WordStemmingFilter
+  AudioResamplingFilter
 
 
 Graph construction (:mod:`pliers.graph`)

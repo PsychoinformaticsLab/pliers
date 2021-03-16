@@ -45,6 +45,7 @@ The current |Stim| hierarchy in pliers (ignoring |CompoundStim| classes discusse
     VideoFrameStim
     VideoFrameCollectionStim
     ComplexTextStim
+    SeriesStim
 
 CompoundStim classes
 ~~~~~~~~~~~~~~~~~~~~
