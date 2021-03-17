@@ -11,15 +11,24 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     # Grabbing custom dependencies and building as a pdf.
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        python-version: 3.7
+        mamba-version: "*"
+        channels: conda-forge,cantera/label/dev,defaults
+        channel-priority: true
+        activate-environment: ctwrap
+        environment-file: environment.yml
     - name: Install pliers
       run: |
-        pip install -e .
-    - uses: ammaraskar/sphinx-action@master
-      with:
-        pre-build-command: "pip install sphinx-rtd-theme"
-        docs-folder: "docs/"
-    # Create an artifact of the html output.
-    - uses: actions/upload-artifact@v1
+        pip install --no-deps -e .
+    - name: Install Sphinx dependencies
+      run: |
+        cd docs
+        pip install -r requirements.txt
+        sphinx-build -b html . _build
+    - name: Create artifact of the html output
+      uses: actions/upload-artifact@v2
       with:
         name: DocumentationHTML
-        path: docs/_build/html/
+        path: docs/_build/
