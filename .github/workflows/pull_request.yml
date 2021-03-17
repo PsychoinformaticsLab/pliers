@@ -24,10 +24,10 @@ jobs:
         python -m pip install --upgrade --ignore-installed setuptools
         python -m pip install -r requirements.txt --upgrade --upgrade-strategy eager
         pip install -e .
-        cd docs
-        pip install -r requirements.txt
     - name: Run Sphinx
       run: |
+        cd docs
+        pip install -r requirements.txt
         sphinx-build -b html . _build
     - name: Create artifact of the html output
       uses: actions/upload-artifact@v2
