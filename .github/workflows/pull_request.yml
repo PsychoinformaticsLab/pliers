@@ -11,6 +11,9 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     # Grabbing custom dependencies and building as a pdf.
+    - name: Install pliers
+      run: |
+        pip install -e .
     - uses: ammaraskar/sphinx-action@master
       with:
         pre-build-command: "pip install sphinx-rtd-theme"
