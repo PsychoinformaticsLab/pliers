@@ -17,8 +17,7 @@ jobs:
         mamba-version: "*"
         channels: conda-forge,cantera/label/dev,defaults
         channel-priority: true
-        activate-environment: ctwrap
-        environment-file: environment.yml
+        activate-environment: pliers
     - name: Install pliers
       run: |
         pip install --no-deps -e .
