@@ -19,12 +19,13 @@
 import sphinx_rtd_theme
 import os
 import sys
+import glob
 
 sys.path.insert(0, os.path.abspath('.'))
 
 print(os.path.abspath('.'))
-print(glob('*'))
 print(os.path.dirname(os.path.realpath(__file__)))
+print(glob.glob('*'))
 
 
 # -- General configuration ------------------------------------------------
