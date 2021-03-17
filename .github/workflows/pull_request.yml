@@ -20,7 +20,7 @@ jobs:
         activate-environment: pliers
     - name: Install pliers
       run: |
-        pip install --no-deps -e .
+        pip install -e .
     - name: Install Sphinx dependencies
       run: |
         cd docs
