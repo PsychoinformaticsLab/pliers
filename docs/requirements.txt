@@ -4,3 +4,4 @@ sphinx-argparse
 ipywidgets
 nbsphinx
 sphinx-rtd-theme
+matplotlib

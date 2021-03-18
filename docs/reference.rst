@@ -176,7 +176,7 @@ Extractors (:mod:`pliers.extractors`)
   MicrosoftVisionAPIAdultExtractor
   SaliencyExtractor
   SharpnessExtractor
-  TensorFlowInceptionV3Extractor
+  TFHubExtractor
   VibranceExtractor
 
 
@@ -192,7 +192,6 @@ Extractors (:mod:`pliers.extractors`)
   BertSentimentExtractor
   ComplexTextExtractor
   DictionaryExtractor
-  IndicoAPITextExtractor
   LengthExtractor
   NumUniqueWordsExtractor
   PartOfSpeechExtractor

@@ -88,7 +88,6 @@ At present, pliers implements several dozen |Extractor| classes that span a wide
   GoogleVisionAPIPropertyExtractor
   GoogleVisionAPISafeSearchExtractor
   GoogleVisionAPIWebEntitiesExtractor
-  IndicoAPIImageExtractor
   MicrosoftAPIFaceExtractor
   MicrosoftAPIFaceEmotionExtractor
   MicrosoftVisionAPIExtractor
@@ -99,7 +98,7 @@ At present, pliers implements several dozen |Extractor| classes that span a wide
   MicrosoftVisionAPIAdultExtractor
   SaliencyExtractor
   SharpnessExtractor
-  TensorFlowInceptionV3Extractor
+  TFHubExtractor
   VibranceExtractor
 
 
@@ -115,7 +114,6 @@ At present, pliers implements several dozen |Extractor| classes that span a wide
   BertSentimentExtractor
   ComplexTextExtractor
   DictionaryExtractor
-  IndicoAPITextExtractor
   LengthExtractor
   NumUniqueWordsExtractor
   PartOfSpeechExtractor

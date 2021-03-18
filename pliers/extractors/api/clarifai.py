@@ -190,6 +190,23 @@ class ClarifaiAPIImageExtractor(ClarifaiAPIExtractor, BatchTransformerMixin,
 
 
 class ClarifaiAPIVideoExtractor(ClarifaiAPIExtractor, VideoExtractor):
+    ''' Uses the Clarifai API to extract tags from videos.
+
+    Args:
+        api_key (str): A valid API_KEY for the Clarifai API. Only needs to be
+            passed the first time the extractor is initialized.
+        model (str): The name of the Clarifai model to use. If None, defaults
+            to the general image tagger.
+        min_value (float): A value between 0.0 and 1.0 indicating the minimum
+            confidence required to return a prediction. Defaults to 0.0.
+        max_concepts (int): A value between 0 and 200 indicating the maximum
+            number of label predictions returned.
+        select_concepts (list): List of concepts (strings) to query from the
+            API. For example, ['food', 'animal'].
+        rate_limit (int): The minimum number of seconds required between
+            transform calls on this Transformer.
+        batch_size (int): Number of stims to send per batched API request.
+    '''
 
     def _extract(self, stim):
         verify_dependencies(['clarifai_client'])
