@@ -48,7 +48,6 @@
 .. |MicrosoftVisionAPIAdultExtractor| replace:: :py:class:`MicrosoftVisionAPIAdultExtractor`
 .. |SaliencyExtractor| replace:: :py:class:`SaliencyExtractor`
 .. |SharpnessExtractor| replace:: :py:class:`SharpnessExtractor`
-.. |TFHubExtractor| replace:: :py:class:`TFHubExtractor`
 .. |VibranceExtractor| replace:: :py:class:`VibranceExtractor`
 .. |BertExtractor| replace:: :py:class:`BertExtractor`
 .. |BertSequenceEncodingExtractor| replace:: :py:class:`BertSequenceEncodingExtractor`
@@ -87,7 +86,6 @@
 .. |RevAISpeechAPIConverter| replace:: :py:class:`RevAISpeechAPIConverter`
 .. |WitTranscriptionConverter| replace:: :py:class:`WitTranscriptionConverter`
 .. |ExtractorResultToSeriesConverter| replace:: :py:class:`ExtractorResultToSeriesConverter`
-
 
 .. currentmodule:: pliers.filters
 .. |Filter| replace:: :py:class:`Filter`
