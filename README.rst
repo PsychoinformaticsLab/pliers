@@ -1,4 +1,3 @@
-
 *pliers*: a python package for automated feature extraction
 ===========================================================
 
@@ -75,29 +74,3 @@ your stims explicitly rather than passing in filenames (i.e.,
    :target: https://coveralls.io/github/tyarkoni/pliers?branch=master
 .. |DOI:10.1145/3097983.3098075| image:: https://zenodo.org/badge/DOI/10.1145/3097983.3098075.svg
    :target: https://doi.org/10.1145/3097983.3098075
-
-
-Pliers documentation
-====================
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-   installation
-   quickstart
-   basic-concepts
-   stimuli
-   transformers
-   graphs
-   results
-   config
-   reference
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
