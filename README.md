@@ -1,4 +1,4 @@
-# *pliers*: a comprehensive framework for automated feature extraction
+# *pliers*: a python package for automated feature extraction
 
 [![PyPI version fury.io](https://badge.fury.io/py/pliers.svg)](https://pypi.python.org/pypi/pliers/) ![pytest](https://github.com/PsychoinformaticsLab/pliers/actions/workflows/python-package.yml/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/tyarkoni/pliers/badge.svg?branch=master)](https://coveralls.io/github/tyarkoni/pliers?branch=master)
 
