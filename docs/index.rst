@@ -77,9 +77,6 @@ your stims explicitly rather than passing in filenames (i.e.,
    :target: https://doi.org/10.1145/3097983.3098075
 
 
-Pliers documentation
-====================
-
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
