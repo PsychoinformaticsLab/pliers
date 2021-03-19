@@ -17,11 +17,6 @@ Each of the above tasks can typically be accomplished in 2 - 3 lines of code wit
 
 In a nutshell, pliers provides a high-level, unified interface to a very large number of feature extraction tools that span a wide range of modalities.
 
-## How to cite
-If you use pliers in your work, please cite both the pliers GitHub repository (http://github.com/tyarkoni/pliers) and the following paper:
-
-> McNamara, Q., De La Vega, A., & Yarkoni, T. (2017, August). [Developing a comprehensive framework for multimodal feature extraction](https://dl.acm.org/citation.cfm?id=3098075). In Proceedings of the 23rd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (pp. 1567-1574). ACM.
-
 ## Documentation
 
 The official pliers documentation is quite thorough, and contains a comprehensive [quickstart](http://psychoinformaticslab.github.io/pliers/quickstart.html), [user guide](http://psychoinformaticslab.github.io/pliers/) and complete [API Reference](http://psychoinformaticslab.github.io/pliers/reference.html).
@@ -46,3 +41,8 @@ You may also use the provided `Dockerfile` to build a complete Docker image whic
 While installing pliers itself is straightforward, setting up web-based feature extraction APIs that pliers interfaces with can take a bit more effort. For example, pliers includes support for face and object recognition via Google’s Cloud Vision API, and enables conversion of audio files to text transcripts via several different speech-to-text services. While some of these APIs are free to use (and usually provide a limited number of free monthly calls), they all require each user to register for their own API credentials. More details on API key setup are available [here](http://tyarkoni.github.io/pliers/installation.html#api-keys).
 
 Another option is to stick to using local models and algorithms, such as the wide range covered by TensforFlow Hub using the `TFHubExtractor`.
+
+## How to cite
+If you use pliers in your work, please cite both the pliers GitHub repository (http://github.com/tyarkoni/pliers) and the following paper:
+
+> McNamara, Q., De La Vega, A., & Yarkoni, T. (2017, August). [Developing a comprehensive framework for multimodal feature extraction](https://dl.acm.org/citation.cfm?id=3098075). In Proceedings of the 23rd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (pp. 1567-1574). ACM.
