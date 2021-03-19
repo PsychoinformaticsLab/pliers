@@ -26,11 +26,10 @@ If you use pliers in your work, please cite both the pliers GitHub repository (h
 
 The official pliers documentation is quite thorough, and contains a comprehensive [quickstart](http://psychoinformaticslab.github.io/pliers/quickstart.html), [user guide](http://psychoinformaticslab.github.io/pliers/) and complete [API Reference](http://psychoinformaticslab.github.io/pliers/reference.html).
 
-
 ## Installation
 
 Simply install using pip to get the latest release:
-primarily
+
 > pip install pliers
 
 ### Dependencies
