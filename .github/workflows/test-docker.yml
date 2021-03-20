@@ -1,0 +1,158 @@
+
+name: Pull Request Docker Check
+
+on: [pull_request,workflow_dispatch,push]
+
+env:
+  UNSTABLE_IMG: ghcr.io/PsychoinformaticsLab/pliers:unstable
+  EXEC_IMG: ghcr.io/PsychoinformaticsLab/ci:ci_exec
+  BUILDER_IMG: ghcr.io/PsychoinformaticsLab/ci:ci_build
+  DOC_IMG: ghcr.io/PsychoinformaticsLab/ci:ci_docs
+  TEST_IMG: ghcr.io/PsychoinformaticsLab/ci:ci_test
+  
+
+jobs:
+  build_image:
+    runs-on: ubuntu-latest
+    steps:
+    - 
+      name: Checkout
+      uses: actions/checkout@v2
+    -
+      name: Login to GitHub Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.CR_PAT }}
+    -
+      name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    - 
+      name: Build and export builder
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./docker/Dockerfile
+        target: builder
+        cache-from: |
+          type=registry,ref=${{ env.BUILDER_IMG }}
+          type=registry,ref=${{ env.UNSTABLE_IMG }}
+        cache-to: |
+          type=registry,ref=${{ env.BUILDER_IMG }},mode=max
+        push: true
+        tags: ${{ env.BUILDER_IMG }}
+    - 
+      name: Build and export executable
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./docker/Dockerfile
+        target: executable
+        cache-from: |
+          type=registry,ref=${{ env.EXEC_IMG }}
+        cache-to: |
+          type=registry,ref=${{ env.EXEC_IMG }},mode=max
+        push: true
+        tags: |
+          ${{ env.EXEC_IMG }}
+          ${{ env.EXEC_IMG }}_${{ github.sha }}
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build_image
+    steps:
+    -
+      name: Checkout
+      uses: actions/checkout@v2
+    -
+      name: Login to GitHub Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.CR_PAT }}
+    -
+      name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    # - 
+    #   name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
+    #   timeout-minutes: 30
+    - 
+      name: Build and export
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./docker/Dockerfile
+        target: tests
+        load: true
+        tags: ${{ env.TEST_IMG }}
+        cache-from: |
+          type=registry,ref=${{ env.BUILDER_IMG }}
+          type=registry,ref=${{ env.EXEC_IMG }}
+          type=registry,ref=${{ env.TEST_IMG }}
+        cache-to: |
+          type=registry,ref=${{ env.TEST_IMG }}
+    # - 
+    #   name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
+    #   timeout-minutes: 30
+    -
+      name: run tests
+      run: docker run ${TEST_IMG}
+    - 
+      name: push tests image
+      run: docker push ${TEST_IMG}
+    
+  push:
+    if: (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags'))
+    runs-on: ubuntu-latest
+    needs:
+      - build_image
+      - test
+    steps:
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+      # -
+      #   name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+      #   timeout-minutes: 30
+      -
+        name: rename image to PsychoinformaticsLab/pliers
+        run: |
+          docker pull ${{ env.EXEC_IMG }}_${{ github.sha }}
+          docker tag ${{ env.EXEC_IMG }}_${{ github.sha }} ${{ env.UNSTABLE_IMG }}
+          docker push ${{ env.UNSTABLE_IMG }}
+          if [ ${GITHUB_REF##*/} != "main" ]; then
+            docker tag ${{ env.EXEC_IMG }}_${{ github.sha }} ghcr.io/PsychoinformaticsLab/pliers:${GITHUB_REF##*/}
+            docker push ghcr.io/PsychoinformaticsLab/pliers:${GITHUB_REF##*/}
+          fi
+  clean:
+    if: always()
+    runs-on: ubuntu-latest
+    needs:
+      - build_image
+      - test
+    steps:
+      -
+        name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+      -
+        name: delete old images
+        uses: smartsquaregmbh/delete-old-packages@v0.2.0
+        with:
+          keep: 5
+          names: github-actions-docker,ci
