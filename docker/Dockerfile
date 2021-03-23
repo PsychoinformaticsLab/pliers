@@ -73,6 +73,6 @@ WORKDIR /opt/pliers
 RUN python -m pip install /opt/pliers['tests']
 ENV skip_high_memory true
 LABEL org.opencontainers.image.source=https://github.com/PsychoinformaticsLab/pliers
-CMD py.test pliers/tests -n auto --cov=pliers --cov-report xml -m "not requires_payment" -W ignore::UserWarning &&\
+CMD py.test pliers/tests -n 1 --cov=pliers --cov-report xml -m "not requires_payment" -W ignore::UserWarning &&\
     skip_high_memory=false &&\
-    py.test pliers/tests/extractors/test_model_extractors.py -n auto --forked --cov-append --cov=pliers --cov-report xml -m "not requires_payment" -W ignore::UserWarning
+    py.test pliers/tests/extractors/test_model_extractors.py -n 1 --forked --cov-append --cov=pliers --cov-report xml -m "not requires_payment" -W ignore::UserWarning
