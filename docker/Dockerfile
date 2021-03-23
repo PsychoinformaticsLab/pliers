@@ -33,6 +33,7 @@ RUN python -m pip install --no-cache-dir --editable .
 RUN python -m spacy download en_core_web_sm
 RUN python -m pliers.support.download \
     && python -m pliers.support.setup_yamnet
+LABEL org.opencontainers.image.source=https://github.com/PsychoinformaticsLab/pliers
 
 FROM python:3.7-slim as base
 # Empty top level directories to facilitate use of the image in singularity
@@ -47,6 +48,7 @@ RUN mkdir -p /data /backup \
         make \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+LABEL org.opencontainers.image.source=https://github.com/PsychoinformaticsLab/pliers
 
 FROM base as executable
 RUN useradd --create-home --shell /bin/bash pliers
@@ -57,16 +59,19 @@ COPY --from=builder --chown=pliers /root/pliers_data /home/pliers/pliers_data
 ENV PATH="/opt/venv/bin:$PATH"
 USER pliers
 WORKDIR /work
+LABEL org.opencontainers.image.source=https://github.com/PsychoinformaticsLab/pliers
 
 FROM executable as docs
 WORKDIR /opt/pliers/docs
 RUN python -m pip install /opt/pliers['docs']
+LABEL org.opencontainers.image.source=https://github.com/PsychoinformaticsLab/pliers
 CMD make doctest && make html
+
 
 FROM executable as tests
 WORKDIR /opt/pliers
 RUN python -m pip install /opt/pliers['tests']
-
+LABEL org.opencontainers.image.source=https://github.com/PsychoinformaticsLab/pliers
 CMD py.test pliers/tests -n auto --cov=pliers --cov-report xml -m "not requires_payment" -W ignore::UserWarning &&\
     skip_high_memory=false &&\
     py.test pliers/tests/extractors/test_model_extractors.py -n auto --forked --cov-append --cov=pliers --cov-report xml -m "not requires_payment" -W ignore::UserWarning
