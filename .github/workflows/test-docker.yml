@@ -3,18 +3,19 @@ name: Docker Workflow
 
 on: [pull_request,workflow_dispatch,push]
 
-env:
-  UNSTABLE_IMG: ghcr.io/${{ github.repository_owner }}/pliers:unstable
-  EXEC_IMG: ghcr.io/${{ github.repository_owner }}/ci:ci_exec
-  BUILDER_IMG: ghcr.io/${{ github.repository_owner }}/ci:ci_build
-  DOC_IMG: ghcr.io/${{ github.repository_owner }}/ci:ci_docs
-  TEST_IMG: ghcr.io/${{ github.repository_owner }}/ci:ci_test
-  
-
 jobs:
   docker_test_and_deploy:
     runs-on: ubuntu-latest
     steps:
+    - 
+      name: Set environment variables
+      run: |
+        repo_owner=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')
+        echo UNSTABLE_IMG=ghcr.io/${repo_owner}/pliers:unstable >> $GITHUB_ENV
+        echo EXEC_IMG=ghcr.io/${repo_owner}/pliersci:ci_exec >> $GITHUB_ENV
+        echo BUILDER_IMG=ghcr.io/${repo_owner}/pliersci:ci_build >> $GITHUB_ENV
+        echo DOC_IMG=ghcr.io/${repo_owner}/pliersci:ci_docs >> $GITHUB_ENV
+        echo TEST_IMG=ghcr.io/${repo_owner}/pliersci:ci_docs >> $GITHUB_ENV
     - 
       name: Checkout
       uses: actions/checkout@v2
