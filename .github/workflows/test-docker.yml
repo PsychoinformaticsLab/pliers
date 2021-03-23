@@ -73,7 +73,7 @@ jobs:
         CR_PAT: ${{ secrets.CR_PAT }}
       run: |
         if [ "${GITHUB_EVENT_NAME}" == "push" ] && [ ! -z "${CR_PAT}" ]; then
-          echo "${CR_PAT}" | docker login ghcr.io -u USERNAME --password-stdin 
+          echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin 
           docker push ${UNSTABLE_IMG}  # push image for users
           docker push ${BUILDER_IMG}  # push image for build cache 
           # check if this is a release
