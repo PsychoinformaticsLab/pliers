@@ -22,11 +22,11 @@ following tasks (and many others!):
 
 Each of the above tasks can typically be accomplished in 2 - 3 lines of
 code with pliers. Combining them *all*--and returning a single,
-standardized, integrated DataFrame as the result--might take a bit more
+standardized DataFrame--might take a bit more
 work. Say maybe 5 or 6 lines.
 
-In a nutshell, pliers provides a high-level, unified interface to a very
-large number of feature extraction tools that span a wide range of
+In a nutshell, pliers provides a high-level, unified interface to a
+large number of feature extraction tools spanning a wide range of
 modalities.
 
 Documentation
@@ -47,26 +47,23 @@ Simply use pip to install the latest release:
 Dependencies
 ~~~~~~~~~~~~
 
-By default, installing pliers with pip will only install third-party
+Installing pliers with pip will only install third-party
 libraries that are essential for pliers to function properly. However,
 because pliers provides interfaces to a large number of feature
 extraction tools, there are dozens of optional dependencies that may be
 required depending on what kinds of features you plan to extract. You
-can choose to install dependencies piece meal (pliers will alert you if
+may install dependencies piece meal (pliers will alert you if
 you're missing a depedency) or you may install all the required
 dependencies:
 
    pip install -r optional-dependencies.txt
 
-Note, however, that some of these Python dependencies have their own
-(possibly platform-dependent) requirements. For example, python-magic
+Note, that some of these Python dependencies may have their own requirements. 
+For example, python-magic
 requires libmagic and without this, you’ll be relegated to loading all
 your stims explicitly rather than passing in filenames (i.e.,
 ``stim = VideoStim('my_video.mp4')`` will work fine, but passing
-'my_video.mp4' directly to an ``Extractor`` may not). Additionally, the
-Python OpenCV bindings require OpenCV3--but relatively few of the
-feature extractors in pliers currently depend on OpenCV, so you may not
-need to bother with this.
+'my_video.mp4' directly to an ``Extractor`` may not).
 
 Docker image
 ^^^^^^^^^^^^
@@ -78,18 +75,18 @@ instructions <https://github.com/PsychoinformaticsLab/pliers/blob/master/docker/
 API Keys
 ^^^^^^^^
 
-While installing pliers itself is straightforward, setting up web-based
-feature extraction APIs that pliers interfaces with can take a bit more
+While installing pliers itself is straightforward, configuring web-based
+feature extraction APIs can take a more
 effort. For example, pliers includes support for face and object
 recognition via Google’s Cloud Vision API, and enables conversion of
 audio files to text transcripts via several different speech-to-text
 services. While some of these APIs are free to use (and usually provide
-a limited number of free monthly calls), they all require each user to
-register for their own API credentials. More details on API key setup
+a limited number of free monthly calls), they require users to
+register to received API credentials. More details on API key setup
 are available
 `here <http://psychoinformaticslab.github.io/pliers/installation.html#api-keys>`__.
 
-Another option is to stick to using local models and algorithms, such as
+Another option is to exclusively use local models and algorithms, such as
 the wide range covered by TensforFlow Hub using the ``TFHubExtractor``.
 
 How to cite
