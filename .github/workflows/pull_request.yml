@@ -23,7 +23,7 @@ jobs:
         python -m pip install --upgrade pip wheel
         python -m pip install --upgrade --ignore-installed setuptools
         python -m pip install -r requirements.txt --upgrade --upgrade-strategy eager
-        python -m pip pip install -e .
+        python -m pip install -e .
     - name: Run Sphinx
       run: |
         cd docs
