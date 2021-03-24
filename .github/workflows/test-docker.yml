@@ -67,7 +67,7 @@ jobs:
     -
       name: run tests
       run: |
-        docker run -it \
+        docker run \
           --memory-reservation="5g" \
           --memory="7g" \
           --memory-swap="10g" \
