@@ -87,7 +87,7 @@ services. While some of these APIs are free to use (and usually provide
 a limited number of free monthly calls), they all require each user to
 register for their own API credentials. More details on API key setup
 are available
-`here <http://tyarkoni.github.io/pliers/installation.html#api-keys>`__.
+`here <http://psychoinformaticslab.github.io/pliers/installation.html#api-keys>`__.
 
 Another option is to stick to using local models and algorithms, such as
 the wide range covered by TensforFlow Hub using the ``TFHubExtractor``.
@@ -95,8 +95,7 @@ the wide range covered by TensforFlow Hub using the ``TFHubExtractor``.
 How to cite
 -----------
 
-If you use pliers in your work, please cite both the pliers GitHub
-repository (http://github.com/tyarkoni/pliers) and the following paper:
+If you use pliers in your work, please cite both the pliers and the following paper:
 
    McNamara, Q., De La Vega, A., & Yarkoni, T. (2017, August).
    `Developing a comprehensive framework for multimodal feature
