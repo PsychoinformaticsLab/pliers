@@ -34,8 +34,7 @@ Documentation
 
 The official pliers documentation is comprehensive, and contains a
 `quickstart <http://psychoinformaticslab.github.io/pliers/quickstart.html>`__,
-`user guide <http://psychoinformaticslab.github.io/pliers/>`__ and
-complete `API
+`user guide <http://psychoinformaticslab.github.io/pliers/>`__ and `API
 Reference <http://psychoinformaticslab.github.io/pliers/reference.html>`__.
 
 Installation
