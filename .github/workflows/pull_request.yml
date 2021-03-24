@@ -27,7 +27,7 @@ jobs:
     - name: Run Sphinx
       run: |
         cd docs
-        pip install -r requirements.txt
+        python -m pip install -r requirements.txt
         sphinx-build -b html . _build
     - name: Create artifact of the html output
       uses: actions/upload-artifact@v2
