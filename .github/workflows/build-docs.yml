@@ -35,7 +35,7 @@ jobs:
         git clone https://github.com/PsychoinformaticsLab/pliers.git --branch gh-pages --single-branch gh-pages
         pwd
         ls
-        cp -r _build/* gh-pages/
+        cp -r docs/_build/* gh-pages/
         cd gh-pages
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
