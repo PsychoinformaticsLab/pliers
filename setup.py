@@ -18,7 +18,7 @@ setup(
     description="Multimodal feature extraction in Python",
     maintainer='Tal Yarkoni',
     maintainer_email='tyarkoni@gmail.com',
-    url='http://github.com/tyarkoni/pliers',
+    url='http://github.com/psychoinformaticslab/pliers',
     install_requires=['numpy', 'scipy', 'moviepy', 'pandas',
                       'pillow', 'python-magic', 'requests', 'nltk'],
     packages=find_packages(exclude=['pliers/tests']),
@@ -27,7 +27,7 @@ setup(
                   'pliers.tests': ['data/*/*']
                   },
     zip_safe=False,
-    download_url='https://github.com/tyarkoni/pliers/archive/%s.tar.gz' %
+    download_url='https://github.com/psychoinformaticslab/pliers/archive/%s.tar.gz' %
     __version__,
     **extra_setuptools_args,
     extras_require={

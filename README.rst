@@ -103,7 +103,7 @@ If you use pliers in your work, please cite both the pliers and the following pa
 .. |PyPI version fury.io| image:: https://badge.fury.io/py/pliers.svg
    :target: https://pypi.python.org/pypi/pliers/
 .. |pytest| image:: https://github.com/PsychoinformaticsLab/pliers/actions/workflows/python-package.yml/badge.svg
-.. |Coverage Status| image:: https://coveralls.io/repos/github/tyarkoni/pliers/badge.svg?branch=master
-   :target: https://coveralls.io/github/tyarkoni/pliers?branch=master
+.. |Coverage Status| image:: https://coveralls.io/repos/github/psychoinformaticslab/pliers/badge.svg?branch=master
+   :target: https://coveralls.io/github/psychoinformaticslab/pliers?branch=master
 .. |DOI:10.1145/3097983.3098075| image:: https://zenodo.org/badge/DOI/10.1145/3097983.3098075.svg
    :target: https://doi.org/10.1145/3097983.3098075

@@ -13,7 +13,7 @@ Or, if you want to work on the bleeding edge:
 
 ::
 
-    pip install pliers git+https://github.com/tyarkoni/pliers.git
+    pip install pliers git+https://github.com/psychoinformaticslab/pliers.git
 
 Dependencies
 ------------

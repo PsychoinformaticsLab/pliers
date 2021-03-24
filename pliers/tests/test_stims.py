@@ -277,7 +277,7 @@ def test_remote_stims():
     image = ImageStim(url=url)
     assert image.data.shape == (288, 360, 3)
 
-    url = 'https://github.com/tyarkoni/pliers/blob/master/README.md'
+    url = 'https://github.com/psychoinformaticslab/pliers/blob/master/README.rst'
     text = TextStim(url=url)
     assert len(text.text) > 1
 
