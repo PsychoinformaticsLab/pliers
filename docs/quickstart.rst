@@ -1349,7 +1349,7 @@ Note, as with other examples above, that the ``ClarifaiAPIImageExtractor``
 wraps the Clarifai object recognition API, so you’ll need to have an API
 key set up appropriately (if you don’t have an API key, and don’t want
 to set one up, you can replace ``ClarifaiAPIImageExtractor`` with
-``TensorFlowInceptionV3Extractor`` to get similar, though not quite as
+``TFHubExtractor`` to get similar, though not quite as
 accurate, results).
 
 ::

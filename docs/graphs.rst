@@ -13,7 +13,6 @@ For example, suppose we have a series of videos (perhaps segments of a full-leng
 - Run face detection on each extracted frame (we'll use Google's Cloud Vision face detection API);
 - Extract the audio track from the video;
 - Transcribe the audio track to text (we'll use Google's Cloud Speech API for this);
-- Run a sentiment analysis model (in this case, using the Indico.io API) on the transcribed text.
 
 The code to do this, with transformations made explicit:
 
@@ -24,8 +23,7 @@ The code to do this, with transformations made explicit:
 	from pliers.stimuli import VideoStim
 	from pliers.filters import FrameSamplingFilter
 	from pliers.converters import GoogleSpeechAPIConverter
-	from pliers.extractors import (IndicoAPITextExtractor, merge_results,
-	                               GoogleVisionAPIFaceExtractor)
+	from pliers.extractors import (merge_results, GoogleVisionAPIFaceExtractor)
 
 	segments = ['segment1.mp4', 'segment2.mp4', 'segment3.mp4']
 	segments = [VideoStim(s) for s in segments]
