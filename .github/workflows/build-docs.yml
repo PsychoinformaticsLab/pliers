@@ -29,9 +29,12 @@ jobs:
         cd docs
         pip install -r requirements.txt
         /home/runner/.local/bin/sphinx-build -b html . _build
+        pwd
     - name: Commit documentation changes
       run: |
         git clone https://github.com/PsychoinformaticsLab/pliers.git --branch gh-pages --single-branch gh-pages
+        pwd
+        ls
         cp -r _build/* gh-pages/
         cd gh-pages
         git config --local user.email "action@github.com"
