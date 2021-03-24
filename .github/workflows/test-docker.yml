@@ -64,6 +64,10 @@ jobs:
         load: true
         tags: |
           ${{ env.TEST_IMG }}
+    - 
+      name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      timeout-minutes: 30
     -
       name: run tests
       run: |
