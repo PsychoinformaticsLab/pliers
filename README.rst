@@ -32,8 +32,7 @@ modalities.
 Documentation
 -------------
 
-The official pliers documentation is quite thorough, and contains a
-comprehensive
+The official pliers documentation is comprehensive, and contains a
 `quickstart <http://psychoinformaticslab.github.io/pliers/quickstart.html>`__,
 `user guide <http://psychoinformaticslab.github.io/pliers/>`__ and
 complete `API
