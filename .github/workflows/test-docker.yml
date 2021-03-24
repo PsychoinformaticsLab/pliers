@@ -15,7 +15,7 @@ jobs:
         echo EXEC_IMG=ghcr.io/${repo_owner}/pliersci:ci_exec >> $GITHUB_ENV
         echo BUILDER_IMG=ghcr.io/${repo_owner}/pliersci:ci_build >> $GITHUB_ENV
         echo DOC_IMG=ghcr.io/${repo_owner}/pliersci:ci_docs >> $GITHUB_ENV
-        echo TEST_IMG=ghcr.io/${repo_owner}/pliersci:ci_docs >> $GITHUB_ENV
+        echo TEST_IMG=ghcr.io/${repo_owner}/pliersci:ci_tests >> $GITHUB_ENV
     - 
       name: Checkout
       uses: actions/checkout@v2
@@ -60,7 +60,7 @@ jobs:
         build-args: |
           BUILDKIT_INLINE_CACHE=1
         cache-from: |
-          type=docker,ref=${{ env.EXEC_IMG }}
+          ${{ env.EXEC_IMG }}
         load: true
         tags: |
           ${{ env.TEST_IMG }}
