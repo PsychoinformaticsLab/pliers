@@ -68,9 +68,13 @@ your stims explicitly rather than passing in filenames (i.e.,
 Docker image
 ^^^^^^^^^^^^
 
-You may also use the provided ``Dockerfile`` to build a complete Docker
-image which fulfills all the optional dependencies. Follow `these
-instructions <https://github.com/PsychoinformaticsLab/pliers/blob/master/docker/README.md>`__.
+You may also use the provided Docker image which fulfills all the optional dependencies.
+
+:: 
+
+   docker run -p 8888:8888 ghcr.io/psychoinformaticslab/pliers:unstable
+
+Follow `these instructions <http://psychoinformaticslab.github.io/pliers/installation.html#docker>`__.
 
 API Keys
 ^^^^^^^^
