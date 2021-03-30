@@ -61,6 +61,7 @@ jobs:
           BUILDKIT_INLINE_CACHE=1
         cache-from: |
           ${{ env.EXEC_IMG }}
+          ${{ env.BUILDER_IMG }}
         load: true
         tags: |
           ${{ env.TEST_IMG }}
@@ -71,7 +72,7 @@ jobs:
           --memory-reservation="5g" \
           --memory="7g" \
           --memory-swap="10g" \
-          ${TEST_IMG}
+          ${{ env.TEST_IMG }}
     -
       name: Push to registry (if not pull request)
       env:
