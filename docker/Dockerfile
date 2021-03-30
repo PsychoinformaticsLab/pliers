@@ -59,6 +59,7 @@ COPY --from=builder --chown=pliers /root/pliers_data /home/pliers/pliers_data
 ENV PATH="/opt/venv/bin:$PATH"
 USER pliers
 WORKDIR /work
+CMD ["jupyter", "notebook", "--no-browser", "--ip", "0.0.0.0"]
 LABEL org.opencontainers.image.source=https://github.com/PsychoinformaticsLab/pliers
 
 FROM executable as docs
