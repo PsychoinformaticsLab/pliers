@@ -74,6 +74,7 @@ If you want to build your own pliers docker image, you will need to clone the pl
 and use ``docker build``
 
 ::
+
     git clone https://github.com/psychoinformaticslab/pliers.git
     docker build --target executable -t pliers:dev -f ./pliers/docker/Dockerfile ./pliers
 
