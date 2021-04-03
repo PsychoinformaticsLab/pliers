@@ -11,8 +11,8 @@ jobs:
       name: remove all docker images
       run: |
         docker rmi $(docker images -a -q)
-        rm -rf /usr/share/dotnet
-        rm -rf /usr/local/lib/android
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
     - 
       name: Set environment variables
       run: |
