@@ -17,18 +17,16 @@ jobs:
         echo DOC_IMG=ghcr.io/${repo_owner}/pliersci:ci_docs >> $GITHUB_ENV
         echo TEST_IMG=ghcr.io/${repo_owner}/pliersci:ci_tests >> $GITHUB_ENV
     - 
-      name: Maximize build space
-      uses: easimon/maximize-build-space@master
-      with:
-        root-reserve-mb: 512
-        swap-size-mb: 1024
-        remove-dotnet: 'true'
-    - 
       name: Checkout
       uses: actions/checkout@v2
     -
       name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
+    - 
+      name: run df -h and docker images
+      run: |
+        df -h
+        docker images
     - 
       name: Build the base image
       uses: docker/build-push-action@v2
@@ -42,6 +40,11 @@ jobs:
           type=registry,ref=${{ env.BUILDER_IMG }}
         load: true
         tags: ${{ env.BUILDER_IMG }}
+    - 
+      name: run df -h and docker images
+      run: |
+        df -h
+        docker images
     - 
       name: Build executable image
       uses: docker/build-push-action@v2
@@ -58,6 +61,15 @@ jobs:
           ${{ env.EXEC_IMG }}
           ${{ env.UNSTABLE_IMG }}
     - 
+      name: run df -h and docker images
+      run: |
+        df -h
+        docker images
+    - 
+      name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      timeout-minutes: 30
+    - 
       name: Build testing image
       uses: docker/build-push-action@v2
       with:
@@ -73,17 +85,14 @@ jobs:
         tags: |
           ${{ env.TEST_IMG }}
     - 
-      name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
-      timeout-minutes: 30
+      name: run df -h and docker images
+      run: |
+        df -h
+        docker images
     -
       name: Run tests
       run: |
-        docker run \
-          --memory-reservation="5g" \
-          --memory="7g" \
-          --memory-swap="10g" \
-          ${{ env.TEST_IMG }}
+        docker run ${{ env.TEST_IMG }}
     -
       name: Push to registry (if not pull request)
       env:
