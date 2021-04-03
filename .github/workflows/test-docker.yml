@@ -8,6 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - 
+      name: remove all docker images
+      run: |
+        docker rmi $(docker images -a -q)
+    - 
       name: Set environment variables
       run: |
         repo_owner=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')
