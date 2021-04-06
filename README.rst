@@ -43,6 +43,9 @@ The official pliers documentation is comprehensive, and contains a
 `user guide <http://psychoinformaticslab.github.io/pliers/>`__ and `API
 Reference <http://psychoinformaticslab.github.io/pliers/reference.html>`__.
 
+There is also a `tutorial <http://naturalistic-data.org/features/notebooks/Pliers_Tutorial.html>`__
+as a part of a `course about naturalistic data <http://naturalistic-data.org/intro>`__.
+
 Installation
 ------------
 
