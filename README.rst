@@ -4,6 +4,12 @@
 |PyPI version fury.io| |pytest| |Coverage Status|
 |DOI:10.1145/3097983.3098075|
 
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/4mQjtyQPu_c" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+
 Pliers is a Python package for automated extraction of features from
 multimodal stimuli. It provides a unified, standardized interface to
 dozens of different feature extraction tools and services--including
