@@ -1,9 +1,9 @@
 from setuptools import setup, find_packages
 import os
 
-extra_setuptools_args = dict(
-    tests_require=['pytest']
-)
+def read_requirements(req):
+    with open(req) as f:
+        return f.read().splitlines()
 
 thispath, _ = os.path.split(__file__)
 
@@ -19,19 +19,7 @@ setup(
     maintainer='Tal Yarkoni',
     maintainer_email='tyarkoni@gmail.com',
     url='http://github.com/psychoinformaticslab/pliers',
-    install_requires=[
-        'imageio>=2.3',
-        'moviepy>=0.2',
-        'nltk>=3.0',
-        'numpy>=1.13',
-        'pandas>=0.24',
-        'pillow',
-        'psutil',
-        'python-magic',
-        'requests',
-        'scipy>=0.13',
-        'tqdm'
-    ],
+    install_requires=read_requirements(os.path.join(thispath, "requirements.txt")),
     packages=find_packages(exclude=['pliers/tests']),
     license='MIT',
     package_data={'pliers': ['datasets/*'],
@@ -40,42 +28,11 @@ setup(
     zip_safe=False,
     download_url='https://github.com/psychoinformaticslab/pliers/archive/%s.tar.gz' %
     __version__,
-    **extra_setuptools_args,
     extras_require={
-        'all': [
-            'clarifai',
-            'duecredit',
-            'face_recognition',
-            'gensim',
-            'google-api-python-client',
-            'google-compute-engine',
-            'librosa>=0.6.3',
-            'numba<=0.48',
-            'matplotlib',
-            'opencv-python',
-            'openpyxl',
-            'pathos',
-            'pygraphviz',
-            'pysrt',
-            'pytesseract',
-            'python-twitter',
-            'rev_ai',
-            'scikit-learn',
-            'seaborn',
-            'spacy',
-            'SpeechRecognition>=3.6.0',
-            'tensorflow>=2.0.0',
-            'torch',
-            'transformers',
-            'tensorflow-hub',
-            'tensorflow_text',
-            'xlrd'
-        ],
-        'docs': [
-            'sphinx-rtd-theme',
-            'sphinx-gallery',
-        ],
+        'all': read_requirements(os.path.join(thispath, "optional-dependencies.txt")),
+        'docs': read_requirements(os.path.join(thispath, "docs", "requirements.txt")),
         'tests': [
+            'pytest',
             'coveralls',
             'pytest-cov',
             'pytest-forked',
