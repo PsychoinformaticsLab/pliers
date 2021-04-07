@@ -5,11 +5,6 @@
 |DOI:10.1145/3097983.3098075|
 
 
-.. raw:: html
-
-   <iframe width="560" height="315" src="https://www.youtube.com/embed/4mQjtyQPu_c" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
-
 Pliers is a Python package for automated extraction of features from
 multimodal stimuli. It provides a unified, standardized interface to
 dozens of different feature extraction tools and services--including
@@ -43,7 +38,18 @@ The official pliers documentation is comprehensive, and contains a
 `user guide <http://psychoinformaticslab.github.io/pliers/>`__ and `API
 Reference <http://psychoinformaticslab.github.io/pliers/reference.html>`__.
 
-There is also a `tutorial <http://naturalistic-data.org/features/notebooks/Pliers_Tutorial.html>`__
+Pliers overview (with application to naturalistic fMRI)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Pliers is a general purpose tool, this is just one domain where it's useful.
+
+.. raw:: html
+
+   <iframe width="560" height="315" src="https://www.youtube.com/embed/4mQjtyQPu_c" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+`Tutorial Video <https://www.youtube.com/watch?v=4mQjtyQPu_c>`__
+
+The above video is from a `tutorial <http://naturalistic-data.org/features/notebooks/Pliers_Tutorial.html>`__
 as a part of a `course about naturalistic data <http://naturalistic-data.org/intro>`__.
 
 Installation
