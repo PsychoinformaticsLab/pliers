@@ -1,4 +1,5 @@
 sphinx>=3.3
+pytest
 sphinx-autodoc-typehints
 sphinx-argparse
 ipywidgets
