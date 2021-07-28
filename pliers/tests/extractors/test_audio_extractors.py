@@ -430,18 +430,26 @@ def test_audioset_extractor(hop_size, top_n, target_sr):
 
 def test_mfcc_energy_extractor():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
-    ext = MFCCEnergyExtractor()
+    ext = MFCCEnergyExtractor(register='low')
     data = ext.transform(audio)._data
 
-    assert data['low'].shape  == (611, 48)
-    assert data['high'].shape == (611, 48)
-    assert np.isclose(np.sum(data['low'][0]),246.74509)
-    assert np.isclose(np.sum(data['high'][100]),198.20714)
+    assert data['energy'].shape  == (611, 48)
+    assert np.isclose(np.sum(data['energy'][0]),246.74509)
+    
+    ext = MFCCEnergyExtractor(register='high')
+    data = ext.transform(audio)._data
+    assert data['energy'].shape == (611, 48)
+    assert np.isclose(np.sum(data['energy'][100]),198.20714)
 
-    ext2 = MFCCEnergyExtractor(n_mfcc=64, n_coefs=8, hop_length=512)
+    ext2 = MFCCEnergyExtractor(n_mfcc=64, n_coefs=8, hop_length=512, 
+                               register='low')
     data = ext2.transform(audio)._data
 
-    assert data['low'].shape  == (1221, 64)
-    assert data['high'].shape == (1221, 64)
-    assert np.isclose(np.sum(data['low'][650]),339.96500)
-    assert np.isclose(np.sum(data['high'][601]),143.52367)
+    assert data['energy'].shape  == (1221, 64)
+    assert np.isclose(np.sum(data['energy'][650]),339.96500)
+
+    ext2 = MFCCEnergyExtractor(n_mfcc=64, n_coefs=8, hop_length=512, 
+                               register='high')
+    data = ext2.transform(audio)._data 
+    assert data['energy'].shape == (1221, 64)
+    assert np.isclose(np.sum(data['energy'][601]),143.52367)
