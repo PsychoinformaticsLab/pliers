@@ -627,7 +627,7 @@ class MFCCEnergyExtractor(MFCCExtractor):
 
     Args:
     n_mfcc (int): specifies the number of MFCC to extract
-    n_coefs(int): cepstrum coefficients to keep in the low quefrency spectrum
+    n_coefs(int): cepstrum coefficients to keep in the high/low quefrency spectrum
     hop_length (int): hop length in number of samples
     librosa_kwargs (optional): Optional named arguments to pass to librosa
     '''
@@ -658,4 +658,4 @@ class MFCCEnergyExtractor(MFCCExtractor):
         return subset_mfs.T
 
     def get_feature_names(self):
-        return ['energy']
+        return ['mfcc_energy_%d' % i for i in range(self.n_mfcc)]
