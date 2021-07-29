@@ -271,7 +271,7 @@ def test_remote_stims():
 
     url = 'https://archive.org/download/999WavFiles/TANKEN.WAV'
     audio = AudioStim(url=url)
-    assert round(audio.duration) == 1
+    assert round(audio.duration) == 25
 
     url = 'https://archive.org/download/NIX-C-1987-11903/1987_11903L.jpg'
     image = ImageStim(url=url)
