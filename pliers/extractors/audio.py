@@ -647,7 +647,9 @@ class MFCCEnergyExtractor(MFCCExtractor):
     def _get_values(self,stim):
         vals = super()._get_values(stim)
         subset = vals[:self.n_coefs] if self.direction == 'low' \
-            else vals[(self.n_mfcc-self.n_coefs):]
+            else vals[self.n_coefs:]
+            
+        assert 0
         subset_mfs = fft.dct(np.transpose(subset), 
             type=2, 
             n=self.n_mfcc, 
