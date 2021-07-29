@@ -405,8 +405,8 @@ class SpaCyExtractor(TextExtractor):
 
 
 class BertExtractor(ComplexTextExtractor):
-    ''' Returns encodings from the last hidden layer of a Bert or Bert-derived
-    model (ALBERT, DistilBERT, RoBERTa, CamemBERT). Excludes special tokens.
+    ''' Returns encodings from the last hidden layer of BERT or similar
+    models (ALBERT, DistilBERT, RoBERTa, CamemBERT). Excludes special tokens.
     Base class for other Bert extractors.
     Args:
         pretrained_model (str): A string specifying which transformer
@@ -454,7 +454,7 @@ class BertExtractor(ComplexTextExtractor):
         self.tokenizer_type = tokenizer
         self.model_class = model_class
         self.framework = framework
-        self.return_input=return_input
+        self.return_input = return_input
         self.model_kwargs = model_kwargs if model_kwargs else {}
         self.tokenizer_kwargs = tokenizer_kwargs if tokenizer_kwargs else {}
         model = model_class if self.framework == 'pt' else 'TF' + model_class
@@ -494,7 +494,6 @@ class BertExtractor(ComplexTextExtractor):
             then postprocesses the output '''
         wds, ons, dur, tok, idx = self._preprocess(stims)
         preds = self.model(idx)
-        preds = [p.detach() if self.framework == 'pt' else p for p in preds]
         data, feat, ons, dur = self._postprocess(stims, preds, tok, wds, ons, dur)
         return ExtractorResult(data, stims, self, features=feat, onsets=ons, 
                                durations=dur)
@@ -506,7 +505,10 @@ class BertExtractor(ComplexTextExtractor):
             and durations and input. Here, returns token-level encodings 
             (excluding special tokens).
         '''
-        out = preds[0][:, 1:-1, :].numpy().squeeze()
+        out = preds.last_hidden_state[:, 1:-1, :]
+        if self.framework == 'pt':
+            out = out.detach() 
+        out = out.numpy().squeeze()
         data = [out.tolist()]
         feat = ['encoding']
         if self.return_input:
@@ -514,15 +516,15 @@ class BertExtractor(ComplexTextExtractor):
             feat += ['token', 'word']
         return data, feat, ons, dur
     
-    def _to_df(self, result, include_attributes=True):
+    def _to_df(self, result):
         res_df = pd.DataFrame(dict(zip(result.features, result._data)))
         res_df['object_id'] = range(res_df.shape[0])
         return res_df
 
 
 class BertSequenceEncodingExtractor(BertExtractor):
-    ''' Extract contextualized encodings for words or sequences using
-        pretrained BertModel.
+    ''' Extract contextualized sequence encodings using pretrained BERT
+        (or similar models, e.g. DistilBERT).
     Args:
         pretrained_model (str): A string specifying which transformer
             model to use. Can be any pretrained BERT or BERT-derived (ALBERT, 
@@ -590,8 +592,6 @@ class BertSequenceEncodingExtractor(BertExtractor):
             tokenizer_kwargs=tokenizer_kwargs)
 
     def _postprocess(self, stims, preds, tok, wds, ons, dur):
-        preds = [p.numpy().squeeze() for p in preds]
-        self.preds = preds
         try: 
             dur = ons[-1] + dur[-1] - ons[0]
         except:
@@ -599,14 +599,20 @@ class BertSequenceEncodingExtractor(BertExtractor):
         ons = ons[0]
         if self.pooling:
             pool_func = getattr(np, self.pooling)
-            out = pool_func(preds[0][1:-1, :], axis=0)
+            p = preds.last_hidden_state[0, 1:-1, :]
+            if self.framework == 'pt':
+                p = p.detach()
+            out = pool_func(p.numpy().squeeze(), axis=0)
         elif self.return_special:
             if self.return_special == '[CLS]':
-                out = preds[0][0,:] 
+                out = preds.last_hidden_state[:,0,:]
             elif self.return_special == '[SEP]':
-                out = preds[0][1,:]
+                out = preds.last_hidden_state[:,-1,:]
             else:
-                out = preds[1]
+                out = preds.pooler_output
+            if self.framework == 'pt':
+                out = out.detach()
+            out = out.numpy().squeeze()
         data = [[out.tolist()]]
         feat = ['encoding']
         if self.return_input:
@@ -616,7 +622,8 @@ class BertSequenceEncodingExtractor(BertExtractor):
 
 
 class BertLMExtractor(BertExtractor):
-    ''' Returns masked words predictions for BERT (or BERT-derived) models.
+    ''' Returns masked words predictions from BERT (or similar, e.g. 
+        DistilBERT) models.
     Args:
         pretrained_model (str): A string specifying which transformer
             model to use. Can be any pretrained BERT or BERT-derived (ALBERT, 
@@ -719,7 +726,10 @@ class BertLMExtractor(BertExtractor):
         return mwds
 
     def _postprocess(self, stims, preds, tok, wds, ons, dur):
-        preds = preds[0].numpy()[:,1:-1,:]
+        if self.framework == 'pt':
+            preds = preds.logits[:,1:-1,:].detach().numpy()
+        else:
+            preds = preds.logits[:,1:-1,:].numpy()
         if self.return_softmax:
             preds = scipy.special.softmax(preds, axis=-1)
         out_idx = preds[0,self.mask_pos,:].argsort()[::-1]
@@ -758,8 +768,8 @@ class BertLMExtractor(BertExtractor):
 
     
 class BertSentimentExtractor(BertExtractor):
-    ''' Extracts sentiment for sequences using Bert or Bert-derived models
-        fine-tuned for sentiment classification.
+    ''' Extracts sentiment for sequences using BERT (or similar, e.g. 
+        DistilBERT) models fine-tuned for sentiment classification.
     Args:
         pretrained_model (str): A string specifying which transformer
             model to use (must be one fine-tuned for sentiment classification)
@@ -796,7 +806,10 @@ class BertSentimentExtractor(BertExtractor):
                 model_kwargs=model_kwargs, tokenizer_kwargs=tokenizer_kwargs)
 
     def _postprocess(self, stims, preds, tok, wds, ons, dur):
-        data = preds[0].numpy().squeeze()
+        data = preds.logits
+        if self.framework == 'pt':
+            data = data.detach()
+        data = data.numpy().squeeze()
         if self.return_softmax:
             data = scipy.special.softmax(data) 
         data = [listify(d) for d in data.tolist()]

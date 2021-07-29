@@ -9,6 +9,7 @@ librosa>=0.6.3
 numba<=0.48
 matplotlib
 opencv-python
+openpyxl
 pathos
 pygraphviz
 pysrt
@@ -18,8 +19,10 @@ scikit-learn
 seaborn
 spacy
 SpeechRecognition>=3.6.0
-tensorflow>=1.0.0
+tensorflow>=2.0.0
 torch
 transformers
 xlrd
 rev_ai
+tensorflow-hub
+tensorflow_text

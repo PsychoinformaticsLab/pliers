@@ -4,7 +4,7 @@ import json
 import numpy as np
 import pytest
 
-from pliers.tests.utils import (get_test_data_path, DummyExtractor, 
+from pliers.tests.utils import (get_test_data_path, DummyExtractor,
                                 ClashingFeatureExtractor)
 from pliers.extractors import (LengthExtractor,
                                BrightnessExtractor,
@@ -16,8 +16,10 @@ from pliers.support.download import download_nltk_data
 from pliers.extractors.base import ExtractorResult, merge_results
 from pliers import config
 
-TEXT_DIR = join(get_test_data_path(), 'text')
+cache_default = config.get_option('cache_transformers')
+config.set_option('cache_transformers', True)
 
+TEXT_DIR = join(get_test_data_path(), 'text')
 
 @pytest.fixture(scope='module')
 def get_nltk():
@@ -158,7 +160,7 @@ def test_merge_extractor_results():
             df_log_attr = json.loads(df[idx_str][0])
             for l in logattr[de.name]:
                 assert l in df_log_attr.keys()
-    
+
     df = merge_results(results, format='long', extractor_params=True)
     for idx, row in df.iterrows():
         de_name = row['feature'].split('#')[0]

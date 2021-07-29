@@ -2,7 +2,7 @@ python-magic
 numpy>=1.13
 nltk>=3.0
 moviepy>=0.2
-pandas~=0.25
+pandas>=0.24
 pillow
 requests
 scipy>=0.13

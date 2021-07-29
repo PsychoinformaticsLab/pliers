@@ -66,7 +66,7 @@ class STFTAudioExtractor(AudioExtractor):
         framesamp = int(self.frame_size * stim.sampling_rate)
         hopsamp = int(self.hop_size * stim.sampling_rate)
         w = np.hanning(framesamp)
-        X = np.array([fft(w * x[i:(i + framesamp)])
+        X = np.array([fft.fft(w * x[i:(i + framesamp)])
                       for i in range(0, len(x) - framesamp, hopsamp)])
         nyquist_lim = int(X.shape[1] // 2)
         X = np.log(X[:, :nyquist_lim])

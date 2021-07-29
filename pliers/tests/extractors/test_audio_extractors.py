@@ -371,6 +371,7 @@ def test_percussion_extractor():
     assert np.isclose(df['onset'][29], 1.346757)
     assert np.isclose(df['duration'][29], 0.04644)
     assert np.isclose(df['percussive'][29], 0.004497, rtol=1e-4)
+<<<<<<< HEAD
 
 
 @pytest.mark.parametrize('hop_size', [0.1, 1])
@@ -453,3 +454,5 @@ def test_mfcc_energy_extractor():
     data = ext2.transform(audio)._data 
     assert data['energy'].shape == (1221, 64)
     assert np.isclose(np.sum(data['energy'][601]),143.52367)
+=======
+>>>>>>> master

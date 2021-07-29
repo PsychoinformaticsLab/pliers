@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from .utils import get_test_data_path
+from pliers.tests.utils import get_test_data_path
 from pliers.stimuli import (VideoStim, VideoFrameStim, ComplexTextStim,
                             AudioStim, ImageStim, CompoundStim,
                             TranscribedAudioCompoundStim,
@@ -273,11 +273,11 @@ def test_remote_stims():
     audio = AudioStim(url=url)
     assert round(audio.duration) == 3
 
-    url = 'https://www.whitehouse.gov/sites/whitehouse.gov/files/images/twitter_cards_potus.jpg'
+    url = 'https://archive.org/download/NIX-C-1987-11903/1987_11903L.jpg'
     image = ImageStim(url=url)
-    assert image.data.shape == (240, 240, 3)
+    assert image.data.shape == (288, 360, 3)
 
-    url = 'https://github.com/tyarkoni/pliers/blob/master/README.md'
+    url = 'https://github.com/psychoinformaticslab/pliers/blob/master/README.rst'
     text = TextStim(url=url)
     assert len(text.text) > 1
 
@@ -289,7 +289,7 @@ def test_get_filename():
         assert exists(filename)
     assert not exists(filename)
 
-    url = 'https://via.placeholder.com/350x150'
+    url = 'https://archive.org/download/NIX-C-1987-11903/1987_11903L.jpg'
     image = ImageStim(url=url)
     with image.get_filename() as filename:
         assert exists(filename)
