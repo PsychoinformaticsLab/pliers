@@ -29,7 +29,8 @@ from pliers.extractors import (LibrosaFeatureExtractor,
                                BeatTrackExtractor,
                                HarmonicExtractor,
                                PercussiveExtractor,
-                               AudiosetLabelExtractor)
+                               AudiosetLabelExtractor,
+                               MFCCEnergyExtractor)
 from pliers.stimuli import (ComplexTextStim, AudioStim,
                             TranscribedAudioCompoundStim)
 from pliers.filters import AudioResamplingFilter
@@ -166,7 +167,7 @@ def test_chroma_extractors():
     assert df.shape == (2441, 10)
     assert np.isclose(df['onset'][1], 0.02322)
     assert np.isclose(df['duration'][0], 0.02322)
-    assert np.isclose(df['chroma_5'][0], 0.86870)
+    assert np.isclose(df['chroma_5'][0], 0.42068)
 
     ext = ChromaCQTExtractor()
     df = ext.transform(audio).to_df()
@@ -370,3 +371,85 @@ def test_percussion_extractor():
     assert np.isclose(df['onset'][29], 1.346757)
     assert np.isclose(df['duration'][29], 0.04644)
     assert np.isclose(df['percussive'][29], 0.004497, rtol=1e-4)
+
+
+@pytest.mark.parametrize('hop_size', [0.1, 1])
+@pytest.mark.parametrize('top_n', [5, 10])
+@pytest.mark.parametrize('target_sr', [22000, 14000])
+def test_audioset_extractor(hop_size, top_n, target_sr):
+    verify_dependencies(['tensorflow'])
+
+    def compute_expected_length(stim, ext):
+        stft_par = ext.params.STFT_WINDOW_SECONDS - ext.params.STFT_HOP_SECONDS
+        tot_window = ext.params.PATCH_WINDOW_SECONDS + stft_par
+        ons = np.arange(start=0, stop=stim.duration - tot_window, step=hop_size)
+        return len(ons)
+
+    audio_stim = AudioStim(join(AUDIO_DIR, 'crowd.mp3'))
+    audio_filter = AudioResamplingFilter(target_sr=target_sr)
+    audio_resampled = audio_filter.transform(audio_stim)
+
+    # test with defaults and 44100 stimulus
+    ext = AudiosetLabelExtractor(hop_size=hop_size)
+    r_orig = ext.transform(audio_stim).to_df()
+    assert r_orig.shape[0] == compute_expected_length(audio_stim, ext)
+    assert r_orig.shape[1] == 525
+    assert np.argmax(r_orig.to_numpy()[:,4:].mean(axis=0)) == 0
+    assert r_orig['duration'][0] == .975
+    assert all([np.isclose(r_orig['onset'][i] - r_orig['onset'][i-1], hop_size)
+                for i in range(1,r_orig.shape[0])])
+
+    # test resampled audio length and errors
+    if target_sr >= 14500:
+        r_resampled = ext.transform(audio_resampled).to_df()
+        assert r_orig.shape[0] == r_resampled.shape[0]
+    else:
+        with pytest.raises(ValueError) as sr_error:
+            ext.transform(audio_resampled)
+        assert all([substr in str(sr_error.value) 
+                    for substr in ['Upsample' , str(target_sr)]])
+
+    # test top_n option
+    ext_top_n = AudiosetLabelExtractor(top_n=top_n)
+    r_top_n = ext_top_n.transform(audio_stim).to_df()
+    assert r_top_n.shape[1] == ext_top_n.top_n + 4
+    assert np.argmax(r_top_n.to_numpy()[:,4:].mean(axis=0)) == 0
+
+    # test label subset
+    labels = ['Speech', 'Silence', 'Harmonic', 'Bark', 'Music', 'Bell', 
+              'Steam', 'Rain']
+    ext_labels_only = AudiosetLabelExtractor(labels=labels)
+    r_labels_only = ext_labels_only.transform(audio_stim).to_df()
+    assert r_labels_only.shape[1] == len(labels) + 4
+    
+    # test top_n/labels error
+    with pytest.raises(ValueError) as err:
+        AudiosetLabelExtractor(top_n=10, labels=labels)
+    assert 'Top_n and labels are mutually exclusive' in str(err.value)
+
+
+def test_mfcc_energy_extractor():
+    audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
+    ext = MFCCEnergyExtractor(register='low')
+    data = ext.transform(audio)._data
+
+    assert data['energy'].shape  == (611, 48)
+    assert np.isclose(np.sum(data['energy'][0]),246.74509)
+    
+    ext = MFCCEnergyExtractor(register='high')
+    data = ext.transform(audio)._data
+    assert data['energy'].shape == (611, 48)
+    assert np.isclose(np.sum(data['energy'][100]),198.20714)
+
+    ext2 = MFCCEnergyExtractor(n_mfcc=64, n_coefs=8, hop_length=512, 
+                               register='low')
+    data = ext2.transform(audio)._data
+
+    assert data['energy'].shape  == (1221, 64)
+    assert np.isclose(np.sum(data['energy'][650]),339.96500)
+
+    ext2 = MFCCEnergyExtractor(n_mfcc=64, n_coefs=8, hop_length=512, 
+                               register='high')
+    data = ext2.transform(audio)._data 
+    assert data['energy'].shape == (1221, 64)
+    assert np.isclose(np.sum(data['energy'][601]),143.52367)
