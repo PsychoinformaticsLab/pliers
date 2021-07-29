@@ -167,7 +167,7 @@ def test_chroma_extractors():
     assert df.shape == (2441, 10)
     assert np.isclose(df['onset'][1], 0.02322)
     assert np.isclose(df['duration'][0], 0.02322)
-    assert np.isclose(df['chroma_5'][0], 0.42068)
+    assert np.isclose(df['chroma_5'][0], 0.42069)
 
     ext = ChromaCQTExtractor()
     df = ext.transform(audio).to_df()
