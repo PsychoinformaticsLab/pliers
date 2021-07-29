@@ -29,8 +29,13 @@ from pliers.extractors import (LibrosaFeatureExtractor,
                                BeatTrackExtractor,
                                HarmonicExtractor,
                                PercussiveExtractor,
+<<<<<<< HEAD
                                AudiosetLabelExtractor,
                                MFCCEnergyExtractor)
+=======
+                               AudiosetLabelExtractor
+                               )
+>>>>>>> origin/master
 from pliers.stimuli import (ComplexTextStim, AudioStim,
                             TranscribedAudioCompoundStim)
 from pliers.filters import AudioResamplingFilter
@@ -167,7 +172,7 @@ def test_chroma_extractors():
     assert df.shape == (2441, 10)
     assert np.isclose(df['onset'][1], 0.02322)
     assert np.isclose(df['duration'][0], 0.02322)
-    assert np.isclose(df['chroma_5'][0], 0.86870)
+    assert np.isclose(df['chroma_5'][0], 0.42069)
 
     ext = ChromaCQTExtractor()
     df = ext.transform(audio).to_df()
@@ -425,7 +430,6 @@ def test_audioset_extractor(hop_size, top_n, target_sr):
     with pytest.raises(ValueError) as err:
         AudiosetLabelExtractor(top_n=10, labels=labels)
     assert 'Top_n and labels are mutually exclusive' in str(err.value)
-
 
 def test_mfcc_energy_extractor():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
