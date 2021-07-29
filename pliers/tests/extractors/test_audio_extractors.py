@@ -29,8 +29,8 @@ from pliers.extractors import (LibrosaFeatureExtractor,
                                BeatTrackExtractor,
                                HarmonicExtractor,
                                PercussiveExtractor,
-                               AudiosetLabelExtractor,
-                               MFCCEnergyExtractor)
+                               AudiosetLabelExtractor
+                               )
 from pliers.stimuli import (ComplexTextStim, AudioStim,
                             TranscribedAudioCompoundStim)
 from pliers.filters import AudioResamplingFilter
@@ -426,30 +426,3 @@ def test_audioset_extractor(hop_size, top_n, target_sr):
     with pytest.raises(ValueError) as err:
         AudiosetLabelExtractor(top_n=10, labels=labels)
     assert 'Top_n and labels are mutually exclusive' in str(err.value)
-
-
-def test_mfcc_energy_extractor():
-    audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
-    ext = MFCCEnergyExtractor(register='low')
-    data = ext.transform(audio)._data
-
-    assert data['energy'].shape  == (611, 48)
-    assert np.isclose(np.sum(data['energy'][0]),246.74509)
-    
-    ext = MFCCEnergyExtractor(register='high')
-    data = ext.transform(audio)._data
-    assert data['energy'].shape == (611, 48)
-    assert np.isclose(np.sum(data['energy'][100]),198.20714)
-
-    ext2 = MFCCEnergyExtractor(n_mfcc=64, n_coefs=8, hop_length=512, 
-                               register='low')
-    data = ext2.transform(audio)._data
-
-    assert data['energy'].shape  == (1221, 64)
-    assert np.isclose(np.sum(data['energy'][650]),339.96500)
-
-    ext2 = MFCCEnergyExtractor(n_mfcc=64, n_coefs=8, hop_length=512, 
-                               register='high')
-    data = ext2.transform(audio)._data 
-    assert data['energy'].shape == (1221, 64)
-    assert np.isclose(np.sum(data['energy'][601]),143.52367)
