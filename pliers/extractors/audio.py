@@ -632,7 +632,7 @@ class MFCCEnergyExtractor(MFCCExtractor):
     librosa_kwargs (optional): Optional named arguments to pass to librosa
     '''
 
-    _log_attributes = ('hop_length', 'n_coefs', 'n_mfcc')
+    _log_attributes = ('hop_length', 'n_coefs', 'n_mfcc', 'direction')
 
     def __init__(self, n_mfcc=48, n_coefs=13, hop_length=1024, 
                  direction='low', **librosa_kwargs):
@@ -648,11 +648,11 @@ class MFCCEnergyExtractor(MFCCExtractor):
         vals = super()._get_values(stim)
         subset = vals[:self.n_coefs] if self.direction == 'low' \
             else vals[self.n_coefs:]
-            
+                        
         subset_mfs = fft.dct(np.transpose(subset), 
             type=2, 
             n=self.n_mfcc, 
-            axis=- 1, 
+            axis=-1, 
             norm='ortho', 
             overwrite_x=False)
         subset_mfs = 10 ** (subset_mfs / 20.)
