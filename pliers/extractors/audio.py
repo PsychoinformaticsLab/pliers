@@ -632,12 +632,13 @@ class MFCCEnergyExtractor(MFCCExtractor):
     librosa_kwargs (optional): Optional named arguments to pass to librosa
     '''
 
-    _log_attributes = ('hop_length', 'n_coefs', 'n_mfcc', 'direction')
+    _log_attributes = ('hop_length', 'n_coefs', 'n_mfcc', 'direction', 'n_mels')
 
     def __init__(self, n_mfcc=48, n_coefs=13, hop_length=1024, 
-                 direction='low', **librosa_kwargs):
+                 n_mels=128, direction='low', **librosa_kwargs):
         assert direction in ['low', 'high']
         self.n_mfcc = n_mfcc
+        self.n_mels = n_mels
         self.n_coefs = n_coefs
         self.hop_length = hop_length
         self.librosa_kwargs = librosa_kwargs
@@ -646,17 +647,16 @@ class MFCCEnergyExtractor(MFCCExtractor):
 
     def _get_values(self,stim):
         vals = super()._get_values(stim)
-        subset = vals[:self.n_coefs] if self.direction == 'low' \
-            else vals[self.n_coefs:]
+        if self.direction == 'low':
+            vals[self.n_coefs:] = 0
+        else:
+            vals[:self.n_coefs] = 0
+            
+        
+        mels = librosa.feature.inverse.mfcc_to_mel(
+            vals, n_mels=self.n_mels)
                         
-        subset_mfs = fft.dct(np.transpose(subset), 
-            type=2, 
-            n=self.n_mfcc, 
-            axis=-1, 
-            norm='ortho', 
-            overwrite_x=False)
-        subset_mfs = 10 ** (subset_mfs / 20.)
-        return subset_mfs.T
+        return mels
 
     def get_feature_names(self):
-        return ['mfcc_energy_%d' % i for i in range(self.n_mfcc)]
+        return ['mfcc_energy_%d' % i for i in range(self.n_mels)]

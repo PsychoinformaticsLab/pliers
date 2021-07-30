@@ -29,13 +29,8 @@ from pliers.extractors import (LibrosaFeatureExtractor,
                                BeatTrackExtractor,
                                HarmonicExtractor,
                                PercussiveExtractor,
-<<<<<<< HEAD
                                AudiosetLabelExtractor,
                                MFCCEnergyExtractor)
-=======
-                               AudiosetLabelExtractor
-                               )
->>>>>>> origin/master
 from pliers.stimuli import (ComplexTextStim, AudioStim,
                             TranscribedAudioCompoundStim)
 from pliers.filters import AudioResamplingFilter
