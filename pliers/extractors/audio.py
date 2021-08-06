@@ -632,18 +632,27 @@ class MFCCEnergyExtractor(MFCCExtractor):
     librosa_kwargs (optional): Optional named arguments to pass to librosa
     '''
 
-    _log_attributes = ('hop_length', 'n_coefs', 'n_mfcc', 'direction', 'n_mels')
+    _log_attributes = (
+        'n_mfcc', 'n_coefs', 'hop_length', 'n_mels', 'direction', 
+        'norm','dct_type', 'lifter', 'librosa_kwargs'
+        )
 
     def __init__(self, n_mfcc=48, n_coefs=13, hop_length=1024, 
-                 n_mels=128, direction='low', **librosa_kwargs):
+                 n_mels=128, direction='low', norm='ortho',
+                 dct_type=2, lifter=0, **librosa_kwargs):
         assert direction in ['low', 'high']
         self.n_mfcc = n_mfcc
         self.n_mels = n_mels
         self.n_coefs = n_coefs
         self.hop_length = hop_length
-        self.librosa_kwargs = librosa_kwargs
         self.direction = direction
-        super().__init__(n_mfcc=n_mfcc)
+        self.norm = norm
+        self.dct_type = dct_type
+        self.lifter = lifter
+        self.librosa_kwargs = librosa_kwargs
+
+        super().__init__(n_mfcc=n_mfcc, lifter=lifter, dct_type=dct_type,
+                         norm=norm, n_mels=n_mels, **librosa_kwargs)
 
     def _get_values(self,stim):
         vals = super()._get_values(stim)
@@ -654,7 +663,8 @@ class MFCCEnergyExtractor(MFCCExtractor):
             
         
         mels = librosa.feature.inverse.mfcc_to_mel(
-            vals, n_mels=self.n_mels)
+            vals, n_mels=self.n_mels, dct_type=self.dct_type,
+            norm=self.norm, lifter=self.lifter)
                         
         return mels
 
