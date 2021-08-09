@@ -633,19 +633,19 @@ class MFCCEnergyExtractor(MFCCExtractor):
     '''
 
     _log_attributes = (
-        'n_mfcc', 'n_coefs', 'hop_length', 'n_mels', 'direction', 
+        'n_mfcc', 'n_coefs', 'hop_length', 'n_mels', 'register', 
         'norm','dct_type', 'lifter', 'librosa_kwargs'
         )
 
     def __init__(self, n_mfcc=48, n_coefs=13, hop_length=1024, 
-                 n_mels=128, direction='low', norm='ortho',
+                 n_mels=128, register='low', norm='ortho',
                  dct_type=2, lifter=0, **librosa_kwargs):
-        assert direction in ['low', 'high']
+        assert register in ['low', 'high']
         self.n_mfcc = n_mfcc
         self.n_mels = n_mels
         self.n_coefs = n_coefs
         self.hop_length = hop_length
-        self.direction = direction
+        self.register = register
         self.norm = norm
         self.dct_type = dct_type
         self.lifter = lifter
@@ -656,7 +656,7 @@ class MFCCEnergyExtractor(MFCCExtractor):
 
     def _get_values(self,stim):
         vals = super()._get_values(stim)
-        if self.direction == 'low':
+        if self.register == 'low':
             vals[self.n_coefs:] = 0
         else:
             vals[:self.n_coefs] = 0
