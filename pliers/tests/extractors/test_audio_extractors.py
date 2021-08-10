@@ -453,4 +453,4 @@ def test_mfcc_energy_extractor():
                                n_mels=n_mels, register='high')
     data = ext2.transform(audio).data.iloc[:, 4:]
     assert data.shape == (1221, n_mels)
-    assert np.isclose(data.iloc[601].sum(),data.iloc[601].sum())
+    assert np.isclose(data.iloc[601].sum(),210.857157)
