@@ -29,8 +29,8 @@ from pliers.extractors import (LibrosaFeatureExtractor,
                                BeatTrackExtractor,
                                HarmonicExtractor,
                                PercussiveExtractor,
-                               AudiosetLabelExtractor
-                               )
+                               AudiosetLabelExtractor,
+                               MFCCEnergyExtractor)
 from pliers.stimuli import (ComplexTextStim, AudioStim,
                             TranscribedAudioCompoundStim)
 from pliers.filters import AudioResamplingFilter
@@ -372,7 +372,6 @@ def test_percussion_extractor():
     assert np.isclose(df['duration'][29], 0.04644)
     assert np.isclose(df['percussive'][29], 0.004497, rtol=1e-4)
 
-
 @pytest.mark.parametrize('hop_size', [0.1, 1])
 @pytest.mark.parametrize('top_n', [5, 10])
 @pytest.mark.parametrize('target_sr', [22000, 14000])
@@ -426,3 +425,32 @@ def test_audioset_extractor(hop_size, top_n, target_sr):
     with pytest.raises(ValueError) as err:
         AudiosetLabelExtractor(top_n=10, labels=labels)
     assert 'Top_n and labels are mutually exclusive' in str(err.value)
+
+def test_mfcc_energy_extractor():
+    audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
+    n_mels = 48
+
+    ext = MFCCEnergyExtractor(register='low', n_mels=n_mels)
+    data = ext.transform(audio).data.iloc[:, 4:]
+
+    
+    assert data.shape  == (1221, n_mels)
+    assert np.isclose(data.iloc[0].sum(),695.7308991156441)
+    
+    ext = MFCCEnergyExtractor(register='high', n_mels=n_mels)
+    data = ext.transform(audio).data.iloc[:, 4:]
+    assert data.shape == (1221, n_mels)
+    assert np.isclose(data.iloc[100].sum(),107.06728965998656)
+
+    ext2 = MFCCEnergyExtractor(n_mfcc=64, n_coefs=8, hop_length=512, 
+                               n_mels=n_mels, register='low')
+    data = ext2.transform(audio).data.iloc[:, 4:]
+
+    assert data.shape  == (1221, n_mels)
+    assert np.isclose(data.iloc[650].sum(),884.4713338141073)
+
+    ext2 = MFCCEnergyExtractor(n_mfcc=64, n_coefs=8, hop_length=512, 
+                               n_mels=n_mels, register='high')
+    data = ext2.transform(audio).data.iloc[:, 4:]
+    assert data.shape == (1221, n_mels)
+    assert np.isclose(data.iloc[601].sum(),210.857157)
