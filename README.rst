@@ -49,8 +49,8 @@ Pliers is a general purpose tool, this is just one domain where it's useful.
 
 `Tutorial Video <https://www.youtube.com/watch?v=4mQjtyQPu_c>`__
 
-The above video is from a `tutorial <http://naturalistic-data.org/features/notebooks/Pliers_Tutorial.html>`__
-as a part of a `course about naturalistic data <http://naturalistic-data.org/intro>`__.
+The above video is from a `tutorial <https://naturalistic-data.org/content/Pliers_Tutorial.html>`__
+as a part of a `course about naturalistic data <https://naturalistic-data.org/>`__.
 
 Installation
 ------------
