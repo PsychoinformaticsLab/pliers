@@ -158,7 +158,7 @@ class TFHubImageExtractor(TFHubExtractor):
             x = stim.data
 
         if self.rescale_rgb:
-            if tf.dtypes.is_integer(self.input_dtype):
+            if self.input_dtype.dtype.is_integer:
                 logging.warning('Rescaling the input from [0, 255] to [0, 1] and settings '
                                 'input_dtype to an integer type may result in loss of precision.'
                                 'Please, set rescale_rgb to False.')
