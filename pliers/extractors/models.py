@@ -136,6 +136,7 @@ class TFHubImageExtractor(TFHubExtractor):
                  features=None,
                  rescale_rgb=True, 
                  reshape_input=None, 
+                 input_dtype=tf.float32,
                  **kwargs):
         if not reshape_input:
             logging.warning('Note that some models may require (or perform best with) '
@@ -146,6 +147,7 @@ class TFHubImageExtractor(TFHubExtractor):
                             '(height, width, n_channels) to reshape_input')
         self.rescale_rgb = rescale_rgb
         self.reshape_input = reshape_input
+        self.input_dtype = input_dtype
         super().__init__(url_or_path, features, **kwargs)
 
     def _preprocess(self, stim):
@@ -154,10 +156,21 @@ class TFHubImageExtractor(TFHubExtractor):
             x = resizer.transform(stim).data
         else:
             x = stim.data
+
         if self.rescale_rgb:
+            if tf.dtypes.is_integer(self.input_dtype):
+                logging.warning('Rescaling the input from [0, 255] to [0, 1] and settings '
+                                'input_dtype to an integer type may result in loss of precision.'
+                                'Please, set rescale_rgb to False.')
+
             x = x / 255.0
-        x = tf.convert_to_tensor(x, dtype=tf.float32)
+
+        x = tf.convert_to_tensor(x, dtype=self.input_dtype)
         x = tf.expand_dims(x, axis=0)
+
+        if self.transform_inp:
+            return self.transform_inp(x)
+
         return x
 
 
