@@ -3,6 +3,10 @@
 Installing pliers
 =================
 
+
+PIP
+---
+
 The easiest way to install pliers is with pip. For the latest stable release:
 
 ::
@@ -13,10 +17,10 @@ Or, if you want to work on the bleeding edge:
 
 ::
 
-    pip install pliers git+https://github.com/tyarkoni/pliers.git
+    pip install pliers git+https://github.com/psychoinformaticslab/pliers.git
 
 Dependencies
-------------
+^^^^^^^^^^^^
 
 By default, installing pliers with pip will only install third-party libraries that are essential for pliers to function properly. These libraries are listed in requirements.txt. However, because pliers provides interfaces to a large number of feature extraction tools, there are literally dozens of other optional dependencies that may be required depending on 
 what kinds of features you plan to extract (see optional-dependencies.txt). To be on the safe side, you can install all of the optional dependencies with pip:
@@ -32,6 +36,50 @@ Or, if you installed via GitHub clone:
     pip install -r optional-dependencies.txt
 
 Note, however, that some of these Python dependencies have their own (possibly platform-dependent) requirements. Most notably, python-magic requires libmagic (see `here <https://github.com/ahupp/python-magic#dependencies>`_ for installation instructions), and without this, you'll be relegated to loading all your stims explicitly rather than passing in filenames (i.e., :py:`stim = VideoStim('my_video.mp4'`) will work fine, but passing 'my_video.mp4' directly to an |Extractor| will not). Additionally, the Python OpenCV bindings require `OpenCV3 <http://opencv.org/>`_ (which can be a bit more challenging to install)--but relatively few of the feature extractors in pliers currently depend on OpenCV, so you may not need to bother with this. Similarly, the |TesseractConverter| requires the tesseract OCR library, but no other |Transformer| does, so unless you're planning to capture text from images, you're probably safe.
+
+Docker
+------
+
+If you have docker installed on your machine, you can run:
+
+::
+
+    docker run -p 8888:8888 ghcr.io/psychoinformaticslab/pliers:unstable
+
+The above command will open a jupyter notebook you can connect to by copy/pasting the
+url displayed on the terminal with the form ``http://127.0.0.1:8888/?token=<some_token>``
+to your browser.
+The ``unstable`` tag can be replaced with a versioned tag like ``0.4.2``.
+If you wish to publish data/results using pliers, please use a versioned tag.
+Using a versioned tag ensures the image you are using today will be the same
+for all time, whereas the ``unstable`` tag will change periodically as pliers is updated.
+`You can see available versioned tags on github <https://github.com/orgs/PsychoinformaticsLab/packages/container/package/pliers>`__.
+
+If you want to save your work you will need to mount a directory onto the docker image.
+By default, the jupyter notebook opens in the ``/work`` directory, so we will
+mount a directory in the ``/work`` directory:
+
+::
+
+    docker run -v /my/directory:/work -p 8888:8888 ghcr.io/psychoinformaticslab/pliers:unstable
+
+where ``/my/directory`` is replaced with a path to a directory that you want to save.
+
+.. note::
+    If you are using windows, here is the way to specify a directory ``-v 'C:\My Dir\With Spaces:/work'``.
+    Use quotes to surround the entire argument, not just the windows path.
+
+
+If you want to build your own pliers docker image, you will need to clone the pliers repository
+and use ``docker build``
+
+::
+
+    git clone https://github.com/psychoinformaticslab/pliers.git
+    docker build --target executable -t pliers:dev -f ./pliers/docker/Dockerfile ./pliers
+
+The flag ``-t`` specifies the tagged name of the image, which can be any valid docker image name,
+``pliers:dev`` is an example name.
 
 API Keys
 --------
@@ -66,11 +114,11 @@ While installing pliers itself is usually straightforward, setting up some of th
 | MicrosoftAPIFaceExtractor             | `Microsoft Face API <https://azure.microsoft.com/try/cognitive-services/my-apis/>`__                | MICROSOFT\_FACE\_SUBSCRIPTION\_KEY   | API key and                    | 152b067184e2ae03711e6439de124c27      |
 | (and subclasses)                      |                                                                                                     | MICROSOFT\_SUBSCRIPTION\_LOCATION    | registered region              | westus                                |
 +---------------------------------------+-----------------------------------------------------------------------------------------------------+--------------------------------------+--------------------------------+---------------------------------------+
-| IndicoAPIExtractor                    | `Indico.io API <https://indico.io>`__                                                               | INDICO\_APP\_KEY                     | API key                        | 45f9f8a56e4194d3dce858db1e5c3ae4      |
-+---------------------------------------+-----------------------------------------------------------------------------------------------------+--------------------------------------+--------------------------------+---------------------------------------+
 | ClarifaiAPIImageExtractor             | `Clarifai image recognition API <https://clarifai.com>`__                                           | CLARIFAI\_API\_KEY                   | API key                        | 168ed02e137459ead66c3a661be7b784      |
 +---------------------------------------+-----------------------------------------------------------------------------------------------------+--------------------------------------+--------------------------------+---------------------------------------+
 | ClarifaiAPIVideoExtractor             | `Clarifai video tagging API <https://clarifai.com>`__                                               | CLARIFAI\_API\_KEY                   | API key                        | 168ed02e137459ead66c3a661be7b784      |
++---------------------------------------+-----------------------------------------------------------------------------------------------------+--------------------------------------+--------------------------------+---------------------------------------+
+| RevAISpeechAPIConverter               | `Rev.ai speech-to-text API <https://rev.ai>`__                                                      | REVAI\_ACCESS\_TOKEN                 | API key                        | 686n83674ab3989d2f5e4aa0aec9f273      |
 +---------------------------------------+-----------------------------------------------------------------------------------------------------+--------------------------------------+--------------------------------+---------------------------------------+
 
 \* Note that this is not the plaintext e-mail or username for your IBM services account

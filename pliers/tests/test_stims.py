@@ -269,27 +269,27 @@ def test_remote_stims():
     video = VideoStim(url=video_url)
     assert video.fps == 30.0
 
-    url = 'http://www.bobainsworth.com/wav/simpsons/themodyn.wav'
+    url = 'https://archive.org/download/999WavFiles/TANKEN.WAV'
     audio = AudioStim(url=url)
-    assert round(audio.duration) == 3
+    assert round(audio.duration) == 25
 
     url = 'https://archive.org/download/NIX-C-1987-11903/1987_11903L.jpg'
     image = ImageStim(url=url)
     assert image.data.shape == (288, 360, 3)
 
-    url = 'https://github.com/tyarkoni/pliers/blob/master/README.md'
+    url = 'https://github.com/psychoinformaticslab/pliers/blob/master/README.rst'
     text = TextStim(url=url)
     assert len(text.text) > 1
 
 
 def test_get_filename():
-    url = 'http://www.bobainsworth.com/wav/simpsons/themodyn.wav'
+    url = 'https://archive.org/download/999WavFiles/TANKEN.WAV'
     audio = AudioStim(url=url)
     with audio.get_filename() as filename:
         assert exists(filename)
     assert not exists(filename)
 
-    url = 'https://via.placeholder.com/350x150'
+    url = 'https://archive.org/download/NIX-C-1987-11903/1987_11903L.jpg'
     image = ImageStim(url=url)
     with image.get_filename() as filename:
         assert exists(filename)

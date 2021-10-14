@@ -25,7 +25,7 @@ __all__ = [
 
 # TODO: replace with Doi whenever available (Zenodo?)
 due.cite(
-    Url("https://github.com/tyarkoni/pliers"),
+    Url("https://github.com/psychoinformaticslab/pliers"),
     description="A Python package for automated extraction of features from "
                 "multimodal stimuli",
     tags=['reference-implementation'],

@@ -20,9 +20,9 @@ def test_magic_loader():
 def test_magic_loader2():
     text_file = join(get_test_data_path(), 'text', 'sample_text.txt')
     video_url = 'https://archive.org/download/DisneyCastletest/Disney_Castle_512kb.mp4'
-    audio_url = 'http://www.bobainsworth.com/wav/simpsons/themodyn.wav'
+    audio_url = 'https://archive.org/download/999WavFiles/TANKEN.WAV'
     image_url = 'https://archive.org/download/NIX-C-1987-11903/1987_11903L.jpg'
-    text_url = 'https://github.com/tyarkoni/pliers/blob/master/README.md'
+    text_url = 'https://github.com/psychoinformaticslab/pliers/blob/master/README.rst'
     stims = load_stims([text_file, video_url, audio_url, image_url, text_url])
     assert len(stims) == 5
     assert stims[1].fps == 30.0

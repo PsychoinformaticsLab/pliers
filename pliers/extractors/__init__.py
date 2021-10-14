@@ -54,7 +54,9 @@ from .audio import (LibrosaFeatureExtractor,
                     HarmonicExtractor,
                     PercussiveExtractor,
                     AudiosetLabelExtractor, 
-                    FundamentalFrequencyExtractor)
+                    FundamentalFrequencyExtractor,
+                    MFCCEnergyExtractor)
+
 from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
                     VibranceExtractor, FaceRecognitionFaceEncodingsExtractor,
                     FaceRecognitionFaceLandmarksExtractor,
@@ -157,5 +159,6 @@ __all__ = [
     'MetricExtractor',
     'SpectralFlatnessExtractor',
     'OnsetDetectExtractor',
-    'FundamentalFrequencyExtractor'
+    'FundamentalFrequencyExtractor',
+    'MFCCEnergyExtractor'
 ]

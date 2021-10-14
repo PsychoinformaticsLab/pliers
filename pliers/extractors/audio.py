@@ -639,3 +639,55 @@ class AudiosetLabelExtractor(AudioExtractor):
         return ExtractorResult(preds, stim, self, features=labels,
                                onsets=onsets, durations=[dur]*len(onsets),
                                orders=list(range(len(onsets))))
+
+
+
+class MFCCEnergyExtractor(MFCCExtractor):
+    ''' Given a Middle Bound, Extract the Energy from the Low/High Register
+    of Mel-Frequency Ceptral Coefficients.
+
+    Args:
+    n_mfcc (int): specifies the number of MFCC to extract
+    n_coefs(int): cepstrum coefficients to keep in the high/low quefrency spectrum
+    hop_length (int): hop length in number of samples
+    librosa_kwargs (optional): Optional named arguments to pass to librosa
+    '''
+
+    _log_attributes = (
+        'n_mfcc', 'n_coefs', 'hop_length', 'n_mels', 'register', 
+        'norm','dct_type', 'lifter', 'librosa_kwargs'
+        )
+
+    def __init__(self, n_mfcc=48, n_coefs=13, hop_length=1024, 
+                 n_mels=128, register='low', norm='ortho',
+                 dct_type=2, lifter=0, **librosa_kwargs):
+        assert register in ['low', 'high']
+        self.n_mfcc = n_mfcc
+        self.n_mels = n_mels
+        self.n_coefs = n_coefs
+        self.hop_length = hop_length
+        self.register = register
+        self.norm = norm
+        self.dct_type = dct_type
+        self.lifter = lifter
+        self.librosa_kwargs = librosa_kwargs
+
+        super().__init__(n_mfcc=n_mfcc, lifter=lifter, dct_type=dct_type,
+                         norm=norm, n_mels=n_mels, **librosa_kwargs)
+
+    def _get_values(self,stim):
+        vals = super()._get_values(stim)
+        if self.register == 'low':
+            vals[self.n_coefs:] = 0
+        else:
+            vals[:self.n_coefs] = 0
+            
+        
+        mels = librosa.feature.inverse.mfcc_to_mel(
+            vals, n_mels=self.n_mels, dct_type=self.dct_type,
+            norm=self.norm, lifter=self.lifter)
+                        
+        return mels
+
+    def get_feature_names(self):
+        return ['mfcc_energy_%d' % i for i in range(self.n_mels)]

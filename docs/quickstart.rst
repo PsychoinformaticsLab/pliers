@@ -6,7 +6,7 @@ Quickstart
 The fastest way to learn how pliers works is to work through a few short examples. In this section, we'll demonstrate how pliers can be used to quickly tackle three different feature extraction challenges. We start with very simple examples, and gradually scale up in complexity.
 
 An executable Jupyter Notebook version of this document can be found in the 
-`\/examples <https://github.com/tyarkoni/pliers/tree/master/examples>`_ folder of the GitHub repo.
+`\/examples <https://github.com/psychoinformaticslab/pliers/tree/master/examples>`_ folder of the GitHub repo.
 
 Face detection
 --------------
@@ -1349,7 +1349,7 @@ Note, as with other examples above, that the ``ClarifaiAPIImageExtractor``
 wraps the Clarifai object recognition API, so you’ll need to have an API
 key set up appropriately (if you don’t have an API key, and don’t want
 to set one up, you can replace ``ClarifaiAPIImageExtractor`` with
-``TensorFlowInceptionV3Extractor`` to get similar, though not quite as
+``TFHubExtractor`` to get similar, though not quite as
 accurate, results).
 
 ::
