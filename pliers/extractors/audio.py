@@ -172,19 +172,23 @@ class LibrosaFeatureExtractor(AudioExtractor, metaclass=ABCMeta):
             return getattr(librosa.feature, self._feature)(
                 y=stim.data, sr=stim.sampling_rate, **self.librosa_kwargs)
 
-        elif self._feature in[ 'onset_detect', 'onset_strength_multi']:
+        elif self._feature in ['onset_detect', 'onset_strength_multi']:
             return getattr(librosa.onset, self._feature)(
                 y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
                 **self.librosa_kwargs)
 
-        elif self._feature in[ 'tempo', 'beat_track']:
+        elif self._feature in ['tempo', 'beat_track']:
             return getattr(librosa.beat, self._feature)(
                 y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
                 **self.librosa_kwargs)
 
-        elif self._feature in[ 'harmonic', 'percussive']:
+        elif self._feature in ['harmonic', 'percussive']:
             return getattr(librosa.effects, self._feature)(
                 y=stim.data,
+                **self.librosa_kwargs)
+        elif self._feature == 'f0':
+            return getattr(librosa, self._feature)(
+                y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
                 **self.librosa_kwargs)
         else:
             return getattr(librosa.feature, self._feature)(
@@ -501,6 +505,23 @@ class PercussiveExtractor(LibrosaFeatureExtractor):
     _feature = 'percussive'
 
 
+class FundamentalFrequencyExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts the fundamental frequency using the YIN algorithm as
+        implemented in the Librosa library.
+
+    For details on argument specification visit:
+    https://librosa.org/doc/latest/generated/librosa.yin.html.'''
+
+    _feature = 'f0'
+
+    def __init__(self, fmin=65, fmax=2093, **kwargs):
+        self.fmin = fmin
+        self.fmax = fmax
+        super().__init__(fmin=fmin, fmax=fmax, **kwargs)
+
+
+
 class AudiosetLabelExtractor(AudioExtractor):
 
     ''' Extract probability of 521 audio event classes based on AudioSet
@@ -511,8 +532,9 @@ class AudiosetLabelExtractor(AudioExtractor):
     hop_size (float): size of the audio segment (in seconds) on which label
         extraction is performed.
     top_n (int): specifies how many of the highest label probabilities are
-        returned. If None, all labels (or all in labels) are returned.
-        Top_n and labels are mutually exclusive arguments.
+        returned. If None, all labels (or those passed to the labels 
+        argument) are returned. Top_n and labels are mutually 
+        exclusive.
     labels (list): specifies subset of labels for which probabilities
         are to be returned. If None, all labels (or top_n) are returned.
         The full list of labels is available in the audioset/yamnet
