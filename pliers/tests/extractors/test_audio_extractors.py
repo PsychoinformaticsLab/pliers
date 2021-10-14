@@ -382,15 +382,15 @@ def test_f0_extractor():
     assert df.shape == (624786, 5)
     assert np.isclose(df['onset'][9], 0.417959)
     assert np.isclose(df['duration'][9], 0.04644)
-    assert np.isclose(df['f0'][9], 83.79720, rtol=1e-4)
+    assert np.isclose(df['yin'][9], 83.79720, rtol=1e-4)
 
     assert np.isclose(df['onset'][17], 0.789478)
     assert np.isclose(df['duration'][17], 0.04644)
-    assert np.isclose(df['f0'][17], 210.88762, rtol=1e-4)
+    assert np.isclose(df['yin'][17], 210.88762, rtol=1e-4)
 
     assert np.isclose(df['onset'][29], 1.346757)
     assert np.isclose(df['duration'][29], 0.04644)
-    assert np.isclose(df['f0'][29], 82.76108, rtol=1e-4)
+    assert np.isclose(df['yin'][29], 82.76108, rtol=1e-4)
 
 
 @pytest.mark.parametrize('hop_size', [0.1, 1])

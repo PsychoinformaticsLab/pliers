@@ -186,7 +186,7 @@ class LibrosaFeatureExtractor(AudioExtractor, metaclass=ABCMeta):
             return getattr(librosa.effects, self._feature)(
                 y=stim.data,
                 **self.librosa_kwargs)
-        elif self._feature == 'f0':
+        elif self._feature == 'yin':
             return getattr(librosa, self._feature)(
                 y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
                 **self.librosa_kwargs)
@@ -513,7 +513,7 @@ class FundamentalFrequencyExtractor(LibrosaFeatureExtractor):
     For details on argument specification visit:
     https://librosa.org/doc/latest/generated/librosa.yin.html.'''
 
-    _feature = 'f0'
+    _feature = 'yin'
 
     def __init__(self, fmin=65, fmax=2093, **kwargs):
         self.fmin = fmin
