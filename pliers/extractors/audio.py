@@ -521,7 +521,6 @@ class FundamentalFrequencyExtractor(LibrosaFeatureExtractor):
         super().__init__(fmin=fmin, fmax=fmax, **kwargs)
 
 
-
 class AudiosetLabelExtractor(AudioExtractor):
 
     ''' Extract probability of 521 audio event classes based on AudioSet
