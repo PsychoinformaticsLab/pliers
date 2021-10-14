@@ -379,7 +379,7 @@ def test_f0_extractor():
     ext = FundamentalFrequencyExtractor()
     df = ext.transform(audio).to_df()
 
-    assert df.shape == (624786, 5)
+    assert df.shape == (1221, 5)
     assert np.isclose(df['onset'][9], 0.417959)
     assert np.isclose(df['duration'][9], 0.04644)
     assert np.isclose(df['yin'][9], 83.79720, rtol=1e-4)
