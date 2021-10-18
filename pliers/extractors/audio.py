@@ -622,13 +622,29 @@ class AudiosetLabelExtractor(AudioExtractor):
 
 
 class MFCCEnergyExtractor(MFCCExtractor):
-    ''' Given a Middle Bound, Extract the Energy from the Low/High Register
-    of Mel-Frequency Ceptral Coefficients.
+    ''' Low-Quefrency and High-Quefrency Mel-Frequency Spectrum extractor.
+    
+    Derived from Hanke et al., 2015 (https://doi.org/10.12688/f1000research.6679.1)
+    
+    This extractor maps selected cepstral coefficients back to the spectrum 
+    domain by reconstructing the n_mfcc mel-frequency spectrum bands using the 
+    low-quefrency and high-quefrency mfcc coefficients respectively.
+    
+    Users can select the top or bottom n_coefs. Non-selected coefficients are 
+    zeroed out, and the result is mapped back to spectral domain using 
+    inverse DCT (using librosas's mfcc_to_mel function).
+    
+    These two sets of features represent broad-spectrum information (timbre) 
+    and fine-scale spectral structure (pitch) respectively.
 
     Args:
-    n_mfcc (int): specifies the number of MFCC to extract
-    n_coefs(int): cepstrum coefficients to keep in the high/low quefrency spectrum
+    n_mfcc (int): specifies the number of MFCCs
+    n_coefs (int): cepstrum coefficients to keep in the high/low quefrency spectrum
     hop_length (int): hop length in number of samples
+    n_mels (int): Dimensionality of mel frequency spectrum to map back to
+    register (str): 'low' or 'high'. Specifies which MFCCs are to be kept.
+    norm (str): Normalization type for DCT
+    lifter (int): If lifter>0, apply inverse liftering (inverse cepstral filtering)
     librosa_kwargs (optional): Optional named arguments to pass to librosa
     '''
 
