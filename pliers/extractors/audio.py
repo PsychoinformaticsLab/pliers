@@ -624,6 +624,8 @@ class AudiosetLabelExtractor(AudioExtractor):
 class MFCCEnergyExtractor(MFCCExtractor):
     ''' Low-Quefrency and High-Quefrency Mel-Frequency Spectrum extractor.
     
+    Extracts two auditory features representing broad-spectrum information (timbre) 
+    and fine-scale spectral structure (pitch) respectively.
     Derived from Hanke et al., 2015 (https://doi.org/10.12688/f1000research.6679.1)
     
     This extractor maps selected cepstral coefficients back to the spectrum 
@@ -633,9 +635,6 @@ class MFCCEnergyExtractor(MFCCExtractor):
     Users can select the top or bottom n_coefs. Non-selected coefficients are 
     zeroed out, and the result is mapped back to spectral domain using 
     inverse DCT (using librosas's mfcc_to_mel function).
-    
-    These two sets of features represent broad-spectrum information (timbre) 
-    and fine-scale spectral structure (pitch) respectively.
 
     Args:
     n_mfcc (int): specifies the number of MFCCs
@@ -644,6 +643,7 @@ class MFCCEnergyExtractor(MFCCExtractor):
     n_mels (int): Dimensionality of mel frequency spectrum to map back to
     register (str): 'low' or 'high'. Specifies which MFCCs are to be kept.
     norm (str): Normalization type for DCT
+    dct_type (int): Discrete cosine transform (DCT) type, default is 2.
     lifter (int): If lifter>0, apply inverse liftering (inverse cepstral filtering)
     librosa_kwargs (optional): Optional named arguments to pass to librosa
     '''
@@ -656,7 +656,10 @@ class MFCCEnergyExtractor(MFCCExtractor):
     def __init__(self, n_mfcc=48, n_coefs=13, hop_length=1024, 
                  n_mels=128, register='low', norm='ortho',
                  dct_type=2, lifter=0, **librosa_kwargs):
-        assert register in ['low', 'high']
+        if register not in ['low', 'high']:
+            raise ValueError('register should \'low\' or \'high\'')
+        if dct_type not in [1, 2, 3]:
+            raise ValueError('dct_type should be 1, 2, or 3')
         self.n_mfcc = n_mfcc
         self.n_mels = n_mels
         self.n_coefs = n_coefs
