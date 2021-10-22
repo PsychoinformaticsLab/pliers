@@ -54,17 +54,19 @@ class TFHubExtractor(Extractor):
             output for compatibility with extractor result
         transform_inp (optional): function to transform Stim.data 
             for compatibility with model input format
-        kwargs (dict): arguments to hub.KerasLayer call
+        keras_args (dict): arguments to hub.KerasLayer call
     '''
 
-    _log_attributes = ('url_or_path', 'features', 'transform_out')
+    _log_attributes = ('url_or_path', 'features', 'transform_out', 'keras_args')
     _input_type = Stim
 
     def __init__(self, url_or_path, features=None,
                  transform_out=None, transform_inp=None,
-                 **kwargs):
+                 keras_args=None):
         verify_dependencies(['tensorflow_hub'])
-        self.model = hub.KerasLayer(url_or_path, **kwargs)
+        if keras_args is None:
+            keras_args = {}
+        self.model = hub.KerasLayer(url_or_path, **keras_args)
         self.url_or_path = url_or_path
         self.features = features
         self.transform_out = transform_out
@@ -119,58 +121,30 @@ class TFHubImageExtractor(TFHubExtractor):
         features (optional): list of labels (for classification) 
             or other feature names. If not specified, returns 
             numbered features (feature_0, feature_1, ... ,feature_n)
-        rescale_rgb (bool): whether to rescale values to 0-1 range
-        reshape_input (tuple): if input needs to be reshaped, 
-            specifies target shape (height, width, n_channels).
-            Details on whether the model only accept a fixed size are
-            usually provided on the TFHub model page
-        kwargs (dict): arguments to hub.KerasLayer call
+        keras_args (dict): arguments to hub.KerasLayer call
     '''
 
     _input_type = ImageStim
-    _log_attributes = ('url_or_path', 'features', 'rescale_rgb', 
-                       'reshape_input')
+    _log_attributes = ('url_or_path', 'features', 'keras_args')
 
     def __init__(self, 
                  url_or_path, 
                  features=None,
-                 rescale_rgb=True, 
-                 reshape_input=None, 
                  input_dtype=tf.float32,
-                 **kwargs):
-        if not reshape_input:
-            logging.warning('Note that some models may require (or perform best with) '
-                            'specific input shapes. Incompatible shapes may raise errors'
-                            ' at extraction. Make sure you check the docs for '
-                            'your model on TFHub. If needed, you can reshape '
-                            'your input image by passing the desired target shape '
-                            '(height, width, n_channels) to reshape_input')
-        self.rescale_rgb = rescale_rgb
-        self.reshape_input = reshape_input
+                 keras_args=None):
+        
         self.input_dtype = input_dtype
-        super().__init__(url_or_path, features, **kwargs)
+
+        logging.warning('Some models may require specific input shapes.'
+                        ' Incompatible shapes may raise errors'
+                        ' at extraction. If needed, you can reshape'
+                        ' your input image using ImageResizingFilter,
+                        ' and rescale using ImageRescalingFilter')
+        super().__init__(url_or_path, features, keras_args=keras_args)
 
     def _preprocess(self, stim):
-        if self.reshape_input:
-            resizer = ImageResizingFilter(size=self.reshape_input[:-1])
-            x = resizer.transform(stim).data
-        else:
-            x = stim.data
-
-        if self.rescale_rgb:
-            if self.input_dtype.dtype.is_integer:
-                logging.warning('Rescaling the input from [0, 255] to [0, 1] and setting '
-                                'input_dtype to an integer type may result in loss of precision.'
-                                'Please, set rescale_rgb to False.')
-
-            x = x / 255.0
-
-        x = tf.convert_to_tensor(x, dtype=self.input_dtype)
+        x = tf.convert_to_tensor(stim.data, dtype=self.input_dtype)
         x = tf.expand_dims(x, axis=0)
-
-        if self.transform_inp:
-            return self.transform_inp(x)
-
         return x
 
 
