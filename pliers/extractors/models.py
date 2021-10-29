@@ -138,7 +138,7 @@ class TFHubImageExtractor(TFHubExtractor):
         logging.warning('Some models may require specific input shapes.'
                         ' Incompatible shapes may raise errors'
                         ' at extraction. If needed, you can reshape'
-                        ' your input image using ImageResizingFilter,
+                        ' your input image using ImageResizingFilter, '
                         ' and rescale using ImageRescalingFilter')
         super().__init__(url_or_path, features, keras_args=keras_args)
 
