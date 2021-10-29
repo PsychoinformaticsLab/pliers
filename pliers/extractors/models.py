@@ -134,6 +134,7 @@ class TFHubImageExtractor(TFHubExtractor):
                  keras_args=None):
         
         self.input_dtype = input_dtype
+        self.keras_args = keras_args
 
         logging.warning('Some models may require specific input shapes.'
                         ' Incompatible shapes may raise errors'

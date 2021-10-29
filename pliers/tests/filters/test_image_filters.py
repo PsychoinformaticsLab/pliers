@@ -1,12 +1,14 @@
 from os.path import join
 
 import numpy as np
+from pliers.filters.image import ImageRescalingFilter
 import pytest
 
 from ..utils import get_test_data_path
 from pliers.filters import (ImageCroppingFilter,
                             ImageResizingFilter,
-                            PillowImageFilter)
+                            PillowImageFilter,
+                            ImageRescalingFilter)
 from pliers.stimuli import ImageStim
 
 IMAGE_DIR = join(get_test_data_path(), 'image')
@@ -79,3 +81,11 @@ def test_pillow_image_filter_filter():
     filt5 = PillowImageFilter(ImageFilter.MaxFilter, size=3)
     med_img = filt5.transform(stim)
     assert np.array_equal(med_img.data[0, 0], [136, 86, 49])
+
+
+def test_image_rescaling_filter():
+    stim = ImageStim(join(IMAGE_DIR, 'thai_people.jpg'))
+    filt = ImageRescalingFilter()
+    rescaled = filt.transform(stim)
+    assert (rescaled.data >= 0).all()
+    assert (rescaled.data <= 1).all()
