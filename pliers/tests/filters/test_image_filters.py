@@ -1,9 +1,6 @@
 from os.path import join
-
 import numpy as np
-from pliers.filters.image import ImageRescalingFilter
 import pytest
-
 from ..utils import get_test_data_path
 from pliers.filters import (ImageCroppingFilter,
                             ImageResizingFilter,
