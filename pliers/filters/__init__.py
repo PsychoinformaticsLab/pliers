@@ -8,7 +8,8 @@ from .audio import (AudioTrimmingFilter,
 from .base import TemporalTrimmingFilter
 from .image import (ImageCroppingFilter,
                     ImageResizingFilter,
-                    PillowImageFilter)
+                    PillowImageFilter,
+                    ImageRescalingFilter)
 from .text import (WordStemmingFilter,
                    TokenizingFilter,
                    TokenRemovalFilter,
@@ -25,6 +26,7 @@ __all__ = [
     'ImageCroppingFilter',
     'ImageResizingFilter',
     'PillowImageFilter',
+    'ImageRescalingFilter',
     'WordStemmingFilter',
     'TokenizingFilter',
     'TokenRemovalFilter',
