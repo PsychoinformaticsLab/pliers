@@ -906,59 +906,17 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
             tokenizer, **self.tokenizer_kwargs)
         super().__init__()
 
-    def _mask_words(self, wds):
+    def _mask(self, wds):
         pass
-    
-    #def _preprocess(self, stims):
-    #    ''' Extracts text, onset, duration from ComplexTextStim, masks target
-    #        words (if relevant), tokenizes the input, and casts words, onsets,
-    #        and durations to token-level lists. Called within _extract method 
-    #        to prepare input for the model. '''
-    #    els = [(e.text, e.onset, e.duration) for e in stims.elements]
-    #    wds, ons, dur = map(list, zip(*els))
-    #    tok = [self.tokenizer.tokenize(w) for w in self._mask_words(wds)]
-    #    n_tok = [len(t) for t in tok]
-    #    stims.name = ' '.join(wds) if stims.name == '' else stims.name
-    #    wds, ons, dur = map(lambda x: np.repeat(x, n_tok), [wds, ons, dur])
-    #    tok = list(flatten(tok))
-    #    idx = self.tokenizer.encode(tok, return_tensors=self.framework)
-    #    return wds, ons, dur, tok, idx
 
     def _extract(self, stims):
         ''' Takes stim as input, preprocesses it, feeds it to Bert model, 
             then postprocesses the output '''
-        # do the masking and get the labels = true token (what could be predicted), and the original word (_mask)
+        # does the onset refer to the last or the second-last word?
+        # tokenize all but last word
+        # tokenize last word, and take first token
         # pass to model
-        # add option to return true word and true token
-        # return the whole distribution or a trimmed distribution
-        # challenge: get onset for the last word, and how to deal with duration
-
+        # return predictions and true token (id, word or token)
+        # enable trimming distribution
         pass
-        #wds, ons, dur, tok, idx = self._preprocess(stims)
-        #preds = self.model(idx)
-        #data, feat, ons, dur = self._postprocess(stims, preds, tok, wds, ons, dur)
-        #return ExtractorResult(data, stims, self, features=feat, onsets=ons, 
-        #                       durations=dur)
 
-    #def _postprocess(self, stims, preds, tok, wds, ons, dur):
-    #    ''' Postprocesses model output (subsets relevant information,
-    #        transforms it where relevant, adds model metadata). 
-    #        Takes prediction array, token list, word list, onsets 
-    #        and durations and input. Here, returns token-level encodings 
-    #        (excluding special tokens).
-    #    '''
-    #   out = preds.last_hidden_state[:, 1:-1, :]
-    #   if self.framework == 'pt':
-    #       out = out.detach() 
-    #   out = out.numpy().squeeze()
-    #   data = [out.tolist()]
-    #   feat = ['encoding']
-    #   if self.return_input:
-    #       data += [tok, wds]
-    #        feat += ['token', 'word']
-    #   return data, feat, ons, dur
-    
-    #def _to_df(self, result):
-    #    res_df = pd.DataFrame(dict(zip(result.features, result._data)))
-    #    res_df['object_id'] = range(res_df.shape[0])
-    #    return res_df
