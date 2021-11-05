@@ -866,16 +866,10 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
         tokenizer (str): Type of tokenization used in the tokenization step.
             If different from model, out-of-vocabulary tokens may be treated 
             as unknown tokens.
-        model_class (str): Specifies model type. Must be one of 'AutoModel' 
-            (encoding extractor) or  'AutoModelWithLMHead' (language model).
-            These are generic model classes, which use the value of 
-            pretrained_model to infer the model-specific transformers 
-            class (e.g. BertModel or BertForMaskedLM for BERT, RobertaModel 
-            or RobertaForMaskedLM for RoBERTa). Fixed by each subclass.
+        model_class (str): Specifies model class from transformers. 
+        tokenizer_class (str): Specifies tokenizer type from transformers. 
         framework (str): name deep learning framework to use. Must be 'pt'
             (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
-        return_input (bool): if True, the extractor returns encoded token
-            and encoded word as features.
         model_kwargs (dict): Named arguments for transformer model.
             See https://huggingface.co/transformers/main_classes/model.html
         tokenizer_kwargs (dict): Named arguments for tokenizer.
@@ -883,16 +877,16 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
     '''
 
     _log_attributes = ('pretrained_model', 'framework', 'tokenizer_type',
-        'model_class', 'return_input', 'model_kwargs', 'tokenizer_kwargs')
+        'model_class', 'model_kwargs', 'tokenizer_kwargs')
     _model_attributes = ('pretrained_model', 'framework', 'model_class', 
         'tokenizer_type')
     # Add tokenizer
     def __init__(self,
-                 pretrained_model='bert-base-uncased',
-                 tokenizer='bert-base-uncased',
-                 model_class='AutoModel',
+                 pretrained_model='gpt2',
+                 tokenizer='gpt2',
+                 model_class='GPT2LMHeadModel',
+                 tokenizer_class='GPT2TokenizerFast',
                  framework='pt',
-                 return_input=False,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
         verify_dependencies(['transformers'])
@@ -903,69 +897,68 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
         self.tokenizer_type = tokenizer
         self.model_class = model_class
         self.framework = framework
-        self.return_input = return_input
         self.model_kwargs = model_kwargs if model_kwargs else {}
         self.tokenizer_kwargs = tokenizer_kwargs if tokenizer_kwargs else {}
         model = model_class if self.framework == 'pt' else 'TF' + model_class
         self.model = getattr(transformers, model).from_pretrained(
             pretrained_model, **self.model_kwargs)
-        self.tokenizer = transformers.GPTTokenizerFast.from_pretrained(
+        self.tokenizer = getattr(transformers, tokenizer_class).from_pretrained(
             tokenizer, **self.tokenizer_kwargs)
         super().__init__()
 
     def _mask_words(self, wds):
-        ''' Called by _preprocess method. Takes list of words in the Stim as
-            input (i.e. the .text attribute for each TextStim in the 
-            ComplexTextStim). If class has mask attribute, replaces word in 
-            the input sequence with [MASK] token based on the value of mask 
-            (either index in the sequence, or word to replace). Here, returns
-            list of words (without masking)
-        '''
-        return wds
-
-    def _preprocess(self, stims):
-        ''' Extracts text, onset, duration from ComplexTextStim, masks target
-            words (if relevant), tokenizes the input, and casts words, onsets,
-            and durations to token-level lists. Called within _extract method 
-            to prepare input for the model. '''
-        els = [(e.text, e.onset, e.duration) for e in stims.elements]
-        wds, ons, dur = map(list, zip(*els))
-        tok = [self.tokenizer.tokenize(w) for w in self._mask_words(wds)]
-        n_tok = [len(t) for t in tok]
-        stims.name = ' '.join(wds) if stims.name == '' else stims.name
-        wds, ons, dur = map(lambda x: np.repeat(x, n_tok), [wds, ons, dur])
-        tok = list(flatten(tok))
-        idx = self.tokenizer.encode(tok, return_tensors=self.framework)
-        return wds, ons, dur, tok, idx
+        pass
+    
+    #def _preprocess(self, stims):
+    #    ''' Extracts text, onset, duration from ComplexTextStim, masks target
+    #        words (if relevant), tokenizes the input, and casts words, onsets,
+    #        and durations to token-level lists. Called within _extract method 
+    #        to prepare input for the model. '''
+    #    els = [(e.text, e.onset, e.duration) for e in stims.elements]
+    #    wds, ons, dur = map(list, zip(*els))
+    #    tok = [self.tokenizer.tokenize(w) for w in self._mask_words(wds)]
+    #    n_tok = [len(t) for t in tok]
+    #    stims.name = ' '.join(wds) if stims.name == '' else stims.name
+    #    wds, ons, dur = map(lambda x: np.repeat(x, n_tok), [wds, ons, dur])
+    #    tok = list(flatten(tok))
+    #    idx = self.tokenizer.encode(tok, return_tensors=self.framework)
+    #    return wds, ons, dur, tok, idx
 
     def _extract(self, stims):
         ''' Takes stim as input, preprocesses it, feeds it to Bert model, 
             then postprocesses the output '''
-        wds, ons, dur, tok, idx = self._preprocess(stims)
-        preds = self.model(idx)
-        data, feat, ons, dur = self._postprocess(stims, preds, tok, wds, ons, dur)
-        return ExtractorResult(data, stims, self, features=feat, onsets=ons, 
-                               durations=dur)
+        # do the masking and get the labels = true token (what could be predicted), and the original word (_mask)
+        # pass to model
+        # add option to return true word and true token
+        # return the whole distribution or a trimmed distribution
+        # challenge: get onset for the last word, and how to deal with duration
 
-    def _postprocess(self, stims, preds, tok, wds, ons, dur):
-        ''' Postprocesses model output (subsets relevant information,
-            transforms it where relevant, adds model metadata). 
-            Takes prediction array, token list, word list, onsets 
-            and durations and input. Here, returns token-level encodings 
-            (excluding special tokens).
-        '''
-        out = preds.last_hidden_state[:, 1:-1, :]
-        if self.framework == 'pt':
-            out = out.detach() 
-        out = out.numpy().squeeze()
-        data = [out.tolist()]
-        feat = ['encoding']
-        if self.return_input:
-            data += [tok, wds]
-            feat += ['token', 'word']
-        return data, feat, ons, dur
+        pass
+        #wds, ons, dur, tok, idx = self._preprocess(stims)
+        #preds = self.model(idx)
+        #data, feat, ons, dur = self._postprocess(stims, preds, tok, wds, ons, dur)
+        #return ExtractorResult(data, stims, self, features=feat, onsets=ons, 
+        #                       durations=dur)
+
+    #def _postprocess(self, stims, preds, tok, wds, ons, dur):
+    #    ''' Postprocesses model output (subsets relevant information,
+    #        transforms it where relevant, adds model metadata). 
+    #        Takes prediction array, token list, word list, onsets 
+    #        and durations and input. Here, returns token-level encodings 
+    #        (excluding special tokens).
+    #    '''
+    #   out = preds.last_hidden_state[:, 1:-1, :]
+    #   if self.framework == 'pt':
+    #       out = out.detach() 
+    #   out = out.numpy().squeeze()
+    #   data = [out.tolist()]
+    #   feat = ['encoding']
+    #   if self.return_input:
+    #       data += [tok, wds]
+    #        feat += ['token', 'word']
+    #   return data, feat, ons, dur
     
-    def _to_df(self, result):
-        res_df = pd.DataFrame(dict(zip(result.features, result._data)))
-        res_df['object_id'] = range(res_df.shape[0])
-        return res_df
+    #def _to_df(self, result):
+    #    res_df = pd.DataFrame(dict(zip(result.features, result._data)))
+    #    res_df['object_id'] = range(res_df.shape[0])
+    #    return res_df
