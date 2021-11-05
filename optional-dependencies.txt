@@ -19,7 +19,7 @@ scikit-learn
 seaborn
 spacy
 SpeechRecognition>=3.6.0
-tensorflow>=2.0.0
+tensorflow==2.4.0
 torch
 transformers
 xlrd
