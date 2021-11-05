@@ -67,6 +67,8 @@ def test_tensorflow_keras_application_extractor():
 
 def test_tfhub_image():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
+    rescale_filter = ImageRescalingFilter()
+    stim = rescale_filter.transform(stim)
     ext = TFHubImageExtractor(EFFNET_URL)
     df = ext.transform(stim).to_df()
     assert all(['feature_' + str(i) in df.columns \
@@ -81,10 +83,10 @@ def test_tfhub_image_reshape():
     rescale_filter = ImageRescalingFilter()
     resize_filter = ImageResizingFilter(size=(224,224), 
                                         maintain_aspect_ratio=False)
-    stim = rescale_filter.transform(stim)
-    stim2 = rescale_filter.transform(stim2)
     stim = resize_filter.transform(stim) 
     stim2 = resize_filter.transform(stim2)
+    stim = rescale_filter.transform(stim)
+    stim2 = rescale_filter.transform(stim2)
     ext = TFHubImageExtractor(MNET_URL,
                               features='feature_vector')
     df = merge_results(ext.transform([stim, stim2]),
