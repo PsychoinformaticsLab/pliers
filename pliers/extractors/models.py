@@ -66,6 +66,7 @@ class TFHubExtractor(Extractor):
         verify_dependencies(['tensorflow_hub'])
         if keras_args is None:
             keras_args = {}
+        self.keras_args = keras_args
         self.model = hub.KerasLayer(url_or_path, **keras_args)
         self.url_or_path = url_or_path
         self.features = features
@@ -134,6 +135,8 @@ class TFHubImageExtractor(TFHubExtractor):
                  keras_args=None):
         
         self.input_dtype = input_dtype
+        if keras_args is None:
+            keras_args = {}
         self.keras_args = keras_args
 
         logging.warning('Some models may require specific input shapes.'
@@ -191,8 +194,11 @@ class TFHubTextExtractor(TFHubExtractor):
                  output_key='default',
                  preprocessor_url_or_path=None, 
                  preprocessor_kwargs=None,
+                 keras_args=None,
                  **kwargs):
-        super().__init__(url_or_path, features, **kwargs)
+        super().__init__(url_or_path, features, 
+                         keras_args=keras_args, 
+                         **kwargs)
         self.output_key = output_key
         self.preprocessor_url_or_path=preprocessor_url_or_path
         self.preprocessor_kwargs = preprocessor_kwargs

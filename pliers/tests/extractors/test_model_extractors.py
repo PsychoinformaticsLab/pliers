@@ -15,7 +15,9 @@ from pliers.extractors import (TensorFlowKerasApplicationExtractor,
                                BertLMExtractor,
                                BertSentimentExtractor,
                                AudiosetLabelExtractor)
-from pliers.filters import AudioResamplingFilter
+from pliers.filters import (AudioResamplingFilter,
+                            ImageResizingFilter,
+                            ImageRescalingFilter)
 from pliers.stimuli import (ImageStim,
                             TextStim, ComplexTextStim,
                             AudioStim)
@@ -76,8 +78,14 @@ def test_tfhub_image():
 def test_tfhub_image_reshape():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     stim2 = ImageStim(join(IMAGE_DIR, 'obama.jpg'))
+    rescale_filter = ImageRescalingFilter()
+    resize_filter = ImageResizingFilter(size=(224,224,3), 
+                                        maintain_aspect_ratio=False)
+    stim = rescale_filter.transform(stim)
+    stim2 = rescale_filter.transform(stim2)
+    stim = resize_filter.transform(stim) 
+    stim2 = resize_filter.transform(stim2)
     ext = TFHubImageExtractor(MNET_URL,
-                              reshape_input=(224,224,3),
                               features='feature_vector')
     df = merge_results(ext.transform([stim, stim2]),
                        extractor_names=False)
