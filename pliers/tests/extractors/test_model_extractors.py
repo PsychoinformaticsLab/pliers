@@ -79,7 +79,7 @@ def test_tfhub_image_reshape():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     stim2 = ImageStim(join(IMAGE_DIR, 'obama.jpg'))
     rescale_filter = ImageRescalingFilter()
-    resize_filter = ImageResizingFilter(size=(224,224,3), 
+    resize_filter = ImageResizingFilter(size=(224,224), 
                                         maintain_aspect_ratio=False)
     stim = rescale_filter.transform(stim)
     stim2 = rescale_filter.transform(stim2)
