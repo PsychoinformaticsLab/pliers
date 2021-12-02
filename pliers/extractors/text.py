@@ -876,11 +876,17 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
             See https://huggingface.co/transformers/main_classes/tokenizer.html
     '''
 
-    _log_attributes = ('pretrained_model', 'framework', 'tokenizer_type',
-        'model_class', 'model_kwargs', 'tokenizer_kwargs')
-    _model_attributes = ('pretrained_model', 'framework', 'model_class', 
-        'tokenizer_type')
-    # Add tokenizer
+    _log_attributes = ('pretrained_model', 
+                       'framework', 
+                       'tokenizer_type',
+                       'model_class', 
+                       'model_kwargs', 
+                       'tokenizer_kwargs')
+    _model_attributes = ('pretrained_model', 
+                         'framework', 
+                         'model_class', 
+                         'tokenizer_type')
+    
     def __init__(self,
                  pretrained_model='gpt2',
                  tokenizer='gpt2',
@@ -906,17 +912,93 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
             tokenizer, **self.tokenizer_kwargs)
         super().__init__()
 
-    def _mask(self, wds):
-        pass
+
+    def _preprocess(self, stims):
+        ''' Extracts text, onset, duration from ComplexTextStim, masks target
+            words (if relevant), tokenizes the input, and casts words, onsets,
+            and durations to token-level lists. Called within _extract method 
+            to prepare input for the model. '''
+        els = [(e.text, e.onset, e.duration) for e in stims.elements]
+        wds, ons, dur = map(list, zip(*els))
+        c_wds, c_ons, c_dur = (l[:-1] for l in [wds,ons,dur])
+        c_tok = [self.tokenizer.tokenize(w) for w in c_wds]
+        n_tok = [len(t) for t in c_tok]
+        stims.name = ' '.join(wds) if stims.name == '' else stims.name
+        wds, ons, dur = map(lambda x: np.repeat(x, n_tok), [c_wds, 
+                                                            c_ons, 
+                                                            c_dur])
+        c_tok = list(flatten(c_tok))
+        c_idx = self.tokenizer.encode(c_tok, return_tensors=self.framework)
+        t_wds = ' ' + wds[-1]
+        t_id = self.tokenizer.encode(t_wds, return_tensors=self.framework)[:,:1][0,0]
+        t_tkn =  self.tokenizer.decode(t_id)
+        return c_wds, c_ons, c_dur, c_tok, c_idx, t_id, t_tkn
 
     def _extract(self, stims):
-        ''' Takes stim as input, preprocesses it, feeds it to Bert model, 
-            then postprocesses the output '''
+        c_wds, c_ons, c_dur, c_tok, c_idx, t_id, t_tkn = self._preprocess(stims)
         # does the onset refer to the last or the second-last word?
-        # tokenize all but last word
-        # tokenize last word, and take first token
+        
         # pass to model
         # return predictions and true token (id, word or token)
         # enable trimming distribution
         pass
 
+'''
+    def _postprocess(self, stims, preds, tok, wds, ons, dur):
+        if self.framework == 'pt':
+            preds = preds.logits[:,1:-1,:].detach().numpy()
+        else:
+            preds = preds.logits[:,1:-1,:].numpy()
+        if self.return_softmax:
+            preds = scipy.special.softmax(preds, axis=-1)
+        out_idx = preds[0,self.mask_pos,:].argsort()[::-1]
+        if self.top_n:
+            sub_idx = out_idx[:self.top_n]
+        elif self.target:
+            sub_idx = self.tokenizer.convert_tokens_to_ids(self.target)
+        elif self.threshold:
+            sub_idx = np.where(preds[0,self.mask_pos,:] >= self.threshold)[0]
+        else:
+            sub_idx = out_idx
+        out_idx = [idx for idx in out_idx if idx in sub_idx]
+        feat = self.tokenizer.convert_ids_to_tokens(out_idx)
+        feat = [f.capitalize() if len(f)==len(f.encode()) else f for f in feat]
+        data = [listify(p) for p in preds[0,self.mask_pos,out_idx]]
+        if self.return_masked_word:
+            feat, data = self._return_masked_word(preds, feat, data)
+        if self.return_input:
+            data += [stims.name]
+            feat += ['sequence']
+        mask_ons = listify(stims.elements[self.mask_pos].onset)
+        mask_dur = listify(stims.elements[self.mask_pos].duration)
+        return data, feat, mask_ons, mask_dur
+    
+
+    def _return_masked_word(self, preds, feat, data):
+        if self.mask_token in self.tokenizer.vocab:
+            true_vocab_idx = self.tokenizer.vocab[self.mask_token]
+            true_score = preds[0,self.mask_pos,true_vocab_idx]
+        else:
+            true_score = np.nan
+            logging.warning('True token not in vocabulary. Returning NaN')
+        feat += ['true_word', 'true_word_score']
+        data += [self.mask_token, true_score]
+        return feat, data
+
+    
+    def _compute_metrics(self, outputs, wd_id, tokenizer):
+        loss = float(outputs.loss.cpu().detach().numpy())
+        top_id = torch.argmax(outputs.logits[0,-1,:], 
+                              axis=-1)
+        top_token = tokenizer.decode(top_id)
+        softmaxed = self.softmax_fn(outputs.logits)
+        prob_true = softmaxed[0,-1,wd_id]
+        prob_true = float(prob_true.cpu().detach().numpy())
+        prob_predicted = float(softmaxed[0,-1,top_id].cpu().detach().numpy())
+        softmaxed = softmaxed[0,-1,:].cpu().detach().numpy()
+        entr = entropy(softmaxed)
+        top_5 = int(softmaxed.argsort().argsort()[wd_id] >= 50252) 
+        top_10 = int(softmaxed.argsort().argsort()[wd_id] >= 50247) 
+        return top_token, loss, entr, prob_true, prob_predicted, top_5, top_10
+
+'''
