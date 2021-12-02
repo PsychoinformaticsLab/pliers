@@ -856,36 +856,40 @@ class WordCounterExtractor(ComplexTextExtractor):
                                features=self.features,
                                onsets=onsets, durations=durations)
 
+
 class GPTForwardLMExtractor(ComplexTextExtractor):
-    ''' Returns predictions for GPT forward language modeling
+    ''' Returns next word predictions for GPT2 .
     Args:
         pretrained_model (str): A string specifying which transformer
-            model to use. Can be any gpt-class model, either pretrained or  
-            https://huggingface.co/transformers/pretrained_models.html
-            or path to custom model.
+            model to use. 
         tokenizer (str): Type of tokenization used in the tokenization step.
-            If different from model, out-of-vocabulary tokens may be treated 
-            as unknown tokens.
-        model_class (str): Specifies model class from transformers. 
-        tokenizer_class (str): Specifies tokenizer type from transformers. 
+            If different from model, out-of-vocabulary tokens may be treated as
+            unknown tokens.
         framework (str): name deep learning framework to use. Must be 'pt'
             (PyTorch) or 'tf' (tensorflow). Defaults to 'pt'.
-        model_kwargs (dict): Named arguments for transformer model.
-            See https://huggingface.co/transformers/main_classes/model.html
+        top_n (int): Specifies how many of the highest-probability tokens are
+            to be returned. Mutually exclusive with target and threshold.
+        target (str or list): Vocabulary token(s) for which probability is to 
+            be returned. Tokens defined in the vocabulary change across 
+            tokenizers. Mutually exclusive with top_n and threshold.
+        threshold (float): If defined, only values above this threshold will
+            be returned. Mutually exclusive with top_n and target.
+        return_softmax (bool): if True, returns probability scores instead of 
+            raw predictions.
+        return_true (bool): if True, returns true_token and its probability.
+        return_input (bool): whether to return input sequence
+        model_kwargs (dict): Named arguments for pretrained model.
+            See: https://huggingface.co/transformers/main_classes/model.html
+            and https://huggingface.co/transformers/model_doc/bert.html.
         tokenizer_kwargs (dict): Named arguments for tokenizer.
-            See https://huggingface.co/transformers/main_classes/tokenizer.html
+            See https://huggingface.co/transformers/main_classes/tokenizer.html.
     '''
 
-    _log_attributes = ('pretrained_model', 
-                       'framework', 
-                       'tokenizer_type',
-                       'model_class', 
-                       'model_kwargs', 
-                       'tokenizer_kwargs')
-    _model_attributes = ('pretrained_model', 
-                         'framework', 
-                         'model_class', 
-                         'tokenizer_type')
+    _log_attributes = ('pretrained_model', 'framework', 'top_n', 'target', 
+        'threshold', 'tokenizer_type', 'return_softmax', 'return_true',
+        'return_input')
+    _model_attributes = ('pretrained_model', 'framework', 'top_n',
+        'target', 'threshold', 'tokenizer_type')
     
     def __init__(self,
                  pretrained_model='gpt2',
@@ -893,6 +897,12 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
                  model_class='GPT2LMHeadModel',
                  tokenizer_class='GPT2TokenizerFast',
                  framework='pt',
+                 top_n=None,
+                 threshold=None,
+                 target=None,
+                 return_true=True,
+                 return_softmax=False,
+                 return_input=True,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
         verify_dependencies(['transformers'])
@@ -910,14 +920,26 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
             pretrained_model, **self.model_kwargs)
         self.tokenizer = getattr(transformers, tokenizer_class).from_pretrained(
             tokenizer, **self.tokenizer_kwargs)
+        self.target = listify(target)
+        if self.target:
+            missing = set(self.target) - set(self.tokenizer.vocab.keys())
+            if missing:
+                logging.warning(f'{missing} not in vocabulary. Dropping.')
+            present = set(self.target) & set(self.tokenizer.vocab.keys())
+            self.target = list(present)
+            if self.target == []:
+                raise ValueError('No valid target token. Import transformers'
+                    ' and run transformers.GPT2Tokenizer.from_pretrained'
+                    f'(\'{tokenizer}\').vocab.keys() to see available tokens')
+        self.top_n = top_n
+        self.threshold = threshold
+        self.return_softmax = return_softmax
+        self.return_true = return_true
+        self.return_input = return_input
         super().__init__()
 
-
     def _preprocess(self, stims):
-        ''' Extracts text, onset, duration from ComplexTextStim, masks target
-            words (if relevant), tokenizes the input, and casts words, onsets,
-            and durations to token-level lists. Called within _extract method 
-            to prepare input for the model. '''
+        ''' Tokenizes input and returns context and target info '''
         els = [(e.text, e.onset, e.duration) for e in stims.elements]
         wds, ons, dur = map(list, zip(*els))
         c_wds, c_ons, c_dur = (l[:-1] for l in [wds,ons,dur])
@@ -931,74 +953,43 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
         c_idx = self.tokenizer.encode(c_tok, return_tensors=self.framework)
         t_wds = ' ' + wds[-1]
         t_id = self.tokenizer.encode(t_wds, return_tensors=self.framework)[:,:1][0,0]
-        t_tkn =  self.tokenizer.decode(t_id)
-        return c_wds, c_ons, c_dur, c_tok, c_idx, t_id, t_tkn
+        t_tok =  self.tokenizer.decode(t_id)
+        return c_ons, c_dur, c_idx, t_id, t_tok # omit c_wds and c_tok
+
 
     def _extract(self, stims):
-        c_wds, c_ons, c_dur, c_tok, c_idx, t_id, t_tkn = self._preprocess(stims)
-        # does the onset refer to the last or the second-last word?
-        
-        # pass to model
-        # return predictions and true token (id, word or token)
-        # enable trimming distribution
-        pass
-
-'''
-    def _postprocess(self, stims, preds, tok, wds, ons, dur):
+        c_ons, c_dur, c_idx, t_id, t_tok = self._preprocess(stims)
+        outputs = self.model(c_idx)
         if self.framework == 'pt':
-            preds = preds.logits[:,1:-1,:].detach().numpy()
+            preds = outputs.logits[0,-1,:].detach().numpy()
         else:
-            preds = preds.logits[:,1:-1,:].numpy()
+            preds = outputs.logits[0,-1,:].numpy()
         if self.return_softmax:
             preds = scipy.special.softmax(preds, axis=-1)
-        out_idx = preds[0,self.mask_pos,:].argsort()[::-1]
+        out_idx = preds.argsort()[::-1]
         if self.top_n:
             sub_idx = out_idx[:self.top_n]
         elif self.target:
             sub_idx = self.tokenizer.convert_tokens_to_ids(self.target)
         elif self.threshold:
-            sub_idx = np.where(preds[0,self.mask_pos,:] >= self.threshold)[0]
+            sub_idx = np.where(preds >= self.threshold)[0]
         else:
             sub_idx = out_idx
         out_idx = [idx for idx in out_idx if idx in sub_idx]
         feat = self.tokenizer.convert_ids_to_tokens(out_idx)
         feat = [f.capitalize() if len(f)==len(f.encode()) else f for f in feat]
-        data = [listify(p) for p in preds[0,self.mask_pos,out_idx]]
-        if self.return_masked_word:
-            feat, data = self._return_masked_word(preds, feat, data)
+        data = [listify(p) for p in preds[out_idx]]
+        if self.return_true:
+            feat += ['true_token', 'true_token_score']
+            data += [t_tok, preds[t_id]]
         if self.return_input:
-            data += [stims.name]
             feat += ['sequence']
-        mask_ons = listify(stims.elements[self.mask_pos].onset)
-        mask_dur = listify(stims.elements[self.mask_pos].duration)
-        return data, feat, mask_ons, mask_dur
-    
+            data += [stims.name]
+        ons = listify(c_ons[-1])
+        dur = listify(c_dur[-1])
+        return data, feat, ons, dur
 
-    def _return_masked_word(self, preds, feat, data):
-        if self.mask_token in self.tokenizer.vocab:
-            true_vocab_idx = self.tokenizer.vocab[self.mask_token]
-            true_score = preds[0,self.mask_pos,true_vocab_idx]
-        else:
-            true_score = np.nan
-            logging.warning('True token not in vocabulary. Returning NaN')
-        feat += ['true_word', 'true_word_score']
-        data += [self.mask_token, true_score]
-        return feat, data
-
-    
-    def _compute_metrics(self, outputs, wd_id, tokenizer):
-        loss = float(outputs.loss.cpu().detach().numpy())
-        top_id = torch.argmax(outputs.logits[0,-1,:], 
-                              axis=-1)
-        top_token = tokenizer.decode(top_id)
-        softmaxed = self.softmax_fn(outputs.logits)
-        prob_true = softmaxed[0,-1,wd_id]
-        prob_true = float(prob_true.cpu().detach().numpy())
-        prob_predicted = float(softmaxed[0,-1,top_id].cpu().detach().numpy())
-        softmaxed = softmaxed[0,-1,:].cpu().detach().numpy()
-        entr = entropy(softmaxed)
-        top_5 = int(softmaxed.argsort().argsort()[wd_id] >= 50252) 
-        top_10 = int(softmaxed.argsort().argsort()[wd_id] >= 50247) 
-        return top_token, loss, entr, prob_true, prob_predicted, top_5, top_10
-
-'''
+    def _to_df(self, result):
+        res_df = pd.DataFrame(dict(zip(result.features, result._data)))
+        res_df['object_id'] = range(res_df.shape[0])
+        return res_df
