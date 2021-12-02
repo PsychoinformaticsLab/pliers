@@ -879,15 +879,12 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
         return_true (bool): if True, returns true_token and its probability.
         return_input (bool): whether to return input sequence
         model_kwargs (dict): Named arguments for pretrained model.
-            See: https://huggingface.co/transformers/main_classes/model.html
-            and https://huggingface.co/transformers/model_doc/bert.html.
         tokenizer_kwargs (dict): Named arguments for tokenizer.
-            See https://huggingface.co/transformers/main_classes/tokenizer.html.
     '''
 
     _log_attributes = ('pretrained_model', 'framework', 'top_n', 'target', 
-        'threshold', 'tokenizer_type', 'return_softmax', 'return_true',
-        'return_input')
+        'threshold', 'tokenizer_type', 'return_softmax', 'return_true_word',
+        'return_true_token', 'return_input', 'return_context')
     _model_attributes = ('pretrained_model', 'framework', 'top_n',
         'target', 'threshold', 'tokenizer_type')
     
@@ -900,9 +897,11 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
                  top_n=None,
                  threshold=None,
                  target=None,
-                 return_true=True,
-                 return_softmax=False,
+                 return_true_token=True,
+                 return_true_word=False,
+                 return_softmax=None,
                  return_input=True,
+                 return_context=True,
                  model_kwargs=None,
                  tokenizer_kwargs=None):
         verify_dependencies(['transformers'])
@@ -934,7 +933,9 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
         self.top_n = top_n
         self.threshold = threshold
         self.return_softmax = return_softmax
-        self.return_true = return_true
+        self.return_context = return_context
+        self.return_true_word = return_true_word
+        self.return_true_token = return_true_token
         self.return_input = return_input
         super().__init__()
 
@@ -942,24 +943,18 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
         ''' Tokenizes input and returns context and target info '''
         els = [(e.text, e.onset, e.duration) for e in stims.elements]
         wds, ons, dur = map(list, zip(*els))
-        c_wds, c_ons, c_dur = (l[:-1] for l in [wds,ons,dur])
-        c_tok = [self.tokenizer.tokenize(w) for w in c_wds]
-        n_tok = [len(t) for t in c_tok]
+        c_wds, c_ons, c_dur = (l[:-1] for l in [wds,ons,dur]) # second last
+        c_tok = self.tokenizer.encode(' '.join(c_wds), return_tensors=self.framework)
         stims.name = ' '.join(wds) if stims.name == '' else stims.name
-        wds, ons, dur = map(lambda x: np.repeat(x, n_tok), [c_wds, 
-                                                            c_ons, 
-                                                            c_dur])
-        c_tok = list(flatten(c_tok))
-        c_idx = self.tokenizer.encode(c_tok, return_tensors=self.framework)
         t_wds = ' ' + wds[-1]
-        t_id = self.tokenizer.encode(t_wds, return_tensors=self.framework)[:,:1][0,0]
+        t_id = self.tokenizer.encode(t_wds, return_tensors=self.framework)[0,0]
         t_tok =  self.tokenizer.decode(t_id)
-        return c_ons, c_dur, c_idx, t_id, t_tok # omit c_wds and c_tok
+        return c_ons, c_dur, c_tok, c_wds, t_id, t_tok, t_wds
 
 
     def _extract(self, stims):
-        c_ons, c_dur, c_idx, t_id, t_tok = self._preprocess(stims)
-        outputs = self.model(c_idx)
+        c_ons, c_dur, c_tok, c_wds, t_id, t_tok, t_wds = self._preprocess(stims)
+        outputs = self.model(c_tok)
         if self.framework == 'pt':
             preds = outputs.logits[0,-1,:].detach().numpy()
         else:
@@ -976,18 +971,24 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
         else:
             sub_idx = out_idx
         out_idx = [idx for idx in out_idx if idx in sub_idx]
-        feat = self.tokenizer.convert_ids_to_tokens(out_idx)
-        feat = [f.capitalize() if len(f)==len(f.encode()) else f for f in feat]
-        data = [listify(p) for p in preds[out_idx]]
-        if self.return_true:
+        feat = [self.tokenizer.decode(o) for o in out_idx]
+        data = [listify(float(p)) for p in preds[out_idx]]
+        if self.return_true_token:
             feat += ['true_token', 'true_token_score']
-            data += [t_tok, preds[t_id]]
+            data += [t_tok, float(preds[t_id])]
+        if self.return_true_word:
+            feat += ['true_word']
+            data += [t_wds]
+        if self.return_context:
+            feat += ['context']
+            data += [' '.join(c_wds)]
         if self.return_input:
             feat += ['sequence']
             data += [stims.name]
         ons = listify(c_ons[-1])
         dur = listify(c_dur[-1])
-        return data, feat, ons, dur
+        return ExtractorResult(data, stims, self, 
+                               features=feat, onsets=ons, durations=dur)
 
     def _to_df(self, result):
         res_df = pd.DataFrame(dict(zip(result.features, result._data)))
