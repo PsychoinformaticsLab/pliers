@@ -858,7 +858,7 @@ class WordCounterExtractor(ComplexTextExtractor):
 
 
 class GPTForwardLMExtractor(ComplexTextExtractor):
-    ''' Returns next word predictions for GPT2 .
+    ''' Returns next word predictions for GPT models .
     Args:
         pretrained_model (str): A string specifying which transformer
             model to use. 
@@ -878,13 +878,16 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
             raw predictions.
         return_true (bool): if True, returns true_token and its probability.
         return_input (bool): whether to return input sequence
+        onset (str): whether the onset in the result is the one from 
+            the target word ('target') or from the last word in the 
+            context ('last_context')
         model_kwargs (dict): Named arguments for pretrained model.
         tokenizer_kwargs (dict): Named arguments for tokenizer.
     '''
 
     _log_attributes = ('pretrained_model', 'framework', 'top_n', 'target', 
         'threshold', 'tokenizer_type', 'return_softmax', 'return_true_word',
-        'return_true_token', 'return_input', 'return_context')
+        'return_true_token', 'return_input', 'return_context', 'onset')
     _model_attributes = ('pretrained_model', 'framework', 'top_n',
         'target', 'threshold', 'tokenizer_type')
     
@@ -902,12 +905,16 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
                  return_softmax=None,
                  return_input=True,
                  return_context=True,
+                 onset='target',
                  model_kwargs=None,
                  tokenizer_kwargs=None):
         verify_dependencies(['transformers'])
         if framework not in ['pt', 'tf']:
             raise(ValueError('''Invalid framework;
                 must be one of 'pt' (pytorch) or 'tf' (tensorflow)'''))
+        if onset not in ['target', 'last_context']:
+            raise(ValueError('''Onset must be one of 
+            'target' or 'last_context'.'''))
         self.pretrained_model = pretrained_model
         self.tokenizer_type = tokenizer
         self.model_class = model_class
@@ -937,6 +944,7 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
         self.return_true_word = return_true_word
         self.return_true_token = return_true_token
         self.return_input = return_input
+        self.onset = onset
         super().__init__()
 
     def _preprocess(self, stims):
@@ -949,11 +957,13 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
         t_wds = ' ' + wds[-1]
         t_id = self.tokenizer.encode(t_wds, return_tensors=self.framework)[0,0]
         t_tok =  self.tokenizer.decode(t_id)
-        return c_ons, c_dur, c_tok, c_wds, t_id, t_tok, t_wds
-
+        return ((c_ons, c_dur, c_tok, c_wds),
+                (t_id, t_tok, t_wds, ons[-1], dur[-1]))
 
     def _extract(self, stims):
-        c_ons, c_dur, c_tok, c_wds, t_id, t_tok, t_wds = self._preprocess(stims)
+        c_outs, t_outs = self._preprocess(stims)
+        c_ons, c_dur, c_tok, c_wds = c_outs 
+        t_id, t_tok, t_wds, t_ons, t_dur = t_outs
         outputs = self.model(c_tok)
         if self.framework == 'pt':
             preds = outputs.logits[0,-1,:].detach().numpy()
@@ -985,8 +995,12 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
         if self.return_input:
             feat += ['sequence']
             data += [stims.name]
-        ons = listify(c_ons[-1])
-        dur = listify(c_dur[-1])
+        if self.onset == 'target':
+            ons = listify(t_ons)
+            dur = listify(t_dur)
+        else:
+            ons = listify(c_ons[-1])
+            dur = listify(c_dur[-1])
         return ExtractorResult(data, stims, self, 
                                features=feat, onsets=ons, durations=dur)
 
