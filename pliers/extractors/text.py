@@ -990,10 +990,10 @@ class GPTForwardLMExtractor(ComplexTextExtractor):
             feat += ['true_word']
             data += [t_wds]
         if self.return_context:
-            feat += ['context']
+            feat += ['lm_context']
             data += [' '.join(c_wds)]
         if self.return_input:
-            feat += ['sequence']
+            feat += ['lm_sequence']
             data += [stims.name]
         if self.onset == 'target':
             ons = listify(t_ons)
