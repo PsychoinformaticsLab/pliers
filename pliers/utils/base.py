@@ -1,6 +1,7 @@
 ''' Miscellaneous internal utilities. '''
 
 import collections
+import collections.abc
 import os
 from abc import ABCMeta, abstractmethod, abstractproperty
 from types import GeneratorType
@@ -25,7 +26,7 @@ def listify(obj):
 def flatten(l):
     ''' Flatten an iterable. '''
     for el in l:
-        if isinstance(el, collections.Iterable) and not isinstance(el, str):
+        if isinstance(el, collections.abc.Iterable) and not isinstance(el, str):
             yield from flatten(el)
         else:
             yield el
@@ -39,7 +40,7 @@ def flatten_dict(d, parent_key='', sep='_'):
     items = []
     for k, v in d.items():
         new_key = parent_key + sep + k if parent_key else k
-        if isinstance(v, collections.MutableMapping):
+        if isinstance(v, collections.abc.MutableMapping):
             items.extend(flatten_dict(v, new_key, sep=sep).items())
         else:
             items.append((new_key, v))
