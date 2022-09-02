@@ -89,7 +89,6 @@ At present, pliers implements several dozen |Extractor| classes that span a wide
   GoogleVisionAPISafeSearchExtractor
   GoogleVisionAPIWebEntitiesExtractor
   MicrosoftAPIFaceExtractor
-  MicrosoftAPIFaceEmotionExtractor
   MicrosoftVisionAPIExtractor
   MicrosoftVisionAPITagExtractor
   MicrosoftVisionAPICategoryExtractor

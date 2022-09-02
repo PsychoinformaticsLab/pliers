@@ -101,24 +101,6 @@ class MicrosoftAPIFaceExtractor(MicrosoftAPITransformer, ImageExtractor):
 
         return pd.DataFrame(face_results)
 
-
-class MicrosoftAPIFaceEmotionExtractor(MicrosoftAPIFaceExtractor):
-
-    ''' Extracts facial emotions from images using the Microsoft API '''
-
-    def __init__(self, face_id=False, rectangle=False, landmarks=False,
-                 subscription_key=None, location=None, api_version='v1.0',
-                 rate_limit=None):
-        super().__init__(face_id,
-                             rectangle,
-                             landmarks,
-                             ['emotion'],
-                             subscription_key=subscription_key,
-                             location=location,
-                             api_version=api_version,
-                             rate_limit=rate_limit)
-
-
 class MicrosoftVisionAPIExtractor(MicrosoftVisionAPITransformer,
                                   ImageExtractor):
     ''' Base MicrosoftVisionAPIExtractor class.

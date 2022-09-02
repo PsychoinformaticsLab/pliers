@@ -4,7 +4,6 @@ import pytest
 
 from pliers import config
 from pliers.extractors import (MicrosoftAPIFaceExtractor,
-                               MicrosoftAPIFaceEmotionExtractor,
                                MicrosoftVisionAPIExtractor,
                                MicrosoftVisionAPITagExtractor,
                                MicrosoftVisionAPICategoryExtractor,
@@ -43,26 +42,6 @@ def test_microsoft_api_face_extractor():
     assert res['face_hair_invisible'][0] != res['face_hair_invisible'][1]
     assert 'face_gender' in res.columns
     assert res['face_gender'][0] == 'female'
-
-
-@pytest.mark.requires_payment
-@pytest.mark.skipif("'MICROSOFT_FACE_SUBSCRIPTION_KEY' not in os.environ")
-def test_microsoft_api_face_emotion_extractor():
-    ext = MicrosoftAPIFaceEmotionExtractor()
-    img = ImageStim(join(IMAGE_DIR, 'obama.jpg'))
-    res = ext.transform(img).to_df(timing=False, object_id=False)
-    assert res.shape == (1, 8)
-    assert res['face_emotion_happiness'][0] > 0.5
-    assert res['face_emotion_anger'][0] < 0.5
-
-    ext = MicrosoftAPIFaceEmotionExtractor(subscription_key='nogood')
-    assert not ext.validate_keys()
-    default = config.get_option('api_key_validation')
-    config.set_option('api_key_validation', True)
-    with pytest.raises(ValueError):
-        ext.transform(img)
-    config.set_option('api_key_validation', default)
-
 
 @pytest.mark.requires_payment
 @pytest.mark.skipif("'MICROSOFT_VISION_SUBSCRIPTION_KEY' not in os.environ")

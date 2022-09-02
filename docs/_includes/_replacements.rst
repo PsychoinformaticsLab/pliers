@@ -39,7 +39,6 @@
 .. |ZeroCrossingRateExtractor| replace:: :py:class:`ZeroCrossingRateExtractor`
 .. |BrightnessExtractor| replace:: :py:class:`BrightnessExtractor`
 .. |MicrosoftAPIFaceExtractor| replace:: :py:class:`MicrosoftAPIFaceExtractor`
-.. |MicrosoftAPIFaceEmotionExtractor| replace:: :py:class:`MicrosoftAPIFaceEmotionExtractor`
 .. |MicrosoftVisionAPIExtractor| replace:: :py:class:`MicrosoftVisionAPIExtractor`
 .. |MicrosoftVisionAPITagExtractor| replace:: :py:class:`MicrosoftVisionAPITagExtractor`
 .. |MicrosoftVisionAPICategoryExtractor| replace:: :py:class:`MicrosoftVisionAPICategoryExtractor`
