@@ -1,4 +1,4 @@
-clarifai
+clarifai-grpc
 duecredit
 face_recognition
 python-twitter

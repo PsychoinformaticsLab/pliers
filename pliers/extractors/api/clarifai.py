@@ -13,17 +13,13 @@ from pliers.extractors.video import VideoExtractor
 from pliers.extractors.base import ExtractorResult
 from pliers.transformers import BatchTransformerMixin
 from pliers.transformers.api import APITransformer
-from pliers.utils import listify, attempt_to_import, verify_dependencies
+from pliers.utils import attempt_to_import, verify_dependencies
 
 
-clarifai_client = attempt_to_import('clarifai.rest.client', 'clarifai_client',
-                                    ['ClarifaiApp',
-                                     'Concept',
-                                     'ModelOutputConfig',
-                                     'ModelOutputInfo',
-                                     'Image',
-                                     'Video'])
+clarifai_channel = attempt_to_import('clarifai_grpc.channel.clarifai_channel', 'clarifai_channel',
+                                    ['ClarifaiChannel'])
 
+clarifai_api = attempt_to_import('clarifai_grpc.grpc.api', 'clarifai_api', ['resources_pb2, service_pb2, service_pb2_grpc'])
 
 class ClarifaiAPIExtractor(APITransformer):
 
@@ -44,56 +40,56 @@ class ClarifaiAPIExtractor(APITransformer):
             transform calls on this Transformer.
     '''
 
-    _log_attributes = ('api_key', 'model', 'model_name', 'min_value',
+    _log_attributes = ('access_token', 'model_name', 'min_value',
                        'max_concepts', 'select_concepts')
     _env_keys = ('CLARIFAI_API_KEY',)
     VERSION = '1.0'
 
-    def __init__(self, api_key=None, model='general-v1.3', min_value=None,
+    def __init__(self, access_token=None, user_id=None, app_id=None, model='general-v1.3', min_value=None,
                  max_concepts=None, select_concepts=None, rate_limit=None,
                  batch_size=None):
-        verify_dependencies(['clarifai_client'])
-        if api_key is None:
+        verify_dependencies(['clarifai_channel', 'clarifai_api'])
+        if access_token is None:
             try:
-                api_key = os.environ['CLARIFAI_API_KEY']
+                access_token = os.environ['CLARIFAI_ACCESS_TOKEN']
             except KeyError:
-                raise ValueError("A valid Clarifai API API_KEY "
+                raise ValueError("A valid Clarifai API ACCESS_TOKEN "
                                  "must be passed the first time a Clarifai "
                                  "extractor is initialized.")
 
-        self.api_key = api_key
-        try:
-            self.api = clarifai_client.ClarifaiApp(api_key=api_key)
-            self.model = self.api.models.get(model)
-        except clarifai_client.ApiError as e:
-            logging.warning(str(e))
-            self.api = None
-            self.model = None
+        self.access_token = access_token
+        self.api = clarifai_api.service_pb2_grpc.V2Stub(clarifai_channel.ClarifaiChannel.get_grpc_channel())
+        self.metadata =  (('authorization', 'Key ' + access_token),)
+        self.user_id= user_id
+        self.app_id = app_id
+
         self.model_name = model
+        self.application_id = None
         self.min_value = min_value
         self.max_concepts = max_concepts
         self.select_concepts = select_concepts
-        if select_concepts:
-            select_concepts = listify(select_concepts)
-            self.select_concepts = [clarifai_client.Concept(concept_name=n)
-                                    for n in select_concepts]
+        # if select_concepts:
+        #     select_concepts = listify(select_concepts)
+        #     self.select_concepts = [clarifai_client.Concept(concept_name=n)
+        #                             for n in select_concepts]
         super().__init__(rate_limit=rate_limit)
 
     @property
     def api_keys(self):
-        return [self.api_key]
+        return [self.access_token]
 
     def check_valid_keys(self):
         return self.api is not None
 
     def _query_api(self, objects):
-        verify_dependencies(['clarifai_client'])
-        moc = clarifai_client.ModelOutputConfig(min_value=self.min_value,
-                                                max_concepts=self.max_concepts,
-                                                select_concepts=self.select_concepts)
-        model_output_info = clarifai_client.ModelOutputInfo(output_config=moc)
-        tags = self.model.predict(objects, model_output_info=model_output_info)
-        return tags['outputs']
+        verify_dependencies(['clarifai_api'])
+        request = clarifai_api.service_pb2.PostModelOutputsRequest(
+            model_id=self.model_name,
+            user_app_id=clarifai_api.resources_pb2.UserAppIDSet(user_id=self.user_id, app_id=self.app_id),
+            inputs=objects
+        )
+        response = self.api.PostModelOutputs(request, metadata=self.metadata)
+        return response['outputs']
 
     def _parse_annotations(self, annotation, handle_annotations=None):
         """
@@ -152,29 +148,42 @@ class ClarifaiAPIImageExtractor(ClarifaiAPIExtractor, BatchTransformerMixin,
 
     _batch_size = 32
 
-    def __init__(self, api_key=None, model='general-v1.3', min_value=None,
+    def __init__(self, access_token=None, user_id=None, app_id=None, model='general-image-recognition', min_value=None,
                  max_concepts=None, select_concepts=None, rate_limit=None,
                  batch_size=None):
-        super().__init__(api_key=api_key,
-                             model=model,
-                             min_value=min_value,
-                             max_concepts=max_concepts,
-                             select_concepts=select_concepts,
-                             rate_limit=rate_limit,
-                             batch_size=batch_size)
+        super().__init__(access_token=access_token,
+                            user_id=user_id,
+                            app_id=app_id,
+                            model=model,
+                            min_value=min_value,
+                            max_concepts=max_concepts,
+                            select_concepts=select_concepts,
+                            rate_limit=rate_limit,
+                            batch_size=batch_size)
 
     def _extract(self, stims):
-        verify_dependencies(['clarifai_client'])
+        verify_dependencies(['clarifai_api'])
 
         # ExitStack lets us use filename context managers simultaneously
         with ExitStack() as stack:
             imgs = []
             for s in stims:
                 if s.url:
-                    imgs.append(clarifai_client.Image(url=s.url))
+                    image=clarifai_api.resources_pb2.Image(url=s.url)
+                    
                 else:
-                    f = stack.enter_context(s.get_filename())
-                    imgs.append(clarifai_client.Image(filename=f))
+                    f_name = stack.enter_context(s.get_filename())
+                    with open(f_name, "rb") as f:
+                        file_bytes = f.read()
+                    image = clarifai_api.resources_pb2.Image(
+                                base64=file_bytes
+                            )
+                image = clarifai_api.resources_pb2.Input(
+                    data=clarifai_api.resources_pb2.Data(
+                        image=image
+                    )
+                )
+                imgs.append(image)
             outputs = self._query_api(imgs)
 
         extractions = []
