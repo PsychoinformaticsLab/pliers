@@ -19,10 +19,10 @@ VIDEO_DIR = join(get_test_data_path(), 'video')
 def test_clarifai_api_extractor():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'))
     ext = ClarifaiAPIImageExtractor()
-    assert ext.validate_keys()
+    assert ext.validate_keys() is None
     result = ext.transform(stim).to_df()
     assert result['apple'][0] > 0.5
-    assert result.ix[:, 5][0] > 0.0
+    assert result.iloc[:, 5][0] > 0.0
 
     result = ClarifaiAPIImageExtractor(max_concepts=5).transform(stim).to_df()
     assert result.shape == (1, 9)
@@ -37,29 +37,29 @@ def test_clarifai_api_extractor():
     assert result.shape == (1, 6)
     assert 'cat' in result.columns and 'dog' in result.columns
 
-    url = 'https://via.placeholder.com/350x150'
+    url = 'https://upload.wikimedia.org/wikipedia/commons/c/cf/Google_URL_Shortener_Logo.png'
     stim = ImageStim(url=url)
     result = ClarifaiAPIImageExtractor(max_concepts=5).transform(stim).to_df()
     assert result.shape == (1, 9)
-    assert result['graphic'][0] > 0.8
+    assert result['illustration'][0] > 0.8
 
-    ext = ClarifaiAPIImageExtractor(api_key='nogood')
-    assert not ext.validate_keys()
+    ext = ClarifaiAPIImageExtractor(access_token='nogood')
+    assert ext.validate_keys() is None # Clarifai API cannot validate keys
 
     stim = ImageStim(join(IMAGE_DIR, 'obama.jpg'))
-    result = ClarifaiAPIImageExtractor(model='face').transform(stim).to_df()
+    result = ClarifaiAPIImageExtractor(model='face-detection').transform(stim).to_df()
     keys_to_check = ['top_row', 'left_col', 'bottom_row', 'right_col']
     assert [k not in result.keys() for k in keys_to_check]
     assert all([result[k][0] != np.nan for k in result if k in keys_to_check])
 
     stim = ImageStim(join(IMAGE_DIR, 'aspect_ratio_fail.jpg'))
-    result = ClarifaiAPIImageExtractor(model='face').transform(stim).to_df()
+    result = ClarifaiAPIImageExtractor(model='face-detection').transform(stim).to_df()
     assert [k in result.keys() for k in keys_to_check]
 
     # check whether a multi-face image has the appropriate amount of rows
     stim = ImageStim(join(IMAGE_DIR, 'thai_people.jpg'))
-    result = ClarifaiAPIImageExtractor(model='face').transform(stim).to_df()
-    assert len(result) == 4
+    result = ClarifaiAPIImageExtractor(model='face-detection').transform(stim).to_df()
+    assert len(result) == 2
 
 @pytest.mark.requires_payment
 @pytest.mark.skipif("'CLARIFAI_ACCESS_TOKEN' not in os.environ")
@@ -101,7 +101,7 @@ def test_clarifai_api_extractor_large():
 def test_clarifai_api_video_extractor():
     stim = VideoStim(join(VIDEO_DIR, 'small.mp4'))
     ext = ClarifaiAPIVideoExtractor()
-    assert ext.validate_keys()
+    assert ext.validate_keys() is None
     result = ext.transform(stim).to_df()
     # This should actually be 6, in principle, because the clip is < 6 seconds,
     # but the Clarifai API is doing weird things. See comment in
@@ -110,12 +110,12 @@ def test_clarifai_api_video_extractor():
     # Changes sometimes, so use a range
     assert result.shape[1] > 25 and result.shape[1] < 30
     assert result['toy'][0] > 0.5
-    assert result['onset'][1] == 1.0
+    assert result['onset'][1] == 1.5
     assert result['duration'][0] == 1.0
     # because of the behavior described above—handle both cases
-    assert np.isclose(result['duration'][5], 0.57) or result['duration'][6] == 0
+    assert np.isclose(result['duration'][5], 0.07) or result['duration'][6] == 0
 
-    ext = ClarifaiAPIVideoExtractor(model='face')
+    ext = ClarifaiAPIVideoExtractor(model='face-detection')
     result = ext.transform(stim).to_df()
     keys_to_check = ['top_row', 'left_col', 'bottom_row', 'right_col']
     assert [k not in result.keys() for k in keys_to_check]

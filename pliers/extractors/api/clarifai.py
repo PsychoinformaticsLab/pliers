@@ -59,7 +59,7 @@ class ClarifaiAPIExtractor(APITransformer):
 
         if user_id is None:
             try:
-                access_token = os.environ['CLARIFAI_USER_ID']
+                user_id = os.environ['CLARIFAI_USER_ID']
             except KeyError:
                 raise ValueError("A valid Clarifai API CLARIFAI_USER_ID "
                                  "must be passed the first time a Clarifai "
@@ -67,7 +67,7 @@ class ClarifaiAPIExtractor(APITransformer):
 
         if app_id is None:
             try:
-                access_token = os.environ['CLARIFAI_APP_ID']
+                app_id = os.environ['CLARIFAI_APP_ID']
             except KeyError:
                 raise ValueError("A valid Clarifai API CLARIFAI_APP_ID "
                                  "must be passed the first time a Clarifai "
@@ -95,7 +95,7 @@ class ClarifaiAPIExtractor(APITransformer):
         return [self.access_token]
 
     def check_valid_keys(self):
-        return self.api is not None
+        return None
 
     def _query_api(self, objects):
         verify_dependencies(['clarifai_api'])
@@ -250,9 +250,15 @@ class ClarifaiAPIVideoExtractor(ClarifaiAPIExtractor, VideoExtractor):
     '''
 
     def _extract(self, stim):
-        verify_dependencies(['clarifai_client'])
+        verify_dependencies(['clarifai_api'])
         with stim.get_filename() as filename:
-            vids = [clarifai_client.Video(filename=filename)]
+            with open(filename, "rb") as f:
+                file_bytes = f.read()
+            vids = [clarifai_api.resources_pb2.Input(
+                    data=clarifai_api.resources_pb2.Data(
+                        video=clarifai_api.resources_pb2.Video(base64=file_bytes)
+                    )
+                )]
             outputs = self._query_api(vids)
         return ExtractorResult(outputs, stim, self)
 
@@ -260,19 +266,19 @@ class ClarifaiAPIVideoExtractor(ClarifaiAPIExtractor, VideoExtractor):
         onsets = []
         durations = []
         data = []
-        frames = result._data[0]['data']['frames']
+        frames = result._data[0].data.frames
         for i, frame_res in enumerate(frames):
             tmp_res = self._parse_annotations(frame_res)
             # if we detect multiple faces, the parsed annotation can be multi-line
             if type(tmp_res) == list:
                 for d in tmp_res:
                     data.append(d)
-                    onset = frame_res['frame_info']['time'] / 1000.0
+                    onset = frame_res.frame_info.time / 1000.0
 
                     if (i + 1) == len(frames):
                         end = result.stim.duration
                     else:
-                        end = frames[i + 1]['frame_info']['time'] / 1000.0
+                        end = frames[i + 1].frame_info.time / 1000.0
                     onsets.append(onset)
                     durations.append(max([end - onset, 0]))
 
@@ -282,12 +288,12 @@ class ClarifaiAPIVideoExtractor(ClarifaiAPIExtractor, VideoExtractor):
                     result.features = list(df.columns)
             else:
                 data.append(tmp_res)
-                onset = frame_res['frame_info']['time'] / 1000.0
+                onset = frame_res.frame_info.time / 1000.0
 
                 if (i + 1) == len(frames):
                     end = result.stim.duration
                 else:
-                    end = frames[i+1]['frame_info']['time'] / 1000.0
+                    end = frames[i+1].frame_info.time / 1000.0
                 onsets.append(onset)
             # NOTE: As of Clarifai API v2 and client library 2.6.1, the API
             # returns more frames than it should—at least for some videos.
