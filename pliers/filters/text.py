@@ -87,7 +87,12 @@ class WordStemmingFilter(TextFilter):
 
         tokens = [stim.text]
         if self.tokenize:
-            tokens = nltk.word_tokenize(tokens[0])
+            try:
+                tokens = word_tokenize(tokens[0])
+            except LookupError:
+                nltk.download('punkt')
+                tokens = word_tokenize(tokens[0])
+
         tokens = [t if self.case_sensitive else t.lower() for t in tokens]
         if not isinstance(self.stemmer, stem.WordNetLemmatizer):
             stemmed = ' '.join([self.stemmer.stem(t) for t in tokens])
@@ -124,7 +129,11 @@ class TokenizingFilter(TextFilter):
         if self.tokenizer:
             tokens = self.tokenizer.tokenize(stim.text)
         else:
-            tokens = word_tokenize(stim.text)
+            try:
+                tokens = word_tokenize(stim.text)
+            except LookupError:
+                nltk.download('punkt')
+                tokens = word_tokenize(stim.text)
         stims = [TextStim(stim.filename, token, order=i)
                  for i, token in enumerate(tokens)]
         return stims
@@ -158,7 +167,11 @@ class TokenRemovalFilter(TextFilter):
         super().__init__()
 
     def _filter(self, stim):
-        tokens = word_tokenize(stim.text)
+        try:
+            tokens = word_tokenize(stim.text)
+        except LookupError:
+            nltk.download('punkt')
+            tokens = word_tokenize(stim.text)
         tokens = [tok for tok in tokens if tok not in self.tokens]
         text = ' '.join(tokens)
         return TextStim(stim.filename, text)
