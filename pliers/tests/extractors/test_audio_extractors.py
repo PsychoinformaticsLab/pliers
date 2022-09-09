@@ -78,7 +78,7 @@ def test_librosa_extractor():
     assert df.shape == (1221, 5)
     assert np.isclose(df['onset'][1], 0.04644)
     assert np.isclose(df['duration'][0], 0.04644)
-    assert np.isclose(df['rms'][0], 0.25663)
+    assert np.isclose(df['rms'][0], 0.1813)
 
 
 def test_spectral_extractors():
