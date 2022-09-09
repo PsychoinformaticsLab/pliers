@@ -39,7 +39,7 @@ def test_transformation_history():
 def test_transform_with_string_input():
     ext = BrightnessExtractor()
     res = ext.transform(join(get_test_data_path(), 'image', 'apple.jpg'))
-    np.testing.assert_almost_equal(res.to_df()['brightness'].values[0], 0.887842942)
+    np.testing.assert_almost_equal(res.to_df()['brightness'].values[0], 0.887842942, 3)
 
 
 def test_parallelization():

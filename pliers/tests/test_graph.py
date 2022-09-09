@@ -52,7 +52,7 @@ def test_graph_smoke_test():
     graph = Graph(nodes)
     result = graph.run(stim, format='wide', extractor_names='multi')
     brightness = result[('brightness_node', 'brightness')].values[0]
-    assert_almost_equal(brightness, 0.556134, 5, 3)
+    assert_almost_equal(brightness, 0.556134, 3)
 
 
 def test_add_children():
@@ -101,7 +101,7 @@ def test_small_pipeline2():
     vibrance = result[('VibranceExtractor', 'vibrance')].values[0]
     assert_almost_equal(brightness, 0.746965, 3)
     assert ('VibranceExtractor', 'vibrance') in result.columns
-    assert_almost_equal(vibrance, 841.577274, 5)
+    assert_almost_equal(vibrance, 836.25558, 3)
 
 
 def test_small_pipeline_json_spec():
@@ -375,8 +375,8 @@ def test_adding_nodes():
     img = ImageStim(join(get_test_data_path(), 'image', 'button.jpg'))
     results = graph.run(img, merge=False)
     assert len(results) == 2
-    assert_almost_equal(results[0].to_df()['vibrance'][0], 841.577274, 5)
-    assert_almost_equal(results[1].to_df()['brightness'][0], 0.746965, 5)
+    assert_almost_equal(results[0].to_df()['vibrance'][0], 841.577274, 3)
+    assert_almost_equal(results[1].to_df()['brightness'][0], 0.746965, 3)
 
     graph = Graph()
     graph.add_chain(['PunctuationRemovalFilter', 'LengthExtractor'])
