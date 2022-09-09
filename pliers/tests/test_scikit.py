@@ -36,13 +36,13 @@ def test_extractor_scikit():
     trans = PliersTransformer(ext)
     res = trans.fit_transform(stim)
     assert res.shape == (1, 1)
-    assert np.isclose(res[0][0], 0.88784294, 1e-5)
+    assert np.isclose(res[0][0], 0.88784294, 1e-4)
     meta = trans.metadata_
     assert np.isnan(meta['onset'][0])
     trans = PliersTransformer('BrightnessExtractor')
     res = trans.fit_transform(stim)
     assert res.shape == (1, 1)
-    assert np.isclose(res[0][0], 0.88784294, 1e-5)
+    assert np.isclose(res[0][0], 0.88784294, 1e-4)
     meta = trans.metadata_
     assert np.isnan(meta['onset'][0])
 
@@ -59,8 +59,8 @@ def test_within_pipeline():
     pipeline = Pipeline([('pliers', trans), ('normalizer', normalizer)])
     res = pipeline.fit_transform(stim)
     assert res.shape == (1, 2)
-    assert np.isclose(res[0][0], 0.66393, 1e-5)
-    assert np.isclose(res[0][1], 0.74780, 1e-5)
+    assert np.isclose(res[0][0], 0.66393, 1e-3)
+    assert np.isclose(res[0][1], 0.74780, 1e-3)
     meta = trans.metadata_
     assert 'onset' in meta.columns
     assert meta['class'][0] == 'ImageStim'

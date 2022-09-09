@@ -52,7 +52,7 @@ def test_graph_smoke_test():
     graph = Graph(nodes)
     result = graph.run(stim, format='wide', extractor_names='multi')
     brightness = result[('brightness_node', 'brightness')].values[0]
-    assert_almost_equal(brightness, 0.556134, 5)
+    assert_almost_equal(brightness, 0.556134, 5, 3)
 
 
 def test_add_children():
@@ -99,7 +99,7 @@ def test_small_pipeline2():
     assert ('BrightnessExtractor', 'brightness') in result.columns
     brightness = result[('BrightnessExtractor', 'brightness')].values[0]
     vibrance = result[('VibranceExtractor', 'vibrance')].values[0]
-    assert_almost_equal(brightness, 0.746965, 5)
+    assert_almost_equal(brightness, 0.746965, 3)
     assert ('VibranceExtractor', 'vibrance') in result.columns
     assert_almost_equal(vibrance, 841.577274, 5)
 
