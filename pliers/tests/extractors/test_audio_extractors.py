@@ -238,7 +238,7 @@ def test_tonnetz_extractor():
     assert np.isclose(df['onset'][1], 0.04644)
     assert np.isclose(df['duration'][0], 0.04644)
 
-    tonal_centroid_answers = SemVerDict({'>=0.6.3,<0.8.0': -0.0391266, '>=0.8.0,<0.9.0': -0.0804008, '>=0.9.0': -0.009426})
+    tonal_centroid_answers = SemVerDict({'>=0.6.3,<0.8.0': -0.0391266, '>=0.8.0,<0.9.0': -0.0804008, '>=0.9.0': -0.009426200446909845})
     assert np.isclose(df['tonal_centroid_0'][0], tonal_centroid_answers[LIBROSA_VERSION])
 
 
