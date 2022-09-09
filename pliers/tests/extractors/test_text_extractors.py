@@ -198,7 +198,7 @@ def test_spacy_token_extractor():
     result = ext.transform(stim).to_df()
     assert result['text'][0] == 'This'
     assert result['lemma_'][0].lower() == 'this'
-    assert result['pos_'][0] == 'DET'
+    assert result['pos_'][0] == 'PRON'
     assert result['tag_'][0] == 'DT'
     assert result['dep_'][0] == 'nsubj'
     assert result['shape_'][0] == 'Xxxx'

@@ -90,6 +90,7 @@ class WordStemmingFilter(TextFilter):
             try:
                 tokens = word_tokenize(tokens[0])
             except LookupError:
+                import pdb; pdb.set_trace()
                 nltk.download('punkt')
                 tokens = word_tokenize(tokens[0])
 
@@ -98,8 +99,13 @@ class WordStemmingFilter(TextFilter):
             stemmed = ' '.join([self.stemmer.stem(t) for t in tokens])
         else:
             pos_tagged = pos_wordnet(tokens)
-            stemmed = ' '.join([self.stemmer.lemmatize(t, pos=pos_tagged[t])
-                                for t in tokens])
+            try:
+                stemmed = ' '.join([self.stemmer.lemmatize(t, pos=pos_tagged[t])
+                                    for t in tokens])
+            except LookupError:
+                nltk.download('omw-1.4')
+                stemmed = ' '.join([self.stemmer.lemmatize(t, pos=pos_tagged[t])
+                    for t in tokens])
         return TextStim(stim.filename, stemmed, stim.onset, stim.duration,
                         stim.order, stim.url)
 
