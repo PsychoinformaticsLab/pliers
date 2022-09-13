@@ -53,10 +53,10 @@ def test_tensorflow_keras_application_extractor():
     results = ext.transform(imgs)
     df = merge_results(results, format='wide', extractor_names='multi')
     assert df.shape == (2, 19)
-    true = 0.9737075
+    true = 0.9769853
     pred = df['TensorFlowKerasApplicationExtractor'].loc[0, 'Granny_Smith']
     assert np.isclose(true, pred, 1e-05)
-    true = 0.64234024
+    true = 0.6623167
     pred = df['TensorFlowKerasApplicationExtractor'].loc[1, 'Windsor_tie']
     assert np.isclose(true, pred, 1e-05)
     assert 4.2 in df[('onset', np.nan)].values
