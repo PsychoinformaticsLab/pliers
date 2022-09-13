@@ -35,7 +35,7 @@ def test_text_extractor():
     result = td.transform(stim)[2].to_df()
     assert result['duration'][0] == 1
     assert result.shape == (1, 6)
-    assert np.isclose(result['frequency'][0], 11.729, 1e-5)
+    assert np.isclose(result['frequency'][0], 11.729, 1e-3)
 
 
 def test_text_length_extractor():
@@ -80,7 +80,7 @@ def test_predefined_dictionary_extractor():
     result = td.transform(stim).to_df()
     assert result.shape == (1, 5)
     assert 'aoa_Freq_pm' in result.columns
-    assert np.isclose(result['aoa_Freq_pm'][0], 10.313725, 1e-5)
+    assert np.isclose(result['aoa_Freq_pm'][0], 10.313725, 1e-3)
 
 
 def test_predefined_dictionary_retrieval():

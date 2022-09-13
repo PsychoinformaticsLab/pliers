@@ -130,7 +130,7 @@ def test_validation_levels(caplog):
     stim2 = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
     res = ext.transform([stim, stim2], validation='loose')
     assert len(res) == 1
-    assert np.isclose(res[0].to_df()['brightness'][0], 0.88784294, 1e-5)
+    assert np.isclose(res[0].to_df()['brightness'][0], 0.88784294, 1e-3)
 
     config.set_option('cache_transformers', cache_default)
 
