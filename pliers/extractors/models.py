@@ -54,20 +54,20 @@ class TFHubExtractor(Extractor):
             output for compatibility with extractor result
         transform_inp (optional): function to transform Stim.data 
             for compatibility with model input format
-        keras_args (dict): arguments to hub.KerasLayer call
+        keras_kwargs (dict): arguments to hub.KerasLayer call
     '''
 
-    _log_attributes = ('url_or_path', 'features', 'transform_out', 'keras_args')
+    _log_attributes = ('url_or_path', 'features', 'transform_out', 'keras_kwargs')
     _input_type = Stim
 
     def __init__(self, url_or_path, features=None,
                  transform_out=None, transform_inp=None,
-                 keras_args=None):
+                 keras_kwargs=None):
         verify_dependencies(['tensorflow_hub'])
-        if keras_args is None:
-            keras_args = {}
-        self.keras_args = keras_args
-        self.model = hub.KerasLayer(url_or_path, **keras_args)
+        if keras_kwargs is None:
+            keras_kwargs = {}
+        self.keras_kwargs = keras_kwargs
+        self.model = hub.KerasLayer(url_or_path, **keras_kwargs)
         self.url_or_path = url_or_path
         self.features = features
         self.transform_out = transform_out
@@ -122,29 +122,29 @@ class TFHubImageExtractor(TFHubExtractor):
         features (optional): list of labels (for classification) 
             or other feature names. If not specified, returns 
             numbered features (feature_0, feature_1, ... ,feature_n)
-        keras_args (dict): arguments to hub.KerasLayer call
+        keras_kwargs (dict): arguments to hub.KerasLayer call
     '''
 
     _input_type = ImageStim
-    _log_attributes = ('url_or_path', 'features', 'keras_args')
+    _log_attributes = ('url_or_path', 'features', 'keras_kwargs')
 
     def __init__(self, 
                  url_or_path, 
                  features=None,
                  input_dtype=tf.float32,
-                 keras_args=None):
+                 keras_kwargs=None):
         
         self.input_dtype = input_dtype
-        if keras_args is None:
-            keras_args = {}
-        self.keras_args = keras_args
+        if keras_kwargs is None:
+            keras_kwargs = {}
+        self.keras_kwargs = keras_kwargs
 
         logging.warning('Some models may require specific input shapes.'
                         ' Incompatible shapes may raise errors'
                         ' at extraction. If needed, you can reshape'
                         ' your input image using ImageResizingFilter, '
                         ' and rescale using ImageRescalingFilter')
-        super().__init__(url_or_path, features, keras_args=keras_args)
+        super().__init__(url_or_path, features, keras_kwargs=keras_kwargs)
 
     def _preprocess(self, stim):
         x = tf.convert_to_tensor(stim.data, dtype=self.input_dtype)
@@ -194,10 +194,10 @@ class TFHubTextExtractor(TFHubExtractor):
                  output_key='default',
                  preprocessor_url_or_path=None, 
                  preprocessor_kwargs=None,
-                 keras_args=None,
+                 keras_kwargs=None,
                  **kwargs):
         super().__init__(url_or_path, features, 
-                         keras_args=keras_args, 
+                         keras_kwargs=keras_kwargs, 
                          **kwargs)
         self.output_key = output_key
         self.preprocessor_url_or_path=preprocessor_url_or_path
