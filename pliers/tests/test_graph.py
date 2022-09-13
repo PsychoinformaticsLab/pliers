@@ -101,7 +101,7 @@ def test_small_pipeline2():
     vibrance = result[('VibranceExtractor', 'vibrance')].values[0]
     assert_almost_equal(brightness, 0.746965, 3)
     assert ('VibranceExtractor', 'vibrance') in result.columns
-    assert_almost_equal(vibrance, 836.25558, 3)
+    assert_almost_equal(vibrance, 841.577274, 3)
 
 
 def test_small_pipeline_json_spec():
