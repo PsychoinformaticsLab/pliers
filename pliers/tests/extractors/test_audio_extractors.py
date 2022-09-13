@@ -376,7 +376,7 @@ def test_harmonic_extractor():
     assert df.shape == (624786, 5)
     assert np.isclose(df['onset'][8], 0.371519)
     assert np.isclose(df['duration'][8], 0.04644)
-    assert np.isclose(df['harmonic'][8], answers[LIBROSA_VERSION], rtol=1e-4) 
+    assert np.isclose(df['harmonic'][8], answers[LIBROSA_VERSION], rtol=1e-3) 
 
 
 def test_percussion_extractor():
@@ -392,11 +392,11 @@ def test_percussion_extractor():
     assert df.shape == (624786, 5)
     assert np.isclose(df['onset'][9], 0.417959)
     assert np.isclose(df['duration'][9], 0.04644)
-    assert np.isclose(df['percussive'][9], answers[LIBROSA_VERSION][9], rtol=1e-4) 
+    assert np.isclose(df['percussive'][9], answers[LIBROSA_VERSION][9], rtol=1e-3) 
     
     assert np.isclose(df['onset'][17], 0.789478)
     assert np.isclose(df['duration'][17], 0.04644)
-    assert np.isclose(df['percussive'][17], answers[LIBROSA_VERSION][17], rtol=1e-4) 
+    assert np.isclose(df['percussive'][17], answers[LIBROSA_VERSION][17], rtol=1e-3) 
     
 def test_f0_extractor():
     audio = AudioStim(join(AUDIO_DIR, 'barber.wav'))
@@ -406,15 +406,15 @@ def test_f0_extractor():
     assert df.shape == (1221, 5)
     assert np.isclose(df['onset'][9], 0.417959)
     assert np.isclose(df['duration'][9], 0.04644)
-    assert np.isclose(df['yin'][9], 83.79720, rtol=1e-4)
+    assert np.isclose(df['yin'][9], 83.79720, rtol=1e-3)
 
     assert np.isclose(df['onset'][17], 0.789478)
     assert np.isclose(df['duration'][17], 0.04644)
-    assert np.isclose(df['yin'][17], 210.88762, rtol=1e-4)
+    assert np.isclose(df['yin'][17], 210.88762, rtol=1e-3)
 
     assert np.isclose(df['onset'][29], 1.346757)
     assert np.isclose(df['duration'][29], 0.04644)
-    assert np.isclose(df['yin'][29], 82.76108, rtol=1e-4)
+    assert np.isclose(df['yin'][29], 82.76108, rtol=1e-3)
 
 
 @pytest.mark.parametrize('hop_size', [0.1, 1])
