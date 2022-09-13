@@ -119,7 +119,7 @@ def test_google_vision_face_batch():
     result = ext.transform(video)
     result = merge_results(result, format='wide', extractor_names=False)
     assert 'joyLikelihood' in result.columns
-    assert result.shape == (28, 139)
+    assert result.shape == (26, 139)
 
     video = VideoStim(join(VIDEO_DIR, 'small.mp4'))
     video = conv.transform(video)
@@ -200,7 +200,7 @@ def test_google_vision_api_extractor_large():
     config.set_option('allow_large_jobs', True)
     results = merge_results(ext.transform(images))
     assert 'GoogleVisionAPILabelExtractor#Apple' in results.columns
-    assert results.shape == (2, 32)
+    assert results.shape == (2, 61)
 
     config.set_option('allow_large_jobs', default)
     config.set_option('large_job', default_large)
@@ -296,8 +296,8 @@ def test_google_video_api_label_extractor(caplog):
         assert np.isclose(result['onset'][2], 3.2, 0.1)
         assert np.isnan(result['cat'][1])
         assert result['cat'][2] > 0.5
-        assert np.isnan(result['clock'][2])
-        assert result['clock'][1] > 0.5 or result['clock'][0] > 0.5
+        assert np.isnan(result['category_technology'][2])
+        assert result['category_technology'][1] > 0.5 or result['category_technology'][0] > 0.5
 
 
 @pytest.mark.long_test
@@ -364,7 +364,7 @@ def test_google_language_api_extractor():
 
     stim = TextStim(join(TEXT_DIR, 'scandal.txt'))
     result = ext.transform(stim).to_df(timing=False, object_id='auto')
-    assert result.shape == (46, 10)
+    assert result.shape == (46, 11)
     assert 'category_/Books & Literature' in result.columns
     assert result['category_/Books & Literature'][0] > 0.5
     irene = result[result['text'] == 'Irene Adler']
@@ -464,4 +464,4 @@ def test_google_language_api_entity_sentiment_extractor():
     assert result['text'][8] == 'phones'
     assert result['type'][8] == 'CONSUMER_GOOD'
     assert 'sentiment_score' in result.columns
-    assert result['sentiment_score'][8] > 0.6 # 'love their ... phones'
+    assert result['sentiment_score'][8] > 0.4 # 'love their ... phones'
