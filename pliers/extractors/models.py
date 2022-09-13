@@ -131,10 +131,10 @@ class TFHubImageExtractor(TFHubExtractor):
     def __init__(self, 
                  url_or_path, 
                  features=None,
-                 input_dtype=tf.float32,
+                 input_dtype=None,
                  keras_kwargs=None):
         
-        self.input_dtype = input_dtype
+        self.input_dtype = input_dtype if input_dtype else tf.float32
         if keras_kwargs is None:
             keras_kwargs = {}
         self.keras_kwargs = keras_kwargs
