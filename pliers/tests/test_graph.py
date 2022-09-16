@@ -378,7 +378,7 @@ def test_adding_nodes():
     results = graph.run(img, merge=False)
     assert len(results) == 2
     # To account for variation in values with Python version
-    assert results[0].to_df()['vibrance'][0] > 840 
+    assert results[0].to_df()['vibrance'][0] > 830 
     assert_almost_equal(results[1].to_df()['brightness'][0], 0.746965, 3)
 
     graph = Graph()

@@ -41,7 +41,7 @@ def test_vibrance_extractor():
     stim = ImageStim(join(IMAGE_DIR, 'apple.jpg'), onset=4.2, duration=1)
     result = VibranceExtractor().transform(stim).to_df()
     color = result['vibrance'][0]
-    assert color > 1365
+    assert color > 1364
     assert color < 1375
     assert result['onset'][0] == 4.2
     assert result['duration'][0] == 1
