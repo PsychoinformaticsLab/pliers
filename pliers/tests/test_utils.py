@@ -86,7 +86,7 @@ def test_resample():
         df[df.onset == 0]['value'].values[0]
 
     assert np.allclose(downsampled_df[downsampled_df.onset == 2]['value'].values[0],
-                       0.2261582761938699)
+                       0.2261582761938699, rtol=1e-03)
 
 
     # Test upsample

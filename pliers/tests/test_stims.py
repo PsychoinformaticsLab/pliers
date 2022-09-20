@@ -99,7 +99,7 @@ def test_video_stim():
     f1 = frames[100]
     assert isinstance(f1, VideoFrameStim)
     assert isinstance(f1.onset, float)
-    assert np.isclose(f1.duration, 1 / 30.0, 1e-5)
+    assert np.isclose(f1.duration, 1 / 30.0, 1e-3)
     f1.data.shape == (320, 560, 3)
 
     # Test getting of specific frame
@@ -251,7 +251,7 @@ def test_transformations_on_compound_stim():
     ext = BrightnessExtractor()
     results = ext.transform(stim)
     assert len(results) == 2
-    assert np.allclose(results[0]._data[0], 0.88784294)
+    assert np.allclose(results[0]._data[0], 0.88784294, rtol=1e-3)
 
 
 def test_transcribed_audio_stim():
@@ -337,7 +337,7 @@ def test_twitter():
     ext = BrightnessExtractor()
     res = ext.transform(ut_tweet)[0].to_df()
     brightness = res['brightness'][0]
-    assert np.isclose(brightness, 0.54057, 1e-5)
+    assert np.isclose(brightness, 0.54057, 1e-3)
 
 
 def test_series():
