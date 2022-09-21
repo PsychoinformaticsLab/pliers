@@ -39,7 +39,7 @@ def test_transformation_history():
 def test_transform_with_string_input():
     ext = BrightnessExtractor()
     res = ext.transform(join(get_test_data_path(), 'image', 'apple.jpg'))
-    np.testing.assert_almost_equal(res.to_df()['brightness'].values[0], 0.887842942)
+    np.testing.assert_almost_equal(res.to_df()['brightness'].values[0], 0.887842942, 3)
 
 
 def test_parallelization():
@@ -130,7 +130,7 @@ def test_validation_levels(caplog):
     stim2 = ImageStim(join(get_test_data_path(), 'image', 'apple.jpg'))
     res = ext.transform([stim, stim2], validation='loose')
     assert len(res) == 1
-    assert np.isclose(res[0].to_df()['brightness'][0], 0.88784294, 1e-5)
+    assert np.isclose(res[0].to_df()['brightness'][0], 0.88784294, 1e-3)
 
     config.set_option('cache_transformers', cache_default)
 
