@@ -22,7 +22,7 @@ WIT_AI_API_KEY=abc123
 IBM_USERNAME=joe@schmo.edu
 IBM_PASSWORD=xyzabc
 GOOGLE_APPLICATION_CREDENTIALS=/root/share/googleapi.json
-CLARIFAI_API_KEY=hhhvvv
+CLARIFAI_ACCESS_TOKEN=hhhvvv
 ```
 This should be obvious, but just to be sure: NEVER check this file into a github repository, unless you want to pay for free cloud computing for a cybercriminal.
 

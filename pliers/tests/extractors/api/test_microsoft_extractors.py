@@ -74,7 +74,7 @@ def test_microsoft_vision_api_tag_extractor():
     assert 'apple' in res.columns
     assert res['apple'][0] > 0.7
 
-    url = 'https://via.placeholder.com/350x150'
+    url = 'https://upload.wikimedia.org/wikipedia/commons/c/cf/Google_URL_Shortener_Logo.png'
     stim = ImageStim(url=url)
     result = ext.transform(stim).to_df()
     assert result['typography'][0] > 0.1

@@ -140,7 +140,7 @@ def test_google_vision_api_label_extractor():
     assert 'Apple' in result.columns
     assert result['Apple'][0] > 0.75
 
-    url = 'https://via.placeholder.com/350x150'
+    url = 'https://upload.wikimedia.org/wikipedia/commons/c/cf/Google_URL_Shortener_Logo.png'
     stim = ImageStim(url=url)
     result = ext.transform(stim).to_df()
     assert result['Text'][0] > 0.9

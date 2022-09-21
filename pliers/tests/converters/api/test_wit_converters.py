@@ -24,5 +24,5 @@ def test_WitTranscriptionConverter():
     text = [elem.text for elem in out_stim]
     assert 'today' in text or 'negotiations' in text
 
-    conv = WitTranscriptionConverter(api_key='nogood')
+    conv = WitTranscriptionConverter(access_token='nogood')
     assert not conv.validate_keys()
