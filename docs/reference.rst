@@ -167,7 +167,7 @@ Extractors (:mod:`pliers.extractors`)
   GoogleVisionAPISafeSearchExtractor
   GoogleVisionAPIWebEntitiesExtractor
   MicrosoftAPIFaceExtractor
-  MicrosoftAPIFaceEmotionExtractor
+
   MicrosoftVisionAPIExtractor
   MicrosoftVisionAPITagExtractor
   MicrosoftVisionAPICategoryExtractor

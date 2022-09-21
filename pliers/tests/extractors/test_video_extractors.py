@@ -16,4 +16,4 @@ def test_optical_flow_extractor():
     result = FarnebackOpticalFlowExtractor().transform(stim).to_df()
     target = result.query('onset==7.2')['total_flow']
     # Value returned by cv2 seems to change over versions, so use low precision
-    assert np.isclose(target, 86248.05, 1e-4)
+    assert np.isclose(target, 86248.05, 1e-3)
