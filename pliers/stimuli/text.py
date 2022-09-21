@@ -230,7 +230,11 @@ class ComplexTextStim(Stim):
             @requires_nltk_corpus
             def tokenize_text(text):
                 if unit == 'word':
-                    return nltk.word_tokenize(text, language)
+                    try:
+                        return nltk.word_tokenize(text, language)
+                    except LookupError:
+                        nltk.download('punkt')
+                        return nltk.word_tokenize(text, language)
                 elif unit.startswith('sent'):
                     return nltk.sent_tokenize(text, language)
                 else:

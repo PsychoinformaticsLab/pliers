@@ -22,7 +22,6 @@ from .api import (ClarifaiAPIImageExtractor,
                   GoogleLanguageAPITextCategoryExtractor,
                   GoogleLanguageAPIEntitySentimentExtractor,
                   MicrosoftAPIFaceExtractor,
-                  MicrosoftAPIFaceEmotionExtractor,
                   MicrosoftVisionAPIExtractor,
                   MicrosoftVisionAPITagExtractor,
                   MicrosoftVisionAPICategoryExtractor,
@@ -53,8 +52,10 @@ from .audio import (LibrosaFeatureExtractor,
                     BeatTrackExtractor,
                     HarmonicExtractor,
                     PercussiveExtractor,
-                    AudiosetLabelExtractor,
+                    AudiosetLabelExtractor, 
+                    FundamentalFrequencyExtractor,
                     MFCCEnergyExtractor)
+
 from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
                     VibranceExtractor, FaceRecognitionFaceEncodingsExtractor,
                     FaceRecognitionFaceLandmarksExtractor,
@@ -117,7 +118,6 @@ __all__ = [
     'FaceRecognitionFaceLandmarksExtractor',
     'FaceRecognitionFaceLocationsExtractor',
     'MicrosoftAPIFaceExtractor',
-    'MicrosoftAPIFaceEmotionExtractor',
     'MicrosoftVisionAPIExtractor',
     'MicrosoftVisionAPITagExtractor',
     'MicrosoftVisionAPICategoryExtractor',
@@ -154,5 +154,9 @@ __all__ = [
     'BertSentimentExtractor',
     'AudiosetLabelExtractor',
     'WordCounterExtractor',
-    'MetricExtractor'
+    'MetricExtractor',
+    'SpectralFlatnessExtractor',
+    'OnsetDetectExtractor',
+    'FundamentalFrequencyExtractor',
+    'MFCCEnergyExtractor'
 ]

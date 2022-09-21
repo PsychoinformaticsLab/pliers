@@ -172,19 +172,23 @@ class LibrosaFeatureExtractor(AudioExtractor, metaclass=ABCMeta):
             return getattr(librosa.feature, self._feature)(
                 y=stim.data, sr=stim.sampling_rate, **self.librosa_kwargs)
 
-        elif self._feature in[ 'onset_detect', 'onset_strength_multi']:
+        elif self._feature in ['onset_detect', 'onset_strength_multi']:
             return getattr(librosa.onset, self._feature)(
                 y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
                 **self.librosa_kwargs)
 
-        elif self._feature in[ 'tempo', 'beat_track']:
+        elif self._feature in ['tempo', 'beat_track']:
             return getattr(librosa.beat, self._feature)(
                 y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
                 **self.librosa_kwargs)
 
-        elif self._feature in[ 'harmonic', 'percussive']:
+        elif self._feature in ['harmonic', 'percussive']:
             return getattr(librosa.effects, self._feature)(
                 y=stim.data,
+                **self.librosa_kwargs)
+        elif self._feature == 'yin':
+            return getattr(librosa, self._feature)(
+                y=stim.data, sr=stim.sampling_rate, hop_length=self.hop_length,
                 **self.librosa_kwargs)
         else:
             return getattr(librosa.feature, self._feature)(
@@ -501,6 +505,22 @@ class PercussiveExtractor(LibrosaFeatureExtractor):
     _feature = 'percussive'
 
 
+class FundamentalFrequencyExtractor(LibrosaFeatureExtractor):
+
+    ''' Extracts the fundamental frequency using the YIN algorithm as
+        implemented in the Librosa library.
+
+    For details on argument specification visit:
+    https://librosa.org/doc/latest/generated/librosa.yin.html.'''
+
+    _feature = 'yin'
+
+    def __init__(self, fmin=65, fmax=2093, **kwargs):
+        self.fmin = fmin
+        self.fmax = fmax
+        super().__init__(fmin=fmin, fmax=fmax, **kwargs)
+
+
 class AudiosetLabelExtractor(AudioExtractor):
 
     ''' Extract probability of 521 audio event classes based on AudioSet
@@ -511,8 +531,9 @@ class AudiosetLabelExtractor(AudioExtractor):
     hop_size (float): size of the audio segment (in seconds) on which label
         extraction is performed.
     top_n (int): specifies how many of the highest label probabilities are
-        returned. If None, all labels (or all in labels) are returned.
-        Top_n and labels are mutually exclusive arguments.
+        returned. If None, all labels (or those passed to the labels 
+        argument) are returned. Top_n and labels are mutually 
+        exclusive.
     labels (list): specifies subset of labels for which probabilities
         are to be returned. If None, all labels (or top_n) are returned.
         The full list of labels is available in the audioset/yamnet
@@ -622,13 +643,29 @@ class AudiosetLabelExtractor(AudioExtractor):
 
 
 class MFCCEnergyExtractor(MFCCExtractor):
-    ''' Given a Middle Bound, Extract the Energy from the Low/High Register
-    of Mel-Frequency Ceptral Coefficients.
+    ''' Low-Quefrency and High-Quefrency Mel-Frequency Spectrum extractor.
+    
+    Extracts two auditory features representing broad-spectrum information (timbre) 
+    and fine-scale spectral structure (pitch) respectively.
+    Derived from Hanke et al., 2015 (https://doi.org/10.12688/f1000research.6679.1)
+    
+    This extractor maps selected cepstral coefficients back to the spectrum 
+    domain by reconstructing the n_mfcc mel-frequency spectrum bands using the 
+    low-quefrency and high-quefrency mfcc coefficients respectively.
+    
+    Users can select the top or bottom n_coefs. Non-selected coefficients are 
+    zeroed out, and the result is mapped back to spectral domain using 
+    inverse DCT (using librosas's mfcc_to_mel function).
 
     Args:
-    n_mfcc (int): specifies the number of MFCC to extract
-    n_coefs(int): cepstrum coefficients to keep in the high/low quefrency spectrum
+    n_mfcc (int): specifies the number of MFCCs
+    n_coefs (int): cepstrum coefficients to keep in the high/low quefrency spectrum
     hop_length (int): hop length in number of samples
+    n_mels (int): Dimensionality of mel frequency spectrum to map back to
+    register (str): 'low' or 'high'. Specifies which MFCCs are to be kept.
+    norm (str): Normalization type for DCT
+    dct_type (int): Discrete cosine transform (DCT) type, default is 2.
+    lifter (int): If lifter>0, apply inverse liftering (inverse cepstral filtering)
     librosa_kwargs (optional): Optional named arguments to pass to librosa
     '''
 
@@ -640,7 +677,10 @@ class MFCCEnergyExtractor(MFCCExtractor):
     def __init__(self, n_mfcc=48, n_coefs=13, hop_length=1024, 
                  n_mels=128, register='low', norm='ortho',
                  dct_type=2, lifter=0, **librosa_kwargs):
-        assert register in ['low', 'high']
+        if register not in ['low', 'high']:
+            raise ValueError('register should \'low\' or \'high\'')
+        if dct_type not in [1, 2, 3]:
+            raise ValueError('dct_type should be 1, 2, or 3')
         self.n_mfcc = n_mfcc
         self.n_mels = n_mels
         self.n_coefs = n_coefs

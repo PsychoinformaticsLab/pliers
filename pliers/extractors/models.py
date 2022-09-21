@@ -200,8 +200,8 @@ class TFHubTextExtractor(TFHubExtractor):
                          keras_kwargs=keras_kwargs, 
                          **kwargs)
         self.output_key = output_key
-        self.preprocessor_url_or_path=preprocessor_url_or_path
-        self.preprocessor_kwargs = preprocessor_kwargs
+        self.preprocessor_url_or_path = preprocessor_url_or_path
+        self.preprocessor_kwargs = preprocessor_kwargs if preprocessor_kwargs else {}
         try:
             verify_dependencies(['tensorflow_text'])
         except MissingDependencyError:
@@ -213,8 +213,8 @@ class TFHubTextExtractor(TFHubExtractor):
     def _preprocess(self, stim):
         x = listify(stim.data)
         if self.preprocessor_url_or_path:
-            preprocessor = hub.KerasLayer(self.preprocessor_url_or_path,
-                                          self.preprocessor_kwargs)
+            preprocessor = hub.KerasLayer(
+                self.preprocessor_url_or_path, **self.preprocessor_kwargs)
             x = preprocessor(x)
         return x
     
