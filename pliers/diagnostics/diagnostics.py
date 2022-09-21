@@ -97,7 +97,7 @@ def variances(df):
     return pd.Series(df.var(axis=0), name='Variances')
 
 
-class Diagnostics(object):
+class Diagnostics:
     defaults = {
         'Eigenvalues': (lambda x: x < 0.05),
         'ConditionIndices': (lambda x: x > 20),
@@ -179,9 +179,9 @@ class Diagnostics(object):
             if diagnostic == 'CorrelationMatrix':
                 result = result.copy()
                 np.fill_diagonal(result.values, 0)
-            return result.applymap(thresh).sum().nonzero()[0]
+            return result.applymap(thresh).sum().to_numpy().nonzero()[0]
         else:
-            return result.apply(thresh).nonzero()[0]
+            return result.apply(thresh).to_numpy().nonzero()[0]
 
     def flag_all(self, thresh_dict=None, include=None, exclude=None):
         '''

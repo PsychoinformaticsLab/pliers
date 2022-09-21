@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+
 from pliers.diagnostics import Diagnostics
 from pliers.diagnostics import correlation_matrix
 from pliers.diagnostics import eigenvalues
@@ -55,7 +56,7 @@ def test_correlation_matrix():
     assert corr.shape == (df.shape[1], df.shape[1])
     assert np.allclose(np.diagonal(corr), np.array([1.0] * df.shape[1]))
     assert np.isfinite(corr['a']['b'])
-    assert np.isclose(corr['a']['b'], corr['b']['a'], 1e-05)
+    assert np.isclose(corr['a']['b'], corr['b']['a'], 1e-03)
 
 
 def test_eigenvalues():

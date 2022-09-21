@@ -4,8 +4,8 @@ import base64
 import os
 import tempfile
 
-from .audio import AudioToTextConverter
-from .image import ImageToTextConverter
+from pliers.converters.audio import AudioToTextConverter
+from pliers.converters.image import ImageToTextConverter
 from pliers.stimuli.text import TextStim, ComplexTextStim
 from pliers.transformers import (GoogleVisionAPITransformer,
                                  GoogleAPITransformer)
@@ -19,22 +19,33 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
         language_code (str): The language of the supplied AudioStim.
         profanity_filter (bool): If set to True, will ask Google to try and
             filter out profanity from the resulting Text.
-        speech_contexts (list): A list of a list of favored phrases or words
-            to assist the API. The inner list is a sequence of word tokens,
-            each outer element is a potential context.
+        speech_contexts (list): A list of favored phrases or words
++            to assist the API.
+        discovery_file (str): path to discovery file containing Google
+            application credentials.
+        api_version (str): API version to use.
+        max_results (int): Max number of results per page.
+        num_retries (int): Number of times to retry query on failure.
+        rate_limit (int): The minimum number of seconds required between
+                transform calls on this Transformer.
     '''
 
     api_name = 'speech'
     resource = 'speech'
-    _log_attributes = ('language_code', 'profanity_filter', 'speech_contexts',
-                       'handle_annotations')
+    _log_attributes = ('discovery_file', 'language_code', 'profanity_filter',
+                       'speech_contexts')
 
     def __init__(self, language_code='en-US', profanity_filter=False,
-                 speech_contexts=None, *args, **kwargs):
+                 speech_contexts=None, discovery_file=None, api_version='v1',
+                 max_results=100, num_retries=3, rate_limit=None):
         self.language_code = language_code
         self.profanity_filter = profanity_filter
         self.speech_contexts = speech_contexts
-        super(GoogleSpeechAPIConverter, self).__init__(*args, **kwargs)
+        super().__init__(discovery_file=discovery_file,
+                             api_version=api_version,
+                             max_results=max_results,
+                             num_retries=num_retries,
+                             rate_limit=rate_limit)
 
     def _query_api(self, request):
         request_obj = self.service.speech().recognize(body=request)
@@ -49,14 +60,13 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
             data = f.read()
         os.remove(tmp)
 
-        content = base64.b64encode(data).decode()
         if self.speech_contexts:
-            speech_contexts = [{'phrases': c} for c in self.speech_contexts]
+            speech_contexts = [{'phrases': self.speech_contexts}]
         else:
             speech_contexts = []
         request = {
             'audio': {
-                'content': content
+                'content': base64.b64encode(data).decode()
             },
             'config': {
                 'encoding': 'FLAC',
@@ -78,19 +88,18 @@ class GoogleSpeechAPIConverter(GoogleAPITransformer, AudioToTextConverter):
         if 'error' in response:
             raise Exception(response['error']['message'])
 
-        offset = 0.0 if stim.onset is None else stim.onset
+        words = []
         if 'results' in response:
             for result in response['results']:
                 transcription = result['alternatives'][0]
-                words = []
                 for w in transcription['words']:
                     onset = float(w['startTime'][:-1])
                     duration = float(w['endTime'][:-1]) - onset
                     words.append(TextStim(text=w['word'],
-                                          onset=offset + onset,
+                                          onset=onset,
                                           duration=duration))
 
-        return ComplexTextStim(elements=words, onset=stim.onset)
+        return ComplexTextStim(elements=words)
 
 
 class GoogleVisionAPITextConverter(GoogleVisionAPITransformer,
@@ -111,40 +120,41 @@ class GoogleVisionAPITextConverter(GoogleVisionAPITransformer,
     request_type = 'TEXT_DETECTION'
     response_object = 'textAnnotations'
     VERSION = '1.0'
+    _log_attributes = ('discovery_file', 'handle_annotations', 'api_version')
 
-    def __init__(self, handle_annotations='first', *args, **kwargs):
-        super(GoogleVisionAPITextConverter, self).__init__(*args, **kwargs)
+    def __init__(self, handle_annotations='first', discovery_file=None,
+                 api_version='v1', max_results=100, num_retries=3,
+                 rate_limit=None):
         self.handle_annotations = handle_annotations
+        super().__init__(discovery_file=discovery_file,
+                             api_version=api_version,
+                             max_results=max_results,
+                             num_retries=num_retries,
+                             rate_limit=rate_limit)
 
     def _convert(self, stims):
         request = self._build_request(stims)
         responses = self._query_api(request)
         texts = []
 
-        for i, response in enumerate(responses):
-            stim = stims[i]
+        for response in responses:
             if response and self.response_object in response:
                 annotations = response[self.response_object]
                 # Combine the annotations
                 if self.handle_annotations == 'first':
                     text = annotations[0]['description']
-                    texts.append(TextStim(text=text, onset=stim.onset,
-                                          duration=stim.duration))
+                    texts.append(TextStim(text=text))
                 elif self.handle_annotations == 'concatenate':
                     text = ''
                     for annotation in annotations:
                         text = ' '.join([text, annotation['description']])
-                    texts.append(TextStim(text=text, onset=stim.onset,
-                                          duration=stim.duration))
+                    texts.append(TextStim(text=text))
                 elif self.handle_annotations == 'list':
                     for annotation in annotations:
-                        texts.append(TextStim(text=annotation['description'],
-                                              onset=stim.onset,
-                                              duration=stim.duration))
+                        texts.append(TextStim(text=annotation['description']))
             elif 'error' in response:
                 raise Exception(response['error']['message'])
             else:
-                texts.append(TextStim(text='', onset=stim.onset,
-                                      duration=stim.duration))
+                texts.append(TextStim(text=''))
 
         return texts

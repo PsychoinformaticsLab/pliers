@@ -1,3 +1,11 @@
+from os.path import join
+from pathlib import Path
+from os import environ
+import shutil
+import numpy as np
+import pytest
+import spacy
+from pliers import config
 from pliers.extractors import (DictionaryExtractor,
                                PartOfSpeechExtractor,
                                LengthExtractor,
@@ -5,14 +13,15 @@ from pliers.extractors import (DictionaryExtractor,
                                PredefinedDictionaryExtractor,
                                TextVectorizerExtractor,
                                WordEmbeddingExtractor,
-                               VADERSentimentExtractor)
+                               VADERSentimentExtractor,
+                               SpaCyExtractor,
+                               WordCounterExtractor)
 from pliers.extractors.base import merge_results
 from pliers.stimuli import TextStim, ComplexTextStim
-from ..utils import get_test_data_path
+from pliers.tests.utils import get_test_data_path
 
-import numpy as np
-from os.path import join
-import pytest
+cache_default = config.get_option('cache_transformers')
+config.set_option('cache_transformers', False)
 
 TEXT_DIR = join(get_test_data_path(), 'text')
 
@@ -26,7 +35,7 @@ def test_text_extractor():
     result = td.transform(stim)[2].to_df()
     assert result['duration'][0] == 1
     assert result.shape == (1, 6)
-    assert np.isclose(result['frequency'][0], 11.729, 1e-5)
+    assert np.isclose(result['frequency'][0], 11.729, 1e-3)
 
 
 def test_text_length_extractor():
@@ -71,7 +80,26 @@ def test_predefined_dictionary_extractor():
     result = td.transform(stim).to_df()
     assert result.shape == (1, 5)
     assert 'aoa_Freq_pm' in result.columns
-    assert np.isclose(result['aoa_Freq_pm'][0], 10.313725, 1e-5)
+    assert np.isclose(result['aoa_Freq_pm'][0], 10.313725, 1e-3)
+
+
+def test_predefined_dictionary_retrieval():
+    variables = [
+        'affect/D.Mean.H',
+        'concreteness/SUBTLEX',
+        'subtlexusfrequency/Zipf-value',
+        'calgarysemanticdecision/RTclean_mean',
+        'massiveauditorylexicaldecision/PhonLev'
+    ]
+    stim = TextStim(text='perhaps')
+    td = PredefinedDictionaryExtractor(variables)
+    result = td.transform(stim).to_df().iloc[0]
+    assert np.isnan(result['affect_D.Mean.H'])
+    assert result['concreteness_SUBTLEX'] == 6939
+    assert result['calgarysemanticdecision_RTclean_mean'] == 954.48
+    assert np.isclose(result['subtlexusfrequency_Zipf-value'], 5.1331936)
+    assert np.isclose(result['massiveauditorylexicaldecision_PhonLev'],
+                      6.65101626)
 
 
 def test_part_of_speech_extractor():
@@ -94,7 +122,29 @@ def test_word_embedding_extractor():
     result = merge_results(ext.transform(stims), extractor_names='multi',
                            format='wide')
     assert ('WordEmbeddingExtractor', 'embedding_dim99') in result.columns
-    assert 0.001091 in result[('WordEmbeddingExtractor', 'embedding_dim0')]
+    assert np.allclose(0.0010911,
+                       result[('WordEmbeddingExtractor', 'embedding_dim0')][0])
+
+    unk = TextStim(text='nowaythisinvocab')
+    result = ext.transform(unk).to_df()
+    assert result['embedding_dim10'][0] == 0.0
+
+    ones = np.ones(100)
+    ext = WordEmbeddingExtractor(join(TEXT_DIR, 'simple_vectors.bin'),
+                                 binary=True, unk_vector=ones)
+    result = ext.transform(unk).to_df()
+    assert result['embedding_dim10'][0] == 1.0
+
+    ext = WordEmbeddingExtractor(join(TEXT_DIR, 'simple_vectors.bin'),
+                                 binary=True, unk_vector='random')
+    result = ext.transform(unk).to_df()
+    assert result['embedding_dim10'][0] <= 1.0
+    assert result['embedding_dim10'][0] >= -1.0
+
+    ext = WordEmbeddingExtractor(join(TEXT_DIR, 'simple_vectors.bin'),
+                                 binary=True, unk_vector='nothing')
+    result = ext.transform(unk).to_df()
+    assert result['embedding_dim10'][0] == 0.0
 
 
 def test_vectorizer_extractor():
@@ -111,7 +161,8 @@ def test_vectorizer_extractor():
     result = merge_results(ext.transform([stim, stim2]), format='wide',
                            extractor_names='multi')
     assert ('TextVectorizerExtractor', 'woman') in result.columns
-    assert 0.129568189476 in result[('TextVectorizerExtractor', 'woman')]
+    assert np.allclose(0.129568189476,
+                       result[('TextVectorizerExtractor', 'woman')][0])
 
     ext = TextVectorizerExtractor(vectorizer='CountVectorizer',
                                   analyzer='char_wb',
@@ -133,3 +184,116 @@ def test_vader_sentiment_extractor():
     assert result2['sentiment_neg'][0] == 0.0
     assert result2['sentiment_neu'][0] == 0.248
     assert result2['sentiment_compound'][0] == 0.8439
+
+
+def test_spacy_token_extractor():
+    pytest.importorskip('spacy')
+    stim = TextStim(text='This is a test.')
+    ext = SpaCyExtractor(extractor_type='token')
+    assert ext.model is not None
+
+    ext2 = SpaCyExtractor(model='en_core_web_sm')
+    assert isinstance(ext2.model, spacy.lang.en.English)
+
+    result = ext.transform(stim).to_df()
+    assert result['text'][0] == 'This'
+    assert result['lemma_'][0].lower() == 'this'
+    assert result['pos_'][0] == 'PRON'
+    assert result['tag_'][0] == 'DT'
+    assert result['dep_'][0] == 'nsubj'
+    assert result['shape_'][0] == 'Xxxx'
+    assert result['is_alpha'][0] == 'True'
+    assert result['is_stop'][0] == 'True'
+    assert result['is_punct'][0] == 'False'
+    assert result['is_ascii'][0] == 'True'
+    assert result['is_digit'][0] == 'False'
+    assert result['sentiment'][0] == '0.0'
+
+    assert result['text'][1] == 'is'
+    assert result['lemma_'][1].lower() == 'be'
+    assert result['pos_'][1] == 'AUX'
+    assert result['tag_'][1] == 'VBZ'
+    assert result['dep_'][1] == 'ROOT'
+    assert result['shape_'][1] == 'xx'
+    assert result['is_alpha'][1] == 'True'
+    assert result['is_stop'][1] == 'True'
+    assert result['is_punct'][1] == 'False'
+    assert result['is_ascii'][1] == 'True'
+    assert result['is_digit'][1] == 'False'
+    assert result['sentiment'][1] == '0.0'
+
+    assert result['text'][2] == 'a'
+    assert result['lemma_'][2].lower() == 'a'
+    assert result['pos_'][2] == 'DET'
+    assert result['tag_'][2] == 'DT'
+    assert result['dep_'][2] == 'det'
+    assert result['shape_'][2] == 'x'
+    assert result['is_alpha'][2] == 'True'
+    assert result['is_stop'][2] == 'True'
+    assert result['is_punct'][2] == 'False'
+    assert result['is_ascii'][2] == 'True'
+    assert result['is_digit'][2] == 'False'
+    assert result['sentiment'][2] == '0.0'
+
+    assert result['text'][3] == 'test'
+    assert result['lemma_'][3].lower() == 'test'
+    assert result['pos_'][3] == 'NOUN'
+    assert result['tag_'][3] == 'NN'
+    assert result['dep_'][3] == 'attr'
+    assert result['shape_'][3] == 'xxxx'
+    assert result['is_alpha'][3] == 'True'
+    assert result['is_stop'][3] == 'False'
+    assert result['is_punct'][3] == 'False'
+    assert result['is_ascii'][3] == 'True'
+    assert result['is_digit'][3] == 'False'
+    assert result['sentiment'][3] == '0.0'
+
+
+def test_spacy_doc_extractor():
+    pytest.importorskip('spacy')
+    stim2 = TextStim(text='This is a test. And we are testing again. This '
+                     'should be quite interesting. Tests are totally fun.')
+    ext = SpaCyExtractor(extractor_type='doc')
+    assert ext.model is not None
+
+    result = ext.transform(stim2).to_df()
+    assert result['text'][0]=='This is a test. '
+    assert result['is_parsed'][0]
+    assert result['is_tagged'][0]
+    assert result['is_sentenced'][0]
+
+    assert result['text'][3]=='Tests are totally fun.'
+    assert result['is_parsed'][3]
+    assert result['is_tagged'][3]
+    assert result['is_sentenced'][3]
+
+
+def test_word_counter_extractor():
+    stim_txt = ComplexTextStim(text='This is a text where certain words occur'
+                                    ' again and again Sometimes they are '
+                                    'lowercase sometimes they are uppercase '
+                                    'There are also words that may look '
+                                    'different but they come from the same '
+                                    'lemma Take a word like text and its '
+                                    'plural texts Oh words')
+    stim_with_onsets = ComplexTextStim(filename=join(TEXT_DIR,
+                                       'complex_stim_with_repetitions.txt'))
+    ext = WordCounterExtractor()
+    result_stim_txt = ext.transform(stim_txt).to_df()
+    result_stim_with_onsets = ext.transform(stim_with_onsets).to_df()
+    assert result_stim_txt.shape[0] == 45
+    assert all(result_stim_txt['word_count'] >= 1)
+    assert result_stim_txt['word_count'][15] == 2
+    assert result_stim_txt['word_count'][44] == 3
+    assert result_stim_with_onsets.shape[0] == 8
+    assert result_stim_with_onsets['onset'][2] == 0.8
+    assert result_stim_with_onsets['duration'][2] == 0.1
+    assert result_stim_with_onsets['word_count'][2] == 2
+    assert result_stim_with_onsets['word_count'][5] == 2
+    assert result_stim_with_onsets['word_count'][7] == 1
+
+    ext2 = WordCounterExtractor(log_scale=True)
+    result_stim_txt = ext2.transform(stim_txt).to_df()
+    assert all(result_stim_txt['log_word_count'] >= 0)
+    assert result_stim_txt['log_word_count'][15] == np.log(2)
+    assert result_stim_txt['log_word_count'][44] == np.log(3)

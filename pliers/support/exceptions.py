@@ -26,7 +26,7 @@ class MissingCorpusError(PliersError):
     """
 
     def __init__(self, message=MISSING_CORPUS_MESSAGE, *args, **kwargs):
-        super(MissingCorpusError, self).__init__(message, *args, **kwargs)
+        super().__init__(message, *args, **kwargs)
 
 
 class MissingDependencyError(PliersError):
@@ -36,6 +36,6 @@ class MissingDependencyError(PliersError):
     """
 
     def __init__(self, dependencies, message=MISSING_DEPENDENCY_MESSAGE,
-                 *args, **kwargs):
-        msg = message % ', '.join(dependencies)
-        super(MissingDependencyError, self).__init__(msg, *args, **kwargs)
+                 custom_message=None, *args, **kwargs):
+        msg = custom_message or message % ', '.join(dependencies)
+        super().__init__(msg, *args, **kwargs)

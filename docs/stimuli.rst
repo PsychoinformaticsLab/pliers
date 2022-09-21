@@ -45,6 +45,7 @@ The current |Stim| hierarchy in pliers (ignoring |CompoundStim| classes discusse
     VideoFrameStim
     VideoFrameCollectionStim
     ComplexTextStim
+    SeriesStim
 
 CompoundStim classes
 ~~~~~~~~~~~~~~~~~~~~
@@ -65,7 +66,7 @@ Consider this code:
     tac = TranscribedAudioCompoundStim(audio, text)
 
     # Construct a Graph with two extractors
-    graph = Graph(['PartOfSpeechExtractor', 'RMSEExtractor'])
+    graph = Graph(['PartOfSpeechExtractor', 'RMSExtractor'])
 
     # Apply the extractors to the Stim
     result = graph.transform(tac)

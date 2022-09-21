@@ -1,10 +1,11 @@
 ''' Converter classes that operate on ImageStim inputs. '''
 
 from PIL import Image
-from .base import Converter
+
 from pliers.stimuli.image import ImageStim
 from pliers.stimuli.text import TextStim
 from pliers.utils import attempt_to_import, verify_dependencies
+from .base import Converter
 
 pytesseract = attempt_to_import('pytesseract')
 
@@ -26,5 +27,4 @@ class TesseractConverter(ImageToTextConverter):
     def _convert(self, stim):
         verify_dependencies(['pytesseract'])
         text = pytesseract.image_to_string(Image.fromarray(stim.data))
-        return TextStim(text=text, onset=stim.onset, duration=stim.duration,
-                        order=stim.order)
+        return TextStim(text=text)

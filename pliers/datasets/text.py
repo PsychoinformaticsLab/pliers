@@ -12,7 +12,7 @@ import pandas as pd
 def _load_datasets():
     path = os.path.abspath(__file__)
     path = os.path.join(os.path.dirname(path), 'dictionaries.json')
-    dicts = json.load(io.open(path, encoding='utf-8'))
+    dicts = json.load(open(path, encoding='utf-8'))
     return dicts
 
 datasets = _load_datasets()
@@ -36,7 +36,7 @@ def _download_dictionary(url, format, rename):
     with open(_file, 'wb') as f:
         f.write(r.content)
 
-    if zipfile.is_zipfile(_file):
+    if format != 'xlsx' and zipfile.is_zipfile(_file):
         with zipfile.ZipFile(_file) as zf:
             source = zf.namelist()[0]
             zf.extract(source, tmpdir)
@@ -45,9 +45,9 @@ def _download_dictionary(url, format, rename):
     if format == 'csv' or url.endswith('csv'):
         data = pd.read_csv(_file)
     elif format == 'tsv' or url.endswith('tsv'):
-        data = pd.read_table(_file, sep='\t')
+        data = pd.read_csv(_file, sep='\t')
     elif format.startswith('xls') or os.path.splitext(url)[1].startswith('xls'):
-        data = pd.read_excel(_file)
+        data = pd.read_excel(_file, engine='openpyxl')
 
     if rename is not None:
         data = data.rename(columns=rename)
@@ -55,7 +55,7 @@ def _download_dictionary(url, format, rename):
 
 
 def fetch_dictionary(name, url=None, format=None, index=0, rename=None,
-                     save=True):
+                     save=True, force_retrieve=False):
     ''' Retrieve a dictionary of text norms from the web or local storage.
 
     Args:
@@ -77,16 +77,20 @@ def fetch_dictionary(name, url=None, format=None, index=0, rename=None,
             locally-saved dictionary will retain the renamed columns.
         save (bool): Whether or not to save the dictionary locally the first
             time it is retrieved.
+        force_retrieve (bool): If True, remote dictionary will always be
+            downloaded, even if a local copy exists (and the local copy will
+            be overwritten).
+
     Returns: A pandas DataFrame indexed by strings (typically words).
 
     '''
     file_path = os.path.join(_get_dictionary_path(), name + '.csv')
-    if os.path.exists(file_path):
+    if not force_retrieve and os.path.exists(file_path):
         df = pd.read_csv(file_path)
         index = datasets[name].get('index', df.columns[index])
         return df.set_index(index)
 
-    elif name in datasets:
+    if name in datasets:
         url = datasets[name]['url']
         format = datasets[name].get('format', format)
         index = datasets[name].get('index', index)

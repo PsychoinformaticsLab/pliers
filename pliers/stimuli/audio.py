@@ -1,11 +1,9 @@
 ''' Classes that represent audio clips. '''
 
-from .base import Stim
 from moviepy.audio.io.AudioFileClip import AudioFileClip
+from moviepy.video.io.ffmpeg_reader import ffmpeg_parse_infos
 
-import os
-import re
-import subprocess
+from .base import Stim
 
 
 class AudioStim(Stim):
@@ -34,12 +32,13 @@ class AudioStim(Stim):
             filename = url
         self.filename = filename
 
-        self.sampling_rate = sampling_rate
-        if not self.sampling_rate:
-            self.sampling_rate = self.get_sampling_rate(self.filename)
-
-        self.clip = clip
-        if not self.clip:
+        if clip:
+            self.sampling_rate = clip.fps
+            self.clip = clip
+        else:
+            self.sampling_rate = sampling_rate
+            if not self.sampling_rate:
+                self.sampling_rate = self.get_sampling_rate(self.filename)
             self._load_clip()
 
         # Small default buffer isn't ideal, but moviepy has persistent issues
@@ -52,47 +51,20 @@ class AudioStim(Stim):
             # Average channels to make data mono
             self.data = self.data.mean(axis=1)
 
-        super(AudioStim, self).__init__(
-            filename, onset=onset, duration=duration, order=order)
-
-    @staticmethod
-    def get_sampling_rate(filename):
-        ''' Use FFMPEG to get the sampling rate, most of this code was
-        adapted from the moviepy codebase '''
-        cmd = ['ffmpeg', '-i', filename]
-
-        with open(os.devnull, 'rb') as devnull:
-            creationflags = 0x08000000 if os.name == 'nt' else 0
-            p = subprocess.Popen(cmd,
-                                 stdin=devnull,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE,
-                                 creationflags=creationflags)
-
-        _, p_err = p.communicate()
-        del p
-
-        lines = p_err.decode('utf8').splitlines()
-        if 'No such file or directory' in lines[-1]:
-            raise IOError(('Error: the file %s could not be found.\n'
-                           'Please check that you entered the correct '
-                           'path.') % filename)
-
-        lines_audio = [l for l in lines if ' Audio: ' in l]
-
-        if lines_audio:
-            line = lines_audio[0]
-            try:
-                match = re.search(' [0-9]* Hz', line)
-                return int(line[match.start() + 1:match.end() - 3])
-            except Exception as e:
-                pass
-
-        # Return a sensible default
-        return 44100
+        super().__init__(
+            filename, onset=onset, duration=duration, order=order, url=url)
 
     def _load_clip(self):
         self.clip = AudioFileClip(self.filename, fps=self.sampling_rate)
+
+    @staticmethod
+    def get_sampling_rate(filename):
+        ''' Use moviepy/FFMPEG to get the sampling rate '''
+        infos = ffmpeg_parse_infos(filename)
+        fps = infos.get('audio_fps', 44100)
+        if fps == 'unknown':
+            fps = 44100
+        return fps
 
     def __getstate__(self):
         d = self.__dict__.copy()

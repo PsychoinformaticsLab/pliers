@@ -2,13 +2,15 @@
 Extractors that operate primarily or exclusively on Image stimuli.
 '''
 
+from functools import partial
+
+import numpy as np
+import pandas as pd
+
 from pliers.stimuli.image import ImageStim
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.utils import attempt_to_import, verify_dependencies, listify
-import numpy as np
-import pandas as pd
-from functools import partial
-
+from pliers.support.due import due, Url, Doi
 
 cv2 = attempt_to_import('cv2')
 face_recognition = attempt_to_import('face_recognition')
@@ -72,6 +74,10 @@ class SaliencyExtractor(ImageExtractor):
     ''' Determines the saliency of the image using Itti & Koch (1998) algorithm
     implemented in pySaliencyMap '''
 
+    @due.dcite(Doi("10.1109/34.730558"),
+               description="Image saliency estimation",
+               path='pliers.extractors.image.SilencyExtractor',
+               tags=["implementation"])
     def _extract(self, stim):
         from pliers.external.pysaliency import pySaliencyMap
         # pySaliencyMap from https://github.com/akisato-/pySaliencyMap
@@ -108,7 +114,7 @@ class FaceRecognitionFeatureExtractor(ImageExtractor):
         func = getattr(face_recognition.api, self._feature)
         self.func = partial(func, **face_recognition_kwargs)
 
-        super(FaceRecognitionFeatureExtractor, self).__init__()
+        super().__init__()
 
     def get_feature_names(self):
         return self._feature
@@ -116,12 +122,11 @@ class FaceRecognitionFeatureExtractor(ImageExtractor):
     def _extract(self, stim):
         values = self.func(stim.data)
         feature_names = listify(self.get_feature_names())
-        return ExtractorResult(values, stim, self, features=feature_names,
-                               raw=values)
+        return ExtractorResult(values, stim, self, features=feature_names)
 
     def _to_df(self, result):
         cols = listify(self._feature)
-        return pd.DataFrame([[r] for r in result.raw], columns=cols)
+        return pd.DataFrame([[r] for r in result._data], columns=cols)
 
 
 class FaceRecognitionFaceEncodingsExtractor(FaceRecognitionFeatureExtractor):
@@ -140,8 +145,8 @@ class FaceRecognitionFaceLandmarksExtractor(FaceRecognitionFeatureExtractor):
     _feature = 'face_landmarks'
 
     def _to_df(self, result):
-        data = pd.DataFrame.from_records(result.raw)
-        data.columns = ['%s_%s' % (self._feature, c) for c in data.columns]
+        data = pd.DataFrame.from_records(result._data)
+        data.columns = ['{}_{}'.format(self._feature, c) for c in data.columns]
         return data
 
 

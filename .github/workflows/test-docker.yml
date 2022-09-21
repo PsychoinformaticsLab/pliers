@@ -1,0 +1,116 @@
+
+name: Docker Workflow
+
+on: [pull_request,push]
+
+jobs:
+  docker_test_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - 
+      name: remove all docker images
+      run: |
+        docker rmi $(docker images -a -q)
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+    - 
+      name: Set environment variables
+      run: |
+        repo_owner=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')
+        echo UNSTABLE_IMG=ghcr.io/${repo_owner}/pliers:unstable >> $GITHUB_ENV
+        echo EXEC_IMG=ghcr.io/${repo_owner}/pliersci:ci_exec >> $GITHUB_ENV
+        echo BUILDER_IMG=ghcr.io/${repo_owner}/pliersci:ci_build >> $GITHUB_ENV
+        echo DOC_IMG=ghcr.io/${repo_owner}/pliersci:ci_docs >> $GITHUB_ENV
+        echo TEST_IMG=ghcr.io/${repo_owner}/pliersci:ci_tests >> $GITHUB_ENV
+    - 
+      name: Checkout
+      uses: actions/checkout@v2
+    -
+      name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    - 
+      name: check space and docker environment
+      run: |
+        df -h
+        docker images
+    - 
+      name: Build the base image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./docker/Dockerfile
+        target: builder
+        build-args: |
+          BUILDKIT_INLINE_CACHE=1
+        cache-from: |
+          type=registry,ref=${{ env.BUILDER_IMG }}
+        load: true
+        tags: ${{ env.BUILDER_IMG }}
+    - 
+      name: check space and docker environment
+      run: |
+        df -h
+        docker images
+    - 
+      name: Build executable image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./docker/Dockerfile
+        target: executable
+        build-args: |
+          BUILDKIT_INLINE_CACHE=1
+        cache-from: |
+          type=registry,ref=${{ env.UNSTABLE_IMG }}
+        load: true
+        tags: |
+          ${{ env.EXEC_IMG }}
+          ${{ env.UNSTABLE_IMG }}
+    - 
+      name: check space and docker environment
+      run: |
+        df -h
+        docker images
+    - 
+      name: Build testing image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./docker/Dockerfile
+        target: tests
+        build-args: |
+          BUILDKIT_INLINE_CACHE=1
+        cache-from: |
+          ${{ env.EXEC_IMG }}
+          ${{ env.BUILDER_IMG }}
+        load: true
+        tags: |
+          ${{ env.TEST_IMG }}
+    - 
+      name: check space and docker environment
+      run: |
+        df -h
+        docker images
+    -
+      name: Run tests
+      run: |
+        docker run ${{ env.TEST_IMG }}
+    -
+      name: Push to registry (if not pull request)
+      env:
+        CR_PAT: ${{ secrets.CR_PAT }}
+      run: |
+        if [ "${GITHUB_EVENT_NAME}" == "push" ] && [ ! -z "${CR_PAT}" ]; then
+          echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin 
+          docker push ${UNSTABLE_IMG}  # push image for users
+          docker push ${BUILDER_IMG}  # push image for build cache 
+          # check if this is a release
+          ref_name=${GITHUB_REF##*/}
+          if [[ "${ref_name}" == v* ]]; then
+            release=${UNSTABLE_IMG/unstable/${ref_name}}
+            docker tag ${UNSTABLE_IMG} ${release}
+            docker push ${release}
+          fi
+        else
+          echo "pull request, not pushing"
+        fi

@@ -1,4 +1,12 @@
+from os.path import join, exists
+import tempfile
+import os
+import numpy as np
+
+from numpy.testing import assert_almost_equal
+import pandas as pd
 import pytest
+
 from pliers.graph import Graph, Node
 from pliers.converters import (TesseractConverter,
                                VideoToAudioConverter,
@@ -6,12 +14,8 @@ from pliers.converters import (TesseractConverter,
 from pliers.filters import FrameSamplingFilter
 from pliers.extractors import (BrightnessExtractor, VibranceExtractor,
                                LengthExtractor, merge_results)
-from pliers.stimuli import (ImageStim, VideoStim)
+from pliers.stimuli import (ImageStim, TextStim, VideoStim)
 from .utils import get_test_data_path, DummyExtractor
-from os.path import join, exists
-from numpy.testing import assert_almost_equal
-import tempfile
-import os
 
 
 def test_node_init():
@@ -49,7 +53,7 @@ def test_graph_smoke_test():
     graph = Graph(nodes)
     result = graph.run(stim, format='wide', extractor_names='multi')
     brightness = result[('brightness_node', 'brightness')].values[0]
-    assert_almost_equal(brightness, 0.556134, 5)
+    assert_almost_equal(brightness, 0.556134, 3)
 
 
 def test_add_children():
@@ -80,7 +84,7 @@ def test_small_pipeline():
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
     result = merge_results(result, format='wide', extractor_names='prepend')
-    assert (0, 'text[Exit]') in result['stim_name'].values
+    assert 'Exit' in result['stim_name'].values[0]
     assert 'LengthExtractor#text_length' in result.columns
     assert result['LengthExtractor#text_length'].values[0] == 4
 
@@ -96,9 +100,10 @@ def test_small_pipeline2():
     assert ('BrightnessExtractor', 'brightness') in result.columns
     brightness = result[('BrightnessExtractor', 'brightness')].values[0]
     vibrance = result[('VibranceExtractor', 'vibrance')].values[0]
-    assert_almost_equal(brightness, 0.746965, 5)
+    assert_almost_equal(brightness, 0.746965, 3)
     assert ('VibranceExtractor', 'vibrance') in result.columns
-    assert_almost_equal(vibrance, 841.577274, 5)
+    vibrance = np.round(vibrance, 2)
+    assert vibrance in [841.58, 836.26] # Value varies by Python version
 
 
 def test_small_pipeline_json_spec():
@@ -124,7 +129,7 @@ def test_small_pipeline_json_spec():
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
     result = merge_results(result, format='wide', extractor_names='multi')
-    assert (0, 'text[Exit]') in result['stim_name'].values
+    assert 'Exit' in result['stim_name'].values[0][0]
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
 
@@ -140,7 +145,7 @@ def test_small_pipeline_json_spec2():
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
     result = merge_results(result, format='wide', extractor_names='multi')
-    assert (0, 'text[Exit]') in result['stim_name'].values
+    assert 'Exit' in result['stim_name'].values[0][0]
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
 
@@ -172,7 +177,7 @@ def test_small_pipeline_json_spec3():
     assert history.shape == (2, 8)
     assert history.iloc[0]['result_class'] == 'TextStim'
     result = merge_results(result, format='wide', extractor_names='multi')
-    assert (0, 'text[Exit\n]') in result['stim_name'].values
+    assert 'Exit' in result['stim_name'].values[0][0]
     assert ('LengthExtractor', 'text_length') in result.columns
     assert result[('LengthExtractor', 'text_length')].values[0] == 4
 
@@ -187,16 +192,19 @@ def test_big_pipeline():
         VibranceExtractor(), 'BrightnessExtractor',
     ])]
     audio_nodes = [(VideoToAudioConverter(), [
-        WitTranscriptionConverter(), 'LengthExtractor'],
+        (WitTranscriptionConverter(), ['LengthExtractor'])],
         'video_to_audio')]
     graph = Graph()
     graph.add_nodes(visual_nodes)
     graph.add_nodes(audio_nodes)
+    with pytest.raises(RuntimeError):
+        graph.draw('temp.png')
     results = graph.run(video, merge=False)
     result = merge_results(results, format='wide', extractor_names='multi')
     # Test that pygraphviz outputs a file
     drawfile = next(tempfile._get_candidate_names())
     graph.draw(drawfile)
+    graph.draw(drawfile, color=False)
     assert exists(drawfile)
     os.remove(drawfile)
     assert ('LengthExtractor', 'text_length') in result.columns
@@ -263,3 +271,122 @@ def test_big_pipeline_json():
     # assert not result[('onset', '')].isnull().any()
     assert 'text[negotiations]' in result['stim_name'].values
     assert 'frame[90]' in result['stim_name'].values
+
+
+def test_stim_results():
+    stim = TextStim(text='some, example the text.')
+    g = Graph()
+    g.add_nodes(['PunctuationRemovalFilter', 'TokenRemovalFilter',
+                 'TokenizingFilter'], mode='vertical')
+    final_stims = g.run(stim, merge=False)
+    assert len(final_stims) == 2
+    assert final_stims[1].text == 'text'
+
+    n = Node('PunctuationRemovalFilter', name='punc')
+    g = Graph([n])
+    g.add_nodes(['TokenizingFilter', 'LengthExtractor'], parent=n)
+    results = g.run(stim)
+    assert isinstance(results, pd.DataFrame)
+    assert results['LengthExtractor#text_length'][0] == 21
+    with pytest.raises(ValueError):
+        g.run(stim, invalid_results='fail')
+
+
+@pytest.mark.skipif("'WIT_AI_API_KEY' not in os.environ")
+def test_to_json():
+    nodes = {
+        "roots": [
+            {
+                "transformer": "FrameSamplingFilter",
+                "parameters": {
+                    "every": 15
+                },
+                "children": [
+                    {
+                        "transformer": "TesseractConverter",
+                        "children": [
+                            {
+                                "transformer": "LengthExtractor"
+                            }
+                        ]
+                    },
+                    {
+                        "transformer": "VibranceExtractor"
+                    },
+                    {
+                        "transformer": "BrightnessExtractor"
+                    }
+                ]
+            },
+            {
+                "transformer": "VideoToAudioConverter",
+                "children": [
+                    {
+                        "transformer": "WitTranscriptionConverter",
+                        "children": [
+                            {
+                                "transformer": "LengthExtractor"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+    graph = Graph(nodes)
+    assert graph.to_json() == nodes
+    graph = Graph(spec=join(get_test_data_path(), 'graph', 'simple_graph.json'))
+    simple_graph = {
+        "roots": [
+            {
+                "transformer": "TesseractConverter",
+                "children": [
+                    {
+                        "transformer": "LengthExtractor"
+                    }
+                ]
+            }
+        ]
+    }
+    assert graph.to_json() == simple_graph
+    filename = join(get_test_data_path(), 'image', 'button.jpg')
+    res = graph.run(filename)
+    assert res['LengthExtractor#text_length'][0] == 4
+
+
+def test_save_graph():
+    graph = Graph(spec=join(get_test_data_path(), 'graph', 'simple_graph.json'))
+    filename = tempfile.mkstemp()[1]
+    graph.save(filename)
+    assert os.path.exists(filename)
+    same_graph = Graph(spec=filename)
+    os.remove(filename)
+    assert graph.to_json() == same_graph.to_json()
+    img = join(get_test_data_path(), 'image', 'button.jpg')
+    res = same_graph.run(img)
+    assert res['LengthExtractor#text_length'][0] == 4
+
+
+def test_adding_nodes():
+    graph = Graph()
+    graph.add_children(['VibranceExtractor', 'BrightnessExtractor'])
+    assert len(graph.roots) == 2
+    assert len(graph.nodes) == 2
+    for r in graph.roots:
+        assert len(r.children) == 0
+    img = ImageStim(join(get_test_data_path(), 'image', 'button.jpg'))
+    results = graph.run(img, merge=False)
+    assert len(results) == 2
+    # To account for variation in values with Python version
+    assert results[0].to_df()['vibrance'][0] > 830 
+    assert_almost_equal(results[1].to_df()['brightness'][0], 0.746965, 3)
+
+    graph = Graph()
+    graph.add_chain(['PunctuationRemovalFilter', 'LengthExtractor'])
+    txt = TextStim(text='the.best.text.')
+    results = graph.run(txt, merge=False)
+    assert len(results) == 1
+    assert results[0].to_df()['text_length'][0] == 11
+
+    with pytest.raises(ValueError):
+        graph.add_nodes(['LengthExtractor'], mode='invalid')

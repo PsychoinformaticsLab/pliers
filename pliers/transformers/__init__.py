@@ -4,7 +4,10 @@ that have multiple subclasses spanning different modules (e.g., Google Cloud
 extractors that span audio, image, etc.).'''
 
 from .base import Transformer, BatchTransformerMixin, get_transformer
-from .google import GoogleAPITransformer, GoogleVisionAPITransformer
+from .api import (GoogleAPITransformer,
+                  GoogleVisionAPITransformer,
+                  MicrosoftAPITransformer,
+                  MicrosoftVisionAPITransformer)
 
 
 __all__ = [
@@ -12,6 +15,7 @@ __all__ = [
     'get_transformer',
     'GoogleAPITransformer',
     'GoogleVisionAPITransformer',
-    'PliersTransformer',
+    'MicrosoftAPITransformer',
+    'MicrosoftVisionAPITransformer',
     'Transformer'
 ]

@@ -1,42 +1,77 @@
-FROM ubuntu:trusty
+FROM python:3.7-slim as builder
+ARG DEBIAN_FRONTEND="noninteractive"
+WORKDIR /opt/pliers
+# Install dependencies into a virtual environment so they can be easily copied into
+# the second stage.
+ENV PATH="/opt/venv/bin:$PATH"
+RUN chmod a+rX -R . \
+    && apt-get update -qq \
+    && apt-get install -yq --no-install-recommends \
+        cmake \
+        gcc \
+        g++ \
+        libc6-dev \
+        libgraphviz-dev \
+        libmagic-dev \
+        libsndfile1 \
+        make \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+# Run this in different layers for faster rebuilds when debugging. The extra layers
+# do impose a size penalty, because we build the final image in a separate stage.
+RUN python -m venv /opt/venv
+RUN python -m pip install --no-cache-dir --upgrade pip setuptools wheel
+RUN python -m pip install --no-cache-dir ipython notebook
+COPY requirements.txt .
+RUN python -m pip install --no-cache-dir --requirement requirements.txt
+# Install the non-GPU tensorflow package because it is smaller.
+COPY optional-dependencies.txt .
+RUN sed -i 's/tensorflow>/tensorflow-cpu>/g' optional-dependencies.txt \
+    && python -m pip install --no-cache-dir --requirement optional-dependencies.txt
+COPY . .
+RUN python -m pip install --no-cache-dir --editable .
+RUN python -m spacy download en_core_web_sm
+RUN python -m pliers.support.download \
+    && python -m pliers.support.setup_yamnet
+LABEL org.opencontainers.image.source=https://github.com/PsychoinformaticsLab/pliers
 
-RUN apt-get update && apt-get install -y git
-RUN apt-get install -y software-properties-common
-RUN add-apt-repository ppa:joyard-nicolas/ffmpeg -y
-RUN apt-get -qq update
-RUN apt-get install -y ffmpeg tesseract-ocr
-RUN apt-get install -y wget
-RUN apt-get install -y graphviz libgraphviz-dev pkg-config
+FROM python:3.7-slim as base
+# Empty top level directories to facilitate use of the image in singularity
+# on a box with kernel lacking overlay FS support
+RUN mkdir -p /data /backup \
+    && apt-get update -qq \
+    && apt-get install -yq --no-install-recommends \
+        ffmpeg \
+        graphviz \
+        libmagic1 \
+        tesseract-ocr \
+        make \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+LABEL org.opencontainers.image.source=https://github.com/PsychoinformaticsLab/pliers
 
-ENV MINICONDA_URL "https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh"
-ENV CONDA_DEPS "pip jupyter pytest numpy pandas pillow==2.9.0 requests scipy nltk six tqdm seaborn matplotlib pathos tensorflow contextlib2"
-WORKDIR /root
-ENV MINICONDA $HOME/miniconda
-ENV PATH "$MINICONDA/bin:$PATH"
-RUN wget $MINICONDA_URL -O miniconda.sh;
-RUN bash miniconda.sh -b -f -p $MINICONDA;
-RUN hash -r
-RUN conda info -a
-RUN conda config --set always_yes yes --set changeps1 no
-RUN conda config --add channels conda-forge
-RUN conda update -y conda
-RUN conda create -y -n py35 python=3.5 $CONDA_DEPS
+FROM base as executable
+RUN useradd --create-home --shell /bin/bash pliers
+COPY --from=builder --chown=pliers /opt/venv /opt/venv
+COPY --from=builder --chown=pliers /opt/pliers /opt/pliers
+COPY --from=builder --chown=pliers /root/nltk_data /home/pliers/nltk_data
+COPY --from=builder --chown=pliers /root/pliers_data /home/pliers/pliers_data
+ENV PATH="/opt/venv/bin:$PATH"
+USER pliers
+WORKDIR /work
+CMD ["jupyter", "notebook", "--no-browser", "--ip", "0.0.0.0"]
+LABEL org.opencontainers.image.source=https://github.com/PsychoinformaticsLab/pliers
 
-RUN /bin/bash -c "source /miniconda/envs/py35/bin/activate py35 \
-  && pip install --upgrade --ignore-installed setuptools \
-  && pip install python-magic coveralls pytest-cov pygraphviz pysrt xlrd clarifai pytesseract moviepy==0.2.2.13 SpeechRecognition IndicoIo sklearn python-twitter gensim oauth2client google-api-python-client google-compute-engine librosa ipython"
+FROM executable as docs
+WORKDIR /opt/pliers/docs
+RUN python -m pip install /opt/pliers['docs']
+LABEL org.opencontainers.image.source=https://github.com/PsychoinformaticsLab/pliers
+CMD make doctest && make html
 
-RUN /bin/bash -c 'source /miniconda/envs/py35/bin/activate py35 \
- && python -c "import imageio; imageio.plugins.ffmpeg.download()"'
 
-RUN git clone https://github.com/tyarkoni/pliers.git
-WORKDIR /root/pliers
-RUN /bin/bash -c 'source /miniconda/envs/py35/bin/activate py35 \
- && python setup.py install'
-RUN echo "if (tty -s); then \n\
-    source /miniconda/envs/py35/bin/activate py35\n\
-fi" >> /root/.bashrc
-RUN /bin/bash -c 'source /miniconda/envs/py35/bin/activate py35 \
- && python -m pliers.support.download'
-RUN apt-get install -y curl
-CMD ["/bin/bash"]
+FROM executable as tests
+WORKDIR /opt/pliers
+RUN python -m pip install /opt/pliers['tests']
+ENV skip_high_memory true
+LABEL org.opencontainers.image.source=https://github.com/PsychoinformaticsLab/pliers
+CMD py.test pliers/tests -n auto --cov=pliers --cov-report xml -m "not requires_payment" -W ignore::UserWarning

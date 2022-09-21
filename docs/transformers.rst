@@ -45,20 +45,28 @@ At present, pliers implements several dozen |Extractor| classes that span a wide
 	:toctree: generated/
  	:template: _class.rst
 
+  AudiosetLabelExtractor
+  BeatTrackExtractor
   ChromaCENSExtractor
   ChromaCQTExtractor
   ChromaSTFTExtractor
+  HarmonicExtractor
   MeanAmplitudeExtractor
   MelspectrogramExtractor
   MFCCExtractor
+  OnsetDetectExtractor
+  OnsetStrengthMultiExtractor
+  PercussiveExtractor
   PolyFeaturesExtractor
-  RMSEExtractor
+  RMSExtractor
   SpectralCentroidExtractor
   SpectralBandwidthExtractor
   SpectralContrastExtractor
+  SpectralFlatnessExtractor
   SpectralRolloffExtractor
   STFTAudioExtractor
   TempogramExtractor
+  TempoExtractor
   TonnetzExtractor
   ZeroCrossingRateExtractor
 
@@ -70,7 +78,8 @@ At present, pliers implements several dozen |Extractor| classes that span a wide
  	:template: _class.rst
 
   BrightnessExtractor
-  ClarifaiAPIExtractor
+  ClarifaiAPIImageExtractor
+  ClarifaiAPIVideoExtractor
   FaceRecognitionFaceEncodingsExtractor
   FaceRecognitionFaceLandmarksExtractor
   FaceRecognitionFaceLocationsExtractor
@@ -79,10 +88,16 @@ At present, pliers implements several dozen |Extractor| classes that span a wide
   GoogleVisionAPIPropertyExtractor
   GoogleVisionAPISafeSearchExtractor
   GoogleVisionAPIWebEntitiesExtractor
-  IndicoAPIImageExtractor
+  MicrosoftAPIFaceExtractor
+  MicrosoftVisionAPIExtractor
+  MicrosoftVisionAPITagExtractor
+  MicrosoftVisionAPICategoryExtractor
+  MicrosoftVisionAPIImageTypeExtractor
+  MicrosoftVisionAPIColorExtractor
+  MicrosoftVisionAPIAdultExtractor
   SaliencyExtractor
   SharpnessExtractor
-  TensorFlowInceptionV3Extractor
+  TFHubExtractor
   VibranceExtractor
 
 
@@ -92,15 +107,20 @@ At present, pliers implements several dozen |Extractor| classes that span a wide
 	:toctree: generated/
  	:template: _class.rst
 
+  BertExtractor
+  BertSequenceEncodingExtractor
+  BertLMExtractor
+  BertSentimentExtractor
   ComplexTextExtractor
   DictionaryExtractor
-  IndicoAPITextExtractor
   LengthExtractor
   NumUniqueWordsExtractor
   PartOfSpeechExtractor
   PredefinedDictionaryExtractor
+  SpaCyExtractor
   TextVectorizerExtractor
   VADERSentimentExtractor
+  WordCounterExtractor
   WordEmbeddingExtractor
 
 
@@ -112,7 +132,27 @@ At present, pliers implements several dozen |Extractor| classes that span a wide
 
   FarnebackOpticalFlowExtractor
 
-Note that, in practice, the number of features one can extract using the above classes is extremely large, because many of these Extractors return open-ended feature sets that are determined by the contents of the input |Stim| and/or the specified initialization arguments. For example, most of the image-labeling Extractors that rely on deep learning-based services (e.g., |GoogleVisionAPILabelExtractor| and |ClarifaiAPIExtractor|) will return feature information for any of the top N objects detected in the image. And the |PredefinedDictionaryExtractor| provides a standardized interface to a large number of online word lookup dictionaries (e.g., word norms for written frequency, age-of-acquisition, emotionality ratings, etc.).
+** Deep Learning Models **
+
+.. autosummary::
+	:toctree: generated/
+ 	:template: _class.rst
+
+  TensorFlowKerasApplicationExtractor
+  TFHubImageExtractor
+  TFHubTextExtractor
+  TFHubExtractor
+
+** Misc-type extractor **
+
+.. autosummary::
+	:toctree: generated/
+ 	:template: _class.rst
+
+  MetricExtractor
+
+
+Note that, in practice, the number of features one can extract using the above classes is extremely large, because many of these Extractors return open-ended feature sets that are determined by the contents of the input |Stim| and/or the specified initialization arguments. For example, most of the image-labeling Extractors that rely on deep learning-based services (e.g., |GoogleVisionAPILabelExtractor| and |ClarifaiAPIImageExtractor|) will return feature information for any of the top N objects detected in the image. And the |PredefinedDictionaryExtractor| provides a standardized interface to a large number of online word lookup dictionaries (e.g., word norms for written frequency, age-of-acquisition, emotionality ratings, etc.).
 
 Working with Extractor results
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -176,9 +216,12 @@ Pliers currently implements the following |Converter| classes:
   :template: _class.rst
 
 	ComplexTextIterator
+	ExtractorResultToSeriesConverter
 	IBMSpeechAPIConverter
 	GoogleSpeechAPIConverter
 	GoogleVisionAPITextConverter
+	MicrosoftAPITextConverter
+	RevAISpeechAPIConverter
 	TesseractConverter
 	VideoFrameCollectionIterator
 	VideoFrameIterator
@@ -186,6 +229,7 @@ Pliers currently implements the following |Converter| classes:
 	VideoToComplexTextConverter
 	VideoToTextConverter
 	WitTranscriptionConverter
+  ExtractorResultToSeriesConverter
 
 Filters
 -------
@@ -201,13 +245,18 @@ Pliers currently implements the following |Filter| classes:
 	:toctree: generated/
  	:template: _class.rst
 
+	AudioTrimmingFilter
 	FrameSamplingFilter
 	ImageCroppingFilter
+	LowerCasingFilter
 	PillowImageFilter
 	PunctuationRemovalFilter
+	TemporalTrimmingFilter
 	TokenizingFilter
 	TokenRemovalFilter
+	VideoTrimmingFilter
 	WordStemmingFilter
+  AudioResamplingFilter
 
 Iterable-aware transformations
 ------------------------------

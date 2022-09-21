@@ -1,13 +1,15 @@
 ''' Classes that represent images. '''
 
-from .base import Stim
-from scipy.misc import imread
-from PIL import Image
-from six.moves.urllib.request import urlopen
-from scipy.misc import imsave
-import six
+from functools import lru_cache
+from urllib.request import urlopen
 import io
+
+from imageio import imread, imsave
+from PIL import Image
 import numpy as np
+
+from .base import _get_bytestring
+from .base import Stim
 
 
 class ImageStim(Stim):
@@ -29,16 +31,32 @@ class ImageStim(Stim):
 
     def __init__(self, filename=None, onset=None, duration=None, data=None,
                  url=None):
-        if data is None and isinstance(filename, six.string_types):
-            data = imread(filename, mode='RGB')
+        if data is None and isinstance(filename, str):
+            data = imread(filename, pilmode='RGB')
         if url is not None:
             img = Image.open(io.BytesIO(urlopen(url).read()))
             img = img.convert(mode='RGB')
             data = np.array(img)
             filename = url
         self.data = data
-        super(ImageStim, self).__init__(filename, onset=onset,
-                                        duration=duration)
+        self._bytestring = None
+        super().__init__(filename, onset=onset,
+                                        duration=duration, url=url)
 
     def save(self, path):
         imsave(path, self.data)
+
+    def __hash__(self):
+        return hash((self.data.tobytes(), self.onset, self.duration,
+                     self.order, self.history))
+    
+
+    def get_bytestring(self, encoding='utf-8'):
+        ''' Return the image data as a bytestring.
+
+        Args:
+            encoding (str): Encoding to use. Defaults to utf-8.
+
+        Returns: A string.
+        '''
+        return _get_bytestring(self, encoding)

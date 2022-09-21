@@ -13,7 +13,7 @@ For example, suppose we have a series of videos (perhaps segments of a full-leng
 - Run face detection on each extracted frame (we'll use Google's Cloud Vision face detection API);
 - Extract the audio track from the video;
 - Transcribe the audio track to text (we'll use Google's Cloud Speech API for this);
-- Run a sentiment analysis model (in this case, using the Indico.io API) on the transcribed text.
+- Extract Frequency from transcribed text
 
 The code to do this, with transformations made explicit:
 
@@ -24,8 +24,7 @@ The code to do this, with transformations made explicit:
 	from pliers.stimuli import VideoStim
 	from pliers.filters import FrameSamplingFilter
 	from pliers.converters import GoogleSpeechAPIConverter
-	from pliers.extractors import (IndicoAPITextExtractor, merge_results,
-	                               GoogleVisionAPIFaceExtractor)
+	from pliers.extractors import (merge_results, GoogleVisionAPIFaceExtractor, PredefinedDictionaryExtractor)
 
 	segments = ['segment1.mp4', 'segment2.mp4', 'segment3.mp4']
 	segments = [VideoStim(s) for s in segments]
@@ -42,12 +41,12 @@ The code to do this, with transformations made explicit:
 	transcriber = GoogleSpeechAPIConverter()
 	transcripts = transcriber.transform(segments)
 
-	# # Apply Indico sentiment analysis extractor
-	indico = IndicoAPITextExtractor(models=['sentiment'])
-	sentiment_results = indico.transform(transcripts)
+	# Apply frequency extractor
+	freq = PredefinedDictionaryExtractor(variables=['subtlexusfrequency/Lg10WF'])
+	frequency_results = freq.transform(transcripts)
 
 	# Combine visual and text-based feature data
-	results = face_results + sentiment_results
+	results = face_results + frequency_results
 
 	# # Merge into a single pandas DF
 	df = merge_results(results)
@@ -63,12 +62,12 @@ The above code really isn't that bad--it already features a high level of abstra
 
 	from pliers.graph import Graph
 	from pliers.filters import FrameSamplingFilter
-	from pliers.extractors import IndicoAPITextExtractor
+	from pliers.extractors import PredefinedDictionaryExtractor
 
 	# Define nodes
 	nodes = [
 	    (FrameSamplingFilter(hertz=2), ['GoogleVisionAPIFaceExtractor']),
-	    ('GoogleSpeechAPIConverter', [IndicoAPITextExtractor(models=['sentiment'])])
+	    ('GoogleSpeechAPIConverter', [PredefinedDictionaryExtractor(variables=['subtlexusfrequency/Lg10WF'])])
 	]
 
 	# Construct and run Graph
@@ -80,14 +79,14 @@ Node specification
 ~~~~~~~~~~~~~~~~~~
 :ref:`listing-2` produces exactly the same result as in :ref:`listing-1`. But instead of explicitly initializing and applying each |Transformer| in sequence, all of the important work is done in the compact node specification. A detailed explanation of the node specification format can be found in the :func:`~pliers.graph.Graph.add_nodes` docstring. For present purposes, the key thing to recognize is that each node in the above graph is represented as a tuple with 2 elements. In this case, there are two root nodes--one for image processing (face extraction), the other for speech processing (sentiment analysis on the transcribed text). The first element in each |Node| definition indicates which Transformer to apply at that node. Here, the first node applies a |FrameSamplingFilter|, and the second applies a |GoogleSpeechAPIConverter|.
 
-The second element in each tuple contains any children nodes-—i.e., nodes to which the output of the Transformer specified in the first node are passed. In our case, each node has only one child: the |FrameSamplingFilter| passes its output to the |GoogleVisionAPIFaceExtractor|, and the |GoogleSpeechAPIConverter| passes its output to the |IndicoAPITextExtractor|. However, in principle, the list of children nodes can be arbitrarily large. For example, we could have written:
+The second element in each tuple contains any children nodes-—i.e., nodes to which the output of the Transformer specified in the first node are passed. In our case, each node has only one child: the |FrameSamplingFilter| passes its output to the |GoogleVisionAPIFaceExtractor|, and the |GoogleSpeechAPIConverter| passes its output to the |PredefinedDictionaryExtractor|. However, in principle, the list of children nodes can be arbitrarily large. For example, we could have written:
 
 ::
 
 	nodes = [
 	    (FrameSamplingFilter(hertz=2),
 	    	['GoogleVisionAPIFaceExtractor',
-	    	 'ClarifaiAPIExtractor',
+	    	 'ClarifaiAPIImageExtractor',
 	    	 'GoogleVisionAPILabelExtractor'])
 	]
 
@@ -104,13 +103,13 @@ We can also nest additional levels by replacing each string value in the child l
 	    	[
 	    	('GoogleVisionAPITextConverter',
 	    		[
-	    			IndicoAPITextExtractor(models=['sentiment'])
+	    			PredefinedDictionaryExtractor(variables=['subtlexusfrequency/Lg10WF'])
 	    	 	])
 	    	 ]
 	    )
 	]
 
-Here, we're passing video frames to the |GoogleVisionAPITextConverter|, which detects text labels within images. Any resulting |TextStim| objects are then passed onto the |IndicoAPITextExtractor| for sentiment analysis. Using this simple syntax, we can quickly construct Graphs with arbitrarily deep nestings.
+Here, we're passing video frames to the |GoogleVisionAPITextConverter|, which detects text labels within images. Any resulting |TextStim| objects are then passed onto the |PredefinedDictionaryExtractor| for sentiment analysis. Using this simple syntax, we can quickly construct Graphs with arbitrarily deep nestings.
 
 Other stuff
 ###########
@@ -143,9 +142,9 @@ A convenient feature of the graph API illustrated in :ref:`listing-2` is that th
 	            'transformer': 'GoogleSpeechAPIConverter',
 	            'children': [
 	                {
-	                    'transformer': 'IndicoAPITextExtractor',
+	                    'transformer': 'PredefinedDictionaryExtractor',
 	                    'parameters': {
-	                        'models': ['sentiment']
+	                        'variables': ['subtlexusfrequency/Lg10WF']
 	                    }
 	                }
 	            ]

@@ -1,11 +1,15 @@
 ''' Classes that represent text or sequences of text. '''
 
 import re
+from urllib.request import urlopen
+
 import pandas as pd
-from six import string_types
-from six.moves.urllib.request import urlopen
+
 from pliers.support.decorators import requires_nltk_corpus
+from pliers.utils import attempt_to_import, verify_dependencies
 from .base import Stim
+
+pysrt = attempt_to_import('pysrt')
 
 
 class TextStim(Stim):
@@ -35,7 +39,8 @@ class TextStim(Stim):
             text = urlopen(url).read()
         self.text = text
         name = 'text[%s]' % text[:40]  # Truncate at 40 chars
-        super(TextStim, self).__init__(filename, onset, duration, order, name)
+        super().__init__(filename, onset, duration, order,
+                                       name=name, url=url)
 
     @property
     def data(self):
@@ -103,12 +108,12 @@ class ComplexTextStim(Stim):
             raise ValueError("At least one of the 'filename', 'elements', or "
                              "text arguments must be specified.")
 
-        super(ComplexTextStim, self).__init__(filename, onset, duration)
+        super().__init__(filename, onset, duration)
 
         self._elements = []
 
         if filename is not None:
-            if filename.endswith("srt"):
+            if filename.endswith('srt'):
                 self._from_srt(filename)
             else:
                 self._from_file(filename, columns, default_duration)
@@ -121,7 +126,7 @@ class ComplexTextStim(Stim):
 
     @property
     def elements(self):
-        return self._elements
+        return [f for f in self]
 
     def _from_file(self, filename, columns, default_duration):
         tod_names = {'t': 'text', 'o': 'onset', 'd': 'duration'}
@@ -142,18 +147,30 @@ class ComplexTextStim(Stim):
                 if duration is None:
                     duration = default_duration
                 elem = TextStim(filename, r['text'], r['onset'], duration)
-            self.add_elem(elem)
+            self._elements.append(elem)
 
     def save(self, path):
-        with open(path, 'w') as f:
-            f.write('onset\ttext\tduration\n')
+        if path.endswith('srt'):
+            verify_dependencies(['pysrt'])
+            from pysrt import SubRipFile, SubRipItem
+            from datetime import time
+
+            out = SubRipFile()
             for elem in self._elements:
-                f.write('{}\t{}\t{}\n'.format(elem.onset,
-                                              elem.text,
-                                              elem.duration))
+                start = time(*self._to_tup(elem.onset))
+                end = time(*self._to_tup(elem.onset + elem.duration))
+                out.append(SubRipItem(0, start, end, elem.text))
+            out.save(path)
+        else:
+            with open(path, 'w') as f:
+                f.write('onset\ttext\tduration\n')
+                for elem in self._elements:
+                    f.write('{}\t{}\t{}\n'.format(elem.onset,
+                                                  elem.text,
+                                                  elem.duration))
 
     def _from_srt(self, filename):
-        import pysrt
+        verify_dependencies(['pysrt'])
 
         data = pysrt.open(filename)
         list_ = [[] for _ in data]
@@ -164,7 +181,7 @@ class ComplexTextStim(Stim):
             end_ = tuple(row.end)
             duration = self._to_sec(end_) - start_time
 
-            line = re.sub('\s+', ' ', row.text)
+            line = re.sub(r'\s+', ' ', row.text)
             list_[i] = [line, start_time, duration]
 
         # Convert to pandas DataFrame
@@ -173,17 +190,25 @@ class ComplexTextStim(Stim):
         for i, r in df.iterrows():
             elem = TextStim(filename, text=r['text'], onset=r['onset'],
                             duration=r['duration'], order=i)
-            self.add_elem(elem)
-
-    def add_elem(self, elem):
-        offset = 0.0 if self.onset is None else self.onset
-        elem.onset = offset if elem.onset is None else offset + elem.onset
-        self._elements.append(elem)
+            self._elements.append(elem)
 
     def __iter__(self):
         """ Iterate text elements. """
         for elem in self._elements:
-            yield elem
+            offset = 0.0 if self.onset is None else self.onset
+            # Calculate element onset relative to this stimulus
+            rel_onset = offset if elem.onset is None else offset + elem.onset
+            yield TextStim(elem.filename, elem.text, rel_onset, elem.duration,
+                           elem.order)
+
+    def _to_tup(self, sec):
+        hours = int(sec / 3600)
+        sec = sec % 3600
+        mins = int(sec / 60)
+        sec = sec % 60
+        secs = int(sec)
+        microsecs = int((sec - secs) * 1000000)
+        return hours, mins, secs, microsecs
 
     def _to_sec(self, tup):
         hours, mins, secs, msecs = tup
@@ -195,7 +220,7 @@ class ComplexTextStim(Stim):
     def _from_text(self, text, unit, tokenizer, language):
 
         if tokenizer is not None:
-            if isinstance(tokenizer, string_types):
+            if isinstance(tokenizer, str):
                 tokens = re.findall(tokenizer, text)
             else:
                 tokens = tokenizer.tokenize(text)
@@ -205,7 +230,11 @@ class ComplexTextStim(Stim):
             @requires_nltk_corpus
             def tokenize_text(text):
                 if unit == 'word':
-                    return nltk.word_tokenize(text, language)
+                    try:
+                        return nltk.word_tokenize(text, language)
+                    except LookupError:
+                        nltk.download('punkt')
+                        return nltk.word_tokenize(text, language)
                 elif unit.startswith('sent'):
                     return nltk.sent_tokenize(text, language)
                 else:
@@ -215,5 +244,13 @@ class ComplexTextStim(Stim):
             tokens = tokenize_text(text)
 
         for i, t in enumerate(tokens):
-            self.add_elem(TextStim(text=t, onset=None, duration=None,
-                                   order=i))
+            self._elements.append(TextStim(text=t, onset=None, duration=None,
+                                  order=i))
+
+    @property
+    def data(self):
+        return ' '.join([e.text for e in self._elements])
+
+    def __hash__(self):
+        return hash(
+            (self.data, self.onset, self.duration, self.order, self.history))

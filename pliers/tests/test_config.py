@@ -1,8 +1,10 @@
-import pliers
 import tempfile
 import os
 import json
+
 import pytest
+
+import pliers
 from pliers.config import reset_options
 
 

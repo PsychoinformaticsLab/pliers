@@ -1,22 +1,23 @@
 ''' Base class for all Stims and associated functionality. '''
 
-
 from abc import ABCMeta, abstractmethod
-from os.path import exists, isdir, join, basename
+from os.path import isdir, join, basename, realpath, isfile
 from glob import glob
-from six import with_metaclass, string_types
-from six.moves.urllib.request import urlopen
-from six.moves.urllib.parse import urlparse
+from urllib.request import urlopen
+from urllib.parse import urlparse
 from collections import namedtuple
 from contextlib import contextmanager
-from pliers import config
-from pliers.utils import isiterable
-import pandas as pd
 import os
 import tempfile
+import base64
+
+import pandas as pd
+
+from pliers import config
+from pliers.utils import isiterable
 
 
-class Stim(with_metaclass(ABCMeta)):
+class Stim(metaclass=ABCMeta):
 
     ''' Base class for all classes in the Stim hierarchy.
 
@@ -33,13 +34,14 @@ class Stim(with_metaclass(ABCMeta)):
     '''
 
     def __init__(self, filename=None, onset=None, duration=None, order=None,
-                 name=None):
+                 name=None, url=None):
 
         self.filename = filename
         self.onset = onset
         self.duration = duration
         self.order = order
         self._history = None
+        self.url = url
 
         if name is None:
             name = '' if self.filename is None else basename(self.filename)
@@ -112,7 +114,7 @@ def load_stims(source, dtype=None, fail_silently=False):
     from .audio import AudioStim
     from .text import TextStim
 
-    if isinstance(source, string_types):
+    if isinstance(source, str):
         return_list = False
         source = [source]
     else:
@@ -128,9 +130,10 @@ def load_stims(source, dtype=None, fail_silently=False):
     }
 
     def load_file(source):
+        source = realpath(source)
         import magic  # requires libmagic, so import here
         mime = magic.from_file(source, mime=True)
-        if not isinstance(mime, string_types):
+        if not isinstance(mime, str):
             mime = mime.decode('utf-8')
         mime = mime.split('/')[0]
         if mime in stim_map.keys():
@@ -151,12 +154,13 @@ def load_stims(source, dtype=None, fail_silently=False):
             load_url(s)
         elif isdir(s):
             for f in glob(join(s, '*')):
-                load_file(f)
-        elif exists(s):
+                if isfile(f):
+                    load_file(f)
+        elif isfile(s):
             load_file(s)
         else:
             if not (return_list and fail_silently):
-                raise IOError("File not found")
+                raise OSError("File not found")
 
     if return_list:
         return stims
@@ -164,7 +168,17 @@ def load_stims(source, dtype=None, fail_silently=False):
     return stims[0]
 
 
-def _log_transformation(source, result, trans=None):
+def _get_bytestring(stim, encoding='utf-8'):
+    if stim._bytestring is None:
+        with stim.get_filename() as filename:
+            with open(filename, 'rb') as f:
+                data = f.read()
+                stim._bytestring = base64.b64encode(data).decode(encoding=encoding)
+
+    return stim._bytestring
+
+
+def _log_transformation(source, result, trans=None, implicit=False):
 
     if result is None or not config.get_option('log_transformations') or \
             (trans is not None and not trans._loggable):
@@ -173,7 +187,12 @@ def _log_transformation(source, result, trans=None):
     if isiterable(result):
         return (_log_transformation(source, r, trans) for r in result)
 
-    values = [source.name, source.filename, source.__class__.__name__]
+    # Converters are no longer restricted to Stim inputs, so ensure name and
+    # filename are set.
+    name = getattr(source, 'name', None)
+    filename = getattr(source, 'filename', None)
+
+    values = [name, filename, source.__class__.__name__]
     if isinstance(result, Stim):
         values.extend([result.name, result.filename])
     else:
@@ -187,14 +206,17 @@ def _log_transformation(source, result, trans=None):
         values.append(['', ''])
     parent = source.history
     string = str(parent) if parent else values[2]
-    string += '->%s/%s' % (values[6], values[5])
+    string += '->{}/{}'.format(values[6], values[5])
     values.extend([string, parent])
+    values.append(implicit)
     result.history = TransformationLog(*values)
     return result
 
+
 _trans_log = namedtuple('TransformationLog', "source_name source_file " +
                         "source_class result_name result_file result_class " +
-                        " transformer_class transformer_params string parent")
+                        " transformer_class transformer_params string " +
+                        "parent implicit")
 
 
 class TransformationLog(_trans_log):
@@ -208,9 +230,9 @@ class TransformationLog(_trans_log):
 
     def to_df(self):
         def _append_row(rows, history):
-            rows.append(history[:-2])
-            if history[-1]:
-                _append_row(rows, history[-1])
+            rows.append(history[:-3])
+            if history.parent:
+                _append_row(rows, history.parent)
             return rows
         rows = _append_row([], self)[::-1]
-        return pd.DataFrame(rows, columns=self._fields[:-2])
+        return pd.DataFrame(rows, columns=self._fields[:-3])

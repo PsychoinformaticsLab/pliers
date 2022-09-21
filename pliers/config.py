@@ -4,7 +4,7 @@ manipulating them. '''
 import json
 from os.path import join, expanduser, exists
 import os
-from six import string_types
+
 
 __all__ = ['set_option', 'set_options', 'get_option']
 
@@ -12,7 +12,8 @@ _config_name = 'pliers_config.json'
 
 _default_converters = {
     'AudioStim->TextStim':
-        ('IBMSpeechAPIConverter', 'WitTranscriptionConverter'),
+        ('GoogleSpeechAPIConverter', 'IBMSpeechAPIConverter',
+         'WitTranscriptionConverter'),
     'ImageStim->TextStim':
         ('GoogleVisionAPITextConverter', 'TesseractConverter')
 }
@@ -25,7 +26,11 @@ _default_settings = {
     'n_jobs': None,
     'parallelize': False,
     'progress_bar': True,
-    'use_generators': False
+    'use_generators': False,
+    'allow_large_jobs': True,
+    'long_job': 60,  # in seconds
+    'large_job': 100,
+    'api_key_validation': False
 }
 
 
@@ -47,7 +52,7 @@ def get_option(key):
 
 
 def from_file(filenames, error_on_missing=True):
-    if isinstance(filenames, string_types):
+    if isinstance(filenames, str):
         filenames = [filenames]
     for f in filenames:
         if exists(f):
