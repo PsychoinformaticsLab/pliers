@@ -188,7 +188,12 @@ class NumUniqueWordsExtractor(TextExtractor):
             if nltk is None:
                 num_words = len(set(text.split()))
             else:
-                num_words = len(set(nltk.word_tokenize(text)))
+                try:
+                    num_words = len(set(nltk.word_tokenize(text)))
+                except LookupError:
+                    nltk.download('punkt')
+                    num_words = len(set(nltk.word_tokenize(text)))
+                
         else:
             num_words = len(set(self.tokenizer.tokenize(text)))
 
