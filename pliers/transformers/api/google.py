@@ -11,9 +11,6 @@ google_auth = attempt_to_import('google.oauth2', 'google_auth',
                                 fromlist=['service_account'])
 
 
-DISCOVERY_URL = 'https://{api}.googleapis.com/$discovery/rest?version={apiVersion}'
-
-
 class GoogleAPITransformer(APITransformer):
     ''' Base GoogleAPITransformer class.
 
@@ -47,8 +44,7 @@ class GoogleAPITransformer(APITransformer):
             self.credentials = google_auth.service_account.Credentials\
                 .from_service_account_file(discovery_file)
             self.service = googleapiclient.discovery.build(
-                self.api_name, api_version, credentials=self.credentials,
-                discoveryServiceUrl=DISCOVERY_URL)
+                self.api_name, api_version, credentials=self.credentials)
         except Exception as e:
             logging.warning(str(e))
             self.credentials = None

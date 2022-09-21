@@ -26,7 +26,7 @@ CLARIFAI_API_KEY=hhhvvv
 ```
 This should be obvious, but just to be sure: NEVER check this file into a github repository, unless you want to pay for free cloud computing for a cybercriminal.
 
-3. Obtain a service account key for your Google Cloud account, and save it to a file called googleapi.json
+3. Obtain a [service account key](https://cloud.google.com/iam/docs/creating-managing-service-accounts) for your Google Cloud account, and save it to a file called googleapi.json
 
 4. Open an interactive session on the docker container:
 
