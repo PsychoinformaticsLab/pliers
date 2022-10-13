@@ -1,4 +1,4 @@
-sphinx~=4
+sphinx>=4
 pytest
 sphinx-autodoc-typehints
 sphinx-argparse
