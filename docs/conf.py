@@ -22,6 +22,7 @@ import os
 sys.path.insert(0, os.path.abspath('../'))
 
 import pliers
+from pliers import *
 
 # -- General configuration ------------------------------------------------
 

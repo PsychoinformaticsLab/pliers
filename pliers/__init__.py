@@ -1,8 +1,6 @@
 from .config import set_option, get_option, set_options
-from .graph import Graph
 from .version import __version__
 from .support.due import due, Url, BibTeX
-
 
 __all__ = [
     'config',
@@ -20,7 +18,6 @@ __all__ = [
     'filters',
     'stimuli',
     'support',
-    'Graph'
 ]
 
 # TODO: replace with Doi whenever available (Zenodo?)
