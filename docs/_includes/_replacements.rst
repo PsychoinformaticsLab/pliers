@@ -66,6 +66,7 @@
 .. |TFHubExtractor| replace:: :py:class:`TFHubExtractor`
 .. |TFHubImageExtractor| replace:: :py:class:`TFHubImageExtractor`
 .. |TFHubTextExtractor| replace:: :py:class:`TFHubTextExtractor`
+.. |MetricExtractor| replace:: :py:class:`MetricExtractor`
 
 
 .. currentmodule:: pliers.converters
