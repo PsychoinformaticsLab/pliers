@@ -8,7 +8,7 @@ build:
 python:
   install:
   - requirements: requirements.txt
-  path: .
+  - path: .
 
 sphinx:
   fail_on_warning: true
