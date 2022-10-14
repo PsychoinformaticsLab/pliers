@@ -1,7 +1,7 @@
 *pliers*: a python package for automated feature extraction
 ===========================================================
 
-|PyPI version fury.io| |pytest| |Coverage Status|
+|PyPI version fury.io| |pytest| |Coverage Status| [docs]
 |DOI:10.1145/3097983.3098075|
 
 
@@ -52,62 +52,6 @@ Pliers is a general purpose tool, this is just one domain where it's useful.
 The above video is from a `tutorial <https://naturalistic-data.org/content/Pliers_Tutorial.html>`__
 as a part of a `course about naturalistic data <https://naturalistic-data.org/>`__.
 
-Installation
-------------
-
-Simply use pip to install the latest release:
-
-   pip install pliers
-
-Dependencies
-~~~~~~~~~~~~
-
-Installing pliers with pip will only install third-party
-libraries that are essential for pliers to function properly. However,
-because pliers provides interfaces to a large number of feature
-extraction tools, there are dozens of optional dependencies that may be
-required depending on what kinds of features you plan to extract. You
-may install dependencies piece meal (pliers will alert you if
-you're missing a depedency) or you may install all the required
-dependencies:
-
-   pip install -r optional-dependencies.txt
-
-Note, that some of these Python dependencies may have their own requirements. 
-For example, python-magic
-requires libmagic and without this, you’ll be relegated to loading all
-your stims explicitly rather than passing in filenames (i.e.,
-``stim = VideoStim('my_video.mp4')`` will work fine, but passing
-'my_video.mp4' directly to an ``Extractor`` may not).
-
-Docker image
-^^^^^^^^^^^^
-
-You may also use the provided Docker image which fulfills all the optional dependencies.
-
-:: 
-
-   docker run -p 8888:8888 ghcr.io/psychoinformaticslab/pliers:unstable
-
-Follow `these instructions <http://psychoinformaticslab.github.io/pliers/installation.html#docker>`__.
-
-API Keys
-^^^^^^^^
-
-While installing pliers itself is straightforward, configuring web-based
-feature extraction APIs can take a more
-effort. For example, pliers includes support for face and object
-recognition via Google’s Cloud Vision API, and enables conversion of
-audio files to text transcripts via several different speech-to-text
-services. While some of these APIs are free to use (and usually provide
-a limited number of free monthly calls), they require users to
-register to received API credentials. More details on API key setup
-are available
-`here <http://psychoinformaticslab.github.io/pliers/installation.html#api-keys>`__.
-
-Another option is to exclusively use local models and algorithms, such as
-the wide range covered by TensforFlow Hub using the ``TFHubExtractor``.
-
 How to cite
 -----------
 
@@ -126,3 +70,6 @@ If you use pliers in your work, please cite both the pliers and the following pa
    :target: https://coveralls.io/github/psychoinformaticslab/pliers?branch=master
 .. |DOI:10.1145/3097983.3098075| image:: https://zenodo.org/badge/DOI/10.1145/3097983.3098075.svg
    :target: https://doi.org/10.1145/3097983.3098075
+.. |docs| image:: https://readthedocs.org/projects/pliers/badge/?version=latest
+    :target: https://pliers.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status

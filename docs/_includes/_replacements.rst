@@ -66,6 +66,7 @@
 .. |TFHubExtractor| replace:: :py:class:`TFHubExtractor`
 .. |TFHubImageExtractor| replace:: :py:class:`TFHubImageExtractor`
 .. |TFHubTextExtractor| replace:: :py:class:`TFHubTextExtractor`
+.. |MetricExtractor| replace:: :py:class:`MetricExtractor`
 
 
 .. currentmodule:: pliers.converters
@@ -91,10 +92,10 @@
 .. |FrameSamplingFilter| replace:: :py:class:`FrameSamplingFilter`
 .. |ImageCroppingFilter| replace:: :py:class:`ImageCroppingFilter`
 .. |PillowImageFilter| replace:: :py:class:`PillowImageFilter`
-.. |PunctuationRemovalFilter| replace :py:class:`PunctuationRemovalFilter`
-.. |TokenizingFilter| replace :py:class:`TokenizingFilter`
-.. |TokenRemovalFilter| replace :py:class:`TokenRemovalFilter`
-.. |WordStemmingFilter| replace :py:class:`WordStemmingFilter`
+.. |PunctuationRemovalFilter| replace:: :py:class:`PunctuationRemovalFilter`
+.. |TokenizingFilter| replace:: :py:class:`TokenizingFilter`
+.. |TokenRemovalFilter| replace:: :py:class:`TokenRemovalFilter`
+.. |WordStemmingFilter| replace:: :py:class:`WordStemmingFilter`
 .. |AudioResamplingFilter| replace:: :py:class:`AudioResamplingFilter`
 
 .. currentmodule:: pliers.graph

@@ -1,10 +1,10 @@
 import pandas as pd
 import numpy as np
 from pliers.utils import attempt_to_import, verify_dependencies
-import matplotlib.pyplot as plt
 from scipy.spatial.distance import mahalanobis
 from numpy.linalg import LinAlgError
 
+mpl = attempt_to_import('matplotlib')
 
 sns = attempt_to_import('seaborn')
 
@@ -152,10 +152,10 @@ class Diagnostics:
             verify_dependencies('seaborn')
             for key, result in self.results.items():
                 if key == 'CorrelationMatrix':
-                    ax = plt.axes()
+                    ax = mpl.pyplot.axes()
                     sns.heatmap(result, cmap='Blues', ax=ax)
                     ax.set_title(key)
-                    sns.plt.show()
+                    sns.mpl.pyplot.show()
                 else:
                     result.plot(kind='bar', title=key)
                     plt.show()

@@ -1,13 +1,13 @@
 ''' The `diagnostics` module contains functions for computing basic metrics
 that may be of use in determining the quality of `Extractor` results. '''
 
-from .diagnostics import Diagnostics
-from .diagnostics import correlation_matrix
-from .diagnostics import eigenvalues
-from .diagnostics import condition_indices
-from .diagnostics import variance_inflation_factors
-from .diagnostics import mahalanobis_distances
-from .diagnostics import variances
+from .base import Diagnostics
+from .base import correlation_matrix
+from .base import eigenvalues
+from .base import condition_indices
+from .base import variance_inflation_factors
+from .base import mahalanobis_distances
+from .base import variances
 
 
 __all__ = [
