@@ -1,3 +1,5 @@
+.. include:: _includes/_replacements.rst
+
 Developer guide
 ===============
 
