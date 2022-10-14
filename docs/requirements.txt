@@ -1,8 +1,0 @@
-sphinx>=4
-pytest
-sphinx-autodoc-typehints
-sphinx-argparse
-ipywidgets
-nbsphinx
-sphinx-rtd-theme
-matplotlib
