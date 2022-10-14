@@ -1,7 +1,7 @@
 *pliers*: a python package for automated feature extraction
 ===========================================================
 
-|PyPI version fury.io| |pytest| |Coverage Status| [docs]
+|PyPI version fury.io| |pytest| |Coverage Status| |docs|
 |DOI:10.1145/3097983.3098075|
 
 
