@@ -1,6 +1,6 @@
 .. include:: _includes/_replacements.rst
 
-Configuring pliers
+Configuration
 ==================
 
 Pliers contains a number of package-wide options that can be configured via the pliers.config module. These include:

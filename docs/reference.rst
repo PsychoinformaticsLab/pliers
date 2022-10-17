@@ -1,5 +1,5 @@
 --------------------
-Pliers API Reference
+API Reference
 --------------------
 
 This is the full API reference for all user-facing classes and functions in the pliers package.

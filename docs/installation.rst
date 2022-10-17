@@ -1,10 +1,10 @@
 .. include:: _includes/_replacements.rst
 
-Installing pliers
+Installation
 =================
 
 
-PIP
+Pip
 ---
 
 The easiest way to install pliers is with pip. For the latest stable release:
