@@ -1,6 +1,7 @@
 clarifai
 duecredit
 face_recognition
+keras
 python-twitter
 gensim
 google-api-python-client
