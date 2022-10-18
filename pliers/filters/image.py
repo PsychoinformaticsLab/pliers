@@ -149,3 +149,30 @@ class PillowImageFilter(ImageFilter):
         new_img = np.array(pillow_img.filter(self.filter))
         return ImageStim(stim.filename,
                          data=new_img)
+
+
+class ImageRescalingFilter(ImageFilter):
+
+    ''' Rescales pixel values to (0,1)
+
+    Args:
+        scaling_factor (float): scaling factor by which pixel values 
+            are divided (defaults to 255.0 for RGB rescaling)
+        round_to (int): how many decimals to round new values to
+    '''
+
+    _log_attributes = ('scaling_factor', 'round_to',)
+
+    def __init__(self, 
+                 scaling_factor=255.0, 
+                 round_to=5):
+        self.scaling_factor = scaling_factor
+        self.round_to = round_to
+        super().__init__()
+
+    def _filter(self, stim):
+        new_img = stim.data / self.scaling_factor
+        new_img = np.around(new_img, self.round_to)
+        return ImageStim(stim.filename,
+                         data=new_img)
+

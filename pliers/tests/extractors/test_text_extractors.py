@@ -1,7 +1,4 @@
 from os.path import join
-from pathlib import Path
-from os import environ
-import shutil
 import numpy as np
 import pytest
 import spacy
