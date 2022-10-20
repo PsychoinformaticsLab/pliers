@@ -33,10 +33,9 @@ modalities.
 Documentation
 -------------
 
-The official pliers documentation is comprehensive, and contains a
-`quickstart <http://psychoinformaticslab.github.io/pliers/quickstart.html>`__,
-`user guide <http://psychoinformaticslab.github.io/pliers/>`__ and `API
-Reference <http://psychoinformaticslab.github.io/pliers/reference.html>`__.
+The official pliers documentation on ReadTheDocs is comprehensive, and contains a
+`quickstart <https://pliers.readthedocs.io/en/latest/quickstart.html>`__,
+`API Reference <https://pliers.readthedocs.io/en/latest/reference.html>`__, and more.
 
 Pliers overview (with application to naturalistic fMRI)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
