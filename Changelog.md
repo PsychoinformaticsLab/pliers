@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.4.2 (October 20, 2022)
+This is a minor release, with updates to the documentation, and various minor improvements:
+
+* Parameterize dtype for TFHubExtractor, add ImageResizingFilter + ImageRescalingFilter (#459) 
+* Add Librosa fundamental frequency (#461) 
+* Updated documentation (#445, #448, #447, #446), moved to ReadTheDocs (#482), and added video to README (#454)
+* Add more information to docstring for MFCCEnergyExtractor (#463)
+* Import ABC from collections.abc for Python 3.10 compatibility (#467) 
+
+The following extractor was deprecated:
+* Remove MicrosoftAPIFaceEmotionExtractor (#471) 
+
+Bug fixes and housekeeping:
+* FIX: Google APIs (remove discoveryServiceUrl) (#478)
+* FIX: Tests (#457, #477)
+* Move to Clarifai-GRPC to fix Clarifai extractors (#474)
+* FIX: Change excel engine (#455) 
+* Build docker image with github actions (#452) 
+* Update links from Naturalistic Data course (#458) 
+
+
 ## 0.4.1 (February 26, 2021)
 This is a minor release that adds one new extractor, and a resampling utility, as well as a large number of minor bugfixes.
 
