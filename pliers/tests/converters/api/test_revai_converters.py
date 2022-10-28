@@ -28,3 +28,7 @@ def test_googleAPI_converter():
 
     conv = RevAISpeechAPIConverter(access_token='badtoken')
     assert not conv.validate_keys()
+
+    conv = RevAISpeechAPIConverter(language='ex')  # pass unsupported lang
+    with pytest.raises(Exception):
+        conv.transform(stim)

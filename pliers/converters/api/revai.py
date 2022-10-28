@@ -27,13 +27,16 @@ class RevAISpeechAPIConverter(APITransformer, AudioToTextConverter):
             to finish. Defaults to 90 seconds.
         request_rate (int): Number of seconds to wait between polling the
             API for completion.
+        language (str): Language included in the provided audio file.
+            Must be a language supported by RevAI; for the full list,
+            see their docs: https://docs.rev.ai/api/asynchronous/reference/#operation/SubmitTranscriptionJob!ct=application/json&path=language&t=request  #:PEP8 -E501
     '''
 
     _env_keys = ('REVAI_ACCESS_TOKEN',)
     _log_attributes = ('access_token', 'timeout', 'request_rate')
     VERSION = '1.0'
 
-    def __init__(self, access_token=None, timeout=1000, request_rate=5):
+    def __init__(self, access_token=None, timeout=1000, request_rate=5, language="en"):
         verify_dependencies(['rev_ai_client'])
         if access_token is None:
             try:
@@ -45,6 +48,7 @@ class RevAISpeechAPIConverter(APITransformer, AudioToTextConverter):
         self.timeout = timeout
         self.request_rate = request_rate
         self.client = rev_ai_client.RevAiAPIClient(access_token)
+        self.language = language
         super().__init__()
 
     @property
@@ -71,10 +75,12 @@ class RevAISpeechAPIConverter(APITransformer, AudioToTextConverter):
         logging.warning(msg)
 
         if audio.url:
-            job = self.client.submit_job_url(audio.url)
+            job = self.client.submit_job_url(
+                audio.url, language=self.language)
         else:
             with audio.get_filename() as filename:
-                job = self.client.submit_job_local_file(filename)
+                job = self.client.submit_job_local_file(
+                    filename, language=self.language)
 
         operation_start = time.time()
         response = self.client.get_job_details(job.id)

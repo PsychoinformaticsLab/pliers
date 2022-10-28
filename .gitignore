@@ -13,3 +13,4 @@ env.list
 docs/_build/
 docs/generated/
 .pytest_cache/
+.vscode/
