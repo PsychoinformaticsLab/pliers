@@ -110,6 +110,18 @@ class TFHubExtractor(Extractor):
         if not isinstance(out, np.ndarray):
             out = out.numpy().squeeze()
         return out
+
+    def _get_timing(self, out, stim):
+        """ Returns the timing of the output. 
+        Args:
+            out: output of the model
+            stim: input stimulus
+
+        Returns:
+            onsets: onsets of the output
+            durations: durations of the output        
+        """
+        return None, None
         
     def _extract(self, stim):
         inp = self._preprocess(stim)
@@ -123,7 +135,10 @@ class TFHubExtractor(Extractor):
 
         out = self._postprocess(out)
                 
+        onsets, durations = self._get_timing(out, stim)
+
         return ExtractorResult(listify(out), stim, self, 
+                               onsets=onsets, durations=durations,
                                features=features)
     
     def _to_df(self, result):
@@ -166,7 +181,6 @@ class TFHubImageExtractor(TFHubExtractor):
         x = tf.expand_dims(x, axis=0)
         return x
 
-
 class TFHubAudioExtractor(TFHubExtractor):
 
     ''' TFHub Extractor class for audio models.
@@ -194,6 +208,21 @@ class TFHubAudioExtractor(TFHubExtractor):
         x = tf.convert_to_tensor(stim.data, dtype=self.input_dtype)
         return x
 
+    def _get_timing(self, out, stim):
+        """ Returns the timing of the output. 
+        Args:
+            out: output of the model
+            stim: input stimulus
+
+        Returns:
+            onsets: onsets of the output
+            durations: durations of the output        
+        """
+
+        durations = [stim.duration / out.shape[0]] * out.shape[0]
+        onsets = np.arange(0, stim.duration, durations[0]).tolist()
+
+        return onsets, durations
 
 class TFHubTextExtractor(TFHubExtractor):
 
