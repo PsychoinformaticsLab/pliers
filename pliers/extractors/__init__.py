@@ -63,7 +63,7 @@ from .image import (BrightnessExtractor, SaliencyExtractor, SharpnessExtractor,
 from .misc import MetricExtractor
 from .models import (TensorFlowKerasApplicationExtractor, 
                      TFHubImageExtractor, TFHubTextExtractor, 
-                     TFHubExtractor)
+                     TFHubExtractor, TFHubAudioExtractor)
 from .text import (ComplexTextExtractor, DictionaryExtractor,
                    PredefinedDictionaryExtractor, LengthExtractor,
                    NumUniqueWordsExtractor, PartOfSpeechExtractor,
@@ -128,6 +128,7 @@ __all__ = [
     'TFHubExtractor',
     'TFHubImageExtractor',
     'TFHubTextExtractor',
+    'TFHubAudioExtractor',
     'ComplexTextExtractor',
     'DictionaryExtractor',
     'PredefinedDictionaryExtractor',

@@ -6,7 +6,7 @@ import pandas as pd
 from pliers.extractors.image import ImageExtractor
 from pliers.extractors.base import Extractor, ExtractorResult
 from pliers.filters.image import ImageResizingFilter
-from pliers.stimuli import ImageStim, TextStim
+from pliers.stimuli import ImageStim, TextStim, AudioStim
 from pliers.stimuli.base import Stim
 from pliers.support.exceptions import MissingDependencyError
 from pliers.utils import (attempt_to_import, verify_dependencies,
@@ -26,30 +26,31 @@ class TFHubExtractor(Extractor):
     Args:
         url_or_path (str): url or path to TFHub model. You can
             browse models at https://tfhub.dev/.
-        features (optional): list of labels (for classification) 
-            or other feature names. The number of items must 
-            match the number of features in the output. For example,
-            if a classification model with 1000 output classes is passed 
+        load_type (optional): whether to load the model as a KerasLayer
+            or as a SavedModel. If 'keras', loads as a KerasLayer. If
+            'saved_model', loads as a SavedModel.
+        signature (optional): signature to use when loading a SavedModel.
+        features (optional): list of feature names matching output dimensions
+            
+            For example, for a classification model with 1000 output classes 
+            this must be a list containing 1000 items.
             (e.g. EfficientNet B6, 
-            see https://tfhub.dev/tensorflow/efficientnet/b6/classification/1), 
-            this must be a list containing 1000 items. If a text encoder 
-            outputting 768-dimensional encoding is passed (e.g. base BERT),
-            this must be a list containing 768 items. Each dimension in the 
-            model output will be returned as a separate feature in the 
-            ExtractorResult.
+            https://tfhub.dev/tensorflow/efficientnet/b6/classification/1), 
+            
             Alternatively, the model output can be packed into a single 
             feature (i.e. a vector) by passing a single-element list 
-            (e.g. ['encoding']) or a string. Along the lines of 
-            the previous examples, if a single feature name is 
-            passed here (e.g. if features=['encoding']) for a TFHub model 
-            that outputs a 768-dimensional encoding, the extractor will 
-            return only one feature named 'encoding', which contains the 
-            encoding vector as a 1-d array wrapped in a list.
+            or a string. For example, for a model that outputs a 
+            768-dimensional encoding, the value 'encoding' will result
+            in a 1-d array wrapped in a list named 'encoding'.
+
             If no value is passed, the extractor will automatically 
             compute the number of features in the model output 
             and return an equal number of features in pliers, labeling
             each feature with a generic prefix + its positional index 
             in the model output (feature_0, feature_1, ... ,feature_n).
+
+            Note that for saved models, the feature names are inferred
+            from the output signature, but can be over-ridden.
         transform_out (optional): function to transform model 
             output for compatibility with extractor result
         transform_inp (optional): function to transform Stim.data 
@@ -62,12 +63,22 @@ class TFHubExtractor(Extractor):
 
     def __init__(self, url_or_path, features=None,
                  transform_out=None, transform_inp=None,
+                 load_type='keras', signature=None,
                  keras_kwargs=None):
         verify_dependencies(['tensorflow_hub'])
         if keras_kwargs is None:
             keras_kwargs = {}
         self.keras_kwargs = keras_kwargs
-        self.model = hub.KerasLayer(url_or_path, **keras_kwargs)
+        self.load_type = load_type
+
+        if load_type == 'keras':
+            self.model = hub.KerasLayer(url_or_path, **keras_kwargs)
+        elif load_type == 'saved_model':
+            model = hub.load(url_or_path)
+            if signature is None:
+                signature = list(model.signatures.keys())[0]
+            self.model = model.signatures[signature]
+
         self.url_or_path = url_or_path
         self.features = features
         self.transform_out = transform_out
@@ -78,8 +89,11 @@ class TFHubExtractor(Extractor):
         if self.features:
             return listify(self.features)
         else:
-            return ['feature_' + str(i) 
-                    for i in range(out.shape[-1])]
+            if isinstance(out, dict):
+                return list(out.keys())
+            else:
+                return ['feature_' + str(i) 
+                        for i in range(out.shape[-1])]
     
     def _preprocess(self, stim):
         if self.transform_inp:
@@ -93,13 +107,22 @@ class TFHubExtractor(Extractor):
     def _postprocess(self, out):
         if self.transform_out:
             out = self.transform_out(out)
-        return out.numpy().squeeze()
+        if not isinstance(out, np.ndarray):
+            out = out.numpy().squeeze()
+        return out
         
     def _extract(self, stim):
         inp = self._preprocess(stim)
         out = self.model(inp)
-        out = self._postprocess(out)
+
         features = self.get_feature_names(out)
+
+        if self.load_type == 'saved_model':
+            if isinstance(out, dict):
+                out = np.vstack(out.values()).T
+
+        out = self._postprocess(out)
+                
         return ExtractorResult(listify(out), stim, self, 
                                features=features)
     
@@ -116,39 +139,59 @@ class TFHubExtractor(Extractor):
 
 class TFHubImageExtractor(TFHubExtractor):
 
-    ''' TFHub Extractor class for image models
+    ''' TFHub Extractor class for image models.
+
+    Note that some models may require specific input shapes.'
+    You can reshape inputs using filters, such as ImageResizingFilter.
+    ImageRescaleFilter.
+
     Args:
         url_or_path (str): url or path to TFHub model
-        features (optional): list of labels (for classification) 
-            or other feature names. If not specified, returns 
-            numbered features (feature_0, feature_1, ... ,feature_n)
-        keras_kwargs (dict): arguments to hub.KerasLayer call
+        input_dtype (optional): dtype of input data. Defaults to tf.float32
     '''
 
     _input_type = ImageStim
-    _log_attributes = ('url_or_path', 'features', 'keras_kwargs')
 
     def __init__(self, 
                  url_or_path, 
-                 features=None,
                  input_dtype=None,
-                 keras_kwargs=None):
+                 **kwargs):
         
         self.input_dtype = input_dtype if input_dtype else tf.float32
-        if keras_kwargs is None:
-            keras_kwargs = {}
-        self.keras_kwargs = keras_kwargs
 
-        logging.warning('Some models may require specific input shapes.'
-                        ' Incompatible shapes may raise errors'
-                        ' at extraction. If needed, you can reshape'
-                        ' your input image using ImageResizingFilter, '
-                        ' and rescale using ImageRescalingFilter')
-        super().__init__(url_or_path, features, keras_kwargs=keras_kwargs)
+        super().__init__(url_or_path, **kwargs)
 
     def _preprocess(self, stim):
         x = tf.convert_to_tensor(stim.data, dtype=self.input_dtype)
         x = tf.expand_dims(x, axis=0)
+        return x
+
+
+class TFHubAudioExtractor(TFHubExtractor):
+
+    ''' TFHub Extractor class for audio models.
+
+    Note that some models may require a specific sampling frequency.'
+    You can resample inputs using AudioResamplingFilter.
+
+    Args:
+        url_or_path (str): url or path to TFHub model
+        input_dtype (optional): dtype of input data. Defaults to tf.float32
+    '''
+
+    _input_type = AudioStim
+
+    def __init__(self, 
+                 url_or_path, 
+                 input_dtype=None,
+                 **kwargs):
+        
+        self.input_dtype = input_dtype if input_dtype else tf.float32
+
+        super().__init__(url_or_path, **kwargs)
+
+    def _preprocess(self, stim):
+        x = tf.convert_to_tensor(stim.data, dtype=self.input_dtype)
         return x
 
 
