@@ -8,7 +8,7 @@ on: [push, pull_request]
 jobs:
   build:
     name: pytest (${{ matrix.python-version }}, ${{ matrix.os }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash -l {0}
@@ -26,7 +26,6 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install libavformat-dev libavfilter-dev libavdevice-dev libmp3lame-dev tesseract-ocr graphviz cmake libboost-python-dev libgraphviz-dev
-        conda install -c conda-forge ffmpeg
     - uses: actions/cache@v2
       with:
         path: ~/.cache/pip
