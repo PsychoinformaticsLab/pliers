@@ -140,7 +140,7 @@ class TFHubExtractor(Extractor):
 
         return ExtractorResult(listify(out), stim, self, 
                                onsets=onsets, durations=durations,
-                               features=features, orders=order)
+                               features=features, orders=orders)
     
     def _to_df(self, result):
         if len(result.features) == 1:
