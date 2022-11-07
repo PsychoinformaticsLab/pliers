@@ -120,8 +120,9 @@ class TFHubExtractor(Extractor):
         Returns:
             onsets: onsets of the output
             durations: durations of the output        
+            order: order of the output
         """
-        return None, None
+        return None, None, None
         
     def _extract(self, stim):
         inp = self._preprocess(stim)
@@ -135,11 +136,11 @@ class TFHubExtractor(Extractor):
 
         out = self._postprocess(out)
                 
-        onsets, durations = self._get_timing(out, stim)
+        onsets, durations, order = self._get_timing(out, stim)
 
         return ExtractorResult(listify(out), stim, self, 
                                onsets=onsets, durations=durations,
-                               features=features)
+                               features=features, order=order)
     
     def _to_df(self, result):
         if len(result.features) == 1:
@@ -210,6 +211,10 @@ class TFHubAudioExtractor(TFHubExtractor):
 
     def _get_timing(self, out, stim):
         """ Returns the timing of the output. 
+
+        Assumes model returns a fixed sampling frequency,
+        and deduces durations and onsets from the sampling frequency.
+
         Args:
             out: output of the model
             stim: input stimulus
@@ -221,8 +226,9 @@ class TFHubAudioExtractor(TFHubExtractor):
 
         durations = [stim.duration / out.shape[0]] * out.shape[0]
         onsets = np.arange(0, stim.duration, durations[0]).tolist()
+        order = range(0, len(onsets))
 
-        return onsets, durations
+        return onsets, durations, order
 
 class TFHubTextExtractor(TFHubExtractor):
 
