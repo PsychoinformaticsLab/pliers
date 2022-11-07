@@ -25,7 +25,8 @@ jobs:
     - name: Set up system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install libavformat-dev libavfilter-dev libavdevice-dev ffmpeg libmp3lame-dev tesseract-ocr graphviz cmake libboost-python-dev libgraphviz-dev
+        sudo apt-get install libavformat-dev libavfilter-dev libavdevice-dev libmp3lame-dev tesseract-ocr graphviz cmake libboost-python-dev libgraphviz-dev
+        conda install -c conda-forge ffmpeg
     - uses: actions/cache@v2
       with:
         path: ~/.cache/pip
