@@ -454,7 +454,8 @@ def test_spice_extractor():
     audio_filter = AudioResamplingFilter(target_sr=16000)
     audio_resampled = audio_filter.transform(audio_stim)
 
-    ext = TFHubAudioExtractor(SPICE_URL, load_type="saved_model")
+    ext = TFHubAudioExtractor(SPICE_URL, keras_kwargs=dict(
+        signature='serving_default', signature_outputs_as_dict=True))
     r_orig = ext.transform(audio_stim).to_df()
     assert r_orig.shape == (74, 6)
 

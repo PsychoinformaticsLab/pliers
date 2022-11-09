@@ -26,10 +26,6 @@ class TFHubExtractor(Extractor):
     Args:
         url_or_path (str): url or path to TFHub model. You can
             browse models at https://tfhub.dev/.
-        load_type (optional): whether to load the model as a KerasLayer
-            or as a SavedModel. If 'keras', loads as a KerasLayer. If
-            'saved_model', loads as a SavedModel.
-        signature (optional): signature to use when loading a SavedModel.
         features (optional): list of feature names matching output dimensions
             
             For example, for a classification model with 1000 output classes 
@@ -63,21 +59,13 @@ class TFHubExtractor(Extractor):
 
     def __init__(self, url_or_path, features=None,
                  transform_out=None, transform_inp=None,
-                 load_type='keras', signature=None,
                  keras_kwargs=None):
         verify_dependencies(['tensorflow_hub'])
         if keras_kwargs is None:
             keras_kwargs = {}
         self.keras_kwargs = keras_kwargs
-        self.load_type = load_type
 
-        if load_type == 'keras':
-            self.model = hub.KerasLayer(url_or_path, **keras_kwargs)
-        elif load_type == 'saved_model':
-            model = hub.load(url_or_path)
-            if signature is None:
-                signature = list(model.signatures.keys())[0]
-            self.model = model.signatures[signature]
+        self.model = hub.KerasLayer(url_or_path, **keras_kwargs)
 
         self.url_or_path = url_or_path
         self.features = features
@@ -130,9 +118,8 @@ class TFHubExtractor(Extractor):
 
         features = self.get_feature_names(out)
 
-        if self.load_type == 'saved_model':
-            if isinstance(out, dict):
-                out = np.vstack(out.values()).T
+        if isinstance(out, dict):
+            out = np.vstack(list(out.values())).T
 
         out = self._postprocess(out)
                 
