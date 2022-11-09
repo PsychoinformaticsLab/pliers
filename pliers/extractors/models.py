@@ -110,7 +110,8 @@ class TFHubExtractor(Extractor):
             durations: durations of the output        
             orders: order of the output
         """
-        return None, None, None
+
+        return stim.onset, stim.duration, None
         
     def _extract(self, stim):
         inp = self._preprocess(stim)
@@ -213,7 +214,10 @@ class TFHubAudioExtractor(TFHubExtractor):
         """
 
         durations = [stim.duration / out.shape[0]] * out.shape[0]
-        onsets = np.arange(0, stim.duration, durations[0]).tolist()
+        onsets = np.arange(0, stim.duration, durations[0])
+        if stim.onset is not None:
+            onsets += stim.onset
+        onsets = onsets.tolist()
         orders = range(0, len(onsets))
 
         return onsets, durations, orders
