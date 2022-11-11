@@ -28,6 +28,10 @@ jobs:
         sudo apt-get update
         sudo apt-get upgrade -y ffmpeg
         sudo apt-get install -y libavformat-dev libavfilter-dev libavdevice-dev libmp3lame-dev tesseract-ocr graphviz cmake libboost-python-dev libgraphviz-dev
+    - name: Test ffmpeg version
+      run: |
+        which ffmpeg
+        ffmpeg --version
     - uses: actions/cache@v2
       with:
         path: ~/.cache/pip
