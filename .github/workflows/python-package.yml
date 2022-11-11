@@ -26,7 +26,8 @@ jobs:
       run: |
         sudo add-apt-repository ppa:savoury1/ffmpeg4
         sudo apt-get update
-        sudo apt-get install -y ffmpeg libavformat-dev libavfilter-dev libavdevice-dev libmp3lame-dev tesseract-ocr graphviz cmake libboost-python-dev libgraphviz-dev
+        sudo apt-get upgrade ffmpeg
+        sudo apt-get install -y libavformat-dev libavfilter-dev libavdevice-dev libmp3lame-dev tesseract-ocr graphviz cmake libboost-python-dev libgraphviz-dev
     - uses: actions/cache@v2
       with:
         path: ~/.cache/pip
