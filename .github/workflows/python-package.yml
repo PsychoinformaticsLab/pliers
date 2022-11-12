@@ -18,6 +18,7 @@ jobs:
         python-version: [3.6, 3.7, 3.8]
     env:
       FFMPEG_BINARY: /usr/bin/ffmpeg
+      IMAGEIO_FFMPEG_EXE: /usr/bin/ffmpeg
     steps:
     - uses: actions/checkout@v2
     - uses: conda-incubator/setup-miniconda@v2
