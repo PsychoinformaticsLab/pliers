@@ -17,7 +17,7 @@ jobs:
       matrix:
         python-version: [3.6, 3.7, 3.8]
     env:
-      FFMPEG_BINARY: /usr/lib/ffmpeg
+      FFMPEG_BINARY: /usr/bin/ffmpeg
     steps:
     - uses: actions/checkout@v2
     - uses: conda-incubator/setup-miniconda@v2
@@ -30,10 +30,6 @@ jobs:
         sudo apt-get update
         sudo apt-get upgrade -y ffmpeg
         sudo apt-get install -y libavformat-dev libavfilter-dev libavdevice-dev libmp3lame-dev tesseract-ocr graphviz cmake libboost-python-dev libgraphviz-dev
-    - name: Test ffmpeg version
-      run: |
-        which ffmpeg
-        ffmpeg --version
     - uses: actions/cache@v2
       with:
         path: ~/.cache/pip
