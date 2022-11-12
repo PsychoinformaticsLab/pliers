@@ -29,9 +29,11 @@ jobs:
         sudo add-apt-repository ppa:savoury1/ffmpeg4
         sudo apt-get update
         sudo apt-get upgrade -y ffmpeg
-        which ffmpeg
-        ffmpeg --help
         sudo apt-get install -y libavformat-dev libavfilter-dev libavdevice-dev libmp3lame-dev tesseract-ocr graphviz cmake libboost-python-dev libgraphviz-dev
+    - name: Test ffmpeg version
+      run: |
+        which ffmpeg
+        ffmpeg --version
     - uses: actions/cache@v2
       with:
         path: ~/.cache/pip
