@@ -289,7 +289,7 @@ def test_get_filename():
         assert exists(filename)
     assert not exists(filename)
 
-    url = 'https://archive.org/download/NIX-C-1987-11903/1987_11903L.jpg'
+    url = 'https://storage.googleapis.com/gtv-videos-bucket/sample/images/ElephantsDream.jpg'
     image = ImageStim(url=url)
     with image.get_filename() as filename:
         assert exists(filename)
