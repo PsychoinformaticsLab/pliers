@@ -16,6 +16,8 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [3.6, 3.7, 3.8]
+    env:
+      FFMPEG_BINARY: /usr/lib/ffmpeg
     steps:
     - uses: actions/checkout@v2
     - uses: conda-incubator/setup-miniconda@v2
