@@ -26,8 +26,8 @@ def test_magic_loader2():
 
     stims = load_stims([text_file, video_url, audio_url, image_url, text_url])
     assert len(stims) == 5
-    assert stims[1].fps == 30.0
-    assert stims[3].data.shape == (288, 360, 3)
+    assert stims[1].fps == 24
+    assert stims[3].data.shape == (360, 480, 3)
 
 
 def test_loader_nonexistent():
