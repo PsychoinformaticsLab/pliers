@@ -118,9 +118,11 @@ class TFHubExtractor(Extractor):
         # If output is a dict and no output key, return all keys
         if isinstance(out, dict):
             out = np.vstack(list(out.values())).T
-
+        elif isinstance(out, tf.Tensor):
+            out = out.numpy()
+        
         # Always squeeze last dimension if it is 1
-        out = out.numpy().squeeze()
+        out = out.squeeze()
 
         if self.transform_out:
             out = self.transform_out(out)
