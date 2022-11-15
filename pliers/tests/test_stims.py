@@ -265,17 +265,17 @@ def test_transcribed_audio_stim():
 
 def test_remote_stims():
 
-    video_url = 'https://archive.org/download/DisneyCastletest/Disney_Castle_512kb.mp4'
+    video_url = 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
     video = VideoStim(url=video_url)
-    assert video.fps == 30.0
+    assert video.fps == 24
 
-    url = 'https://archive.org/download/999WavFiles/TANKEN.WAV'
+    url = 'https://www2.cs.uic.edu/~i101/SoundFiles/Fanfare60.wav'
     audio = AudioStim(url=url)
-    assert round(audio.duration) == 25
+    assert round(audio.duration) == 60
 
-    url = 'https://archive.org/download/NIX-C-1987-11903/1987_11903L.jpg'
+    url = 'https://storage.googleapis.com/gtv-videos-bucket/sample/images/ElephantsDream.jpg'
     image = ImageStim(url=url)
-    assert image.data.shape == (288, 360, 3)
+    assert image.data.shape == (360, 480, 3)
 
     url = 'https://github.com/psychoinformaticslab/pliers/blob/master/README.rst'
     text = TextStim(url=url)
@@ -283,13 +283,13 @@ def test_remote_stims():
 
 
 def test_get_filename():
-    url = 'https://archive.org/download/999WavFiles/TANKEN.WAV'
+    url = 'https://www2.cs.uic.edu/~i101/SoundFiles/Fanfare60.wav'
     audio = AudioStim(url=url)
     with audio.get_filename() as filename:
         assert exists(filename)
     assert not exists(filename)
 
-    url = 'https://archive.org/download/NIX-C-1987-11903/1987_11903L.jpg'
+    url = 'https://storage.googleapis.com/gtv-videos-bucket/sample/images/ElephantsDream.jpg'
     image = ImageStim(url=url)
     with image.get_filename() as filename:
         assert exists(filename)
