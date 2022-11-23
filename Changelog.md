@@ -1,7 +1,6 @@
 # Changelog
 
 ## 0.4.3 (November 23, 2022)
-
 New extractors:
 * TFHubAudioExtractor, to support SPICE pitch extraction (#485)
 
