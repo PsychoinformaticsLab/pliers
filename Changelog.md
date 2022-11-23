@@ -1,6 +1,17 @@
 # Changelog
 
-## 0.4.2 (October 20, 2022)
+## 0.4.4 (November 23, 2022)
+
+New extractors:
+* TFHubAudioExtractor, to support SPICE pitch extraction (#485)
+
+Enhancements
+* Support non-English transcripts with RevAI (#484)
+
+Fixes:
+* Fix CI testing 
+
+## 0.4.3 (October 20, 2022)
 This is a minor release, with updates to the documentation, and various minor improvements:
 
 * Parameterize dtype for TFHubExtractor, add ImageResizingFilter + ImageRescalingFilter (#459) 
