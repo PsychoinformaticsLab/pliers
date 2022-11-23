@@ -1,7 +1,7 @@
 clarifai-grpc
 duecredit
 face_recognition
-keras
+keras~=2.10
 python-twitter
 gensim
 google-api-python-client

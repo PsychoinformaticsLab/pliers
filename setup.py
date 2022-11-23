@@ -23,7 +23,7 @@ setup(
     packages=find_packages(exclude=['pliers/tests']),
     license='MIT',
     package_data={'pliers': ['datasets/*'],
-                  'pliers.tests': ['data/*/*']
+                  'pliers.tests': ['data/*/*'],
                   },
     zip_safe=False,
     download_url='https://github.com/psychoinformaticslab/pliers/archive/%s.tar.gz' %
